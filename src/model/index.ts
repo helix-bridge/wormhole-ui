@@ -5,3 +5,4 @@ export * from './network';
 export * from './storage';
 export * from './transfer';
 export * from './util';
+export * from './metamask';

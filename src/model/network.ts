@@ -1,11 +1,14 @@
 import { Config } from './common';
+import { AddEthereumChainParameter } from './metamask';
 
-export type NetworkType = 'pangolin' | 'crab' | 'darwinia' | 'polkadot' | 'kusama';
+export type Network = 'pangolin' | 'crab' | 'darwinia' | 'ethereum' | 'ropsten';
+
+export type NetworkType = 'polkadot' | 'ethereum' | 'tron' | 'darwinia';
 
 export type Token = 'ring' | 'kton' | 'native';
 
 // eslint-disable-next-line no-magic-numbers
-export type SS58Prefix = 0 | 2 | 18 | 42;
+export type SS58Prefix = 0 | 2 | 18 | 42 | null;
 
 interface Facade {
   logo: string;
@@ -16,22 +19,20 @@ type TokenRecord = { [key in Token]?: string };
 
 type Api = { subql: string; [key: string]: string };
 
-interface Donate {
-  address: string;
-}
-
 export interface NetConfig {
   facade: Facade;
   fullName: string;
+  ethereumChain: AddEthereumChainParameter;
   rpc: string;
   ss58Prefix: SS58Prefix;
   token: TokenRecord;
-  erc20: TokenRecord;
   api: Api;
-  donate: Donate;
+  isTest: boolean;
+  type: NetworkType[];
+  name?: string;
 }
 
-export type NetworkConfig<T = NetConfig> = Config<NetworkType, T>;
+export type NetworkConfig<T = NetConfig> = Config<Network, T>;
 
 export type TxStatus =
   | 'future'

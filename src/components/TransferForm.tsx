@@ -2,15 +2,16 @@ import { Button, Form, Input, Select } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useApi } from '../hooks';
-import { TransferFormValues } from '../model';
+import { validateMessages } from '../config';
+// import { useApi } from '../hooks';
+import { TransferFormValues, TransferValue } from '../model';
 import { Balance } from './Balance';
 import { DownIcon } from './icons';
 import { TransferControl } from './TransferControl';
 
 export function TransferForm() {
-  const { t } = useTranslation();
-  const { accounts } = useApi();
+  const { t, i18n } = useTranslation();
+  // const { accounts } = useApi();
   // const { account } = useAccount();
   const [form] = useForm<TransferFormValues>();
 
@@ -25,12 +26,23 @@ export function TransferForm() {
           assets: 'ring',
           amount: '',
         }}
-        onFinish={(_) => {
-          //
+        onFinish={(value) => {
+          console.info('🚀 ~ file: TransferForm.tsx ~ line 71 ~ TransferForm ~ value', value);
         }}
-        // validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
+        validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
       >
-        <Form.Item>
+        <Form.Item
+          name="transfer"
+          rules={[
+            { required: true, message: t('Both send and receive network are all required') },
+            {
+              validator: (_, value: TransferValue) => {
+                return value.from && value.to ? Promise.resolve() : Promise.reject();
+              },
+              message: t('You maybe forgot to select receive or sender network'),
+            },
+          ]}
+        >
           <TransferControl />
         </Form.Item>
 
@@ -67,7 +79,8 @@ export function TransferForm() {
         </Form.Item>
 
         <Form.Item style={{ margin: '48px 0 0 0' }}>
-          {!accounts ? (
+          {/* eslint-disable-next-line no-constant-condition */}
+          {'' ? (
             <Button
               type="primary"
               className="block mx-auto w-full rounded-xl text-white"
@@ -83,7 +96,6 @@ export function TransferForm() {
               type="primary"
               htmlType="submit"
               size="large"
-              disabled={true}
               className="block mx-auto w-full rounded-xl text-white"
             >
               {t('Confirm to transfer')}

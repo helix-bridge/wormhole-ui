@@ -2,16 +2,25 @@ import { typesBundle } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
+import { Button, notification } from 'antd';
 import { omitBy } from 'lodash';
 import { createContext, Dispatch, useCallback, useEffect, useReducer, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NETWORK_CONFIG } from '../config';
-import { Action, ConnectStatus, InjectedAccountWithMeta, NetConfig, NetworkType } from '../model';
-import { convertToSS58, getInitialSetting, patchUrl } from '../utils';
+import { Action, ConnectStatus, IAccountMeta, NetConfig, Network } from '../model';
+import {
+  addEthereumChain,
+  getInitialSetting,
+  isEthereumNetwork,
+  isNetworkConsistent,
+  isPolkadotNetwork,
+  patchUrl,
+} from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
-  accounts: InjectedAccountWithMeta[] | null;
-  network: NetworkType | null;
+  accounts: IAccountMeta[] | null;
+  network: Network | null;
   networkStatus: ConnectStatus;
 }
 
@@ -27,7 +36,11 @@ export interface Chain {
 
 type ActionType = 'switchNetwork' | 'updateNetworkStatus' | 'setAccounts';
 
-const cacheNetwork = (network: NetworkType | null): void => {
+export function isMetamaskInstalled(): boolean {
+  return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
+}
+
+const cacheNetwork = (network: Network | null): void => {
   const info = omitBy({ network }, (value) => !value);
 
   patchUrl(info);
@@ -35,7 +48,7 @@ const cacheNetwork = (network: NetworkType | null): void => {
 };
 
 const initialState: StoreState = {
-  network: getInitialSetting<NetworkType>('network', null),
+  network: getInitialSetting<Network>('network', null),
   accounts: null,
   networkStatus: 'pending',
 };
@@ -44,7 +57,7 @@ const initialState: StoreState = {
 function accountReducer(state: StoreState, action: Action<ActionType, any>): StoreState {
   switch (action.type) {
     case 'switchNetwork': {
-      return { ...state, network: action.payload as NetworkType };
+      return { ...state, network: action.payload as Network };
     }
 
     case 'setAccounts': {
@@ -61,16 +74,15 @@ function accountReducer(state: StoreState, action: Action<ActionType, any>): Sto
 }
 
 export type ApiCtx = {
-  accounts: InjectedAccountWithMeta[] | null;
+  accounts: IAccountMeta[] | null;
   api: ApiPromise | null;
   dispatch: Dispatch<Action<ActionType>>;
-  network: NetworkType | null;
+  network: Network | null;
   networkStatus: ConnectStatus;
-  setAccounts: (accounts: InjectedAccountWithMeta[]) => void;
+  setAccounts: (accounts: IAccountMeta[]) => void;
   setNetworkStatus: (status: ConnectStatus) => void;
-  switchNetwork: (type: NetworkType) => void;
+  switchNetwork: (type: Network) => void;
   setApi: (api: ApiPromise) => void;
-  setRandom: (num: number) => void;
   networkConfig: NetConfig | null;
   chain: Chain;
   extensions: InjectedExtension[] | undefined;
@@ -79,35 +91,91 @@ export type ApiCtx = {
 export const ApiContext = createContext<ApiCtx | null>(null);
 
 export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(accountReducer, initialState);
-  const switchNetwork = useCallback((payload: NetworkType) => dispatch({ type: 'switchNetwork', payload }), []);
-  const setAccounts = useCallback(
-    (payload: InjectedAccountWithMeta[]) => dispatch({ type: 'setAccounts', payload }),
-    []
-  );
+  const switchNetwork = useCallback((payload: Network) => dispatch({ type: 'switchNetwork', payload }), []);
+  const setAccounts = useCallback((payload: IAccountMeta[]) => dispatch({ type: 'setAccounts', payload }), []);
   const setNetworkStatus = useCallback(
     (payload: ConnectStatus) => dispatch({ type: 'updateNetworkStatus', payload }),
     []
   );
   const [api, setApi] = useState<ApiPromise | null>(null);
   const [chain, setChain] = useState<Chain>({ ss58Format: '', tokens: [] });
-  const [random, setRandom] = useState<number>(0);
   const [extensions, setExtensions] = useState<InjectedExtension[] | undefined>(undefined);
+  const notify = useCallback(() => {
+    const key = `key${Date.now()}`;
 
-  useEffect(() => {
-    if (!state.network) {
+    notification.error({
+      message: t('Incorrect network'),
+      description: t(
+        'Network mismatch, you can switch network manually in metamask or do it automatically by clicking the button below',
+        { type: state.network }
+      ),
+      btn: (
+        <Button
+          type="primary"
+          onClick={() => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            addEthereumChain(state.network!).then((res) => {
+              if (res === null) {
+                notification.close(key);
+              }
+            });
+          }}
+        >
+          {t('Switch to {{network}}', { network: state.network })}
+        </Button>
+      ),
+      key,
+      onClose: () => notification.close(key),
+      duration: null,
+    });
+
+    setNetworkStatus('fail');
+  }, [setNetworkStatus, state.network, t]);
+  const metamaskAccountChanged = useCallback(
+    (accounts: string[]) => {
+      setAccounts(accounts.map((address) => ({ address, meta: { source: '' } })));
+    },
+    [setAccounts]
+  );
+  const connectToEth = useCallback(
+    async (chainId?: string) => {
+      setNetworkStatus('connecting');
+
+      if (!isMetamaskInstalled() || !state.network || !chainId) {
+        return;
+      }
+
+      const isMatch = await isNetworkConsistent(state.network, chainId);
+
+      if (!isMatch) {
+        notify();
+
+        return;
+      }
+
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+      const accounts: string[] = await window.ethereum.request({ method: 'eth_accounts' });
+
+      setAccounts(accounts.map((address) => ({ address })));
+      setNetworkStatus('success');
+      window.ethereum.removeListener('accountsChanged', metamaskAccountChanged);
+      window.ethereum.on('accountsChanged', metamaskAccountChanged);
+    },
+    [metamaskAccountChanged, notify, setAccounts, setNetworkStatus, state.network]
+  );
+
+  const connectToSubstrate = useCallback(async () => {
+    const curChain = await api?.rpc.system.chain();
+    const chainNetwork = curChain?.toHuman().toLowerCase() ?? '';
+
+    if (!state.network || chainNetwork === state.network || chainNetwork.includes(state.network)) {
       return;
     }
-    /**
-     * just for refresh purpose;
-     */
-    if (random) {
-      console.info(
-        '%c [ Network connection will be establish again ]-102',
-        'font-size:13px; background:pink; color:#bf2c9f;',
-        random
-      );
-    }
+
+    setNetworkStatus('connecting');
 
     const url = NETWORK_CONFIG[state.network].rpc;
     const provider = new WsProvider(url);
@@ -118,32 +186,73 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
 
     const onReady = async () => {
       const exts = await web3Enable('polkadot-js/apps');
+      const newAccounts = await web3Accounts();
 
       setExtensions(exts);
       setApi(nApi);
       cacheNetwork(state.network);
+      setAccounts(!exts.length && !newAccounts.length ? [] : newAccounts);
+      setNetworkStatus('success');
     };
-
-    setNetworkStatus('connecting');
 
     nApi.on('ready', onReady);
 
     return () => {
       nApi.off('ready', onReady);
     };
-  }, [state.network, setNetworkStatus, random]);
+  }, [api?.rpc.system, setAccounts, setNetworkStatus, state.network]);
 
   /**
    * connect to substrate or metamask when account type changed.
    */
   useEffect(() => {
-    if (state.networkStatus !== 'success' || !api) {
+    // eslint-disable-next-line complexity
+    (async () => {
+      try {
+        if (!state.network) {
+          return;
+        }
+
+        if (isPolkadotNetwork(state.network)) {
+          connectToSubstrate();
+        }
+
+        if (isEthereumNetwork(state.network)) {
+          connectToEth();
+
+          window.ethereum.on('chainChanged', connectToEth);
+        }
+
+        patchUrl({ network: state.network });
+      } catch (error) {
+        setNetworkStatus('fail');
+      }
+    })();
+
+    return () => {
+      window.ethereum.removeListener('chainChanged', connectToEth);
+    };
+  }, [connectToEth, connectToSubstrate, setNetworkStatus, state.network]);
+
+  useEffect(() => {
+    if (state.networkStatus === 'disconnected') {
+      if (isEthereumNetwork(state.network)) {
+        connectToEth();
+      }
+
+      if (isPolkadotNetwork(state.network)) {
+        connectToSubstrate();
+      }
+    }
+  }, [connectToEth, connectToSubstrate, state.network, state.networkStatus]);
+
+  useEffect(() => {
+    if (!api) {
       return;
     }
 
     (async () => {
-      const newAccounts = await web3Accounts();
-      const chainState = await api.rpc.system.properties();
+      const chainState = await api?.rpc.system.properties();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
       const chainInfo = tokenDecimals.reduce(
@@ -156,20 +265,8 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       );
 
       setChain(chainInfo);
-      setAccounts(
-        newAccounts?.map(({ address, ...other }) => ({
-          ...other,
-          address: convertToSS58(address, ss58Format),
-        }))
-      );
     })();
-  }, [api, setAccounts, state.networkStatus]);
-
-  useEffect(() => {
-    if (state.networkStatus === 'disconnected') {
-      setRandom(Math.random());
-    }
-  }, [state.networkStatus]);
+  }, [api]);
 
   return (
     <ApiContext.Provider
@@ -180,7 +277,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
         setNetworkStatus,
         setAccounts,
         setApi,
-        setRandom,
         api,
         networkConfig: state.network ? NETWORK_CONFIG[state.network] : null,
         chain,

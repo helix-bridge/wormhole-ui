@@ -5,20 +5,16 @@ import vars from '../theme/antd/vars.json';
 import crab from '../theme/network/crab.json';
 import crabDark from '../theme/network/dark/crab.json';
 import darwiniaDark from '../theme/network/dark/darwinia.json';
-import kusamaDark from '../theme/network/dark/kusama.json';
 import pangolinDark from '../theme/network/dark/pangolin.json';
-import polkadotDark from '../theme/network/dark/polkadot.json';
 import darwinia from '../theme/network/darwinia.json';
-import kusama from '../theme/network/kusama.json';
 import pangolin from '../theme/network/pangolin.json';
-import polkadot from '../theme/network/polkadot.json';
 
 export const NETWORK_LIGHT_THEME: NetworkConfig<{ [key in keyof typeof darwinia]: string }> = {
   crab,
   darwinia,
-  kusama,
   pangolin,
-  polkadot,
+  ethereum: pangolin,
+  ropsten: pangolin,
 };
 
 export const SKIN_THEME = {
@@ -30,9 +26,9 @@ export const SKIN_THEME = {
 export const NETWORK_DARK_THEME: NetworkConfig<{ [key in keyof typeof darwiniaDark]: string }> = {
   crab: crabDark,
   darwinia: darwiniaDark,
-  kusama: kusamaDark,
   pangolin: pangolinDark,
-  polkadot: polkadotDark,
+  ethereum: pangolinDark,
+  ropsten: pangolinDark,
 };
 
 export enum THEME {

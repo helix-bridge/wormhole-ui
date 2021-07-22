@@ -1,118 +1,138 @@
-import { NetworkConfig } from '../model';
+import { NetConfig, Network, NetworkConfig } from '../model';
 
-export enum Network {
+export enum NetworkEnum {
   pangolin = 'pangolin',
   crab = 'crab',
   darwinia = 'darwinia',
+  ethereum = 'ethereum',
+  ropsten = 'ropsten',
 }
 
 export const NETWORK_CONFIG: NetworkConfig = {
-  polkadot: {
-    facade: {
-      logo: '/image/polkadot-button-mobile.png',
-      logoWithText: '/image/polkadot-button.png',
-    },
-    fullName: 'Polkadot',
-    ss58Prefix: 0,
-    token: { native: 'DOT' },
-    erc20: {
-      ring: '',
-      kton: '',
-    },
-    rpc: 'wss://polkadot.api.onfinality.io/public-ws',
+  crab: {
     api: {
-      subql: '',
+      subql: 'https://api.subquery.network/sq/wuminzhe/crab',
     },
-    donate: {
-      address: '14RYaXRSqb9rPqMaAVp1UZW2czQ6dMNGMbvukwfifi6m8ZgZ',
+    ethereumChain: {
+      chainId: '44',
+      chainName: '',
+      nativeCurrency: { decimals: 18 },
+      rpcUrls: [],
     },
-  },
-  kusama: {
     facade: {
-      logo: '/image/kusama-button-mobile.png',
-      logoWithText: '/image/kusama-button.png',
+      logo: '/image/crab-button-mobile.png',
+      logoWithText: '/image/crab-logo.svg',
     },
-    fullName: 'Kusama',
-    ss58Prefix: 2,
-    token: { native: 'KSM' },
-    erc20: {
-      ring: '',
-      kton: '',
+    fullName: 'Crab Mainnet',
+    isTest: false,
+    rpc: 'wss://crab-rpc.darwinia.network',
+    ss58Prefix: 42,
+    token: {
+      native: 'CRING',
     },
-    // rpc: 'wss://kusama.api.onfinality.io/public-ws',
-    rpc: 'wss://kusama.elara.patract.io',
-    // rpc: 'wss://kusama-rpc.polkadot.io',
-    api: {
-      subql: '',
-    },
-    donate: {
-      address: 'Fzs6WWFcAuJhxAVyZa4EN2suxggjidJjV3AzJxKbRHjh2Jc',
-    },
+    type: ['polkadot', 'darwinia'],
   },
   darwinia: {
+    api: {
+      subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
+    },
+    ethereumChain: {
+      chainId: '',
+      chainName: '',
+      nativeCurrency: { decimals: 18 },
+      rpcUrls: [],
+    },
     // TODO
     facade: {
       logo: '/image/darwinia-button-mobile.png',
       logoWithText: '/image/darwinia-logo.svg',
     },
     fullName: 'Darwinia Mainnet',
-    ss58Prefix: 18,
-    token: { native: 'RING' },
-    erc20: {
-      ring: '',
-      kton: '',
-    },
+    isTest: false,
     rpc: 'wss://rpc.darwinia.network',
+    ss58Prefix: 18,
+    token: {
+      native: 'RING',
+    },
+    type: ['polkadot', 'darwinia'],
+  },
+  ethereum: {
     api: {
-      subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
+      subql: '',
     },
-    donate: {
-      address: '2rbREPAhkptwCtdvU5eSGnHgFiyPcehdkXuGqFF916oYCJ7s',
+    ethereumChain: {
+      chainId: '',
+      chainName: '',
+      nativeCurrency: { decimals: 18 },
+      rpcUrls: [],
     },
+    facade: {
+      logo: 'image/eth-logo.svg',
+      logoWithText: '',
+    },
+    fullName: 'Ethereum Mainnet',
+    isTest: false,
+    rpc: '',
+    ss58Prefix: null,
+    token: {
+      native: 'eth',
+    },
+    type: ['ethereum'],
   },
   pangolin: {
+    api: {
+      subql: 'http://t3.hkg.itering.com:3000',
+    },
+    ethereumChain: {
+      chainId: '43',
+      chainName: '',
+      nativeCurrency: { decimals: 18 },
+      rpcUrls: [],
+    },
     facade: {
       logo: '/image/pangolin-button-mobile.png',
       logoWithText: '/image/pangolin-logo.svg',
     },
     fullName: 'Pangolin Testnet',
-    ss58Prefix: 18,
-    token: { native: 'PRING' },
-    erc20: {
-      ring: '0xfe098c5eeDec594271618922B2F3364F0f8b1785',
-      kton: '0x0eb47c5347B255e469101b9D71288b34DD5e2B95',
-    },
+    isTest: true,
     rpc: 'wss://pangolin-rpc.darwinia.network/',
-    api: {
-      subql: 'http://t3.hkg.itering.com:3000',
+    ss58Prefix: 18,
+    token: {
+      native: 'PRING',
     },
-    donate: {
-      address: '2rbREPAhkptwCtdvU5eSGnHgFiyPcehdkXuGqFF916oYCJ7s',
-    },
+    type: ['polkadot', 'darwinia'],
   },
-  crab: {
-    facade: {
-      logo: '/image/crab-button-mobile.png',
-      logoWithText: '/image/crab-logo.svg',
-    },
-    fullName: 'Crab Mainnet',
-    ss58Prefix: 42,
-    token: { native: 'CRING' },
-    erc20: {
-      ring: '0x588abe3F7EE935137102C5e2B8042788935f4CB0',
-      kton: '0xbfE9E136270cE46A2A6a8E8D54718BdAEBEbaA3D',
-    },
-    rpc: 'wss://crab-rpc.darwinia.network',
+  ropsten: {
     api: {
-      subql: 'https://api.subquery.network/sq/wuminzhe/crab',
+      subql: '',
     },
-    donate: {
-      address: '5FVFSCANyotNxJM4Crm1LQfsmNQSw3p8H7CRbegN7d5Ex91y',
+    ethereumChain: {
+      chainId: '3',
+      chainName: '',
+      nativeCurrency: { decimals: 18 },
+      rpcUrls: [],
     },
+    facade: {
+      logo: '',
+      logoWithText: '',
+    },
+    fullName: 'Ropsten Testnet',
+    isTest: false,
+    rpc: '',
+    ss58Prefix: null,
+    token: {
+      native: 'eth',
+    },
+    type: ['ethereum'],
   },
 };
 
-export interface NetworkSimpleInfo {
+export const NETWORKS: Required<NetConfig>[] = Object.entries(NETWORK_CONFIG).map(([key, value]) => ({
+  ...value,
+  name: key as Network,
+}));
+
+interface NetworkSimpleInfo {
   prefix: number;
   network?: string;
   hasLink?: boolean;
@@ -120,257 +140,164 @@ export interface NetworkSimpleInfo {
 }
 
 const networkSimple: Record<string, NetworkSimpleInfo> = {
-  polkadot: {
-    prefix: 0,
-    network: 'polkadot',
-    hasLink: true,
-  },
-  kusama: {
-    prefix: 2,
-    network: 'kusama',
-    hasLink: true,
-  },
-  darwinia: {
-    prefix: 18,
-    network: 'darwinia',
-    hasLink: true,
-  },
-  crab: {
-    prefix: 42,
-    network: 'crab',
-    hasLink: true,
-  },
-  rococo: {
-    prefix: 42,
-    network: 'rococo',
-    hasLink: true,
-  },
-  westend: {
-    prefix: 42,
-    network: 'westend',
-    hasLink: true,
-  },
-  plasm: {
-    prefix: 5,
-    network: 'plasm',
-    hasLink: true,
-  },
-  bifrost: {
-    prefix: 6,
-    network: 'bifrost',
-    hasLink: true,
-  },
-  edgeware: {
-    prefix: 7,
-    network: 'edgeware',
-    hasLink: true,
-  },
-  kulupu: {
-    prefix: 16,
-    network: 'kulupu',
-    hasLink: true,
-  },
-  pangolin: {
-    prefix: 18,
-    network: 'pangolin',
-    hasLink: true,
-  },
-  dock: {
-    prefix: 22,
-    network: 'dock',
-    hasLink: true,
-  },
-  litentry: {
-    prefix: 31,
-    network: 'litentry',
-    // hasLink: true,
-  },
-  datahighway: {
-    prefix: 33,
-    network: 'datahighway',
-    hasLink: true,
-  },
-  kilt: {
-    prefix: 38,
-    name: 'kilt-testnet',
-    network: 'kilt-testnet',
-    hasLink: true,
-  },
   acala: {
-    prefix: 42,
+    hasLink: true,
     name: 'Acala Mandala',
     network: 'acala-testnet',
-    hasLink: true,
-  },
-  clover: {
     prefix: 42,
-    network: 'clover',
-    hasLink: true,
-  },
-  'clover-testnet': {
-    prefix: 42,
-    network: 'clover-testnet',
-    hasLink: true,
-  },
-  crust: {
-    prefix: 42,
-    network: 'crust',
-    hasLink: true,
-  },
-  'datahighway-harbour': {
-    prefix: 42,
-    network: 'datahighway-harbour',
-    hasLink: true,
-  },
-  dbc: {
-    prefix: 42,
-    network: 'dbc',
-    hasLink: true,
-  },
-  gateway: {
-    prefix: 42,
-    network: 'gateway-testnet',
-    hasLink: true,
-  },
-  laminar: {
-    prefix: 42,
-    network: 'laminar-testnet',
-    hasLink: true,
-  },
-  phala: {
-    prefix: 42,
-    network: 'phala',
-    hasLink: true,
-  },
-  chainx: {
-    prefix: 44,
-    network: 'chainx',
-    hasLink: true,
-  },
-  equilibrium: {
-    prefix: 67,
-    network: 'equilibrium',
-    hasLink: true,
-  },
-  sora: {
-    prefix: 69,
-    network: 'sora',
-    // hasLink: true,
-  },
-  manta: {
-    prefix: 77,
-    network: 'manta-testnet',
-    hasLink: true,
-  },
-  sr25519: {
-    prefix: 1,
-  },
-  ed25519: {
-    prefix: 3,
-  },
-  katalchain: {
-    prefix: 4,
-  },
-  karura: {
-    prefix: 8,
-    network: 'karura',
-    hasLink: true,
-  },
-  reynolds: {
-    prefix: 9,
   },
   'acala mainnet': {
     prefix: 10,
   },
-  'laminar mainnet': {
-    prefix: 11,
-  },
-  polymath: {
-    prefix: 12,
-  },
-  substratee: {
-    prefix: 13,
-  },
-  totem: {
-    prefix: 14,
-  },
-  synesthesia: {
-    prefix: 15,
-  },
-  dark: {
-    prefix: 17,
-  },
-  geek: {
-    prefix: 19,
-  },
-  'dock testnet': {
-    prefix: 21,
-  },
-  shift: {
-    prefix: 23,
-  },
-  zero: {
-    prefix: 24,
-  },
   alphaville: {
     prefix: 25,
-  },
-  jupiter: {
-    prefix: 26,
-  },
-  patract: {
-    prefix: 27,
-  },
-  subsocial: {
-    prefix: 28,
-  },
-  cord: {
-    prefix: 29,
-  },
-  'phala mainnet': {
-    prefix: 30,
-  },
-  robonomics: {
-    prefix: 32,
   },
   ares: {
     prefix: 34,
   },
-  vln: {
-    prefix: 35,
-  },
-  nodle: {
-    prefix: 37,
-  },
-  poli: {
-    prefix: 41,
-  },
-  substrate: {
-    prefix: 42,
-  },
-  secp256k1: {
-    prefix: 43,
-  },
-  uniarts: {
-    prefix: 45,
-  },
-  neatcoin: {
-    prefix: 48,
-  },
-  hydradx: {
-    prefix: 63,
-  },
   aventus: {
     prefix: 65,
   },
-  'crust mainnet': {
-    prefix: 66,
+  basilisk: {
+    prefix: 10041,
+  },
+  bifrost: {
+    hasLink: true,
+    network: 'bifrost',
+    prefix: 6,
   },
   calamari: {
     prefix: 78,
   },
-  'social-network': {
-    prefix: 252,
+  chainx: {
+    hasLink: true,
+    network: 'chainx',
+    prefix: 44,
+  },
+  clover: {
+    hasLink: true,
+    network: 'clover',
+    prefix: 42,
+  },
+  'clover-testnet': {
+    hasLink: true,
+    network: 'clover-testnet',
+    prefix: 42,
+  },
+  cord: {
+    prefix: 29,
+  },
+  crab: {
+    hasLink: true,
+    network: 'crab',
+    prefix: 42,
+  },
+  crust: {
+    hasLink: true,
+    network: 'crust',
+    prefix: 42,
+  },
+  'crust mainnet': {
+    prefix: 66,
+  },
+  dark: {
+    prefix: 17,
+  },
+  darwinia: {
+    hasLink: true,
+    network: 'darwinia',
+    prefix: 18,
+  },
+  datahighway: {
+    hasLink: true,
+    network: 'datahighway',
+    prefix: 33,
+  },
+  'datahighway-harbour': {
+    hasLink: true,
+    network: 'datahighway-harbour',
+    prefix: 42,
+  },
+  dbc: {
+    hasLink: true,
+    network: 'dbc',
+    prefix: 42,
+  },
+  dock: {
+    hasLink: true,
+    network: 'dock',
+    prefix: 22,
+  },
+  'dock testnet': {
+    prefix: 21,
+  },
+  ed25519: {
+    prefix: 3,
+  },
+  edgeware: {
+    hasLink: true,
+    network: 'edgeware',
+    prefix: 7,
+  },
+  equilibrium: {
+    hasLink: true,
+    network: 'equilibrium',
+    prefix: 67,
+  },
+  gateway: {
+    hasLink: true,
+    network: 'gateway-testnet',
+    prefix: 42,
+  },
+  geek: {
+    prefix: 19,
+  },
+  hydradx: {
+    prefix: 63,
+  },
+  jupiter: {
+    prefix: 26,
+  },
+  karura: {
+    hasLink: true,
+    network: 'karura',
+    prefix: 8,
+  },
+  katalchain: {
+    prefix: 4,
+  },
+  kilt: {
+    hasLink: true,
+    name: 'kilt-testnet',
+    network: 'kilt-testnet',
+    prefix: 38,
+  },
+  kulupu: {
+    hasLink: true,
+    network: 'kulupu',
+    prefix: 16,
+  },
+  kusama: {
+    hasLink: true,
+    network: 'kusama',
+    prefix: 2,
+  },
+  laminar: {
+    hasLink: true,
+    network: 'laminar-testnet',
+    prefix: 42,
+  },
+  'laminar mainnet': {
+    prefix: 11,
+  },
+  litentry: {
+    network: 'litentry', // hasLink: true,
+    prefix: 31,
+  },
+  manta: {
+    hasLink: true,
+    network: 'manta-testnet',
+    prefix: 77,
   },
   moonbean: {
     prefix: 1284,
@@ -378,8 +305,99 @@ const networkSimple: Record<string, NetworkSimpleInfo> = {
   moonriver: {
     prefix: 1285,
   },
-  basilisk: {
-    prefix: 10041,
+  neatcoin: {
+    prefix: 48,
+  },
+  nodle: {
+    prefix: 37,
+  },
+  pangolin: {
+    hasLink: true,
+    network: 'pangolin',
+    prefix: 18,
+  },
+  patract: {
+    prefix: 27,
+  },
+  phala: {
+    hasLink: true,
+    network: 'phala',
+    prefix: 42,
+  },
+  'phala mainnet': {
+    prefix: 30,
+  },
+  plasm: {
+    hasLink: true,
+    network: 'plasm',
+    prefix: 5,
+  },
+  poli: {
+    prefix: 41,
+  },
+  polkadot: {
+    hasLink: true,
+    network: 'polkadot',
+    prefix: 0,
+  },
+  polymath: {
+    prefix: 12,
+  },
+  reynolds: {
+    prefix: 9,
+  },
+  robonomics: {
+    prefix: 32,
+  },
+  rococo: {
+    hasLink: true,
+    network: 'rococo',
+    prefix: 42,
+  },
+  secp256k1: {
+    prefix: 43,
+  },
+  shift: {
+    prefix: 23,
+  },
+  'social-network': {
+    prefix: 252,
+  },
+  sora: {
+    network: 'sora', // hasLink: true,
+    prefix: 69,
+  },
+  sr25519: {
+    prefix: 1,
+  },
+  subsocial: {
+    prefix: 28,
+  },
+  substrate: {
+    prefix: 42,
+  },
+  substratee: {
+    prefix: 13,
+  },
+  synesthesia: {
+    prefix: 15,
+  },
+  totem: {
+    prefix: 14,
+  },
+  uniarts: {
+    prefix: 45,
+  },
+  vln: {
+    prefix: 35,
+  },
+  westend: {
+    hasLink: true,
+    network: 'westend',
+    prefix: 42,
+  },
+  zero: {
+    prefix: 24,
   },
 };
 

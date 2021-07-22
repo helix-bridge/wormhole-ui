@@ -32,3 +32,11 @@ export function empty(...args: any[]) {
 export function makeSure<T = () => void>(fn: T | null | undefined): T | typeof empty {
   return fn ?? empty;
 }
+
+export function truth(): true {
+  return true;
+}
+
+export function faulty(): false {
+  return false;
+}

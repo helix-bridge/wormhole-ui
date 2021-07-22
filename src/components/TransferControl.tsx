@@ -1,90 +1,80 @@
-import { ArrowRightOutlined } from '@ant-design/icons';
-import { Badge, Dropdown, Menu } from 'antd';
-import React, { useRef } from 'react';
+import { ArrowRightOutlined, DisconnectOutlined, LinkOutlined } from '@ant-design/icons';
+import { Tooltip } from 'antd';
+import { negate } from 'lodash';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Network } from '../config';
 import { useApi } from '../hooks';
-import { AccountType, NetworkType } from '../model';
-import { DownIcon } from './icons';
+import { NetConfig, TransferValue } from '../model';
+import { getFromNetworks, getToNetworks, isSameNetwork } from '../utils';
+import { Destination } from './Destination';
 
-export interface TransferValue {
-  from?: string;
-  to?: string;
+export interface TransferControlProps {
+  value?: TransferValue;
+  onChange?: (value: TransferValue) => void;
 }
 
-interface AccountProps {
-  accountType: AccountType;
-  title: string;
-  extra?: string | JSX.Element;
-}
-
-const networks: NetworkType[] = [Network.darwinia, Network.crab, Network.pangolin];
-
-export function AccountGrid({ title, extra }: AccountProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  const { networkConfig, network } = useApi();
+export function TransferControl({ value, onChange }: TransferControlProps) {
+  console.info('🚀 ~ file: TransferControl.tsx ~ line 17 ~ TransferControl ~ value', value);
   const { t } = useTranslation();
-
-  return (
-    <div className="sm:col-span-2">
-      <p className="mb-2">{title}</p>
-      <Dropdown
-        trigger={['click']}
-        className="relative cursor-pointer"
-        overlay={
-          <Menu
-            onClick={() => {
-              //
-            }}
-          >
-            {networks.map((item) => (
-              <Menu.Item key={item} className="flex justify-between">
-                <span className="capitalize mr-2">{t(item)}</span>
-              </Menu.Item>
-            ))}
-          </Menu>
-        }
-      >
-        <div
-          ref={panelRef}
-          className={
-            'flex items-center justify-between text-lg px-1 pt-4 pb-2 rounded-xl bg-gray-100 dark:bg-gray-800 max-w-full'
-          }
-        >
-          <div className={`rounded-xl flex flex-col pb-1 bg-${network}`}>
-            <img
-              src={networkConfig?.facade.logo || 'image/eth-logo.svg'}
-              className="h-8 sm:h-12 md:16 ml-2 self-start"
-              alt=""
-            />
-            <span className="capitalize mr-0 text-xs dark:text-white px-2 py-0.5 mt-4">Ethereum Network</span>
-          </div>
-
-          <DownIcon className="mr-2 mb-2 self-end rounded-sm dark:bg-gray-600 dark:text-white" />
-
-          <div className="absolute top-2 right-2">{extra}</div>
-        </div>
-      </Dropdown>
-    </div>
+  const [fromNetwork, setFromNetwork] = useState<NetConfig | undefined>();
+  const [toNetwork, setToNetwork] = useState<NetConfig | undefined>();
+  const [fromNetworks, setFromNetworks] = useState<NetConfig[]>(getFromNetworks([]));
+  const [toNetworks, setToNetworks] = useState<NetConfig[]>(getToNetworks([]));
+  const { networkStatus } = useApi();
+  const triggerChange = useCallback(
+    (val: TransferValue) => {
+      if (onChange) {
+        onChange(val);
+      }
+    },
+    [onChange]
   );
-}
 
-export function TransferControl() {
-  const { t } = useTranslation();
-  const accountType = 'smart';
+  useEffect(() => {
+    const toFilters = fromNetwork ? [negate(isSameNetwork(fromNetwork))] : [];
+
+    setToNetworks(getToNetworks(toFilters));
+  }, [fromNetwork]);
+
+  useEffect(() => {
+    const fromFilters = toNetwork ? [negate(isSameNetwork(toNetwork))] : [];
+
+    setFromNetworks(getFromNetworks(fromFilters));
+  }, [toNetwork]);
 
   return (
     <>
       <div className="flex sm:grid sm:grid-cols-5 justify-between items-center">
-        <AccountGrid
-          accountType={accountType}
+        <Destination
+          networks={fromNetworks}
           title={t('From')}
-          extra={<Badge color="#87d068" text={t('unconnected')} />}
+          extra={
+            networkStatus === 'success' ? (
+              <Tooltip title={t('Network connected')}>
+                <LinkOutlined style={{ color: '#10b981' }} />
+              </Tooltip>
+            ) : (
+              <Tooltip title={t('Network disconnected')}>
+                <DisconnectOutlined style={{ color: '#ef4444' }} />
+              </Tooltip>
+            )
+          }
+          onChange={(from) => {
+            setFromNetwork(from);
+            triggerChange({ from, to: toNetwork });
+          }}
         />
 
         <ArrowRightOutlined className="mt-6 text-2xl" />
 
-        <AccountGrid accountType={'smart'} title={t('To')} />
+        <Destination
+          title={t('To')}
+          networks={toNetworks}
+          onChange={(to) => {
+            setToNetwork(to);
+            triggerChange({ to, from: fromNetwork });
+          }}
+        />
       </div>
 
       {/* <SwitchWalletModal
