@@ -1,6 +1,6 @@
 import { StorageInfo } from '../../model';
 
-export const STORAGE_KEY = 'multisig';
+export const STORAGE_KEY = 'wormhole';
 
 export function updateStorage(data: Partial<StorageInfo>): void {
   if (localStorage) {

@@ -1,4 +1,5 @@
 import { RouteProps } from 'react-router-dom';
+import { Home } from '../pages/Home';
 
 export enum Path {
   root = '/',
@@ -7,6 +8,11 @@ export enum Path {
 }
 
 export const routes: RouteProps[] = [
+  {
+    exact: true,
+    path: Path.root,
+    children: Home,
+  },
   {
     exact: true,
     path: '/404',

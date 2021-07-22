@@ -1,7 +1,8 @@
-import { ApiPromise, WsProvider } from '@polkadot/api';
 import { typesBundle } from '@darwinia/types/mix';
+import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
+import { omitBy } from 'lodash';
 import { createContext, Dispatch, useCallback, useEffect, useReducer, useState } from 'react';
 import { NETWORK_CONFIG } from '../config';
 import { Action, ConnectStatus, InjectedAccountWithMeta, NetConfig, NetworkType } from '../model';
@@ -10,7 +11,7 @@ import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
   accounts: InjectedAccountWithMeta[] | null;
-  network: NetworkType;
+  network: NetworkType | null;
   networkStatus: ConnectStatus;
 }
 
@@ -26,13 +27,15 @@ export interface Chain {
 
 type ActionType = 'switchNetwork' | 'updateNetworkStatus' | 'setAccounts';
 
-const cacheNetwork = (network: NetworkType): void => {
-  patchUrl({ network });
-  updateStorage({ network });
+const cacheNetwork = (network: NetworkType | null): void => {
+  const info = omitBy({ network }, (value) => !value);
+
+  patchUrl(info);
+  updateStorage(info);
 };
 
 const initialState: StoreState = {
-  network: getInitialSetting<NetworkType>('network', 'pangolin'),
+  network: getInitialSetting<NetworkType>('network', null),
   accounts: null,
   networkStatus: 'pending',
 };
@@ -61,14 +64,14 @@ export type ApiCtx = {
   accounts: InjectedAccountWithMeta[] | null;
   api: ApiPromise | null;
   dispatch: Dispatch<Action<ActionType>>;
-  network: NetworkType;
+  network: NetworkType | null;
   networkStatus: ConnectStatus;
   setAccounts: (accounts: InjectedAccountWithMeta[]) => void;
   setNetworkStatus: (status: ConnectStatus) => void;
   switchNetwork: (type: NetworkType) => void;
   setApi: (api: ApiPromise) => void;
   setRandom: (num: number) => void;
-  networkConfig: NetConfig;
+  networkConfig: NetConfig | null;
   chain: Chain;
   extensions: InjectedExtension[] | undefined;
 };
@@ -92,6 +95,9 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [extensions, setExtensions] = useState<InjectedExtension[] | undefined>(undefined);
 
   useEffect(() => {
+    if (!state.network) {
+      return;
+    }
     /**
      * just for refresh purpose;
      */
@@ -176,7 +182,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
         setApi,
         setRandom,
         api,
-        networkConfig: NETWORK_CONFIG[state.network],
+        networkConfig: state.network ? NETWORK_CONFIG[state.network] : null,
         chain,
         extensions,
       }}

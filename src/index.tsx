@@ -1,14 +1,25 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-import './index.scss';
-import './theme/antd/index.less';
+import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
+import './index.scss';
+import { ApiProvider, GqlProvider } from './providers';
+import { AccountProvider } from './providers/account-provider';
 import reportWebVitals from './reportWebVitals';
+import './theme/antd/index.less';
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <Suspense fallback="loading">
+    <Router>
+      <ApiProvider>
+        <AccountProvider>
+          <GqlProvider>
+            <App />
+          </GqlProvider>
+        </AccountProvider>
+      </ApiProvider>
+    </Router>
+  </Suspense>,
   document.getElementById('root')
 );
 

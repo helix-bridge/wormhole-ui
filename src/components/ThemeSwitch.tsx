@@ -22,10 +22,11 @@ export const toggleTheme = (theme: THEME, network: NetworkType) => {
 
 export interface ThemeSwitchProps {
   network: NetworkType;
+  defaultTheme?: THEME;
 }
 
-export function ThemeSwitch({ network }: ThemeSwitchProps) {
-  const [theme, setTheme] = useState<THEME>(readStorage()?.theme || THEME.LIGHT);
+export function ThemeSwitch({ network, defaultTheme = THEME.LIGHT }: ThemeSwitchProps) {
+  const [theme, setTheme] = useState<THEME>(readStorage()?.theme || defaultTheme);
 
   useEffect(() => {
     toggleTheme(theme, network);

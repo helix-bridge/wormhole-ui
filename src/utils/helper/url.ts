@@ -71,9 +71,11 @@ export function getInfoFromHash(): HashInfo {
   return mapKeys(info, (_, key) => toLong[key as keyof HashShort]);
 }
 
-export function getInitialSetting<T = SettingValue | string>(key: SettingKey, defaultValue: T): T {
+export function getInitialSetting<T = SettingValue | string>(key: SettingKey, defaultValue: T | null): T | null {
   const fromHash = getInfoFromHash();
   const fromStorage = readStorage();
 
-  return (fromHash[key as keyof HashInfo] ?? fromStorage[key as keyof StorageInfo] ?? defaultValue) as unknown as T;
+  return (
+    ((fromHash[key as keyof HashInfo] ?? fromStorage[key as keyof StorageInfo] ?? defaultValue) as unknown as T) || null
+  );
 }
