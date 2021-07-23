@@ -1,7 +1,7 @@
 import { Config } from './common';
 import { AddEthereumChainParameter } from './metamask';
 
-export type Network = 'pangolin' | 'crab' | 'darwinia' | 'ethereum' | 'ropsten';
+export type Network = 'pangolin' | 'crab' | 'darwinia' | 'ethereum' | 'ropsten' | 'tron';
 
 export type NetworkType = 'polkadot' | 'ethereum' | 'tron' | 'darwinia';
 
@@ -61,4 +61,4 @@ export type TxStatus =
  */
 export type ConnectStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected';
 
-export type NetworkFilter = (network: Required<NetConfig>, index: number) => boolean;
+export type NetworkFilter = (network: Required<NetConfig>) => boolean;

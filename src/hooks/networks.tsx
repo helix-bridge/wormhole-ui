@@ -21,7 +21,7 @@ export function useNetworks() {
   const getNetworks = useCallback(
     (filters: NetworkFilter[]) => {
       return [...getGlobalFilters(enableTestNetworks), ...filters].reduce(
-        (networks, predicateFn) => networks.filter(predicateFn),
+        (networks, predicateFn) => networks.filter((network) => predicateFn(network)),
         NETWORKS
       );
     },

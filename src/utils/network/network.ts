@@ -1,9 +1,9 @@
 import { ApiPromise } from '@polkadot/api';
 import type ExtType from '@polkadot/extension-inject/types';
 import BN from 'bn.js';
-import { curry, isUndefined } from 'lodash';
+import { curry, curryRight, isUndefined } from 'lodash';
 import Web3 from 'web3';
-import { NETWORK_CONFIG } from '../../config';
+import { NetworkEnum, NETWORK_CONFIG, NETWORK_GRAPH } from '../../config';
 import { NetConfig, Network, NetworkType } from '../../model';
 import ktonABI from './abi/ktonABI.json';
 
@@ -50,6 +50,19 @@ export const isSameNetwork = (net1: NetConfig | undefined, net2: NetConfig | und
   return typeof net1 === typeof net2 && net1?.fullName === net2?.fullName;
 };
 
+export const isInNodeList = (net1: NetConfig | undefined, net2: NetConfig | undefined) => {
+  if (!net1 || !net2) {
+    return true;
+  }
+
+  const vertices = NETWORK_GRAPH.get(NetworkEnum[net1.name]) ?? [];
+  const nets = vertices.map((ver) => ver.network);
+
+  return nets.includes(net2.name);
+};
+
+export const isReachable = curry(isInNodeList); // relation: net1 -> net2 ---- Find the relation by net1
+export const isTraceable = curryRight(isInNodeList); // relation: net1 -> net2 ---- Find the relation by net2
 export const isSameNetworkCurry = curry(isSameNetwork);
 export const isPolkadotNetwork = isSpecifyNetworkType('polkadot');
 export const isEthereumNetwork = isSpecifyNetworkType('ethereum');

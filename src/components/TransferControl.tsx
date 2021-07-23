@@ -5,7 +5,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi, useNetworks } from '../hooks';
 import { NetConfig, TransferValue } from '../model';
-import { HashInfo, patchUrl, truth, isSameNetworkCurry } from '../utils';
+import { HashInfo, patchUrl, truth, isSameNetworkCurry, isReachable, isTraceable } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 import { Destination } from './Destination';
 
@@ -36,8 +36,8 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
           : truth
         : (net: NetConfig) => net.isTest === (isBoolean(from?.isTest) ? from?.isTest : to?.isTest);
 
-    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv]);
-    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv]);
+    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from)]);
+    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to)]);
   }, [value, setFromFilters, setToFilters]);
 
   useEffect(() => {

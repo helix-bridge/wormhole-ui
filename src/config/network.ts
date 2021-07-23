@@ -1,4 +1,4 @@
-import { NetConfig, NetworkConfig } from '../model';
+import { NetConfig, Network, NetworkConfig } from '../model';
 
 export enum NetworkEnum {
   pangolin = 'pangolin',
@@ -6,6 +6,7 @@ export enum NetworkEnum {
   darwinia = 'darwinia',
   ethereum = 'ethereum',
   ropsten = 'ropsten',
+  tron = 'tron',
 }
 
 export const NETWORK_CONFIG: NetworkConfig = {
@@ -140,9 +141,52 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     type: ['ethereum'],
   },
+  tron: {
+    api: {
+      subql: '',
+    },
+    ethereumChain: {
+      chainId: '3',
+      chainName: '',
+      nativeCurrency: {
+        decimals: 18,
+      },
+      rpcUrls: [],
+    },
+    facade: {
+      logo: '',
+      logoWithText: '',
+    },
+    fullName: 'Tron Mainnet',
+    isTest: false,
+    name: 'tron',
+    rpc: '',
+    ss58Prefix: null,
+    token: {
+      native: 'tron',
+    },
+    type: ['tron'],
+  },
 };
 
 export const NETWORKS: Required<NetConfig>[] = Object.values(NETWORK_CONFIG);
+
+interface Vertices {
+  network: Network;
+  status: 'pending' | 'available';
+  tokenBlackList?: string[];
+}
+
+export const NETWORK_GRAPH = new Map<Network, Vertices[]>([
+  [NetworkEnum.crab, [{ network: NetworkEnum.darwinia, status: 'pending' }]],
+  [NetworkEnum.darwinia, [{ network: NetworkEnum.ethereum, status: 'available' }]],
+  [NetworkEnum.ethereum, [{ network: NetworkEnum.darwinia, status: 'available' }]],
+  [NetworkEnum.pangolin, [{ network: NetworkEnum.ropsten, status: 'pending' }]],
+  [NetworkEnum.ropsten, [{ network: NetworkEnum.pangolin, status: 'pending' }]],
+  [NetworkEnum.tron, [{ network: NetworkEnum.darwinia, status: 'pending' }]],
+]);
+
+/* -------------------------------------------------Network Simple-------------------------------------------------------- */
 
 interface NetworkSimpleInfo {
   prefix: number;
