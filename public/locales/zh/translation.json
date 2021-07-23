@@ -150,5 +150,23 @@
     "step_2": "输入接收账号",
     "step_3": "成功",
     "title": "cRING 领取工具"
-  }
+  },
+  "{{enable}} Test Network": "__NOT_TRANSLATED__",
+  "Reset Select": "__NOT_TRANSLATED__",
+  "Select Network": "__NOT_TRANSLATED__",
+  "From": "__NOT_TRANSLATED__",
+  "Network connected": "__NOT_TRANSLATED__",
+  "Network disconnected": "__NOT_TRANSLATED__",
+  "To": "__NOT_TRANSLATED__",
+  "Both send and receive network are all required": "__NOT_TRANSLATED__",
+  "You maybe forgot to select receive or sender network": "__NOT_TRANSLATED__",
+  "Recipient": "__NOT_TRANSLATED__",
+  "Assets": "__NOT_TRANSLATED__",
+  "Amount": "__NOT_TRANSLATED__",
+  "Available balance: {{balance}}": "__NOT_TRANSLATED__",
+  "Connect Wallet": "__NOT_TRANSLATED__",
+  "Confirm to transfer": "__NOT_TRANSLATED__",
+  "Incorrect network": "__NOT_TRANSLATED__",
+  "Network mismatch, you can switch network manually in metamask or do it automatically by clicking the button below": "__NOT_TRANSLATED__",
+  "Switch to {{network}}": "__NOT_TRANSLATED__"
 }

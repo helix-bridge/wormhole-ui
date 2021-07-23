@@ -1,7 +1,6 @@
 import { THEME } from '../config';
-import { Network } from './network';
+import { HashInfo } from '../utils';
 
-export interface StorageInfo {
-  network?: Network;
+export interface StorageInfo extends HashInfo {
   theme?: THEME;
 }

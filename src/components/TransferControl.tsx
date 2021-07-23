@@ -1,11 +1,12 @@
 import { ArrowRightOutlined, DisconnectOutlined, LinkOutlined } from '@ant-design/icons';
 import { Tooltip } from 'antd';
-import { negate } from 'lodash';
-import React, { useCallback, useEffect, useState } from 'react';
+import { isBoolean, negate } from 'lodash';
+import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useApi } from '../hooks';
+import { useApi, useNetworks } from '../hooks';
 import { NetConfig, TransferValue } from '../model';
-import { getFromNetworks, getToNetworks, isSameNetwork } from '../utils';
+import { HashInfo, patchUrl, truth, isSameNetworkCurry } from '../utils';
+import { updateStorage } from '../utils/helper/storage';
 import { Destination } from './Destination';
 
 export interface TransferControlProps {
@@ -14,12 +15,8 @@ export interface TransferControlProps {
 }
 
 export function TransferControl({ value, onChange }: TransferControlProps) {
-  console.info('🚀 ~ file: TransferControl.tsx ~ line 17 ~ TransferControl ~ value', value);
   const { t } = useTranslation();
-  const [fromNetwork, setFromNetwork] = useState<NetConfig | undefined>();
-  const [toNetwork, setToNetwork] = useState<NetConfig | undefined>();
-  const [fromNetworks, setFromNetworks] = useState<NetConfig[]>(getFromNetworks([]));
-  const [toNetworks, setToNetworks] = useState<NetConfig[]>(getToNetworks([]));
+  const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks();
   const { networkStatus } = useApi();
   const triggerChange = useCallback(
     (val: TransferValue) => {
@@ -31,16 +28,25 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
   );
 
   useEffect(() => {
-    const toFilters = fromNetwork ? [negate(isSameNetwork(fromNetwork))] : [];
+    const { from, to } = value || {};
+    const isSameEnv =
+      from?.isTest === to?.isTest
+        ? isBoolean(from?.isTest) && isBoolean(to?.isTest)
+          ? (net: NetConfig) => net.isTest === from?.isTest
+          : truth
+        : (net: NetConfig) => net.isTest === (isBoolean(from?.isTest) ? from?.isTest : to?.isTest);
 
-    setToNetworks(getToNetworks(toFilters));
-  }, [fromNetwork]);
+    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv]);
+    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv]);
+  }, [value, setFromFilters, setToFilters]);
 
   useEffect(() => {
-    const fromFilters = toNetwork ? [negate(isSameNetwork(toNetwork))] : [];
+    const { from, to } = value || {};
+    const info = { from: from?.name ?? '', to: to?.name ?? '' } as HashInfo;
 
-    setFromNetworks(getFromNetworks(fromFilters));
-  }, [toNetwork]);
+    patchUrl(info);
+    updateStorage(info);
+  }, [value]);
 
   return (
     <>
@@ -48,6 +54,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
         <Destination
           networks={fromNetworks}
           title={t('From')}
+          value={value?.from}
           extra={
             networkStatus === 'success' ? (
               <Tooltip title={t('Network connected')}>
@@ -60,8 +67,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
             )
           }
           onChange={(from) => {
-            setFromNetwork(from);
-            triggerChange({ from, to: toNetwork });
+            triggerChange({ from, to: value?.to });
           }}
         />
 
@@ -69,10 +75,10 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
 
         <Destination
           title={t('To')}
+          value={value?.to}
           networks={toNetworks}
           onChange={(to) => {
-            setToNetwork(to);
-            triggerChange({ to, from: fromNetwork });
+            triggerChange({ to, from: value?.from });
           }}
         />
       </div>

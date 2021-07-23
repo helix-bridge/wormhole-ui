@@ -29,7 +29,7 @@ export interface NetConfig {
   api: Api;
   isTest: boolean;
   type: NetworkType[];
-  name?: string;
+  name: Network;
 }
 
 export type NetworkConfig<T = NetConfig> = Config<Network, T>;
@@ -60,3 +60,5 @@ export type TxStatus =
  * pending: initial state, indicate that the connection never launched.
  */
 export type ConnectStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected';
+
+export type NetworkFilter = (network: Required<NetConfig>, index: number) => boolean;

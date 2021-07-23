@@ -2,14 +2,16 @@ import { mapKeys } from 'lodash';
 import { Network, StorageInfo, ValueOf } from '../../model';
 import { readStorage } from './storage';
 
-interface HashInfo {
-  network?: Network;
-  toAccount?: string;
+export interface HashInfo {
+  from?: Network | null;
+  to?: Network | null;
+  destination?: string | null; // to account address;
 }
 
 interface HashShort {
-  n?: Network;
-  t?: string;
+  f?: Network;
+  t?: Network;
+  d?: string;
 }
 
 type SettingKey = keyof StorageInfo | keyof HashInfo;
@@ -22,8 +24,9 @@ export type AdapterMap<T extends object, D extends object> = {
 };
 
 const toShort: AdapterMap<HashInfo, HashShort> = {
-  network: 'n',
-  toAccount: 't',
+  from: 'f',
+  to: 't',
+  destination: 'd',
 };
 
 const toLong: AdapterMap<HashShort, HashInfo> = Object.entries(toShort).reduce(
@@ -45,7 +48,7 @@ function hashToObj(): { [key in keyof HashShort]: string } {
         return { ...acc, [key]: value };
       }, {}) as { [key in keyof HashShort]: string };
   } catch (err) {
-    return { n: '', t: '' };
+    return { f: '', t: '', d: '' };
   }
 }
 
@@ -60,9 +63,7 @@ export function patchUrl(info: HashInfo): void {
       return acc !== '' ? `${acc}&${pair}` : pair;
     }, '');
 
-  if (hash !== '') {
-    location.hash = encodeURIComponent(hash);
-  }
+  location.hash = hash !== '' ? encodeURIComponent(hash) : '';
 }
 
 export function getInfoFromHash(): HashInfo {

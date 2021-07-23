@@ -3,7 +3,7 @@ import type ExtType from '@polkadot/extension-inject/types';
 import BN from 'bn.js';
 import { curry, isUndefined } from 'lodash';
 import Web3 from 'web3';
-import { NETWORKS, NETWORK_CONFIG } from '../../config';
+import { NETWORK_CONFIG } from '../../config';
 import { NetConfig, Network, NetworkType } from '../../model';
 import ktonABI from './abi/ktonABI.json';
 
@@ -42,30 +42,30 @@ function isSpecifyNetworkType(type: NetworkType) {
   };
 }
 
-type NetworkFilter = (network: Required<NetConfig>, index: number) => boolean;
-
-function curryGetNetworks(filters: NetworkFilter[]): (filters: NetworkFilter[]) => Required<NetConfig>[] {
-  return (filterAry = []) => {
-    return [...filters, ...filterAry].reduce((networks, predicateFn) => networks.filter(predicateFn), NETWORKS);
-  };
-}
-
-// By default all networks can be either receivers or senders.
-export const getFromNetworks = curryGetNetworks([]);
-export const getToNetworks = curryGetNetworks([]);
-export const isSameNetwork = curry((net1: NetConfig | undefined, net2: NetConfig | undefined) => {
+export const isSameNetwork = (net1: NetConfig | undefined, net2: NetConfig | undefined) => {
   if ([net1, net2].some(isUndefined)) {
     return false;
   }
 
-  return net1 === net2 || net1?.name === net2?.name;
-});
+  return typeof net1 === typeof net2 && net1?.fullName === net2?.fullName;
+};
 
+export const isSameNetworkCurry = curry(isSameNetwork);
 export const isPolkadotNetwork = isSpecifyNetworkType('polkadot');
 export const isEthereumNetwork = isSpecifyNetworkType('ethereum');
 
 export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
+}
+
+export function getNetworkByName(name: Network | null | undefined) {
+  if (name) {
+    return NETWORK_CONFIG[name];
+  }
+
+  console.warn('🚀 Can not find target network config by name: ', name);
+
+  return null;
 }
 
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {

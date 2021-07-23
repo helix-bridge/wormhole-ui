@@ -1,4 +1,4 @@
-import { NetConfig, Network, NetworkConfig } from '../model';
+import { NetConfig, NetworkConfig } from '../model';
 
 export enum NetworkEnum {
   pangolin = 'pangolin',
@@ -16,7 +16,9 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ethereumChain: {
       chainId: '44',
       chainName: '',
-      nativeCurrency: { decimals: 18 },
+      nativeCurrency: {
+        decimals: 18,
+      },
       rpcUrls: [],
     },
     facade: {
@@ -25,6 +27,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     fullName: 'Crab Mainnet',
     isTest: false,
+    name: 'crab',
     rpc: 'wss://crab-rpc.darwinia.network',
     ss58Prefix: 42,
     token: {
@@ -39,7 +42,9 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ethereumChain: {
       chainId: '',
       chainName: '',
-      nativeCurrency: { decimals: 18 },
+      nativeCurrency: {
+        decimals: 18,
+      },
       rpcUrls: [],
     },
     // TODO
@@ -49,6 +54,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     fullName: 'Darwinia Mainnet',
     isTest: false,
+    name: 'darwinia',
     rpc: 'wss://rpc.darwinia.network',
     ss58Prefix: 18,
     token: {
@@ -63,7 +69,9 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ethereumChain: {
       chainId: '',
       chainName: '',
-      nativeCurrency: { decimals: 18 },
+      nativeCurrency: {
+        decimals: 18,
+      },
       rpcUrls: [],
     },
     facade: {
@@ -72,6 +80,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     fullName: 'Ethereum Mainnet',
     isTest: false,
+    name: 'ethereum',
     rpc: '',
     ss58Prefix: null,
     token: {
@@ -86,7 +95,9 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ethereumChain: {
       chainId: '43',
       chainName: '',
-      nativeCurrency: { decimals: 18 },
+      nativeCurrency: {
+        decimals: 18,
+      },
       rpcUrls: [],
     },
     facade: {
@@ -95,6 +106,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     fullName: 'Pangolin Testnet',
     isTest: true,
+    name: 'pangolin',
     rpc: 'wss://pangolin-rpc.darwinia.network/',
     ss58Prefix: 18,
     token: {
@@ -109,7 +121,9 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ethereumChain: {
       chainId: '3',
       chainName: '',
-      nativeCurrency: { decimals: 18 },
+      nativeCurrency: {
+        decimals: 18,
+      },
       rpcUrls: [],
     },
     facade: {
@@ -117,7 +131,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logoWithText: '',
     },
     fullName: 'Ropsten Testnet',
-    isTest: false,
+    isTest: true,
+    name: 'ropsten',
     rpc: '',
     ss58Prefix: null,
     token: {
@@ -127,10 +142,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
   },
 };
 
-export const NETWORKS: Required<NetConfig>[] = Object.entries(NETWORK_CONFIG).map(([key, value]) => ({
-  ...value,
-  name: key as Network,
-}));
+export const NETWORKS: Required<NetConfig>[] = Object.values(NETWORK_CONFIG);
 
 interface NetworkSimpleInfo {
   prefix: number;

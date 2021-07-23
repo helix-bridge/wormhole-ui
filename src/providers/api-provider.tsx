@@ -3,7 +3,6 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
 import { Button, notification } from 'antd';
-import { omitBy } from 'lodash';
 import { createContext, Dispatch, useCallback, useEffect, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_CONFIG } from '../config';
@@ -14,14 +13,14 @@ import {
   isEthereumNetwork,
   isNetworkConsistent,
   isPolkadotNetwork,
-  patchUrl,
 } from '../utils';
-import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
   accounts: IAccountMeta[] | null;
   network: Network | null;
   networkStatus: ConnectStatus;
+  isDev: boolean;
+  enableTestNetworks: boolean;
 }
 
 interface Token {
@@ -34,23 +33,20 @@ export interface Chain {
   ss58Format: string;
 }
 
-type ActionType = 'switchNetwork' | 'updateNetworkStatus' | 'setAccounts';
+type ActionType = 'switchNetwork' | 'updateNetworkStatus' | 'setAccounts' | 'setEnableTestNetworks';
+
+const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
 export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
 }
 
-const cacheNetwork = (network: Network | null): void => {
-  const info = omitBy({ network }, (value) => !value);
-
-  patchUrl(info);
-  updateStorage(info);
-};
-
 const initialState: StoreState = {
-  network: getInitialSetting<Network>('network', null),
+  network: getInitialSetting<Network>('from', null),
   accounts: null,
   networkStatus: 'pending',
+  isDev,
+  enableTestNetworks: isDev,
 };
 
 // eslint-disable-next-line complexity, @typescript-eslint/no-explicit-any
@@ -68,20 +64,22 @@ function accountReducer(state: StoreState, action: Action<ActionType, any>): Sto
       return { ...state, networkStatus: action.payload };
     }
 
+    case 'setEnableTestNetworks': {
+      return { ...state, enableTestNetworks: action.payload };
+    }
+
     default:
       return state;
   }
 }
 
-export type ApiCtx = {
-  accounts: IAccountMeta[] | null;
+export type ApiCtx = StoreState & {
   api: ApiPromise | null;
   dispatch: Dispatch<Action<ActionType>>;
-  network: Network | null;
-  networkStatus: ConnectStatus;
   setAccounts: (accounts: IAccountMeta[]) => void;
   setNetworkStatus: (status: ConnectStatus) => void;
   switchNetwork: (type: Network) => void;
+  setEnableTestNetworks: (enable: boolean) => void;
   setApi: (api: ApiPromise) => void;
   networkConfig: NetConfig | null;
   chain: Chain;
@@ -95,6 +93,10 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [state, dispatch] = useReducer(accountReducer, initialState);
   const switchNetwork = useCallback((payload: Network) => dispatch({ type: 'switchNetwork', payload }), []);
   const setAccounts = useCallback((payload: IAccountMeta[]) => dispatch({ type: 'setAccounts', payload }), []);
+  const setEnableTestNetworks = useCallback(
+    (payload: boolean) => dispatch({ type: 'setEnableTestNetworks', payload }),
+    []
+  );
   const setNetworkStatus = useCallback(
     (payload: ConnectStatus) => dispatch({ type: 'updateNetworkStatus', payload }),
     []
@@ -190,7 +192,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
 
       setExtensions(exts);
       setApi(nApi);
-      cacheNetwork(state.network);
       setAccounts(!exts.length && !newAccounts.length ? [] : newAccounts);
       setNetworkStatus('success');
     };
@@ -222,8 +223,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
 
           window.ethereum.on('chainChanged', connectToEth);
         }
-
-        patchUrl({ network: state.network });
       } catch (error) {
         setNetworkStatus('fail');
       }
@@ -276,6 +275,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
         switchNetwork,
         setNetworkStatus,
         setAccounts,
+        setEnableTestNetworks,
         setApi,
         api,
         networkConfig: state.network ? NETWORK_CONFIG[state.network] : null,

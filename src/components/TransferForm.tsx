@@ -1,19 +1,31 @@
 import { Button, Form, Input, Select } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { validateMessages } from '../config';
-// import { useApi } from '../hooks';
-import { TransferFormValues, TransferValue } from '../model';
+import { Network, TransferFormValues, TransferValue } from '../model';
+import { getInitialSetting, getNetworkByName } from '../utils';
 import { Balance } from './Balance';
 import { DownIcon } from './icons';
 import { TransferControl } from './TransferControl';
 
 export function TransferForm() {
   const { t, i18n } = useTranslation();
-  // const { accounts } = useApi();
-  // const { account } = useAccount();
   const [form] = useForm<TransferFormValues>();
+  const transfer = useMemo(() => {
+    const come = getInitialSetting('from', '') as Network;
+    const go = getInitialSetting('to', '') as Network;
+    const from = getNetworkByName(come);
+    const to = getNetworkByName(go);
+
+    if (from?.isTest === to?.isTest) {
+      return { from, to };
+    } else if (from) {
+      return { from, to: null };
+    } else {
+      return { from: null, to };
+    }
+  }, []);
 
   return (
     <>
@@ -25,6 +37,7 @@ export function TransferForm() {
           recipient: '',
           assets: 'ring',
           amount: '',
+          transfer,
         }}
         onFinish={(value) => {
           console.info('🚀 ~ file: TransferForm.tsx ~ line 71 ~ TransferForm ~ value', value);
@@ -46,7 +59,7 @@ export function TransferForm() {
           <TransferControl />
         </Form.Item>
 
-        <Form.Item label={t('Destination address')} name="recipient" validateFirst={true} rules={[{ required: true }]}>
+        <Form.Item label={t('Recipient')} name="recipient" validateFirst={true} rules={[{ required: true }]}>
           <Input
             onChange={() => {
               //

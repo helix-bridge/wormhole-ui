@@ -12,7 +12,7 @@ const { Header, Content } = Layout;
 
 function App() {
   const { t } = useTranslation();
-  const { networkStatus } = useApi();
+  const { networkStatus, isDev, enableTestNetworks, setEnableTestNetworks } = useApi();
   const net = 'pangolin';
 
   return (
@@ -30,10 +30,21 @@ function App() {
             <Dropdown
               overlay={
                 <Menu>
-                  <Menu.Item onClick={() => window.open('', '_blank')}>{t('User Guide')} </Menu.Item>
-                  <Menu.Item onClick={() => window.open('', '_blank')}>{t('FAQ')} </Menu.Item>
-                  <Menu.Item onClick={() => window.open('', '_blank')}>{t('Submit Your Token')} </Menu.Item>
-                  <Menu.Item>
+                  <Menu.Item key="guide" onClick={() => window.open('', '_blank')}>
+                    {t('User Guide')}
+                  </Menu.Item>
+                  <Menu.Item key="faq" onClick={() => window.open('', '_blank')}>
+                    {t('FAQ')}
+                  </Menu.Item>
+                  <Menu.Item key="submit" onClick={() => window.open('', '_blank')}>
+                    {t('Submit Your Token')}
+                  </Menu.Item>
+                  {!isDev && (
+                    <Menu.Item key="tests" onClick={() => setEnableTestNetworks(!enableTestNetworks)}>
+                      {t('{{enable}} Test Network', { enable: enableTestNetworks ? 'Disable' : 'Enable' })}
+                    </Menu.Item>
+                  )}
+                  <Menu.Item key="claim">
                     <Button type="primary">{t('Claim Airdrop')}</Button>
                   </Menu.Item>
                 </Menu>

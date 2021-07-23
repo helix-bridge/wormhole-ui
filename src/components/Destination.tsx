@@ -9,12 +9,13 @@ interface DestinationProps {
   networks: NetConfig[];
   title: string;
   onChange?: (net: NetConfig | undefined) => void;
+  value?: NetConfig;
 }
 
-export function Destination({ title, extra, networks, onChange }: DestinationProps) {
+export function Destination({ title, extra, networks, onChange, value }: DestinationProps) {
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState<NetConfig | null>(null);
+  const [selected, setSelected] = useState<NetConfig | null>(value ?? null);
 
   return (
     <div className="sm:col-span-2">
@@ -34,7 +35,7 @@ export function Destination({ title, extra, networks, onChange }: DestinationPro
               }
             }}
           >
-            <Menu.Item key="default">{t('Select Network')}</Menu.Item>
+            <Menu.Item key="default">{t('Reset Select')}</Menu.Item>
             {networks.map((item) => (
               <Menu.Item key={item.fullName} className="flex justify-between">
                 <span className="capitalize mr-2">{item.fullName}</span>
