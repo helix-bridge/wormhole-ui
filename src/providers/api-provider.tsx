@@ -143,11 +143,11 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   );
   const connectToEth = useCallback(
     async (chainId?: string) => {
-      setNetworkStatus('connecting');
-
-      if (!isMetamaskInstalled() || !state.network || !chainId) {
+      if (!isMetamaskInstalled() || !state.network) {
         return;
       }
+
+      setNetworkStatus('connecting');
 
       const isMatch = await isNetworkConsistent(state.network, chainId);
 
@@ -219,6 +219,9 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
         }
 
         if (isEthereumNetwork(state.network)) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          // const { ethereumChain } = getNetworkByName(state.network)!;
+
           connectToEth();
 
           window.ethereum.on('chainChanged', connectToEth);

@@ -4,7 +4,7 @@ import BN from 'bn.js';
 import { curry, curryRight, isUndefined } from 'lodash';
 import Web3 from 'web3';
 import { NetworkEnum, NETWORK_CONFIG, NETWORK_GRAPH, Vertices } from '../../config';
-import { NetConfig, Network, NetworkType } from '../../model';
+import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkType } from '../../model';
 import ktonABI from './abi/ktonABI.json';
 
 export interface Connection {
@@ -101,7 +101,23 @@ export async function isNetworkConsistent(network: Network, id = ''): Promise<bo
  * @description add chain in metamask
  */
 export async function addEthereumChain(network: Network) {
+  const ids = [
+    MetamaskNativeNetworkIds.ethereum,
+    MetamaskNativeNetworkIds.ropsten,
+    MetamaskNativeNetworkIds.rinkeby,
+    MetamaskNativeNetworkIds.goerli,
+    MetamaskNativeNetworkIds.kovan,
+  ];
   const params = NETWORK_CONFIG[network].ethereumChain;
+
+  if (ids.includes(+params.chainId)) {
+    const res = await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: Web3.utils.toHex(+params.chainId) }],
+    });
+
+    return res;
+  }
 
   try {
     const result = await window.ethereum.request({

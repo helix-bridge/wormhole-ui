@@ -36,7 +36,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
         ? isBoolean(from?.isTest) && isBoolean(to?.isTest)
           ? (net: NetConfig) => net.isTest === from?.isTest
           : truth
-        : (net: NetConfig) => net.isTest === (isBoolean(from?.isTest) ? from?.isTest : to?.isTest);
+        : (net: NetConfig) => (isBoolean(from?.isTest) && isBoolean(to?.isTest) ? net.isTest === from?.isTest : true);
 
     setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from)]);
     setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to)]);

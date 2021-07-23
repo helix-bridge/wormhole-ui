@@ -68,7 +68,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       subql: '',
     },
     ethereumChain: {
-      chainId: '',
+      chainId: '1',
       chainName: '',
       nativeCurrency: {
         decimals: 18,
