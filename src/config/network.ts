@@ -171,7 +171,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
 
 export const NETWORKS: Required<NetConfig>[] = Object.values(NETWORK_CONFIG);
 
-interface Vertices {
+export interface Vertices {
   network: Network;
   status: 'pending' | 'available';
   tokenBlackList?: string[];

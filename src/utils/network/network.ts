@@ -3,7 +3,7 @@ import type ExtType from '@polkadot/extension-inject/types';
 import BN from 'bn.js';
 import { curry, curryRight, isUndefined } from 'lodash';
 import Web3 from 'web3';
-import { NetworkEnum, NETWORK_CONFIG, NETWORK_GRAPH } from '../../config';
+import { NetworkEnum, NETWORK_CONFIG, NETWORK_GRAPH, Vertices } from '../../config';
 import { NetConfig, Network, NetworkType } from '../../model';
 import ktonABI from './abi/ktonABI.json';
 
@@ -79,6 +79,14 @@ export function getNetworkByName(name: Network | null | undefined) {
   console.warn('🚀 Can not find target network config by name: ', name);
 
   return null;
+}
+
+export function getVertices(from: Network, to: Network): Vertices | null {
+  if (!from || !to) {
+    return null;
+  }
+
+  return NETWORK_GRAPH.get(from)?.find((item) => item.network === to) ?? null;
 }
 
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {

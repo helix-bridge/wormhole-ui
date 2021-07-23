@@ -1,11 +1,12 @@
-import { ArrowRightOutlined, DisconnectOutlined, LinkOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, DashOutlined, DisconnectOutlined, LinkOutlined } from '@ant-design/icons';
 import { Tooltip } from 'antd';
 import { isBoolean, negate } from 'lodash';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Vertices } from '../config';
 import { useApi, useNetworks } from '../hooks';
-import { NetConfig, TransferValue } from '../model';
-import { HashInfo, patchUrl, truth, isSameNetworkCurry, isReachable, isTraceable } from '../utils';
+import { NetConfig, Network, TransferValue } from '../model';
+import { HashInfo, patchUrl, truth, isSameNetworkCurry, isReachable, isTraceable, getVertices } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 import { Destination } from './Destination';
 
@@ -18,6 +19,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks();
   const { networkStatus } = useApi();
+  const [vertices, setVertices] = useState<Vertices | null>(null);
   const triggerChange = useCallback(
     (val: TransferValue) => {
       if (onChange) {
@@ -39,11 +41,24 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
     setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from)]);
     setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to)]);
   }, [value, setFromFilters, setToFilters]);
+  const Extra = useMemo(() => {
+    return networkStatus === 'success' ? (
+      <Tooltip title={t('Network connected')}>
+        <LinkOutlined style={{ color: '#10b981' }} />
+      </Tooltip>
+    ) : (
+      <Tooltip title={t('Network disconnected')}>
+        <DisconnectOutlined style={{ color: '#ef4444' }} />
+      </Tooltip>
+    );
+  }, [networkStatus, t]);
 
   useEffect(() => {
     const { from, to } = value || {};
     const info = { from: from?.name ?? '', to: to?.name ?? '' } as HashInfo;
+    const ver = getVertices(info.from as Network, info.to as Network);
 
+    setVertices(ver);
     patchUrl(info);
     updateStorage(info);
   }, [value]);
@@ -55,23 +70,19 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
           networks={fromNetworks}
           title={t('From')}
           value={value?.from}
-          extra={
-            networkStatus === 'success' ? (
-              <Tooltip title={t('Network connected')}>
-                <LinkOutlined style={{ color: '#10b981' }} />
-              </Tooltip>
-            ) : (
-              <Tooltip title={t('Network disconnected')}>
-                <DisconnectOutlined style={{ color: '#ef4444' }} />
-              </Tooltip>
-            )
-          }
+          extra={vertices?.status !== 'pending' ? Extra : <></>}
           onChange={(from) => {
             triggerChange({ from, to: value?.to });
           }}
         />
 
-        <ArrowRightOutlined className="mt-6 text-2xl" />
+        {vertices?.status === 'pending' ? (
+          <Tooltip title={t('Coming Soon')}>
+            <DashOutlined className="mt-6 text-2xl" />
+          </Tooltip>
+        ) : (
+          <ArrowRightOutlined className="mt-6 text-2xl" />
+        )}
 
         <Destination
           title={t('To')}
