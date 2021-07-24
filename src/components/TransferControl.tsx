@@ -1,4 +1,4 @@
-import { ArrowRightOutlined, DashOutlined, DisconnectOutlined, LinkOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, DashOutlined, DisconnectOutlined, LinkOutlined, SyncOutlined } from '@ant-design/icons';
 import { Button, Popover, Tooltip } from 'antd';
 import { isBoolean, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -22,6 +22,10 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
   const [vertices, setVertices] = useState<Vertices | null>(null);
   // eslint-disable-next-line complexity
   const Extra = useMemo(() => {
+    if (networkStatus === 'connecting') {
+      return <SyncOutlined spin style={{ color: '#1890ff' }} />;
+    }
+
     const existAndConsistent = value && value.from && value.from.name === network;
 
     return networkStatus === 'success' ? (

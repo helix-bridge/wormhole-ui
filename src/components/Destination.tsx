@@ -19,7 +19,7 @@ export function Destination({
   networks,
   onChange,
   value,
-  defaultLogo = 'image/eth-log.svg',
+  defaultLogo = 'image/eth-logo.svg',
 }: DestinationProps) {
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);

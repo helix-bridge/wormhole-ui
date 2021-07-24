@@ -183,6 +183,11 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       setNetworkStatus('success');
       window.ethereum.removeListener('accountsChanged', metamaskAccountChanged);
       window.ethereum.on('accountsChanged', metamaskAccountChanged);
+      window.ethereum.on('disconnect', () => {
+        if (isEthereumNetwork(state.network)) {
+          setNetworkStatus('disconnected');
+        }
+      });
     },
     [metamaskAccountChanged, notify, setAccounts, setNetworkStatus, state.network]
   );
@@ -213,11 +218,18 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       setAccounts(!exts.length && !newAccounts.length ? [] : newAccounts);
       setNetworkStatus('success');
     };
+    const onDisconnected = () => {
+      if (isPolkadotNetwork(state.network)) {
+        setNetworkStatus('disconnected');
+      }
+    };
 
     nApi.on('ready', onReady);
+    nApi.on('disconnected', onDisconnected);
 
     return () => {
       nApi.off('ready', onReady);
+      nApi.off('disconnected', onDisconnected);
     };
   }, [api?.rpc.system, setAccounts, setNetworkStatus, state.network]);
 
@@ -225,7 +237,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
    * connect to substrate or metamask when account type changed.
    */
   useEffect(() => {
-    // eslint-disable-next-line complexity
     (async () => {
       try {
         if (!state.network) {
@@ -237,9 +248,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
         }
 
         if (isEthereumNetwork(state.network)) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          // const { ethereumChain } = getNetworkByName(state.network)!;
-
           connectToEth();
 
           window.ethereum.on('chainChanged', connectToEth);

@@ -1,5 +1,5 @@
 import { EllipsisOutlined } from '@ant-design/icons';
-import { Affix, Button, Dropdown, Layout, Menu, Spin } from 'antd';
+import { Affix, Button, Dropdown, Layout, Menu } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch } from 'react-router-dom';
 import { Language } from './components/Language';
@@ -12,7 +12,7 @@ const { Header, Content } = Layout;
 
 function App() {
   const { t } = useTranslation();
-  const { networkStatus, isDev, enableTestNetworks, setEnableTestNetworks } = useApi();
+  const { isDev, enableTestNetworks, setEnableTestNetworks } = useApi();
   const net = 'pangolin';
 
   return (
@@ -65,14 +65,12 @@ function App() {
       </Affix>
 
       <Content className="sm:px-16 sm:py-8 px-2 py-1">
-        <Spin spinning={networkStatus === 'connecting'}>
-          <Switch>
-            {routes.map((item, index) => (
-              <Route key={index} {...item}></Route>
-            ))}
-          </Switch>
-          <Language className="fixed bottom-8 right-8" network={net} />
-        </Spin>
+        <Switch>
+          {routes.map((item, index) => (
+            <Route key={index} {...item}></Route>
+          ))}
+        </Switch>
+        <Language className="fixed bottom-8 right-8" network={net} />
       </Content>
     </Layout>
   );
