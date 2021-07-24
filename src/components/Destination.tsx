@@ -10,9 +10,17 @@ interface DestinationProps {
   title: string;
   onChange?: (net: NetConfig | undefined) => void;
   value?: NetConfig;
+  defaultLogo?: string;
 }
 
-export function Destination({ title, extra, networks, onChange, value }: DestinationProps) {
+export function Destination({
+  title,
+  extra,
+  networks,
+  onChange,
+  value,
+  defaultLogo = 'image/eth-log.svg',
+}: DestinationProps) {
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<NetConfig | null>(value ?? null);
@@ -51,11 +59,7 @@ export function Destination({ title, extra, networks, onChange, value }: Destina
           }
         >
           <div className={`rounded-xl flex flex-col gap-4 py-2 flex-1 mr-4 bg-${selected?.name}`}>
-            <img
-              src={selected?.facade.logo || 'image/eth-logo.svg'}
-              className="h-8 sm:h-12 md:16 ml-2 self-start"
-              alt=""
-            />
+            <img src={selected?.facade.logo || defaultLogo} className="h-8 sm:h-12 md:16 ml-2 self-start" alt="" />
             <span className="capitalize mr-0 text-xs dark:text-white px-2 py-0.5">
               {!selected ? t('Select Network') : selected.fullName}
             </span>

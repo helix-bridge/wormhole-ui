@@ -10,6 +10,8 @@ type LoadResult = [string | null, Record<string, string> | boolean];
 const languageCache: Record<string, Record<string, string>> = {};
 const loaders: Record<string, Promise<LoadResult>> = {};
 
+const isCy = process.env.REACT_APP_HOST_TYPE === 'cy';
+
 class Backend {
   type = 'backend';
 
@@ -32,7 +34,7 @@ class Backend {
 
   async createLoader(lng: string): Promise<LoadResult> {
     try {
-      const response = await fetch(`/locales/${lng}/translation.json`, {});
+      const response = await fetch(`/${isCy ? 'public/' : ''}locales/${lng}/translation.json`, {});
 
       if (!response.ok) {
         // eslint-disable-next-line no-magic-numbers

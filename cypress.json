@@ -1,1 +1,16 @@
-{}
+{
+  "baseUrl": "http://localhost:3007",
+  "component": {
+    "componentFolder": "src",
+    "testFiles": "__tests__/**/*.test.{js,ts,jsx,tsx}"
+  },
+  "env": {
+    "product": "",
+    "staging": ""
+  },
+  "folders": {
+    "fileServerFolder": "public"
+  },
+  "ignoreTestFiles": "*/examples/**",
+  "nodeVersion": "system"
+}
