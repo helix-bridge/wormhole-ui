@@ -1,5 +1,5 @@
 import { ArrowRightOutlined, DashOutlined, DisconnectOutlined, LinkOutlined } from '@ant-design/icons';
-import { Tooltip } from 'antd';
+import { Button, Popover, Tooltip } from 'antd';
 import { isBoolean, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,8 +18,47 @@ export interface TransferControlProps {
 export function TransferControl({ value, onChange }: TransferControlProps) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks();
-  const { networkStatus } = useApi();
+  const { networkStatus, network, switchNetwork } = useApi();
   const [vertices, setVertices] = useState<Vertices | null>(null);
+  // eslint-disable-next-line complexity
+  const Extra = useMemo(() => {
+    const existAndConsistent = value && value.from && value.from.name === network;
+
+    return networkStatus === 'success' ? (
+      <Popover
+        content={
+          existAndConsistent ? (
+            t('Network connected')
+          ) : (
+            <div className="max-w-sm flex flex-col">
+              <span>
+                {t(
+                  'The connected network is not the same as the network selected, do you want switch to the {{network}} network?',
+                  { network: value?.from?.name }
+                )}
+              </span>
+              <Button
+                onClick={() => {
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  switchNetwork(value!.from!.name);
+                }}
+                className="self-end mt-2"
+              >
+                {t('Switch')}
+              </Button>
+            </div>
+          )
+        }
+      >
+        <LinkOutlined style={{ color: existAndConsistent ? '#10b981' : '#fbbf24' }} />
+      </Popover>
+    ) : (
+      <Tooltip title={t('Network disconnected')}>
+        <DisconnectOutlined style={{ color: '#ef4444' }} />
+      </Tooltip>
+    );
+  }, [value, network, networkStatus, t, switchNetwork]);
+
   const triggerChange = useCallback(
     (val: TransferValue) => {
       if (onChange) {
@@ -41,17 +80,6 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
     setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from)]);
     setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to)]);
   }, [value, setFromFilters, setToFilters]);
-  const Extra = useMemo(() => {
-    return networkStatus === 'success' ? (
-      <Tooltip title={t('Network connected')}>
-        <LinkOutlined style={{ color: '#10b981' }} />
-      </Tooltip>
-    ) : (
-      <Tooltip title={t('Network disconnected')}>
-        <DisconnectOutlined style={{ color: '#ef4444' }} />
-      </Tooltip>
-    );
-  }, [networkStatus, t]);
 
   useEffect(() => {
     const { from, to } = value || {};

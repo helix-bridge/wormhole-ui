@@ -97,10 +97,7 @@ export async function isNetworkConsistent(network: Network, id = ''): Promise<bo
   return parseInt(NETWORK_CONFIG[network].ethereumChain.chainId, 16).toString() === actualId;
 }
 
-/**
- * @description add chain in metamask
- */
-export async function addEthereumChain(network: Network) {
+export function isNativeMetamaskChain(network: Network): boolean {
   const ids = [
     MetamaskNativeNetworkIds.ethereum,
     MetamaskNativeNetworkIds.ropsten,
@@ -110,14 +107,24 @@ export async function addEthereumChain(network: Network) {
   ];
   const params = NETWORK_CONFIG[network].ethereumChain;
 
-  if (ids.includes(+params.chainId)) {
-    const res = await window.ethereum.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: Web3.utils.toHex(+params.chainId) }],
-    });
+  return ids.includes(+params.chainId);
+}
 
-    return res;
-  }
+export async function switchEthereumChain(network: Network) {
+  const params = NETWORK_CONFIG[network].ethereumChain;
+  const res = await window.ethereum.request({
+    method: 'wallet_switchEthereumChain',
+    params: [{ chainId: Web3.utils.toHex(+params.chainId) }],
+  });
+
+  return res;
+}
+
+/**
+ * @description add chain in metamask
+ */
+export async function addEthereumChain(network: Network) {
+  const params = NETWORK_CONFIG[network].ethereumChain;
 
   try {
     const result = await window.ethereum.request({

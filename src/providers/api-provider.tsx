@@ -2,7 +2,7 @@ import { typesBundle } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
-import { Button, notification } from 'antd';
+import { Button, message, notification } from 'antd';
 import { createContext, Dispatch, useCallback, useEffect, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_CONFIG } from '../config';
@@ -11,8 +11,10 @@ import {
   addEthereumChain,
   getInitialSetting,
   isEthereumNetwork,
+  isNativeMetamaskChain,
   isNetworkConsistent,
   isPolkadotNetwork,
+  switchEthereumChain,
 } from '../utils';
 
 interface StoreState {
@@ -104,37 +106,54 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [api, setApi] = useState<ApiPromise | null>(null);
   const [chain, setChain] = useState<Chain>({ ss58Format: '', tokens: [] });
   const [extensions, setExtensions] = useState<InjectedExtension[] | undefined>(undefined);
-  const notify = useCallback(() => {
-    const key = `key${Date.now()}`;
+  const notify = useCallback(
+    (network: Network) => {
+      const key = `key${Date.now()}`;
+      const promise = new Promise((resolve, reject) => {
+        const fail = (err: Record<string, unknown>) => {
+          message.error(t('Network switch failed, please switch it in the metamask plugin'));
+          setNetworkStatus('fail');
+          reject(err);
+        };
+        notification.error({
+          message: t('Incorrect network'),
+          description: t(
+            'Network mismatch, you can switch network manually in metamask or do it automatically by clicking the button below',
+            { type: network }
+          ),
+          btn: (
+            <Button
+              type="primary"
+              onClick={async () => {
+                try {
+                  const isNative = isNativeMetamaskChain(network);
+                  const action = isNative ? switchEthereumChain : addEthereumChain;
+                  const res = await action(network);
 
-    notification.error({
-      message: t('Incorrect network'),
-      description: t(
-        'Network mismatch, you can switch network manually in metamask or do it automatically by clicking the button below',
-        { type: state.network }
-      ),
-      btn: (
-        <Button
-          type="primary"
-          onClick={() => {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            addEthereumChain(state.network!).then((res) => {
-              if (res === null) {
-                notification.close(key);
-              }
-            });
-          }}
-        >
-          {t('Switch to {{network}}', { network: state.network })}
-        </Button>
-      ),
-      key,
-      onClose: () => notification.close(key),
-      duration: null,
-    });
+                  if (res.result === null) {
+                    notification.close(key);
+                    resolve(res.result as null);
+                  } else {
+                    fail(res.result);
+                  }
+                } catch (err) {
+                  fail(err);
+                }
+              }}
+            >
+              {t('Switch to {{network}}', { network })}
+            </Button>
+          ),
+          key,
+          onClose: () => notification.close(key),
+          duration: null,
+        });
+      });
 
-    setNetworkStatus('fail');
-  }, [setNetworkStatus, state.network, t]);
+      return promise;
+    },
+    [setNetworkStatus, t]
+  );
   const metamaskAccountChanged = useCallback(
     (accounts: string[]) => {
       setAccounts(accounts.map((address) => ({ address, meta: { source: '' } })));
@@ -150,10 +169,9 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       setNetworkStatus('connecting');
 
       const isMatch = await isNetworkConsistent(state.network, chainId);
+      const canRequest = isMatch || !(await notify(state.network));
 
-      if (!isMatch) {
-        notify();
-
+      if (!canRequest) {
         return;
       }
 
