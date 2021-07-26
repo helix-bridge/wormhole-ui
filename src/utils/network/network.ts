@@ -1,7 +1,7 @@
 import { ApiPromise } from '@polkadot/api';
 import type ExtType from '@polkadot/extension-inject/types';
 import BN from 'bn.js';
-import { curry, curryRight, isUndefined } from 'lodash';
+import { curry, curryRight, isNull } from 'lodash';
 import Web3 from 'web3';
 import { NetworkEnum, NETWORK_CONFIG, NETWORK_GRAPH, Vertices } from '../../config';
 import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkType } from '../../model';
@@ -42,15 +42,15 @@ function isSpecifyNetworkType(type: NetworkType) {
   };
 }
 
-export const isSameNetwork = (net1: NetConfig | undefined, net2: NetConfig | undefined) => {
-  if ([net1, net2].some(isUndefined)) {
+export const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) => {
+  if ([net1, net2].some(isNull)) {
     return false;
   }
 
   return typeof net1 === typeof net2 && net1?.fullName === net2?.fullName;
 };
 
-export const isInNodeList = (net1: NetConfig | undefined, net2: NetConfig | undefined) => {
+export const isInNodeList = (net1: NetConfig | null, net2: NetConfig | null) => {
   if (!net1 || !net2) {
     return true;
   }
@@ -90,7 +90,7 @@ export function getVertices(from: Network, to: Network): Vertices | null {
 }
 
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {
-  id = Web3.utils.isHex(id) ? parseInt(id, 16).toString() : id;
+  id = id && Web3.utils.isHex(id) ? parseInt(id, 16).toString() : id;
   // id 1: eth mainnet 3: ropsten 4: rinkeby 5: goerli 42: kovan  43: pangolin 44: crab
   const actualId: string = id ? await Promise.resolve(id) : await window.ethereum.request({ method: 'net_version' });
 

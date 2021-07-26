@@ -2,6 +2,7 @@ import { EllipsisOutlined } from '@ant-design/icons';
 import { Affix, Button, Dropdown, Layout, Menu } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch } from 'react-router-dom';
+import { Connection } from './components/Connection';
 import { Language } from './components/Language';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { THEME } from './config';
@@ -27,6 +28,7 @@ function App() {
           </div>
 
           <div className="flex justify-end items-center flex-1 md:pl-8">
+            <Connection />
             <Dropdown
               overlay={
                 <Menu>

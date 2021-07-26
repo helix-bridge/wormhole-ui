@@ -7,6 +7,7 @@
   "Coming Soon": "Coming Soon",
   "Confirm to transfer": "Confirm to transfer",
   "Connect Wallet": "Connect Wallet",
+  "Connecting node": "Connecting node...",
   "Cross-chain transfer": "Cross-chain transfer",
   "FAQ": "FAQ",
   "From": "From",
@@ -31,6 +32,7 @@
     "Polkadot Extension has no account": "Polkadot Extension has no account",
     "TRON network type does not match": "TRON network type does not match"
   },
+  "crossChainHistory": "You can view your <1>Cross-chain history</1>",
   "crosschain": {
     "About Darwinia": "About Darwinia",
     "Airdrop Is Coming": "Airdrop Is Coming",
@@ -50,7 +52,6 @@
     "Close": "Close",
     "Confirmed！After Darwinia mainnet launched, you will receive this cross-chain transfer.": "Confirmed！After Darwinia mainnet launched, you will receive this cross-chain transfer.",
     "Connected to": "Connected to",
-    "Connecting node": "Connecting node...",
     "Copied": "Copied",
     "Copy signature": "Copy signature",
     "Crab Confirmed": "Darwinia Crab Confirmed",

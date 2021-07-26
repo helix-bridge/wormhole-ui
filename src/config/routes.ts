@@ -1,10 +1,10 @@
 import { RouteProps } from 'react-router-dom';
 import { Home } from '../pages/Home';
+import { HistoryRecords } from '../pages/HistoryRecords';
 
 export enum Path {
   root = '/',
-  wallet = '/wallet',
-  extrinsic = '/extrinsic',
+  history = '/history',
 }
 
 export const routes: RouteProps[] = [
@@ -12,6 +12,11 @@ export const routes: RouteProps[] = [
     exact: true,
     path: Path.root,
     children: Home,
+  },
+  {
+    exact: true,
+    path: Path.history,
+    children: HistoryRecords,
   },
   {
     exact: true,

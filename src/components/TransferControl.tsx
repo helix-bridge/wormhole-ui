@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Vertices } from '../config';
 import { useApi, useNetworks } from '../hooks';
 import { NetConfig, Network, TransferValue } from '../model';
-import { HashInfo, patchUrl, truth, isSameNetworkCurry, isReachable, isTraceable, getVertices } from '../utils';
+import { getVertices, HashInfo, isReachable, isSameNetworkCurry, isTraceable, patchUrl, truth } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 import { Destination } from './Destination';
 
@@ -35,7 +35,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
             t('Network connected')
           ) : (
             <div className="max-w-sm flex flex-col">
-              {value?.from?.name ? (
+              {value?.from?.name && vertices?.status === 'available' ? (
                 <>
                   <span>
                     {t(
@@ -67,7 +67,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
         <DisconnectOutlined style={{ color: '#ef4444' }} />
       </Tooltip>
     );
-  }, [value, network, networkStatus, t, switchNetwork]);
+  }, [networkStatus, value, network, t, vertices?.status, switchNetwork]);
 
   const triggerChange = useCallback(
     (val: TransferValue) => {
@@ -79,7 +79,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
   );
 
   useEffect(() => {
-    const { from, to } = value || {};
+    const { from = null, to = null } = value || {};
     const isSameEnv =
       from?.isTest === to?.isTest
         ? isBoolean(from?.isTest) && isBoolean(to?.isTest)
@@ -108,9 +108,9 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
           networks={fromNetworks}
           title={t('From')}
           value={value?.from}
-          extra={vertices?.status !== 'pending' ? Extra : <></>}
+          extra={Extra}
           onChange={(from) => {
-            triggerChange({ from, to: value?.to });
+            triggerChange({ from, to: value?.to ?? null });
           }}
         />
 
@@ -127,7 +127,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
           value={value?.to}
           networks={toNetworks}
           onChange={(to) => {
-            triggerChange({ to, from: value?.from });
+            triggerChange({ to, from: value?.from ?? null });
           }}
         />
       </div>

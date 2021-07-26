@@ -130,11 +130,11 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
                   const action = isNative ? switchEthereumChain : addEthereumChain;
                   const res = await action(network);
 
-                  if (res.result === null) {
+                  if (res === null) {
                     notification.close(key);
-                    resolve(res.result as null);
+                    resolve(res as null);
                   } else {
-                    fail(res.result);
+                    fail(res);
                   }
                 } catch (err) {
                   fail(err);

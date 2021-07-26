@@ -8,8 +8,8 @@ interface DestinationProps {
   extra?: string | JSX.Element;
   networks: NetConfig[];
   title: string;
-  onChange?: (net: NetConfig | undefined) => void;
-  value?: NetConfig;
+  onChange?: (net: NetConfig | null) => void;
+  value?: NetConfig | null;
   defaultLogo?: string;
 }
 
@@ -34,9 +34,9 @@ export function Destination({
         overlay={
           <Menu
             onClick={({ key }) => {
-              const target = networks.find((net) => net.fullName === key);
+              const target = networks.find((net) => net.fullName === key) ?? null;
 
-              setSelected(target ?? null);
+              setSelected(target);
 
               if (onChange) {
                 onChange(target);

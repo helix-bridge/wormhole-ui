@@ -7,6 +7,7 @@
   "Coming Soon": "敬请期待",
   "Confirm to transfer": "__NOT_TRANSLATED__",
   "Connect Wallet": "__NOT_TRANSLATED__",
+  "Connecting node": "正在连接节点...",
   "Cross-chain transfer": "跨链转账",
   "FAQ": "FAQ",
   "From": "__NOT_TRANSLATED__",
@@ -30,6 +31,7 @@
     "Polkadot Extension has no account": "Polkadot插件内无账号",
     "TRON network type does not match": "波场网络类型不匹配"
   },
+  "crossChainHistory": "点击查看 <1>跨链记录</1>",
   "crosschain": {
     "About Darwinia": "了解 Darwinia",
     "Airdrop Is Coming": "空投来袭",
@@ -49,7 +51,6 @@
     "Close": "关闭",
     "Confirmed！After Darwinia mainnet launched, you will receive this cross-chain transfer.": "交易发送成功！Darwinia 主网上线后，您将收到本次跨链转账。",
     "Connected to": "已连接至",
-    "Connecting node": "正在连接节点...",
     "Copied": "复制成功",
     "Copy signature": "复制签名",
     "Crab Confirmed": "Darwinia Crab网络确认",

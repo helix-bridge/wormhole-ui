@@ -26,7 +26,7 @@ function fallbackCopyTextToClipboard(text: string) {
 export function copyTextToClipboard(text: string) {
   if (!navigator.clipboard) {
     fallbackCopyTextToClipboard(text);
-    return;
+    return Promise.resolve();
   }
 
   return navigator.clipboard.writeText(text);

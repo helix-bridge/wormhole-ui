@@ -8,3 +8,5 @@ coverage
 *.config.js
 
 cypress
+
+**/__tests__/
