@@ -35,21 +35,27 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
             t('Network connected')
           ) : (
             <div className="max-w-sm flex flex-col">
-              <span>
-                {t(
-                  'The connected network is not the same as the network selected, do you want switch to the {{network}} network?',
-                  { network: value?.from?.name }
-                )}
-              </span>
-              <Button
-                onClick={() => {
-                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  switchNetwork(value!.from!.name);
-                }}
-                className="self-end mt-2"
-              >
-                {t('Switch')}
-              </Button>
+              {value?.from?.name ? (
+                <>
+                  <span>
+                    {t(
+                      'The connected network is not the same as the network selected, do you want switch to the {{network}} network?',
+                      { network: value?.from?.name }
+                    )}
+                  </span>
+                  <Button
+                    onClick={() => {
+                      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      switchNetwork(value!.from!.name);
+                    }}
+                    className="self-end mt-2"
+                  >
+                    {t('Switch')}
+                  </Button>
+                </>
+              ) : (
+                <span>{t('The current network is connected to {{network}}', { network })}</span>
+              )}
             </div>
           )
         }
