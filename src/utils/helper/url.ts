@@ -5,13 +5,13 @@ import { readStorage } from './storage';
 export interface HashInfo {
   from?: Network | null;
   to?: Network | null;
-  destination?: string | null; // to account address;
+  recipient?: string | null; // to account address;
 }
 
 interface HashShort {
   f?: Network;
   t?: Network;
-  d?: string;
+  r?: string;
 }
 
 type SettingKey = keyof StorageInfo | keyof HashInfo;
@@ -26,7 +26,7 @@ export type AdapterMap<T extends object, D extends object> = {
 const toShort: AdapterMap<HashInfo, HashShort> = {
   from: 'f',
   to: 't',
-  destination: 'd',
+  recipient: 'r',
 };
 
 const toLong: AdapterMap<HashShort, HashInfo> = Object.entries(toShort).reduce(
@@ -48,7 +48,7 @@ function hashToObj(): { [key in keyof HashShort]: string } {
         return { ...acc, [key]: value };
       }, {}) as { [key in keyof HashShort]: string };
   } catch (err) {
-    return { f: '', t: '', d: '' };
+    return { f: '', t: '', r: '' };
   }
 }
 
@@ -79,4 +79,8 @@ export function getInitialSetting<T = SettingValue | string>(key: SettingKey, de
   return (
     ((fromHash[key as keyof HashInfo] ?? fromStorage[key as keyof StorageInfo] ?? defaultValue) as unknown as T) || null
   );
+}
+
+export function apiUrl(domain: string, path: string): string {
+  return domain + '/api/' + path;
 }

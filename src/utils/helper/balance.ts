@@ -1,6 +1,16 @@
 import BigNumber from 'bignumber.js';
-import { isNull, isNumber, isString, isUndefined } from 'lodash';
 import BN from 'bn.js';
+import { isNull, isNumber, isString, isUndefined } from 'lodash';
+import { Units, unitMap, Unit } from 'web3-utils';
+
+export const ETH_UNITS = unitMap as unknown as Units;
+
+export function getUnit(num: number): Unit {
+  const str = Math.pow(10, num).toString();
+  const [key] = Object.entries(ETH_UNITS).find(([_, value]) => value === str) as [Unit, string];
+
+  return key;
+}
 
 export function accuracyFormat(num: BigNumber.Value, accuracy: number | string) {
   if (accuracy) {
@@ -45,9 +55,10 @@ const toString = (value: string | BN | number): string => {
  * @param balance - balance
  * @returns string type balance
  */
+// eslint-disable-next-line complexity
 export function formatBalance(
   balance: string | BN | number,
-  radix: number,
+  radix: number | keyof Units,
   { withThousandSplit, noDecimal, decimal }: PrettyNumberOptions = {
     withThousandSplit: true,
     noDecimal: true,
@@ -61,6 +72,8 @@ export function formatBalance(
   }
 
   let result = '';
+
+  radix = typeof radix === 'number' ? radix : ETH_UNITS[radix].length;
 
   if (Number.isSafeInteger(Number(origin))) {
     result = (Number(origin) / Math.pow(10, radix)).toString();

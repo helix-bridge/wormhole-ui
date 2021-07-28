@@ -9,10 +9,16 @@ export enum NetworkEnum {
   tron = 'tron',
 }
 
+const EVOLUTION_DOMAIN = {
+  product: 'https://www.evolution.land',
+  dev: 'https://www.evolution.land.l2me.com',
+};
+
 export const NETWORK_CONFIG: NetworkConfig = {
   crab: {
     api: {
       subql: 'https://api.subquery.network/sq/wuminzhe/crab',
+      evolution: EVOLUTION_DOMAIN.product,
     },
     ethereumChain: {
       chainId: '44',
@@ -31,7 +37,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     name: 'crab',
     rpc: 'wss://crab-rpc.darwinia.network',
     ss58Prefix: 42,
-    token: {
+    tokenContract: {
       native: 'CRING',
     },
     type: ['polkadot', 'darwinia'],
@@ -39,6 +45,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
   darwinia: {
     api: {
       subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
+      evolution: EVOLUTION_DOMAIN.product,
     },
     ethereumChain: {
       chainId: '',
@@ -58,7 +65,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     name: 'darwinia',
     rpc: 'wss://rpc.darwinia.network',
     ss58Prefix: 18,
-    token: {
+    tokenContract: {
       native: 'RING',
     },
     type: ['polkadot', 'darwinia'],
@@ -66,6 +73,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
   ethereum: {
     api: {
       subql: '',
+      evolution: EVOLUTION_DOMAIN.product,
     },
     ethereumChain: {
       chainId: '1',
@@ -84,14 +92,19 @@ export const NETWORK_CONFIG: NetworkConfig = {
     name: 'ethereum',
     rpc: '',
     ss58Prefix: null,
-    token: {
+    tokenContract: {
       native: 'eth',
+      ring: '0x9469d013805bffb7d3debe5e7839237e535ec483',
+      kton: '0x9f284e1337a815fe77d2ff4ae46544645b20c5ff',
+      registryEth: '0x6B0940772516B69088904564A56d09CFe6Bb3D85',
+      issuingDarwinia: '0xea7938985898af7fd945b03b7bc2e405e744e913',
     },
     type: ['ethereum'],
   },
   pangolin: {
     api: {
       subql: 'http://t3.hkg.itering.com:3000',
+      evolution: EVOLUTION_DOMAIN.dev,
     },
     ethereumChain: {
       chainId: '43',
@@ -110,7 +123,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     name: 'pangolin',
     rpc: 'wss://pangolin-rpc.darwinia.network/',
     ss58Prefix: 18,
-    token: {
+    tokenContract: {
       native: 'PRING',
     },
     type: ['polkadot', 'darwinia'],
@@ -118,6 +131,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
   ropsten: {
     api: {
       subql: '',
+      evolution: EVOLUTION_DOMAIN.dev,
     },
     ethereumChain: {
       chainId: '3',
@@ -136,14 +150,19 @@ export const NETWORK_CONFIG: NetworkConfig = {
     name: 'ropsten',
     rpc: '',
     ss58Prefix: null,
-    token: {
+    tokenContract: {
       native: 'eth',
+      ring: '0xb52FBE2B925ab79a821b261C82c5Ba0814AAA5e0',
+      kton: '0x1994100c58753793D52c6f457f189aa3ce9cEe94',
+      registryEth: '0x6982702995b053A21389219c1BFc0b188eB5a372',
+      issuingDarwinia: '0x49262B932E439271d05634c32978294C7Ea15d0C',
     },
     type: ['ethereum'],
   },
   tron: {
     api: {
       subql: '',
+      evolution: EVOLUTION_DOMAIN.product,
     },
     ethereumChain: {
       chainId: '3',
@@ -162,7 +181,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     name: 'tron',
     rpc: '',
     ss58Prefix: null,
-    token: {
+    tokenContract: {
       native: 'tron',
     },
     type: ['tron'],
@@ -181,8 +200,8 @@ export const NETWORK_GRAPH = new Map<Network, Vertices[]>([
   [NetworkEnum.crab, [{ network: NetworkEnum.darwinia, status: 'pending' }]],
   [NetworkEnum.darwinia, [{ network: NetworkEnum.ethereum, status: 'available' }]],
   [NetworkEnum.ethereum, [{ network: NetworkEnum.darwinia, status: 'available' }]],
-  [NetworkEnum.pangolin, [{ network: NetworkEnum.ropsten, status: 'pending' }]],
-  [NetworkEnum.ropsten, [{ network: NetworkEnum.pangolin, status: 'pending' }]],
+  [NetworkEnum.pangolin, [{ network: NetworkEnum.ropsten, status: 'available' }]],
+  [NetworkEnum.ropsten, [{ network: NetworkEnum.pangolin, status: 'available' }]],
   [NetworkEnum.tron, [{ network: NetworkEnum.darwinia, status: 'pending' }]],
 ]);
 

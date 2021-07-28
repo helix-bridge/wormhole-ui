@@ -14,7 +14,11 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './commands'
+import './commands';
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
+
+Cypress.on('window:before:load', (window) => {
+  Object.defineProperty(window.navigator, 'language', { value: 'en' });
+});

@@ -15,9 +15,9 @@ interface Facade {
   logoWithText: string;
 }
 
-type TokenRecord = { [key in Token]?: string };
+type TokenContract = { [key in Token]?: string };
 
-type Api = { subql: string; [key: string]: string };
+type Api = { subql: string; evolution: string; [key: string]: string };
 
 export interface NetConfig {
   facade: Facade;
@@ -25,7 +25,7 @@ export interface NetConfig {
   ethereumChain: AddEthereumChainParameter;
   rpc: string;
   ss58Prefix: SS58Prefix;
-  token: TokenRecord;
+  tokenContract: TokenContract & { registryEth?: string; issuingDarwinia?: string };
   api: Api;
   isTest: boolean;
   type: NetworkType[];

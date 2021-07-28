@@ -1,14 +1,12 @@
-import { LockOutlined } from '@ant-design/icons';
-import { Button, ButtonProps, Form, Input, Select } from 'antd';
+import { Button, ButtonProps, Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { validateMessages } from '../config';
+import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi } from '../hooks';
 import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferValue } from '../model';
 import { getInitialSetting, getNetworkByName, getVertices } from '../utils';
-import { Balance } from './Balance';
-import { DownIcon } from './icons';
+import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
 import { TransferControl } from './TransferControl';
 
 const initTransfer: () => TransferValue = () => {
@@ -25,12 +23,13 @@ const initTransfer: () => TransferValue = () => {
     return { from: null, to };
   }
 };
+
 const TRANSFER = initTransfer();
 
 export function TransferForm() {
   const { t, i18n } = useTranslation();
   const [form] = useForm<TransferFormValues>();
-  const { network, networkStatus } = useApi();
+  const { network, networkStatus, accounts } = useApi();
   const [transfer, setTransfer] = useState(TRANSFER);
   const [isFromReady, setIsFromReady] = useState(false);
   const [isToReady, setIsToReady] = useState(false);
@@ -51,22 +50,17 @@ export function TransferForm() {
   return (
     <>
       <Form
-        name="transfer"
+        name={FORM_CONTROL.transfer}
         layout="vertical"
         form={form}
-        initialValues={{
-          recipient: '',
-          assets: 'ring',
-          amount: '',
-          transfer: TRANSFER,
-        }}
+        initialValues={{ transfer: TRANSFER }}
         onFinish={(value) => {
           console.info('🚀 ~ file: TransferForm.tsx ~ line 71 ~ TransferForm ~ value', value);
         }}
         validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
       >
         <Form.Item
-          name="transfer"
+          name={FORM_CONTROL.transfer}
           rules={[
             { required: true, message: t('Both send and receive network are all required') },
             {
@@ -86,84 +80,20 @@ export function TransferForm() {
 
         {isFromReady && isBridgeReady && (
           <>
-            <Form.Item>
-              <Form.Item label={t('Recipient')} name="recipient" validateFirst={true} rules={[{ required: true }]}>
-                <Input
-                  onChange={() => {
-                    //
-                  }}
-                  disabled={!isToReady}
-                  size="large"
-                  suffix={!isToReady && <LockOutlined />}
-                />
-              </Form.Item>
-
-              {!isToReady && (
-                <span className="text-gray-300">{t('You must select the destination network to unlock')}</span>
-              )}
-            </Form.Item>
-
-            <Form.Item label={t('Assets')} name="assets" rules={[{ required: true }]}>
-              <Select
-                onChange={() => {
-                  //
-                }}
-                size="large"
-                suffixIcon={<DownIcon />}
-              >
-                <Select.Option value="ring"> ring </Select.Option>
-                <Select.Option value="kton"> kton </Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              label={t('Amount')}
-              name="amount"
-              rules={[{ required: true }, { pattern: /^[\d,]+(.\d{1,3})?$/ }]}
-            >
-              <Balance
-                placeholder={t('Available balance: {{balance}}', { balance: '99' })}
-                size="large"
-                onChange={() => {
-                  //
-                }}
-              />
-            </Form.Item>
+            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+            <Ethereum2Darwinia form={form} sender={accounts![0].address} lock={!isToReady} />
           </>
         )}
 
         <SubmitButton {...transfer} network={network} networkStatus={networkStatus} isBridgeReady={isBridgeReady} />
       </Form>
-      {/* 
-      <TransferAlertModal
-        cancel={() => {
-          //
-        }}
-        recipient={form.getFieldValue('recipient')}
-        confirm={() => {
-          //
-        }}
-      /> */}
-
-      {/* <TransferConfirmModal /> */}
-
-      {/* <AccountModal
-        // isVisible={}
-        // assets={assets}
-        cancel={() => {
-          //
-        }}
-        confirm={() => {
-          // do nothing
-        }}
-      /> */}
     </>
   );
 }
 
 function FromItemButton({ children, ...others }: ButtonProps) {
   return (
-    <Form.Item className="mt-12">
+    <Form.Item className="mt-8">
       <Button {...others}>{children}</Button>
     </Form.Item>
   );

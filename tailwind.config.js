@@ -25,7 +25,7 @@ module.exports = {
         darwinia: {
           main: '#3a30dd',
         },
-        polkadot: {
+        ropsten: {
           main: '#e6007a',
         },
         kusama: {

@@ -5,15 +5,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Vertices } from '../config';
 import { useApi, useNetworks } from '../hooks';
-import { NetConfig, Network, TransferValue } from '../model';
+import { CustomFormControlProps, NetConfig, Network, TransferValue } from '../model';
 import { getVertices, HashInfo, isReachable, isSameNetworkCurry, isTraceable, patchUrl, truth } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 import { Destination } from './Destination';
 
-export interface TransferControlProps {
-  value?: TransferValue;
-  onChange?: (value: TransferValue) => void;
-}
+export type TransferControlProps = CustomFormControlProps<TransferValue>;
 
 export function TransferControl({ value, onChange }: TransferControlProps) {
   const { t } = useTranslation();

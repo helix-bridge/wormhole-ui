@@ -1,11 +1,9 @@
 import { ApiPromise } from '@polkadot/api';
 import type ExtType from '@polkadot/extension-inject/types';
-import BN from 'bn.js';
 import { curry, curryRight, isNull } from 'lodash';
 import Web3 from 'web3';
 import { NetworkEnum, NETWORK_CONFIG, NETWORK_GRAPH, Vertices } from '../../config';
 import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkType } from '../../model';
-import ktonABI from './abi/ktonABI.json';
 
 export interface Connection {
   accounts: ExtType.InjectedAccountWithMeta[];
@@ -14,16 +12,6 @@ export interface Connection {
 }
 
 export type ConnectStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected';
-
-export type TokenBalance = [string, string];
-
-interface DepositKtonOptions {
-  withdrawAddress: string;
-  erc20Address: string;
-  isManually?: boolean;
-}
-
-// const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
 function isSpecifyNetworkType(type: NetworkType) {
   return (network: Network | null) => {
@@ -136,102 +124,4 @@ export async function addEthereumChain(network: Network) {
   } catch (err) {
     console.warn('%c [ err ]-199', 'font-size:13px; background:pink; color:#bf2c9f;', err);
   }
-}
-
-/* ================================================Unused below=================================================== */
-
-export async function getTokenBalanceDarwinia(api: ApiPromise, account = ''): Promise<TokenBalance> {
-  try {
-    await api?.isReady;
-    // type = 0 query ring balance.  type = 1 query kton balance.
-    /* eslint-disable */
-    const ringUsableBalance = await (api?.rpc as any).balances.usableBalance(0, account);
-    const ktonUsableBalance = await (api?.rpc as any).balances.usableBalance(1, account);
-    /* eslint-enable */
-
-    return [ringUsableBalance.usableBalance.toString(), ktonUsableBalance.usableBalance.toString()];
-  } catch (error) {
-    return ['0', '0'];
-  }
-}
-
-// export function connectFactory(
-//   successFn: (accounts: IAccountMeta[]) => void,
-//   t: TFunction,
-//   indicator?: (status: ConnectStatus) => void
-// ): (network: NetworkType, accountType: AccountType) => Promise<void> {
-//   return async (network: NetworkType, accountType: AccountType) => {
-//     const connect = accountType === 'substrate' ? connectSubstrate : connectEth;
-
-//     indicator('connecting');
-
-//     connect(network)
-//       .then(({ accounts }) => {
-//         successFn(accounts);
-//         indicator('success');
-//       })
-//       .catch((error) => {
-//         message.error(t('Unable to connect to {{type}} network.', { type: network }));
-//         console.error(error.message);
-//         indicator('fail');
-//       });
-//   };
-// }
-
-export async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<TokenBalance> {
-  const web3 = new Web3(window.ethereum);
-  let ring = '0';
-  let kton = '0';
-
-  try {
-    ring = await web3.eth.getBalance(account);
-  } catch (error) {
-    console.error(
-      '%c [ get ring balance in ethereum error ]',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      error.message
-    );
-  }
-
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ktonContract = new web3.eth.Contract(ktonABI as any, ktonAddress, { gas: 55000 });
-
-    kton = await ktonContract.methods.balanceOf(account).call();
-  } catch (error) {
-    console.error(
-      '%c [ get kton balance in ethereum error ]',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      error.message
-    );
-  }
-
-  return [ring, kton];
-}
-
-/**
- * @param account receive account - metamask current active account;
- * @param amount receive amount
- * @returns transaction hash
- */
-export async function depositKton(
-  account: string,
-  amount: BN,
-  { withdrawAddress, erc20Address }: DepositKtonOptions
-): Promise<string> {
-  const web3 = new Web3(window.ethereum || window.web3.currentProvider);
-  const result = web3.eth.abi.encodeParameters(['address', 'uint256'], [erc20Address, amount.toString()]);
-  // eslint-disable-next-line no-magic-numbers
-  const data = '0x3225da29' + result.substr(2);
-  const gas = 100000;
-
-  const txHash = await web3.eth.sendTransaction({
-    from: account,
-    to: withdrawAddress,
-    data,
-    value: '0x00',
-    gas,
-  });
-
-  return txHash.transactionHash;
 }
