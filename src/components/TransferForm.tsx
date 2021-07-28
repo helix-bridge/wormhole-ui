@@ -1,13 +1,16 @@
-import { Button, ButtonProps, Form, Modal } from 'antd';
+import { Button, ButtonProps, Form, Modal, ModalProps } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHistory } from 'react-router-dom';
 import { FORM_CONTROL, validateMessages } from '../config';
+import { Path } from '../config/routes';
 import { useApi, useTx } from '../hooks';
 import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferValue } from '../model';
 import { getInitialSetting, getNetworkByName, getVertices } from '../utils';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
 import { TransferConfirm } from './modal/TransferConfirm';
+import { TransferSuccess } from './modal/TransferSuccess';
 import { TransferControl } from './TransferControl';
 import { TxStatus } from './TxStatus';
 
@@ -41,6 +44,22 @@ export function TransferForm() {
   const [isBridgeReady, setIsBridgeReady] = useState(false);
   const { approve, tx } = useTx();
   const [hasModal, setHasModal] = useState(false);
+  const history = useHistory();
+  const modalConfig: ModalProps = useMemo(
+    () => ({
+      okCancel: true,
+      cancelText: t('Cancel'),
+      okText: t('Confirm'),
+      okButtonProps: { size: 'large' },
+      cancelButtonProps: { size: 'large' },
+      width: 520,
+      centered: true,
+      className: 'confirm-modal',
+      icon: null,
+      afterClose: () => setHasModal(false),
+    }),
+    [t]
+  );
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -53,6 +72,23 @@ export function TransferForm() {
     setIsFromReady(isReady);
     setIsBridgeReady(hasBridge || (!from?.name && !to?.name));
   }, [network, networkStatus, transfer]);
+
+  useEffect(() => {
+    if (!tx || tx.status !== 'finalized') {
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const value = { ...form.getFieldsValue(), sender: accounts![0].address };
+
+    setHasModal(true);
+    confirm({
+      ...modalConfig,
+      content: <TransferSuccess value={value} tx={tx} />,
+      okText: t('Cross-chain history'),
+      onOk: () => history.push(Path.history),
+    });
+  }, [tx, modalConfig, t, form, accounts, history]);
 
   return (
     <>
@@ -69,22 +105,11 @@ export function TransferForm() {
           setHasModal(true);
 
           confirm({
+            ...modalConfig,
             content: <TransferConfirm value={info} />,
             onOk: () => {
               approve(info);
             },
-            afterClose: () => {
-              setHasModal(false);
-            },
-            okCancel: true,
-            cancelText: t('Cancel'),
-            okText: t('Confirm'),
-            okButtonProps: { size: 'large' },
-            cancelButtonProps: { size: 'large' },
-            width: 520,
-            centered: true,
-            className: 'confirm-modal',
-            icon: null,
           });
         }}
         validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
@@ -182,39 +207,23 @@ function SubmitButton({ networkStatus, network, from, to, isBridgeReady }: Submi
     return <FromItemButton disabled>{t('Coming soon')}</FromItemButton>;
   }
 
-  if (networkStatus === 'success' && !!from?.name && from?.name !== network) {
-    return (
-      <FromItemButton
-        onClick={() => {
-          if (from?.name) {
-            switchNetwork(from.name);
-          }
-        }}
-      >
-        {t('Switch to {{network}}', { network: from?.name })}
-      </FromItemButton>
-    );
-  }
-
   if (networkStatus === 'connecting') {
     return <FromItemButton disabled>{t('Connecting node')}</FromItemButton>;
   }
 
   if (networkStatus !== 'success' && !!from?.name) {
-    return (
-      <FromItemButton
-        onClick={() => {
-          switchNetwork(from.name);
-        }}
-      >
-        {t('Connect to {{network}}', { network: from.name })}
-      </FromItemButton>
-    );
+    const text = from?.name !== network ? 'Switch to {{network}}' : 'Connect to {{network}}';
+
+    return <FromItemButton onClick={() => switchNetwork(from.name)}>{t(text, { network: from.name })}</FromItemButton>;
   }
 
   if ((networkStatus === 'success' && !from?.name) || networkStatus === 'pending') {
     return null;
   }
 
-  return <FromItemButton htmlType="submit">{t('Submit')}</FromItemButton>;
+  return (
+    <FromItemButton disabled={!to} htmlType="submit">
+      {t('Submit')}
+    </FromItemButton>
+  );
 }

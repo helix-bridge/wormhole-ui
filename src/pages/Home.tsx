@@ -7,7 +7,10 @@ import { Path } from '../config/routes';
 export function Home() {
   return (
     <>
-      <Card className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto" style={{ maxWidth: 520 }}>
+      <Card
+        className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow"
+        style={{ maxWidth: 520, borderColor: 'transparent' }}
+      >
         <TransferForm></TransferForm>
       </Card>
 

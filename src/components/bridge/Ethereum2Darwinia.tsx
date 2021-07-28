@@ -246,7 +246,7 @@ export function Ethereum2Darwinia({ lock, sender, form }: Ethereum2DarwiniaProps
             >
               <div
                 className={`px-4 border border-l-0 cursor-pointer duration-200 ease-in flex items-center rounded-r-xl self-stretch transition-colors hover:text-${
-                  form.getFieldValue(FORM_CONTROL.transfer).from.name as Network
+                  form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network
                 }-main`}
                 style={{ borderColor: '#434343' }}
                 onClick={() => {
