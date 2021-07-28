@@ -80,7 +80,7 @@ export type ApiCtx = StoreState & {
   dispatch: Dispatch<Action<ActionType>>;
   setAccounts: (accounts: IAccountMeta[]) => void;
   setNetworkStatus: (status: ConnectStatus) => void;
-  switchNetwork: (type: Network) => void;
+  switchNetwork: (type: Network | null) => void;
   setEnableTestNetworks: (enable: boolean) => void;
   setApi: (api: ApiPromise) => void;
   networkConfig: NetConfig | null;
@@ -93,7 +93,7 @@ export const ApiContext = createContext<ApiCtx | null>(null);
 export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const { t } = useTranslation();
   const [state, dispatch] = useReducer(accountReducer, initialState);
-  const switchNetwork = useCallback((payload: Network) => dispatch({ type: 'switchNetwork', payload }), []);
+  const switchNetwork = useCallback((payload: Network | null) => dispatch({ type: 'switchNetwork', payload }), []);
   const setAccounts = useCallback((payload: IAccountMeta[]) => dispatch({ type: 'setAccounts', payload }), []);
   const setEnableTestNetworks = useCallback(
     (payload: boolean) => dispatch({ type: 'setEnableTestNetworks', payload }),
@@ -240,6 +240,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     (async () => {
       try {
         if (!state.network) {
+          setNetworkStatus('pending');
           return;
         }
 

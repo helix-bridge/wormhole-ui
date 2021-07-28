@@ -1,6 +1,6 @@
 import { Button, ButtonProps, Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
@@ -31,7 +31,7 @@ const TRANSFER = initTransfer();
 export function TransferForm() {
   const { t, i18n } = useTranslation();
   const [form] = useForm<TransferFormValues>();
-  const { network, networkStatus, accounts } = useApi();
+  const { network, networkStatus, accounts, switchNetwork } = useApi();
   const [transfer, setTransfer] = useState(TRANSFER);
   const [isFromReady, setIsFromReady] = useState(false);
   const [isToReady, setIsToReady] = useState(false);
@@ -47,7 +47,7 @@ export function TransferForm() {
 
     setIsToReady(!!to);
     setIsFromReady(isReady);
-    setIsBridgeReady(hasBridge || !from?.name || !to?.name);
+    setIsBridgeReady(hasBridge || (!from?.name && !to?.name));
   }, [network, networkStatus, transfer]);
 
   return (
@@ -91,7 +91,27 @@ export function TransferForm() {
         )}
 
         {!tx ? (
-          <SubmitButton {...transfer} network={network} networkStatus={networkStatus} isBridgeReady={isBridgeReady} />
+          <div className={networkStatus === 'success' ? 'grid grid-cols-2 gap-4' : ''}>
+            <SubmitButton {...transfer} network={network} networkStatus={networkStatus} isBridgeReady={isBridgeReady} />
+
+            {networkStatus === 'success' && (
+              <FromItemButton
+                type="default"
+                onClick={() => {
+                  const transferEmpty = { from: null, to: null };
+
+                  setIsBridgeReady(false);
+                  setIsFromReady(false);
+                  setIsToReady(false);
+                  setTransfer(transferEmpty);
+                  form.setFieldsValue({ transfer: transferEmpty });
+                  switchNetwork(null);
+                }}
+              >
+                {t('Disconnect')}
+              </FromItemButton>
+            )}
+          </div>
         ) : (
           <Button type="primary" size="large" className="block mx-auto mt-8 w-full rounded-xl text-white" disabled>
             {t('Transaction {{status}}', { status: tx.status })}
@@ -104,10 +124,17 @@ export function TransferForm() {
   );
 }
 
-function FromItemButton({ children, ...others }: ButtonProps) {
+function FromItemButton({ children, className, ...others }: ButtonProps) {
   return (
     <Form.Item className="mt-8">
-      <Button {...others}>{children}</Button>
+      <Button
+        type="primary"
+        size="large"
+        {...others}
+        className={`block max-auto w-full rounded-xl text-white uppercase ${className} `}
+      >
+        {children}
+      </Button>
     </Form.Item>
   );
 }
@@ -125,27 +152,13 @@ function SubmitButton({ networkStatus, network, from, to, isBridgeReady }: Submi
   const { t } = useTranslation();
   const { switchNetwork } = useApi();
 
-  const buttonProps: ButtonProps = useMemo(
-    () => ({
-      type: 'primary',
-      className: 'block mx-auto w-full rounded-xl text-white',
-      size: 'large',
-    }),
-    []
-  );
-
   if (from?.name && to?.name && !isBridgeReady) {
-    return (
-      <FromItemButton {...buttonProps} disabled>
-        {t('Coming soon')}
-      </FromItemButton>
-    );
+    return <FromItemButton disabled>{t('Coming soon')}</FromItemButton>;
   }
 
   if (networkStatus === 'success' && !!from?.name && from?.name !== network) {
     return (
       <FromItemButton
-        {...buttonProps}
         onClick={() => {
           if (from?.name) {
             switchNetwork(from.name);
@@ -158,17 +171,12 @@ function SubmitButton({ networkStatus, network, from, to, isBridgeReady }: Submi
   }
 
   if (networkStatus === 'connecting') {
-    return (
-      <FromItemButton {...buttonProps} disabled>
-        {t('Connecting node')}
-      </FromItemButton>
-    );
+    return <FromItemButton disabled>{t('Connecting node')}</FromItemButton>;
   }
 
   if (networkStatus !== 'success' && !!from?.name) {
     return (
       <FromItemButton
-        {...buttonProps}
         onClick={() => {
           switchNetwork(from.name);
         }}
@@ -178,13 +186,9 @@ function SubmitButton({ networkStatus, network, from, to, isBridgeReady }: Submi
     );
   }
 
-  if (networkStatus === 'success' && !from?.name) {
+  if ((networkStatus === 'success' && !from?.name) || networkStatus === 'pending') {
     return null;
   }
 
-  return (
-    <FromItemButton {...buttonProps} htmlType="submit">
-      {t('Confirm to transfer')}
-    </FromItemButton>
-  );
+  return <FromItemButton htmlType="submit">{t('Confirm')}</FromItemButton>;
 }

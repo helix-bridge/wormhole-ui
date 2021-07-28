@@ -1,5 +1,5 @@
 import { Dropdown, Menu } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NetConfig } from '../model';
 import { DownIcon } from './icons';
@@ -23,7 +23,7 @@ export function Destination({
 }: DestinationProps) {
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState<NetConfig | null>(value ?? null);
+  // const [selected, setSelected] = useState<NetConfig | null>(value ?? null);
 
   return (
     <div className="sm:col-span-2">
@@ -35,8 +35,6 @@ export function Destination({
           <Menu
             onClick={({ key }) => {
               const target = networks.find((net) => net.fullName === key) ?? null;
-
-              setSelected(target);
 
               if (onChange) {
                 onChange(target);
@@ -58,10 +56,10 @@ export function Destination({
             'flex items-center justify-between text-lg p-2 pr-1 rounded-xl bg-gray-300 dark:bg-gray-800 max-w-full text-white'
           }
         >
-          <div className={`rounded-xl flex flex-col gap-4 py-2 flex-1 mr-4 bg-${selected?.name}`}>
-            <img src={selected?.facade.logo || defaultLogo} className="h-8 sm:h-12 md:16 ml-2 self-start" alt="" />
+          <div className={`rounded-xl flex flex-col gap-4 py-2 flex-1 mr-4 bg-${value?.name}`}>
+            <img src={value?.facade.logo || defaultLogo} className="h-8 sm:h-12 md:16 ml-2 self-start" alt="" />
             <span className="capitalize mr-0 text-xs dark:text-white px-2 py-0.5">
-              {!selected ? t('Select Network') : selected.fullName}
+              {!value ? t('Select Network') : value.fullName}
             </span>
           </div>
 
