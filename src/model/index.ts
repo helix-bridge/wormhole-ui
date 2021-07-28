@@ -3,6 +3,7 @@ export * from './common';
 export * from './evolution';
 export * from './form';
 export * from './metamask';
+export * from './modal';
 export * from './network';
 export * from './storage';
 export * from './transfer';

@@ -1,4 +1,4 @@
-import { Button, ButtonProps, Form } from 'antd';
+import { Button, ButtonProps, Form, Modal } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { useApi, useTx } from '../hooks';
 import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferValue } from '../model';
 import { getInitialSetting, getNetworkByName, getVertices } from '../utils';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
+import { TransferConfirm } from './modal/TransferConfirm';
 import { TransferControl } from './TransferControl';
 import { TxStatus } from './TxStatus';
 
@@ -27,6 +28,8 @@ const initTransfer: () => TransferValue = () => {
 
 const TRANSFER = initTransfer();
 
+const { confirm } = Modal;
+
 // eslint-disable-next-line complexity
 export function TransferForm() {
   const { t, i18n } = useTranslation();
@@ -37,6 +40,7 @@ export function TransferForm() {
   const [isToReady, setIsToReady] = useState(false);
   const [isBridgeReady, setIsBridgeReady] = useState(false);
   const { approve, tx } = useTx();
+  const [hasModal, setHasModal] = useState(false);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -60,9 +64,31 @@ export function TransferForm() {
         onFinish={(value) => {
           console.info('🚀 ~ file: TransferForm.tsx ~ line 71 ~ TransferForm ~ value', value);
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          approve({ ...value, sender: accounts![0].address });
+          const info = { ...value, sender: accounts![0].address };
+
+          setHasModal(true);
+
+          confirm({
+            content: <TransferConfirm value={info} />,
+            onOk: () => {
+              approve(info);
+            },
+            afterClose: () => {
+              setHasModal(false);
+            },
+            okCancel: true,
+            cancelText: t('Cancel'),
+            okText: t('Confirm'),
+            okButtonProps: { size: 'large' },
+            cancelButtonProps: { size: 'large' },
+            width: 520,
+            centered: true,
+            className: 'confirm-modal',
+            icon: null,
+          });
         }}
         validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
+        className={hasModal ? 'filter blur-sm drop-shadow' : ''}
       >
         <Form.Item
           name={FORM_CONTROL.transfer}
@@ -190,5 +216,5 @@ function SubmitButton({ networkStatus, network, from, to, isBridgeReady }: Submi
     return null;
   }
 
-  return <FromItemButton htmlType="submit">{t('Confirm')}</FromItemButton>;
+  return <FromItemButton htmlType="submit">{t('Submit')}</FromItemButton>;
 }
