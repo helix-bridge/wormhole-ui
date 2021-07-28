@@ -17,8 +17,9 @@ export type E2DAsset = 'ring' | 'kton' | 'deposit';
 export interface E2DItems {
   sender: string;
   asset?: E2DAsset;
-  amount?: number | null;
+  amount?: string;
   deposit?: string;
+  recipient?: string;
 }
 
 export type Ethereum2DarwiniaProps = BridgeFormProps & E2DItems;
@@ -148,7 +149,6 @@ export function Ethereum2Darwinia({ lock, sender, form }: Ethereum2DarwiniaProps
         >
           <Input
             onChange={(event) => {
-              console.info('%c [ error ]-127', 'font-size:13px; background:pink; color:#bf2c9f;', event.target.value);
               patchUrl({ recipient: event.target.value });
             }}
             disabled={lock}
@@ -207,6 +207,17 @@ export function Ethereum2Darwinia({ lock, sender, form }: Ethereum2DarwiniaProps
               {
                 validator: async (_, value) => {
                   const val = new BN(Web3.utils.toWei(value));
+                  console.info(
+                    '%c [ val, max, fee, fee < val, val < max -fee ]-210',
+                    'font-size:13px; background:pink; color:#bf2c9f;',
+                    val.toString(),
+                    max?.toString(),
+                    fee?.toString(),
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    fee!.lt(val),
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    val.lt(max!.sub(fee!))
+                  );
 
                   return fee && fee.lt(val) && max && val.lte(max.sub(fee)) ? Promise.resolve() : Promise.reject();
                 },

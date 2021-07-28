@@ -3,11 +3,12 @@ import { useForm } from 'antd/lib/form/Form';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
-import { useApi } from '../hooks';
+import { useApi, useTx } from '../hooks';
 import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferValue } from '../model';
 import { getInitialSetting, getNetworkByName, getVertices } from '../utils';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
 import { TransferControl } from './TransferControl';
+import { TxStatus } from './TxStatus';
 
 const initTransfer: () => TransferValue = () => {
   const come = getInitialSetting('from', '') as Network;
@@ -26,6 +27,7 @@ const initTransfer: () => TransferValue = () => {
 
 const TRANSFER = initTransfer();
 
+// eslint-disable-next-line complexity
 export function TransferForm() {
   const { t, i18n } = useTranslation();
   const [form] = useForm<TransferFormValues>();
@@ -34,6 +36,7 @@ export function TransferForm() {
   const [isFromReady, setIsFromReady] = useState(false);
   const [isToReady, setIsToReady] = useState(false);
   const [isBridgeReady, setIsBridgeReady] = useState(false);
+  const { approve, tx } = useTx();
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -56,6 +59,8 @@ export function TransferForm() {
         initialValues={{ transfer: TRANSFER }}
         onFinish={(value) => {
           console.info('🚀 ~ file: TransferForm.tsx ~ line 71 ~ TransferForm ~ value', value);
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          approve({ ...value, sender: accounts![0].address });
         }}
         validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
       >
@@ -85,8 +90,16 @@ export function TransferForm() {
           </>
         )}
 
-        <SubmitButton {...transfer} network={network} networkStatus={networkStatus} isBridgeReady={isBridgeReady} />
+        {!tx ? (
+          <SubmitButton {...transfer} network={network} networkStatus={networkStatus} isBridgeReady={isBridgeReady} />
+        ) : (
+          <Button type="primary" size="large" className="block mx-auto mt-8 w-full rounded-xl text-white" disabled>
+            {t('Transaction {{status}}', { status: tx.status })}
+          </Button>
+        )}
       </Form>
+
+      <TxStatus tx={tx} />
     </>
   );
 }
