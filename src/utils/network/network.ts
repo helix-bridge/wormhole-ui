@@ -125,3 +125,13 @@ export async function addEthereumChain(network: Network) {
     console.warn('%c [ err ]-199', 'font-size:13px; background:pink; color:#bf2c9f;', err);
   }
 }
+
+export function hasBridge(from: Network, to: Network): boolean {
+  return !!getVertices(from, to);
+}
+
+export function isBridgeAvailable(from: Network, to: Network): boolean {
+  const bridge = getVertices(from, to);
+
+  return !!bridge && bridge.status === 'available';
+}

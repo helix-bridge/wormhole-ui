@@ -7,8 +7,8 @@ import { FORM_CONTROL, validateMessages } from '../config';
 import { Path } from '../config/routes';
 import { useApi, useTx } from '../hooks';
 import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferNetwork } from '../model';
-import { getInitialSetting, getNetworkByName, getVertices } from '../utils';
-import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
+import { getInitialSetting, getNetworkByName, hasBridge, isBridgeAvailable } from '../utils';
+import { Ethereum } from './bridge/Ethereum';
 import { ApproveConfirm } from './modal/ApproveConfirm';
 import { ApproveSuccess } from './modal/ApproveSuccess';
 import { NetworkControl } from './NetworkControl';
@@ -37,11 +37,9 @@ const { confirm } = Modal;
 export function TransferForm() {
   const { t, i18n } = useTranslation();
   const [form] = useForm<TransferFormValues>();
-  const { network, networkStatus, accounts, switchNetwork } = useApi();
+  const { network, networkStatus, switchNetwork } = useApi();
   const [transfer, setTransfer] = useState(TRANSFER);
   const [isFromReady, setIsFromReady] = useState(false);
-  const [isToReady, setIsToReady] = useState(false);
-  const [isBridgeReady, setIsBridgeReady] = useState(false);
   const { approve, tx } = useTx();
   const [hasModal, setHasModal] = useState(false);
   const history = useHistory();
@@ -63,14 +61,10 @@ export function TransferForm() {
 
   // eslint-disable-next-line complexity
   useEffect(() => {
-    const { from, to } = transfer;
+    const { from } = transfer;
     const isReady = !!from && from.name === network && networkStatus === 'success';
-    const vertices = getVertices((from?.name ?? '') as Network, (to?.name ?? '') as Network);
-    const hasBridge = !!vertices && vertices.status === 'available';
 
-    setIsToReady(!!to);
     setIsFromReady(isReady);
-    setIsBridgeReady(hasBridge || (!from?.name && !to?.name));
   }, [network, networkStatus, transfer]);
 
   useEffect(() => {
@@ -79,7 +73,7 @@ export function TransferForm() {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const value = { ...form.getFieldsValue(), sender: accounts![0].address };
+    const value = form.getFieldsValue();
 
     setHasModal(true);
     confirm({
@@ -88,7 +82,7 @@ export function TransferForm() {
       okText: t('Cross-chain history'),
       onOk: () => history.push(Path.history),
     });
-  }, [tx, modalConfig, t, form, accounts, history]);
+  }, [tx, modalConfig, t, form, history]);
 
   return (
     <>
@@ -99,17 +93,13 @@ export function TransferForm() {
         initialValues={{ transfer: TRANSFER }}
         onFinish={(value) => {
           console.info('🚀 ~ file: TransferForm.tsx ~ line 71 ~ TransferForm ~ value', value);
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const info = { ...value, sender: accounts![0].address };
 
           setHasModal(true);
 
           confirm({
             ...modalConfig,
-            content: <ApproveConfirm value={info} />,
-            onOk: () => {
-              approve(info);
-            },
+            content: <ApproveConfirm value={value} />,
+            onOk: () => approve(value),
           });
         }}
         validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
@@ -134,16 +124,16 @@ export function TransferForm() {
           />
         </Form.Item>
 
-        {isFromReady && isBridgeReady && (
+        {isFromReady && (
           <>
             {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-            <Ethereum2Darwinia form={form} sender={accounts![0].address} lock={!isToReady} />
+            <Ethereum form={form} />
           </>
         )}
 
         {!tx ? (
-          <div className={networkStatus === 'success' ? 'grid grid-cols-2 gap-4' : ''}>
-            <SubmitButton {...transfer} network={network} networkStatus={networkStatus} isBridgeReady={isBridgeReady} />
+          <div className={networkStatus === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
+            <SubmitButton {...transfer} network={network} networkStatus={networkStatus} />
 
             {networkStatus === 'success' && (
               <FromItemButton
@@ -151,11 +141,10 @@ export function TransferForm() {
                 onClick={() => {
                   const transferEmpty = { from: null, to: null };
 
-                  setIsBridgeReady(false);
                   setIsFromReady(false);
-                  setIsToReady(false);
                   setTransfer(transferEmpty);
                   form.setFieldsValue({ transfer: transferEmpty });
+                  form.resetFields();
                   switchNetwork(null);
                 }}
               >
@@ -192,29 +181,39 @@ function FromItemButton({ children, className, ...others }: ButtonProps) {
 
 interface SubmitButtonProps {
   networkStatus: ConnectStatus;
-  isBridgeReady: boolean;
   network: Network | null | undefined;
   from: NetConfig | null;
   to: NetConfig | null;
 }
 
 // eslint-disable-next-line complexity
-function SubmitButton({ networkStatus, network, from, to, isBridgeReady }: SubmitButtonProps) {
+function SubmitButton({ networkStatus, network, from, to }: SubmitButtonProps) {
   const { t } = useTranslation();
   const { switchNetwork } = useApi();
+  const errorConnections: ConnectStatus[] = ['pending', 'disconnected', 'fail'];
 
-  if (from?.name && to?.name && !isBridgeReady) {
+  if (from?.name && to?.name && hasBridge(from.name, to.name) && !isBridgeAvailable(from.name, to.name)) {
     return <FromItemButton disabled>{t('Coming soon')}</FromItemButton>;
   }
 
   if (networkStatus === 'connecting') {
-    return <FromItemButton disabled>{t('Connecting node')}</FromItemButton>;
+    return <FromItemButton disabled>{t('Connecting ...')}</FromItemButton>;
   }
 
-  if (networkStatus !== 'success' && !!from?.name) {
-    const text = from?.name !== network ? 'Switch to {{network}}' : 'Connect to {{network}}';
+  if (networkStatus === 'success' && from && from.name !== network) {
+    return (
+      <FromItemButton onClick={() => switchNetwork(from.name)}>
+        {t('Switch to {{network}}', { network: from.name })}
+      </FromItemButton>
+    );
+  }
 
-    return <FromItemButton onClick={() => switchNetwork(from.name)}>{t(text, { network: from.name })}</FromItemButton>;
+  if (errorConnections.includes(networkStatus) && !!from?.name) {
+    return (
+      <FromItemButton onClick={() => switchNetwork(from.name)}>
+        {t('Connect to {{network}}', { network: from.name })}
+      </FromItemButton>
+    );
   }
 
   if ((networkStatus === 'success' && !from?.name) || networkStatus === 'pending') {

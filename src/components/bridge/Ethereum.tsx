@@ -5,14 +5,13 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
-import { BridgeFormProps, E2DAsset, E2D, NetConfig, Network, RequiredPartial } from '../../model';
+import { useApi } from '../../hooks';
+import { BridgeFormProps, E2D, NetConfig, Network, TransferNetwork } from '../../model';
 import { formatBalance, getInfoFromHash, isSameAddress, isValidAddress, patchUrl } from '../../utils';
 import { Balance } from '../Balance';
 import { DepositSelect } from './DepositSelect';
 
-export type E2DKeys = keyof E2D;
-
-export type Ethereum2DarwiniaProps = BridgeFormProps & RequiredPartial<E2D, 'sender'>;
+export type Ethereum2DarwiniaProps = BridgeFormProps & E2D;
 
 enum E2DAssetEnum {
   ring = 'ring',
@@ -79,33 +78,36 @@ async function getFee(config: NetConfig): Promise<BN> {
 }
 
 // eslint-disable-next-line complexity
-export function Ethereum2Darwinia({ lock, sender, form }: Ethereum2DarwiniaProps) {
+export function Ethereum({ form }: Ethereum2DarwiniaProps) {
   const { t } = useTranslation();
   const [max, setMax] = useState<BN | null>(null);
   const [isDeposit, setIsDeposit] = useState(false);
   const [fee, setFee] = useState<BN | null>(null);
+  const [lock, setLock] = useState(false);
+  const { accounts } = useApi();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const { address: account } = accounts![0];
 
   useEffect(() => {
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
     const { recipient } = getInfoFromHash();
 
     form.setFieldsValue({ [FORM_CONTROL.asset]: E2DAssetEnum.ring, [FORM_CONTROL.recipient]: recipient });
-    getRingBalance(sender, netConfig).then((balance) => setMax(balance));
+    getRingBalance(account, netConfig).then((balance) => setMax(balance));
     getFee(netConfig).then((crossFee) => setFee(crossFee));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [account, form]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const asset: E2DAsset = form.getFieldValue(FORM_CONTROL.asset);
+    const { from, to } = form.getFieldValue(FORM_CONTROL.transfer) as TransferNetwork;
+    const needLock = !from || !to;
 
-    setIsDeposit(asset === 'deposit');
-  }, [form]);
+    setLock(needLock);
 
-  useEffect(() => {
-    if (lock) {
+    if (needLock) {
       form.setFieldsValue({ [FORM_CONTROL.recipient]: null });
     }
-  }, [form, lock]);
+  });
 
   return (
     <>
@@ -118,7 +120,7 @@ export function Ethereum2Darwinia({ lock, sender, form }: Ethereum2DarwiniaProps
             { required: true },
             {
               validator(_, value) {
-                return !isSameAddress(sender, value) ? Promise.resolve() : Promise.reject();
+                return !isSameAddress(account, value) ? Promise.resolve() : Promise.reject();
               },
               message: t('The sending address and the receiving address cannot be the same'),
             },
@@ -152,25 +154,19 @@ export function Ethereum2Darwinia({ lock, sender, form }: Ethereum2DarwiniaProps
           size="large"
           onChange={async (value: E2DAssetEnum) => {
             form.setFieldsValue({ amount: null });
-            setMax(Web3.utils.toBN(0));
 
             let balance: null | BN = null;
             const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
 
             if (value === E2DAssetEnum.ring) {
-              balance = await getRingBalance(sender, netConfig);
+              balance = await getRingBalance(account, netConfig);
             }
 
             if (value === E2DAssetEnum.kton) {
-              balance = await getKtonBalance(sender, netConfig);
+              balance = await getKtonBalance(account, netConfig);
             }
 
-            if (value === E2DAssetEnum.deposit) {
-              setIsDeposit(true);
-              return;
-            }
-
-            setIsDeposit(false);
+            setIsDeposit(value === E2DAssetEnum.deposit);
             setMax(balance);
           }}
         >
@@ -182,7 +178,7 @@ export function Ethereum2Darwinia({ lock, sender, form }: Ethereum2DarwiniaProps
 
       {isDeposit ? (
         <Form.Item name={FORM_CONTROL.deposit} label={t('Deposit')} rules={[{ required: true }]}>
-          <DepositSelect address={sender} config={form.getFieldValue(FORM_CONTROL.transfer).from} size="large" />
+          <DepositSelect address={account} config={form.getFieldValue(FORM_CONTROL.transfer).from} size="large" />
         </Form.Item>
       ) : (
         <Form.Item className="mb-0">
@@ -214,7 +210,7 @@ export function Ethereum2Darwinia({ lock, sender, form }: Ethereum2DarwiniaProps
               {
                 validator: async (_, value: string) => {
                   const canIssuing = await hasIssuingAllowance(
-                    sender,
+                    account,
                     Web3.utils.toWei(value),
                     form.getFieldValue(FORM_CONTROL.transfer).from
                   );

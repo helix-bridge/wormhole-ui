@@ -10,5 +10,6 @@ export enum FORM_CONTROL {
   asset = 'asset',
   deposit = 'deposit',
   recipient = 'recipient',
+  sender = 'sender',
   transfer = 'transfer',
 }

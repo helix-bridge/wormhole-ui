@@ -12,7 +12,6 @@ export interface CustomFormControlProps<T = string> {
 
 export interface BridgeFormProps {
   form: FormInstance<TransferFormValues>;
-  lock?: boolean;
 }
 
 /* ---------------------------------------------------Bridge elements--------------------------------------------------- */
