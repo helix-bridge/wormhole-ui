@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
-import { E2DItems } from '../components/bridge/Ethereum2Darwinia';
+import { E2D } from '../model';
 import { abi, LONG_DURATION } from '../config';
-import { NetConfig, NoNullFields, RequiredPick, TransferFormValues, TransferValue, TxStatus } from '../model';
+import { NetConfig, NoNullFields, RequiredPartial, TransferFormValues, TransferNetwork, TxStatus } from '../model';
 
 export interface Tx {
   status: TxStatus;
@@ -26,7 +26,7 @@ export interface Receipt {
 
 type ApproveFn<T> = (value: T, config: NetConfig) => Observable<Tx>;
 
-const approveRingToIssuing: ApproveFn<RequiredPick<E2DItems, 'sender' | 'asset' | 'amount'>> = (
+const approveRingToIssuing: ApproveFn<RequiredPartial<E2D, 'sender' | 'asset' | 'amount'>> = (
   { sender, amount },
   config
 ) => {
@@ -60,10 +60,10 @@ export function useTx() {
   const approve: <T>(value: TransferFormValues<T>) => void = useCallback(
     (value) => {
       const { transfer, ...other } = value;
-      const { from, to } = transfer as NoNullFields<TransferValue>;
+      const { from, to } = transfer as NoNullFields<TransferNetwork>;
 
       if ((from.name === 'ropsten' && to.name === 'pangolin') || (from.name === 'darwinia' && to.name === 'darwinia')) {
-        approveRingToIssuing(other as unknown as Required<E2DItems>, from).subscribe({
+        approveRingToIssuing(other as unknown as Required<E2D>, from).subscribe({
           next: (txt) => setTx(txt),
           error: (txt) => {
             setTx(txt);

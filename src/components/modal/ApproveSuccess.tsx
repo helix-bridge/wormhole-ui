@@ -2,12 +2,20 @@ import { CheckCircleFilled } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
 import { Tx } from '../../hooks';
-import { Network, TransferFormValues } from '../../model';
-import { E2DItems } from '../bridge/Ethereum2Darwinia';
+import { Bridges, Network, TransferAsset, TransferFormValues } from '../../model';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
-export function TransferSuccess<T extends E2DItems>({ tx, value }: { tx: Tx; value: TransferFormValues<T> }) {
+function Detail({ amount, asset }: TransferAsset<string>) {
+  return (
+    <div>
+      <span>{amount}</span>
+      <span className="uppercase ml-4">{asset}</span>
+    </div>
+  );
+}
+
+export function ApproveSuccess({ tx, value }: { tx: Tx; value: TransferFormValues<Bridges> }) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
 
@@ -32,10 +40,8 @@ export function TransferSuccess<T extends E2DItems>({ tx, value }: { tx: Tx; val
       <Des
         title={t('Details')}
         content={
-          <div>
-            <span>{value.amount}</span>
-            <span className="uppercase ml-4">{value.asset}</span>
-          </div>
+          (value.asset && value.amount && <Detail {...value} />) ||
+          (value.assets && value.assets.map((item) => <Detail {...item} key={item.asset} />))
         }
         icon={<CheckCircleFilled className="text-2xl" style={{ color }} />}
       ></Des>

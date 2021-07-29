@@ -5,14 +5,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Vertices } from '../config';
 import { useApi, useNetworks } from '../hooks';
-import { CustomFormControlProps, NetConfig, Network, TransferValue } from '../model';
+import { CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../model';
 import { getVertices, HashInfo, isReachable, isSameNetworkCurry, isTraceable, patchUrl, truth } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 import { Destination } from './Destination';
 
-export type TransferControlProps = CustomFormControlProps<TransferValue>;
+export type NetworkControlProps = CustomFormControlProps<TransferNetwork>;
 
-export function TransferControl({ value, onChange }: TransferControlProps) {
+export function NetworkControl({ value, onChange }: NetworkControlProps) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks();
   const { networkStatus, network, switchNetwork } = useApi();
@@ -67,7 +67,7 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
   }, [networkStatus, value, network, t, vertices?.status, switchNetwork]);
 
   const triggerChange = useCallback(
-    (val: TransferValue) => {
+    (val: TransferNetwork) => {
       if (onChange) {
         onChange(val);
       }
@@ -99,44 +99,33 @@ export function TransferControl({ value, onChange }: TransferControlProps) {
   }, [value]);
 
   return (
-    <>
-      <div className="flex sm:grid sm:grid-cols-5 justify-between items-center">
-        <Destination
-          networks={fromNetworks}
-          title={t('From')}
-          value={value?.from}
-          extra={Extra}
-          onChange={(from) => {
-            triggerChange({ from, to: value?.to ?? null });
-          }}
-        />
-
-        {vertices?.status === 'pending' ? (
-          <Tooltip title={t('Coming Soon')}>
-            <DashOutlined className="mt-6 text-2xl" />
-          </Tooltip>
-        ) : (
-          <ArrowRightOutlined className="mt-6 text-2xl" />
-        )}
-
-        <Destination
-          title={t('To')}
-          value={value?.to}
-          networks={toNetworks}
-          onChange={(to) => {
-            triggerChange({ to, from: value?.from ?? null });
-          }}
-        />
-      </div>
-
-      {/* <SwitchWalletModal
-        cancel={() => setIsWalletSwitcherVisible(false)}
-        confirm={() => {
-          switchAccountType(toOppositeAccountType(accountType));
-          setAccount(null);
+    <div className="flex sm:grid sm:grid-cols-5 justify-between items-center">
+      <Destination
+        networks={fromNetworks}
+        title={t('From')}
+        value={value?.from}
+        extra={Extra}
+        onChange={(from) => {
+          triggerChange({ from, to: value?.to ?? null });
         }}
-        isVisible={isWalletSwitcherVisible}
-      /> */}
-    </>
+      />
+
+      {vertices?.status === 'pending' ? (
+        <Tooltip title={t('Coming Soon')}>
+          <DashOutlined className="mt-6 text-2xl" />
+        </Tooltip>
+      ) : (
+        <ArrowRightOutlined className="mt-6 text-2xl" />
+      )}
+
+      <Destination
+        title={t('To')}
+        value={value?.to}
+        networks={toNetworks}
+        onChange={(to) => {
+          triggerChange({ to, from: value?.from ?? null });
+        }}
+      />
+    </div>
   );
 }

@@ -6,15 +6,15 @@ import { useHistory } from 'react-router-dom';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { Path } from '../config/routes';
 import { useApi, useTx } from '../hooks';
-import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferValue } from '../model';
+import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferNetwork } from '../model';
 import { getInitialSetting, getNetworkByName, getVertices } from '../utils';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
-import { TransferConfirm } from './modal/TransferConfirm';
-import { TransferSuccess } from './modal/TransferSuccess';
-import { TransferControl } from './TransferControl';
+import { ApproveConfirm } from './modal/ApproveConfirm';
+import { ApproveSuccess } from './modal/ApproveSuccess';
+import { NetworkControl } from './NetworkControl';
 import { TxStatus } from './TxStatus';
 
-const initTransfer: () => TransferValue = () => {
+const initTransfer: () => TransferNetwork = () => {
   const come = getInitialSetting('from', '') as Network;
   const go = getInitialSetting('to', '') as Network;
   const from = getNetworkByName(come);
@@ -84,7 +84,7 @@ export function TransferForm() {
     setHasModal(true);
     confirm({
       ...modalConfig,
-      content: <TransferSuccess value={value} tx={tx} />,
+      content: <ApproveSuccess value={value} tx={tx} />,
       okText: t('Cross-chain history'),
       onOk: () => history.push(Path.history),
     });
@@ -106,7 +106,7 @@ export function TransferForm() {
 
           confirm({
             ...modalConfig,
-            content: <TransferConfirm value={info} />,
+            content: <ApproveConfirm value={info} />,
             onOk: () => {
               approve(info);
             },
@@ -120,14 +120,14 @@ export function TransferForm() {
           rules={[
             { required: true, message: t('Both send and receive network are all required') },
             {
-              validator: (_, value: TransferValue) => {
+              validator: (_, value: TransferNetwork) => {
                 return value.from && value.to ? Promise.resolve() : Promise.reject();
               },
               message: t('You maybe forgot to select receive or sender network'),
             },
           ]}
         >
-          <TransferControl
+          <NetworkControl
             onChange={(value) => {
               setTransfer(value);
             }}

@@ -1,10 +1,9 @@
 import { RightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { TransferFormValues } from '../../model/transfer';
-import { E2DItems } from '../bridge/Ethereum2Darwinia';
+import { TransferFormValues, Bridges } from '../../model';
 import { Des } from './Des';
 
-export function TransferConfirm<T extends E2DItems>({ value }: { value: TransferFormValues<T> }) {
+export function ApproveConfirm({ value }: { value: TransferFormValues<Bridges> }) {
   const { t } = useTranslation();
 
   return (
@@ -26,15 +25,29 @@ export function TransferConfirm<T extends E2DItems>({ value }: { value: Transfer
 
       <Des title={t('To')} content={value.recipient}></Des>
 
-      <Des
-        title={t('Amount')}
-        content={
-          <span>
-            {value.amount}
-            <span className="uppercase ml-2">{value.asset}</span>
-          </span>
-        }
-      />
+      {value.amount && value.asset && (
+        <Des
+          title={t('Amount')}
+          content={
+            <span>
+              {value.amount}
+              <span className="uppercase ml-2">{value.asset}</span>
+            </span>
+          }
+        />
+      )}
+
+      {value.assets && (
+        <Des
+          title={t('Amount')}
+          content={value.assets.map((bill) => (
+            <span key={bill.asset}>
+              {bill.amount}
+              <span className="uppercase ml-2">{bill.asset}</span>
+            </span>
+          ))}
+        ></Des>
+      )}
     </>
   );
 }

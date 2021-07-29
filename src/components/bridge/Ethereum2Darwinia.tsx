@@ -5,28 +5,16 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
-import { BridgeFormProps, NetConfig, Network } from '../../model';
+import { BridgeFormProps, E2DAsset, E2D, NetConfig, Network, RequiredPartial } from '../../model';
 import { formatBalance, getInfoFromHash, isSameAddress, isValidAddress, patchUrl } from '../../utils';
 import { Balance } from '../Balance';
 import { DepositSelect } from './DepositSelect';
 
-export type E2DKeys = keyof E2DItems;
+export type E2DKeys = keyof E2D;
 
-export type E2DAsset = 'ring' | 'kton' | 'deposit';
+export type Ethereum2DarwiniaProps = BridgeFormProps & RequiredPartial<E2D, 'sender'>;
 
-export interface E2DItems {
-  sender: string;
-  asset?: E2DAsset;
-  amount?: string;
-  deposit?: string;
-  recipient?: string;
-}
-
-export type Ethereum2DarwiniaProps = BridgeFormProps & E2DItems;
-
-export type TokenBalance = [string, string];
-
-export enum E2DAssetEnum {
+enum E2DAssetEnum {
   ring = 'ring',
   kton = 'kton',
   deposit = 'deposit',
