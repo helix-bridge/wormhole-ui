@@ -34,28 +34,6 @@ export interface NetConfig {
 
 export type NetworkConfig<T = NetConfig> = Config<Network, T>;
 
-export type TxStatus =
-  | 'future'
-  | 'ready'
-  | 'finalized'
-  | 'finalitytimeout'
-  | 'usurped'
-  | 'dropped'
-  | 'inblock'
-  | 'invalid'
-  | 'broadcast'
-  | 'cancelled'
-  | 'completed'
-  | 'error'
-  | 'incomplete'
-  | 'queued'
-  | 'qr'
-  | 'retracted'
-  | 'sending'
-  | 'signing'
-  | 'sent'
-  | 'blocked';
-
 /**
  * pending: initial state, indicate that the connection never launched.
  */

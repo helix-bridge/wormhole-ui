@@ -1,9 +1,10 @@
 import { FormInstance } from 'antd';
 import { NetConfig, Token } from './network';
+import { DeepRequired } from './util';
 
 /* ---------------------------------------------------Components props--------------------------------------------------- */
 
-export type TransferFormValues<T = Record<string, unknown>> = { transfer: TransferNetwork } & T;
+export type TransferFormValues<T = Record<string, unknown>, U = TransferNetwork> = { transfer: U } & T;
 
 export interface CustomFormControlProps<T = string> {
   value?: T;
@@ -21,6 +22,7 @@ export interface TransferNetwork {
   to: NetConfig | null;
 }
 
+export type NoNullTransferNetwork = DeepRequired<TransferNetwork, ['from', 'to']>;
 interface TransferParty {
   sender?: string;
   recipient?: string;

@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { TxProvider } from './providers';
 import App from './App';
 import './index.scss';
 import { ApiProvider, GqlProvider } from './providers';
@@ -13,9 +14,11 @@ ReactDOM.render(
     <Router>
       <ApiProvider>
         <AccountProvider>
-          <GqlProvider>
-            <App />
-          </GqlProvider>
+          <TxProvider>
+            <GqlProvider>
+              <App />
+            </GqlProvider>
+          </TxProvider>
         </AccountProvider>
       </ApiProvider>
     </Router>

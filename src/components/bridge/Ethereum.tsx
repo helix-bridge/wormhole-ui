@@ -1,14 +1,40 @@
 import { LockOutlined } from '@ant-design/icons';
-import { Form, Input, Select } from 'antd';
+import { Button, Form, Input, Select } from 'antd';
 import BN from 'bn.js';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHistory } from 'react-router-dom';
+import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
-import { useApi } from '../../hooks';
-import { BridgeFormProps, E2D, NetConfig, Network, TransferNetwork } from '../../model';
-import { formatBalance, getInfoFromHash, isSameAddress, isValidAddress, patchUrl } from '../../utils';
+import { Path } from '../../config/routes';
+import { useApi, useTx } from '../../hooks';
+import {
+  BridgeFormProps,
+  E2D,
+  NetConfig,
+  Network,
+  NoNullTransferNetwork,
+  RequiredPartial,
+  TransferFormValues,
+  TransferNetwork,
+  Tx,
+} from '../../model';
+import {
+  AfterTxCreator,
+  applyModal,
+  applyModalObs,
+  approveRingToIssuing,
+  createTxObs,
+  formatBalance,
+  getInfoFromHash,
+  isSameAddress,
+  isValidAddress,
+  patchUrl,
+} from '../../utils';
 import { Balance } from '../Balance';
+import { ApproveConfirm } from '../modal/ApproveConfirm';
+import { ApproveSuccess } from '../modal/ApproveSuccess';
 import { DepositSelect } from './DepositSelect';
 
 export type Ethereum2DarwiniaProps = BridgeFormProps & E2D;
@@ -20,6 +46,8 @@ enum E2DAssetEnum {
 }
 
 const BALANCE_FORMATTER = { noDecimal: false, decimal: 3, withThousandSplit: true };
+
+/* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
 async function getRingBalance(account: string, config: NetConfig): Promise<BN | null> {
   const web3 = new Web3(window.ethereum);
@@ -59,12 +87,12 @@ async function getKtonBalance(account: string, config: NetConfig): Promise<BN | 
   return null;
 }
 
-async function hasIssuingAllowance(from: string, amount: string | number, config: NetConfig): Promise<boolean> {
+async function getIssuingAllowance(from: string, config: NetConfig): Promise<BN> {
   const web3js = new Web3(window.ethereum || window.web3.currentProvider);
   const erc20Contract = new web3js.eth.Contract(abi.tokenABI, config.tokenContract.ring);
   const allowanceAmount = await erc20Contract.methods.allowance(from, config.tokenContract.issuingDarwinia).call();
 
-  return !Web3.utils.toBN(allowanceAmount).lt(Web3.utils.toBN(amount || '10000000000000000000000000'));
+  return Web3.utils.toBN(allowanceAmount || 0);
 }
 
 async function getFee(config: NetConfig): Promise<BN> {
@@ -77,16 +105,54 @@ async function getFee(config: NetConfig): Promise<BN> {
   return web3js.utils.toBN(fee || 0);
 }
 
+/* ----------------------------------------------Tx section-------------------------------------------------- */
+
+type ApproveValue = TransferFormValues<RequiredPartial<E2D, 'sender'>, NoNullTransferNetwork>;
+
+function createApproveRingTx(value: ApproveValue, after: AfterTxCreator): Observable<Tx> {
+  const beforeTx = applyModalObs({
+    content: <ApproveConfirm value={value} />,
+  });
+  const txObs = approveRingToIssuing(value);
+
+  return createTxObs(beforeTx, txObs, after);
+}
+
 // eslint-disable-next-line complexity
 export function Ethereum({ form }: Ethereum2DarwiniaProps) {
   const { t } = useTranslation();
+  const [allowance, setAllowance] = useState(new BN(0));
   const [max, setMax] = useState<BN | null>(null);
   const [isDeposit, setIsDeposit] = useState(false);
   const [fee, setFee] = useState<BN | null>(null);
   const [lock, setLock] = useState(false);
   const { accounts } = useApi();
+  const { observer } = useTx();
+  const history = useHistory();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { address: account } = accounts![0];
+  const afterApprove = useCallback(
+    (value: ApproveValue) => (tx: Tx) => () => {
+      const { destroy } = applyModal({
+        content: <ApproveSuccess tx={tx} value={value} />,
+        okText: t('Cross-chain history'),
+        okButtonProps: {
+          size: 'large',
+          onClick: () => {
+            destroy();
+            history.push(Path.history);
+          },
+        },
+        onCancel() {
+          getIssuingAllowance(account, value.transfer.from).then((num) => {
+            setAllowance(num);
+            form.validateFields([FORM_CONTROL.amount]);
+          });
+        },
+      });
+    },
+    [account, form, history, t]
+  );
 
   useEffect(() => {
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
@@ -95,6 +161,7 @@ export function Ethereum({ form }: Ethereum2DarwiniaProps) {
     form.setFieldsValue({ [FORM_CONTROL.asset]: E2DAssetEnum.ring, [FORM_CONTROL.recipient]: recipient });
     getRingBalance(account, netConfig).then((balance) => setMax(balance));
     getFee(netConfig).then((crossFee) => setFee(crossFee));
+    getIssuingAllowance(account, netConfig).then((num) => setAllowance(num));
   }, [account, form]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -208,16 +275,28 @@ export function Ethereum({ form }: Ethereum2DarwiniaProps) {
                 message: t('Insufficient balance'),
               },
               {
-                validator: async (_, value: string) => {
-                  const canIssuing = await hasIssuingAllowance(
-                    account,
-                    Web3.utils.toWei(value),
-                    form.getFieldValue(FORM_CONTROL.transfer).from
-                  );
+                validator: (_, value: string) =>
+                  allowance.gte(new BN(Web3.utils.toWei(value))) ? Promise.resolve() : Promise.reject(),
+                message: (
+                  <div className="my-2">
+                    <span className="mr-4">
+                      {t('Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount')}
+                    </span>
+                    <Button
+                      onClick={() => {
+                        const value = {
+                          sender: account,
+                          transfer: form.getFieldValue(FORM_CONTROL.transfer),
+                        };
 
-                  return canIssuing ? Promise.resolve() : Promise.reject();
-                },
-                message: t('Insufficient transfer authority'),
+                        createApproveRingTx(value, afterApprove(value)).subscribe(observer);
+                      }}
+                      size="small"
+                    >
+                      {t('Approve')}
+                    </Button>
+                  </div>
+                ),
               },
             ]}
           >
@@ -226,7 +305,7 @@ export function Ethereum({ form }: Ethereum2DarwiniaProps) {
               placeholder={t('Available balance {{balance}}', {
                 balance: max === null ? '-' : formatBalance(max, 'ether', BALANCE_FORMATTER),
               })}
-              className="flex-1 "
+              className="flex-1"
             >
               <div
                 className={`px-4 border border-l-0 cursor-pointer duration-200 ease-in flex items-center rounded-r-xl self-stretch transition-colors hover:text-${
@@ -244,7 +323,7 @@ export function Ethereum({ form }: Ethereum2DarwiniaProps) {
             </Balance>
           </Form.Item>
 
-          <p className={fee && max && fee.lt(max) ? 'text-green-400' : 'text-red-400'}>
+          <p className={fee && max && fee.lt(max) ? 'text-green-400' : 'text-red-400 animate-pulse'}>
             {t(`Cross-chain transfer fee. {{fee}} RING. (Account Balance. {{ring}} RING)`, {
               fee: formatBalance(fee ?? '', 'ether'),
               ring: formatBalance(max ?? '', 'ether', BALANCE_FORMATTER),

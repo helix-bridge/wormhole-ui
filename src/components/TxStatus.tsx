@@ -2,7 +2,7 @@ import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, SyncOutli
 import { Alert, AlertProps } from 'antd';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Tx } from '../hooks';
+import { Tx } from '../model';
 
 interface TxStatusProps {
   tx: Tx | null;
@@ -15,11 +15,7 @@ const getAlertProps = (tx: Tx): AlertProps => {
   }
 
   if (tx.status === 'queued') {
-    return { type: 'info', message: 'Sending', icon: <SyncOutlined spin /> };
-  }
-
-  if (tx.status === 'completed') {
-    return { type: 'info', message: 'Transaction complete, wait for receipt {{hash}}', icon: <CheckCircleOutlined /> };
+    return { type: 'info', message: 'Queue, waiting to processed', icon: <SyncOutlined spin /> };
   }
 
   if (tx.status === 'finalized') {
@@ -53,6 +49,7 @@ export function TxStatus({ tx }: TxStatusProps) {
       icon={icon}
       type={type}
       showIcon
+      closable={type === 'success'}
     />
   );
 }
