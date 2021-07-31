@@ -1,11 +1,11 @@
 import { CheckCircleFilled } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
-import { Bridges, Network, TransferFormValues, Tx } from '../../model';
+import { Network, TxSuccessComponentProps } from '../../model';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
-export function ApproveSuccess({ value, tx }: { value: TransferFormValues<Bridges>; tx: Tx }) {
+export function ApproveSuccess({ value, tx }: TxSuccessComponentProps) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
 

@@ -13,6 +13,7 @@ export interface CustomFormControlProps<T = string> {
 
 export interface BridgeFormProps {
   form: FormInstance<TransferFormValues>;
+  setSubmit: React.Dispatch<React.SetStateAction<(value: TransferFormValues) => void>>;
 }
 
 /* ---------------------------------------------------Bridge elements--------------------------------------------------- */
@@ -23,6 +24,7 @@ export interface TransferNetwork {
 }
 
 export type NoNullTransferNetwork = DeepRequired<TransferNetwork, ['from', 'to']>;
+
 interface TransferParty {
   sender?: string;
   recipient?: string;

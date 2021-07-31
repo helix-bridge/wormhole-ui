@@ -25,7 +25,7 @@ export interface NetConfig {
   ethereumChain: AddEthereumChainParameter;
   rpc: string;
   ss58Prefix: SS58Prefix;
-  tokenContract: TokenContract & { registryEth?: string; issuingDarwinia?: string };
+  tokenContract: TokenContract & { registryEth?: string; issuingDarwinia?: string; bankDarwinia?: string };
   api: Api;
   isTest: boolean;
   type: NetworkType[];

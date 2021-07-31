@@ -1,9 +1,9 @@
 import { RightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { TransferFormValues, Bridges } from '../../model';
+import { TxConfirmComponentProps } from '../../model';
 import { Des } from './Des';
 
-export function TransferConfirm({ value }: { value: TransferFormValues<Bridges> }) {
+export function TransferConfirm({ value }: TxConfirmComponentProps) {
   const { t } = useTranslation();
 
   return (

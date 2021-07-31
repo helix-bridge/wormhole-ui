@@ -1,14 +1,12 @@
 import { LockOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Select } from 'antd';
 import BN from 'bn.js';
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useHistory } from 'react-router-dom';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
-import { Path } from '../../config/routes';
-import { useApi, useTx } from '../../hooks';
+import { useAfterSuccess, useApi, useTx } from '../../hooks';
 import {
   BridgeFormProps,
   E2D,
@@ -22,7 +20,6 @@ import {
 } from '../../model';
 import {
   AfterTxCreator,
-  applyModal,
   applyModalObs,
   approveRingToIssuing,
   createTxObs,
@@ -31,10 +28,14 @@ import {
   isSameAddress,
   isValidAddress,
   patchUrl,
+  RedeemEth,
+  redeemToken,
 } from '../../utils';
 import { Balance } from '../Balance';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
 import { ApproveSuccess } from '../modal/ApproveSuccess';
+import { TransferConfirm } from '../modal/TransferConfirm';
+import { TransferSuccess } from '../modal/TransferSuccess';
 import { DepositSelect } from './DepositSelect';
 
 export type Ethereum2DarwiniaProps = BridgeFormProps & E2D;
@@ -118,8 +119,17 @@ function createApproveRingTx(value: ApproveValue, after: AfterTxCreator): Observ
   return createTxObs(beforeTx, txObs, after);
 }
 
+function createCrossRingTx(value: RedeemEth, after: AfterTxCreator): Observable<Tx> {
+  const beforeTx = applyModalObs({
+    content: <TransferConfirm value={value} />,
+  });
+  const txObs = redeemToken(value);
+
+  return createTxObs(beforeTx, txObs, after);
+}
+
 // eslint-disable-next-line complexity
-export function Ethereum({ form }: Ethereum2DarwiniaProps) {
+export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(new BN(0));
   const [max, setMax] = useState<BN | null>(null);
@@ -128,37 +138,27 @@ export function Ethereum({ form }: Ethereum2DarwiniaProps) {
   const [lock, setLock] = useState(false);
   const { accounts } = useApi();
   const { observer } = useTx();
-  const history = useHistory();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { address: account } = accounts![0];
-  const afterApprove = useCallback(
-    (value: ApproveValue) => (tx: Tx) => () => {
-      const { destroy } = applyModal({
-        content: <ApproveSuccess tx={tx} value={value} />,
-        okText: t('Cross-chain history'),
-        okButtonProps: {
-          size: 'large',
-          onClick: () => {
-            destroy();
-            history.push(Path.history);
-          },
-        },
-        onCancel() {
-          getIssuingAllowance(account, value.transfer.from).then((num) => {
-            setAllowance(num);
-            form.validateFields([FORM_CONTROL.amount]);
-          });
-        },
-      });
-    },
-    [account, form, history, t]
+  const { afterTx } = useAfterSuccess();
+  const onDisappear = useCallback(
+    (value: RedeemEth | ApproveValue) =>
+      getIssuingAllowance(account, value.transfer.from).then((num) => {
+        setAllowance(num);
+        form.validateFields([FORM_CONTROL.amount]);
+      }),
+    [account, form]
   );
 
   useEffect(() => {
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
     const { recipient } = getInfoFromHash();
 
-    form.setFieldsValue({ [FORM_CONTROL.asset]: E2DAssetEnum.ring, [FORM_CONTROL.recipient]: recipient });
+    form.setFieldsValue({
+      [FORM_CONTROL.asset]: E2DAssetEnum.ring,
+      [FORM_CONTROL.recipient]: recipient,
+      [FORM_CONTROL.sender]: account,
+    });
     getRingBalance(account, netConfig).then((balance) => setMax(balance));
     getFee(netConfig).then((crossFee) => setFee(crossFee));
     getIssuingAllowance(account, netConfig).then((num) => setAllowance(num));
@@ -176,8 +176,16 @@ export function Ethereum({ form }: Ethereum2DarwiniaProps) {
     }
   });
 
+  useEffect(() => {
+    setSubmit(() => (value: RedeemEth) => createCrossRingTx(value, afterTx(TransferSuccess, { onDisappear })(value)));
+  }, [afterTx, onDisappear, setSubmit]);
+
   return (
     <>
+      <Form.Item name={FORM_CONTROL.sender} className="hidden" rules={[{ required: true }]}>
+        <Input disabled value={account} />
+      </Form.Item>
+
       <Form.Item className="mb-0">
         <Form.Item
           label={t('Recipient')}
@@ -289,7 +297,7 @@ export function Ethereum({ form }: Ethereum2DarwiniaProps) {
                           transfer: form.getFieldValue(FORM_CONTROL.transfer),
                         };
 
-                        createApproveRingTx(value, afterApprove(value)).subscribe(observer);
+                        createApproveRingTx(value, afterTx(ApproveSuccess, { onDisappear })(value)).subscribe(observer);
                       }}
                       size="small"
                     >

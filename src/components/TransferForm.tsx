@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
 import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferNetwork, Tx } from '../model';
-import { getInitialSetting, getNetworkByName, hasBridge, isBridgeAvailable } from '../utils';
+import { empty, getInitialSetting, getNetworkByName, hasBridge, isBridgeAvailable } from '../utils';
 import { Ethereum } from './bridge/Ethereum';
 import { NetworkControl } from './NetworkControl';
 
@@ -33,8 +33,8 @@ export function TransferForm() {
   const { network, networkStatus, switchNetwork } = useApi();
   const [transfer, setTransfer] = useState(TRANSFER);
   const [isFromReady, setIsFromReady] = useState(false);
+  const [submitFn, setSubmit] = useState<(value: TransferFormValues) => void>(empty);
   const { tx } = useTx();
-  const [hasModal, setHasModal] = useState(false);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -52,12 +52,10 @@ export function TransferForm() {
         form={form}
         initialValues={{ transfer: TRANSFER }}
         onFinish={(value) => {
-          console.info('🚀 ~ file: TransferForm.tsx ~ line 71 ~ TransferForm ~ value', value);
-
-          setHasModal(true);
+          submitFn(value);
         }}
         validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
-        className={hasModal ? 'filter blur-sm drop-shadow' : ''}
+        className={tx ? 'filter blur-sm drop-shadow' : ''}
       >
         <Form.Item
           name={FORM_CONTROL.transfer}
@@ -81,7 +79,7 @@ export function TransferForm() {
         {isFromReady && (
           <>
             {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-            <Ethereum form={form} />
+            <Ethereum form={form} setSubmit={setSubmit} />
           </>
         )}
 
