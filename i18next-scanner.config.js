@@ -11,7 +11,7 @@ module.exports = {
   output: './public/',
   options: {
     debug: false,
-    removeUnusedKeys: false,
+    removeUnusedKeys: true,
     browserLanguageDetection: true,
     func: {
       list: ['i18next.t', 'i18n.t', 't'],

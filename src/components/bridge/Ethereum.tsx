@@ -320,7 +320,7 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
           <Select.Option value={E2DAssetEnum.ring}>RING</Select.Option>
           <Select.Option value={E2DAssetEnum.kton}>KTON</Select.Option>
           <Select.Option value={E2DAssetEnum.deposit} className="uppercase">
-            {t('deposit')}
+            {t('Deposit')}
           </Select.Option>
         </Select>
       </Form.Item>
@@ -416,7 +416,7 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
             {t(`Cross-chain transfer fee. {{fee}} RING. (Account Balance. {{balance}} {{token}})`, {
               fee: formatBalance(fee ?? '', 'ether'),
               balance: formatBalance(max ?? '', 'ether', BALANCE_FORMATTER),
-              token: form.getFieldValue(FORM_CONTROL.asset),
+              token: (form.getFieldValue(FORM_CONTROL.asset) ?? '').toString().toUpperCase(),
             })}
           </p>
         </Form.Item>

@@ -36,7 +36,6 @@ export function TransferForm() {
   const [submitFn, setSubmit] = useState<(value: TransferFormValues) => void>(empty);
   const { tx } = useTx();
 
-  // eslint-disable-next-line complexity
   useEffect(() => {
     const { from } = transfer;
     const isReady = !!from && from.name === network && networkStatus === 'success';
@@ -65,7 +64,7 @@ export function TransferForm() {
               validator: (_, value: TransferNetwork) => {
                 return value.from && value.to ? Promise.resolve() : Promise.reject();
               },
-              message: t('You maybe forgot to select receive or sender network'),
+              message: t('You maybe forgot to select receive or sending network'),
             },
           ]}
         >
