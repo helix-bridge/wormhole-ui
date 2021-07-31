@@ -95,9 +95,9 @@ export const redeemToken: TxFn<RedeemEth> = ({ sender, transfer, asset, amount, 
   );
 };
 
-export const redeemDeposit: TxFn<RedeemDeposit> = ({ transfer: { from }, recipient, sender, deposit }) => {
+export const redeemDeposit: TxFn<RedeemDeposit> = ({ transfer: { to, from }, recipient, sender, deposit }) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  recipient = buf2hex(decodeAddress(recipient, false, from.ss58Prefix!).buffer);
+  recipient = buf2hex(decodeAddress(recipient, false, to.ss58Prefix!).buffer);
 
   return createEthContractObs(
     from?.tokenContract.bankDarwinia as string,

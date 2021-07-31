@@ -124,7 +124,7 @@ function createApproveRingTx(value: ApproveValue, after: AfterTxCreator): Observ
   return createTxObs(beforeTx, txObs, after);
 }
 
-function createCrossRingTx(value: RedeemEth, after: AfterTxCreator): Observable<Tx> {
+function createCrossTokenTx(value: RedeemEth, after: AfterTxCreator): Observable<Tx> {
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });
@@ -184,8 +184,12 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
 
   const refreshBalance = useCallback(
     (value: RedeemEth | ApproveValue) => {
-      refreshAmount(value);
-      getRingBalance(account, value.transfer.from).then((balance) => setMax(balance));
+      if (value.asset === 'ring') {
+        refreshAmount(value);
+        getRingBalance(account, value.transfer.from).then((balance) => setMax(balance));
+      } else {
+        getKtonBalance(account, value.transfer.from).then((balance) => setMax(balance));
+      }
     },
     [account, refreshAmount]
   );
@@ -201,20 +205,6 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
     (asset: E2DAssetEnum) => {
       let fn = empty;
 
-      if (asset === E2DAssetEnum.ring) {
-        fn = () => (value: RedeemEth) =>
-          createCrossRingTx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(
-            observer
-          );
-      }
-
-      if (asset === E2DAssetEnum.kton) {
-        fn = () => (value: RedeemEth) =>
-          createCrossRingTx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(
-            observer
-          );
-      }
-
       if (asset === E2DAssetEnum.deposit) {
         fn = () => (value: RedeemDeposit) =>
           createCrossDepositTx(
@@ -222,6 +212,11 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as any })(value)
           ).subscribe(observer);
+      } else {
+        fn = () => (value: RedeemEth) =>
+          createCrossTokenTx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(
+            observer
+          );
       }
 
       setSubmit(fn);
@@ -397,7 +392,7 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
             <Balance
               size="large"
               placeholder={t('Available balance {{balance}}', {
-                balance: max === null ? '-' : formatBalance(max, 'ether', BALANCE_FORMATTER),
+                balance: max === null ? t('Searching') : formatBalance(max, 'ether', BALANCE_FORMATTER),
               })}
               className="flex-1"
             >
@@ -418,9 +413,10 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
           </Form.Item>
 
           <p className={fee && max && fee.lt(max) ? 'text-green-400' : 'text-red-400 animate-pulse'}>
-            {t(`Cross-chain transfer fee. {{fee}} RING. (Account Balance. {{ring}} RING)`, {
+            {t(`Cross-chain transfer fee. {{fee}} RING. (Account Balance. {{balance}} {{token}})`, {
               fee: formatBalance(fee ?? '', 'ether'),
-              ring: formatBalance(max ?? '', 'ether', BALANCE_FORMATTER),
+              balance: formatBalance(max ?? '', 'ether', BALANCE_FORMATTER),
+              token: form.getFieldValue(FORM_CONTROL.asset),
             })}
           </p>
         </Form.Item>
