@@ -1,8 +1,9 @@
 import { LockOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Select } from 'antd';
 import BN from 'bn.js';
+import { format } from 'date-fns';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
@@ -23,20 +24,24 @@ import {
   applyModalObs,
   approveRingToIssuing,
   createTxObs,
+  empty,
   formatBalance,
   getInfoFromHash,
   isSameAddress,
   isValidAddress,
   patchUrl,
+  RedeemDeposit,
+  redeemDeposit,
   RedeemEth,
   redeemToken,
 } from '../../utils';
 import { Balance } from '../Balance';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
 import { ApproveSuccess } from '../modal/ApproveSuccess';
+import { Des } from '../modal/Des';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
-import { DepositSelect } from './DepositSelect';
+import { DepositSelect, getDepositTimeRange } from './DepositSelect';
 
 export type Ethereum2DarwiniaProps = BridgeFormProps & E2D;
 
@@ -128,6 +133,32 @@ function createCrossRingTx(value: RedeemEth, after: AfterTxCreator): Observable<
   return createTxObs(beforeTx, txObs, after);
 }
 
+function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Observable<Tx> {
+  const DATE_FORMAT = 'yyyy/MM/dd';
+  const { start, end } = getDepositTimeRange(value.deposit);
+  const beforeTx = applyModalObs({
+    content: (
+      <TransferConfirm value={value}>
+        <Des
+          title={<Trans>Deposit</Trans>}
+          content={
+            <span>
+              {value.deposit.amount} RING
+              <span>
+                ({<Trans>Deposit ID</Trans>}: {value.deposit.deposit_id} {<Trans>Time</Trans>}:{' '}
+                {format(start, DATE_FORMAT)} - {format(end, DATE_FORMAT)})
+              </span>
+            </span>
+          }
+        ></Des>
+      </TransferConfirm>
+    ),
+  });
+  const txObs = redeemDeposit(value);
+
+  return createTxObs(beforeTx, txObs, after);
+}
+
 // eslint-disable-next-line complexity
 export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
   const { t } = useTranslation();
@@ -136,6 +167,7 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
   const [isDeposit, setIsDeposit] = useState(false);
   const [fee, setFee] = useState<BN | null>(null);
   const [lock, setLock] = useState(false);
+  const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
   const { accounts } = useApi();
   const { observer } = useTx();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -158,6 +190,45 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
     [account, refreshAmount]
   );
 
+  const refreshDeposit = useCallback(
+    (value: RedeemDeposit) => {
+      setRemovedDepositIds(() => [...removedDepositIds, value.deposit.deposit_id]);
+    },
+    [removedDepositIds]
+  );
+
+  const updateSubmit = useCallback(
+    (asset: E2DAssetEnum) => {
+      let fn = empty;
+
+      if (asset === E2DAssetEnum.ring) {
+        fn = () => (value: RedeemEth) =>
+          createCrossRingTx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(
+            observer
+          );
+      }
+
+      if (asset === E2DAssetEnum.kton) {
+        fn = () => (value: RedeemEth) =>
+          createCrossRingTx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(
+            observer
+          );
+      }
+
+      if (asset === E2DAssetEnum.deposit) {
+        fn = () => (value: RedeemDeposit) =>
+          createCrossDepositTx(
+            value,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as any })(value)
+          ).subscribe(observer);
+      }
+
+      setSubmit(fn);
+    },
+    [afterTx, observer, refreshBalance, refreshDeposit, setSubmit]
+  );
+
   useEffect(() => {
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
     const { recipient } = getInfoFromHash();
@@ -167,10 +238,11 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
       [FORM_CONTROL.recipient]: recipient,
       [FORM_CONTROL.sender]: account,
     });
+    updateSubmit(E2DAssetEnum.ring);
     getRingBalance(account, netConfig).then((balance) => setMax(balance));
     getFee(netConfig).then((crossFee) => setFee(crossFee));
     getIssuingAllowance(account, netConfig).then((num) => setAllowance(num));
-  }, [account, form]);
+  }, [account, form, updateSubmit]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -183,13 +255,6 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
       form.setFieldsValue({ [FORM_CONTROL.recipient]: null });
     }
   });
-
-  useEffect(() => {
-    setSubmit(
-      () => (value: RedeemEth) =>
-        createCrossRingTx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(observer)
-    );
-  }, [account, afterTx, observer, refreshAmount, refreshBalance, setSubmit]);
 
   return (
     <>
@@ -254,17 +319,24 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
 
             setIsDeposit(value === E2DAssetEnum.deposit);
             setMax(balance);
+            updateSubmit(value);
           }}
         >
           <Select.Option value={E2DAssetEnum.ring}>RING</Select.Option>
           <Select.Option value={E2DAssetEnum.kton}>KTON</Select.Option>
-          <Select.Option value={E2DAssetEnum.deposit}>{t('deposit')}</Select.Option>
+          <Select.Option value={E2DAssetEnum.deposit} className="uppercase">
+            {t('deposit')}
+          </Select.Option>
         </Select>
       </Form.Item>
 
       {isDeposit ? (
         <Form.Item name={FORM_CONTROL.deposit} label={t('Deposit')} rules={[{ required: true }]}>
-          <DepositSelect address={account} config={form.getFieldValue(FORM_CONTROL.transfer).from} size="large" />
+          <DepositSelect
+            address={account}
+            config={form.getFieldValue(FORM_CONTROL.transfer).from}
+            removedIds={removedDepositIds}
+          />
         </Form.Item>
       ) : (
         <Form.Item className="mb-0">

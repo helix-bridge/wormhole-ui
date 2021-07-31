@@ -1,9 +1,10 @@
 import { RightOutlined } from '@ant-design/icons';
+import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TxConfirmComponentProps } from '../../model';
 import { Des } from './Des';
 
-export function TransferConfirm({ value }: TxConfirmComponentProps) {
+export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirmComponentProps>) {
   const { t } = useTranslation();
 
   return (
@@ -48,6 +49,8 @@ export function TransferConfirm({ value }: TxConfirmComponentProps) {
           ))}
         ></Des>
       )}
+
+      {children}
     </>
   );
 }

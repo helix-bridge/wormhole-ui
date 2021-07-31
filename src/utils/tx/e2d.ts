@@ -34,6 +34,11 @@ export type RedeemEth = TransferFormValues<
   NoNullTransferNetwork
 >;
 
+export type RedeemDeposit = TransferFormValues<
+  DeepRequired<E2D, ['sender' | 'deposit' | 'recipient']>,
+  NoNullTransferNetwork
+>;
+
 function createEthContractObs(
   contractAddress: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,9 +95,7 @@ export const redeemToken: TxFn<RedeemEth> = ({ sender, transfer, asset, amount, 
   );
 };
 
-export const redeemDeposit: TxFn<
-  DeepRequired<TransferFormValues<E2D, NoNullTransferNetwork>, ['transfer', 'sender', 'deposit', 'recipient']>
-> = ({ transfer: { from }, recipient, sender, deposit }) => {
+export const redeemDeposit: TxFn<RedeemDeposit> = ({ transfer: { from }, recipient, sender, deposit }) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   recipient = buf2hex(decodeAddress(recipient, false, from.ss58Prefix!).buffer);
 

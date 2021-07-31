@@ -3,15 +3,23 @@ import { FunctionComponent, useCallback, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 import { Path } from '../config/routes';
-import { E2D, NoNullTransferNetwork, RequiredPartial, TransferFormValues, Tx, TxSuccessComponentProps } from '../model';
+import {
+  Bridges,
+  DeepRequired,
+  NoNullTransferNetwork,
+  TransferFormValues,
+  Tx,
+  TxSuccessComponentProps,
+} from '../model';
 import { TxContext, TxCtx } from '../providers';
-import { applyModal, RedeemEth } from '../utils';
+import { applyModal } from '../utils';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
-type ApproveValue = TransferFormValues<RequiredPartial<E2D, 'sender'>, NoNullTransferNetwork>;
-
-export function useAfterSuccess() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useAfterSuccess<
+  T extends TransferFormValues<DeepRequired<Bridges, ['sender']>, NoNullTransferNetwork>
+>() {
   const { t } = useTranslation();
   const history = useHistory();
 
@@ -21,10 +29,10 @@ export function useAfterSuccess() {
         {
           onDisappear,
         }: Exclude<ModalProps, 'onCancel'> & {
-          onDisappear: (value: RedeemEth | ApproveValue, tx: Tx) => void;
+          onDisappear: (value: T, tx: Tx) => void;
         }
       ) =>
-      (value: RedeemEth | ApproveValue) =>
+      (value: T) =>
       (tx: Tx) =>
       () => {
         const { destroy } = applyModal({

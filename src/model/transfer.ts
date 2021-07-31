@@ -1,4 +1,5 @@
 import { FormInstance } from 'antd';
+import { Deposit } from './evolution';
 import { NetConfig, Token } from './network';
 import { DeepRequired } from './util';
 
@@ -42,7 +43,7 @@ type Transfer<T> = (T extends Array<unknown> ? { assets?: TransferAsset<T[0]>[] 
 
 export type E2DAsset = Exclude<Token, 'native'> | 'deposit';
 
-export type E2D = Transfer<E2DAsset> & { deposit?: string };
+export type E2D = Transfer<E2DAsset> & { deposit?: Deposit };
 
 /* ---------------------------------------------------D2E--------------------------------------------------- */
 
