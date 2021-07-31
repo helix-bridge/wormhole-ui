@@ -80,7 +80,8 @@ export const redeemToken: TxFn<RedeemEth> = ({ sender, transfer, asset, amount, 
   const contractAddress = transfer.from.tokenContract[asset as Token] as string;
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  recipient = buf2hex(decodeAddress(recipient, false, transfer.from.ss58Prefix!).buffer);
+  recipient = buf2hex(decodeAddress(recipient, false, transfer.to.ss58Prefix!).buffer);
+  amount = Web3.utils.toWei(amount, 'ether');
 
   return createEthContractObs(contractAddress, (contract) =>
     contract.methods

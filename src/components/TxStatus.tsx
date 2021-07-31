@@ -4,7 +4,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tx } from '../model';
 
-interface TxStatusProps {
+interface TxStatusProps extends Partial<AlertProps> {
   tx: Tx | null;
 }
 
@@ -33,7 +33,7 @@ const getAlertProps = (tx: Tx): AlertProps => {
   };
 };
 
-export function TxStatus({ tx }: TxStatusProps) {
+export function TxStatus({ tx, ...others }: TxStatusProps) {
   const { t } = useTranslation();
 
   if (!tx) {
@@ -44,12 +44,13 @@ export function TxStatus({ tx }: TxStatusProps) {
 
   return (
     <Alert
+      {...others}
       className="flex fixed top-20 right-8 border-none max-w-sm"
       message={t(message as string, { hash: tx.hash ?? '' })}
       icon={icon}
       type={type}
       showIcon
-      closable={type === 'success'}
+      closable={type === 'success' || type === 'error'}
     />
   );
 }

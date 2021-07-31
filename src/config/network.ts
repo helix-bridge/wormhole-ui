@@ -91,7 +91,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: false,
     name: 'ethereum',
     rpc: '',
-    ss58Prefix: null,
+    ss58Prefix: 18,
     tokenContract: {
       native: 'eth',
       ring: '0x9469d013805bffb7d3debe5e7839237e535ec483',
@@ -150,7 +150,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: true,
     name: 'ropsten',
     rpc: '',
-    ss58Prefix: null,
+    ss58Prefix: 18,
     tokenContract: {
       native: 'eth',
       ring: '0xb52FBE2B925ab79a821b261C82c5Ba0814AAA5e0',

@@ -23,7 +23,7 @@ export interface TransferNetwork {
   to: NetConfig | null;
 }
 
-export type NoNullTransferNetwork = DeepRequired<TransferNetwork, ['from', 'to']>;
+export type NoNullTransferNetwork = DeepRequired<TransferNetwork, ['from' | 'to']>;
 
 interface TransferParty {
   sender?: string;

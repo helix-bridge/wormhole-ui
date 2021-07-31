@@ -4,13 +4,9 @@ import { TxStatus } from '../components/TxStatus';
 import { LONG_DURATION } from '../config';
 import { Tx } from '../model';
 
-type TxError = Record<string, unknown> | null;
-
 export interface TxCtx {
   setTx: (tx: Tx | null) => void;
   tx: Tx | null;
-  setError: (error: TxError) => void;
-  error: TxError;
   observer: Observer<Tx>;
 }
 
@@ -18,11 +14,10 @@ export const TxContext = createContext<TxCtx | null>(null);
 
 export const TxProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [tx, setTx] = useState<Tx | null>(null);
-  const [error, setError] = useState<TxError>(null);
   const observer = useMemo<Observer<Tx>>(() => {
     return {
       next: setTx,
-      error: setError,
+      error: setTx,
       complete: () => {
         console.info('[ tx completed! ]');
       },
@@ -30,15 +25,15 @@ export const TxProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   }, []);
 
   useEffect(() => {
-    if (tx?.status === 'finalized') {
+    if (tx?.status === 'finalized' || tx?.status === 'error') {
       of(null).pipe(delay(LONG_DURATION)).subscribe(setTx);
     }
   }, [tx]);
 
   return (
-    <TxContext.Provider value={{ setTx, tx, error, setError, observer }}>
+    <TxContext.Provider value={{ setTx, tx, observer }}>
       {children}
-      <TxStatus tx={tx} />
+      <TxStatus tx={tx} onClose={() => setTx(null)} />
     </TxContext.Provider>
   );
 };

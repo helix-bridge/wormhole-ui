@@ -141,13 +141,21 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { address: account } = accounts![0];
   const { afterTx } = useAfterSuccess();
-  const onDisappear = useCallback(
+  const refreshAmount = useCallback(
     (value: RedeemEth | ApproveValue) =>
       getIssuingAllowance(account, value.transfer.from).then((num) => {
         setAllowance(num);
         form.validateFields([FORM_CONTROL.amount]);
       }),
     [account, form]
+  );
+
+  const refreshBalance = useCallback(
+    (value: RedeemEth | ApproveValue) => {
+      refreshAmount(value);
+      getRingBalance(account, value.transfer.from).then((balance) => setMax(balance));
+    },
+    [account, refreshAmount]
   );
 
   useEffect(() => {
@@ -177,8 +185,11 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
   });
 
   useEffect(() => {
-    setSubmit(() => (value: RedeemEth) => createCrossRingTx(value, afterTx(TransferSuccess, { onDisappear })(value)));
-  }, [afterTx, onDisappear, setSubmit]);
+    setSubmit(
+      () => (value: RedeemEth) =>
+        createCrossRingTx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(observer)
+    );
+  }, [account, afterTx, observer, refreshAmount, refreshBalance, setSubmit]);
 
   return (
     <>
@@ -297,7 +308,10 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
                           transfer: form.getFieldValue(FORM_CONTROL.transfer),
                         };
 
-                        createApproveRingTx(value, afterTx(ApproveSuccess, { onDisappear })(value)).subscribe(observer);
+                        createApproveRingTx(
+                          value,
+                          afterTx(ApproveSuccess, { onDisappear: refreshAmount })(value)
+                        ).subscribe(observer);
                       }}
                       size="small"
                     >
