@@ -6,7 +6,7 @@ import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
 import { ConnectStatus, NetConfig, Network, TransferFormValues, TransferNetwork, Tx } from '../model';
 import { empty, getInitialSetting, getNetworkByName, hasBridge, isBridgeAvailable } from '../utils';
-import { Ethereum } from './bridge/Ethereum';
+import { Ethereum } from './departure/Ethereum';
 import { NetworkControl } from './NetworkControl';
 
 const initTransfer: () => TransferNetwork = () => {
