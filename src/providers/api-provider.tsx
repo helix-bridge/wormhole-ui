@@ -5,6 +5,7 @@ import type { InjectedExtension } from '@polkadot/extension-inject/types';
 import { Button, message, notification } from 'antd';
 import { createContext, Dispatch, useCallback, useEffect, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Units } from 'web3-utils';
 import { NETWORK_CONFIG } from '../config';
 import { Action, ConnectStatus, IAccountMeta, NetConfig, Network } from '../model';
 import {
@@ -25,13 +26,13 @@ interface StoreState {
   enableTestNetworks: boolean;
 }
 
-interface Token {
+export interface TokenChainInfo {
   symbol: string;
-  decimal: string;
+  decimal: keyof Units;
 }
 
 export interface Chain {
-  tokens: Token[];
+  tokens: TokenChainInfo[];
   ss58Format: string;
 }
 
@@ -77,6 +78,9 @@ function accountReducer(state: StoreState, action: Action<ActionType, any>): Sto
 
 export type ApiCtx = StoreState & {
   api: ApiPromise | null;
+  connectToEth: (id?: string | undefined) => Promise<void>;
+  connectToSubstrate: () => Promise<(() => void) | void>;
+  disconnect: () => void;
   dispatch: Dispatch<Action<ActionType>>;
   setAccounts: (accounts: IAccountMeta[]) => void;
   setNetworkStatus: (status: ConnectStatus) => void;
@@ -193,10 +197,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   );
 
   const connectToSubstrate = useCallback(async () => {
-    const curChain = await api?.rpc.system.chain();
-    const chainNetwork = curChain?.toHuman().toLowerCase() ?? '';
-
-    if (!state.network || chainNetwork === state.network || chainNetwork.includes(state.network)) {
+    if (!state.network) {
       return;
     }
 
@@ -231,7 +232,28 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       nApi.off('ready', onReady);
       nApi.off('disconnected', onDisconnected);
     };
-  }, [api?.rpc.system, setAccounts, setNetworkStatus, state.network]);
+  }, [setAccounts, setNetworkStatus, state.network]);
+
+  // eslint-disable-next-line complexity
+  const disconnect = useCallback(() => {
+    const isPolkadot = isPolkadotNetwork(state.network);
+
+    if (isPolkadot && api && api.isConnected) {
+      api.disconnect().then(() => {
+        setNetworkStatus('pending');
+        setApi(null);
+      });
+      return;
+    }
+
+    const isEthereum = isEthereumNetwork(state.network);
+
+    if (isEthereum && window.ethereum.isConnected()) {
+      setNetworkStatus('pending');
+      setAccounts([]);
+      return;
+    }
+  }, [api, setAccounts, setNetworkStatus, state.network]);
 
   /**
    * connect to substrate or metamask when account type changed.
@@ -264,18 +286,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   }, [connectToEth, connectToSubstrate, setNetworkStatus, state.network]);
 
   useEffect(() => {
-    if (state.networkStatus === 'disconnected') {
-      if (isEthereumNetwork(state.network)) {
-        connectToEth();
-      }
-
-      if (isPolkadotNetwork(state.network)) {
-        connectToSubstrate();
-      }
-    }
-  }, [connectToEth, connectToSubstrate, state.network, state.networkStatus]);
-
-  useEffect(() => {
     if (!api) {
       return;
     }
@@ -301,12 +311,15 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     <ApiContext.Provider
       value={{
         ...state,
+        disconnect,
         dispatch,
         switchNetwork,
         setNetworkStatus,
         setAccounts,
         setEnableTestNetworks,
         setApi,
+        connectToEth,
+        connectToSubstrate,
         api,
         networkConfig: state.network ? NETWORK_CONFIG[state.network] : null,
         chain,

@@ -1,8 +1,8 @@
 import { Dropdown, Menu } from 'antd';
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NetConfig } from '../model';
-import { DownIcon } from './icons';
+import { NetConfig } from '../../model';
+import { DownIcon } from '../icons';
 
 interface DestinationProps {
   extra?: string | JSX.Element;

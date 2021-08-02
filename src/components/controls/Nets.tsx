@@ -3,16 +3,16 @@ import { Button, Popover, Tooltip } from 'antd';
 import { isBoolean, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Vertices } from '../config';
-import { useApi, useNetworks } from '../hooks';
-import { CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../model';
-import { getVertices, HashInfo, isReachable, isSameNetworkCurry, isTraceable, patchUrl, truth } from '../utils';
-import { updateStorage } from '../utils/helper/storage';
+import { Vertices } from '../../config';
+import { useApi, useNetworks } from '../../hooks';
+import { CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../../model';
+import { getVertices, HashInfo, isReachable, isSameNetworkCurry, isTraceable, patchUrl, truth } from '../../utils';
+import { updateStorage } from '../../utils/helper/storage';
 import { Destination } from './Destination';
 
-export type NetworkControlProps = CustomFormControlProps<TransferNetwork>;
+export type NetsProps = CustomFormControlProps<TransferNetwork>;
 
-export function NetworkControl({ value, onChange }: NetworkControlProps) {
+export function Nets({ value, onChange }: NetsProps) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks();
   const { networkStatus, network, switchNetwork } = useApi();

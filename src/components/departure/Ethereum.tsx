@@ -1,4 +1,3 @@
-import { LockOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Select } from 'antd';
 import BN from 'bn.js';
 import { format } from 'date-fns';
@@ -16,7 +15,6 @@ import {
   NoNullTransferNetwork,
   RequiredPartial,
   TransferFormValues,
-  TransferNetwork,
   Tx,
 } from '../../model';
 import {
@@ -27,23 +25,20 @@ import {
   empty,
   formatBalance,
   getInfoFromHash,
-  isSameAddress,
-  isValidAddress,
-  patchUrl,
   RedeemDeposit,
   redeemDeposit,
   RedeemEth,
   redeemToken,
 } from '../../utils';
-import { Balance } from '../Balance';
+import { Balance } from '../controls/Balance';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
 import { ApproveSuccess } from '../modal/ApproveSuccess';
 import { Des } from '../modal/Des';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
-import { DepositSelect, getDepositTimeRange } from './DepositSelect';
-
-export type Ethereum2DarwiniaProps = BridgeFormProps & E2D;
+import { DepositItem, getDepositTimeRange } from '../controls/DepositItem';
+import { RecipientItem } from '../controls/RecipientItem';
+import { MaxBalance } from '../controls/MaxBalance';
 
 enum E2DAssetEnum {
   ring = 'ring',
@@ -160,18 +155,16 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
 }
 
 // eslint-disable-next-line complexity
-export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
+export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(new BN(0));
   const [max, setMax] = useState<BN | null>(null);
   const [isDeposit, setIsDeposit] = useState(false);
   const [fee, setFee] = useState<BN | null>(null);
-  const [lock, setLock] = useState(false);
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
   const { accounts } = useApi();
   const { observer } = useTx();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { address: account } = accounts![0];
+  const { address: account } = (accounts || [])[0] ?? '';
   const { afterTx } = useAfterSuccess();
   const refreshAmount = useCallback(
     (value: RedeemEth | ApproveValue) =>
@@ -225,12 +218,16 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
   );
 
   useEffect(() => {
+    if (!account) {
+      return;
+    }
+
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
     const { recipient } = getInfoFromHash();
 
     form.setFieldsValue({
       [FORM_CONTROL.asset]: E2DAssetEnum.ring,
-      [FORM_CONTROL.recipient]: recipient,
+      [FORM_CONTROL.recipient]: recipient ?? '',
       [FORM_CONTROL.sender]: account,
     });
     updateSubmit(E2DAssetEnum.ring);
@@ -239,67 +236,22 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
     getIssuingAllowance(account, netConfig).then((num) => setAllowance(num));
   }, [account, form, updateSubmit]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const { from, to } = form.getFieldValue(FORM_CONTROL.transfer) as TransferNetwork;
-    const needLock = !from || !to;
-
-    setLock(needLock);
-
-    if (needLock) {
-      form.setFieldsValue({ [FORM_CONTROL.recipient]: null });
-    }
-  });
-
   return (
     <>
       <Form.Item name={FORM_CONTROL.sender} className="hidden" rules={[{ required: true }]}>
         <Input disabled value={account} />
       </Form.Item>
 
-      <Form.Item className="mb-0">
-        <Form.Item
-          label={t('Recipient')}
-          name={FORM_CONTROL.recipient}
-          validateFirst
-          rules={[
-            { required: true },
-            {
-              validator(_, value) {
-                return !isSameAddress(account, value) ? Promise.resolve() : Promise.reject();
-              },
-              message: t('The sending address and the receiving address cannot be the same'),
-            },
-            {
-              validator(_, value) {
-                return isValidAddress(value, 'polkadot') ? Promise.resolve() : Promise.reject();
-              },
-              message: t('The address is wrong, please fill in a substrate address of the {{network}} network.', {
-                network: 'darwinia',
-              }),
-            },
-          ]}
-          extra={t(
-            'Please be sure to fill in the real Darwinia mainnet account, and keep the account recovery files such as mnemonic properly.'
-          )}
-        >
-          <Input
-            onChange={(event) => {
-              patchUrl({ recipient: event.target.value });
-            }}
-            disabled={lock}
-            suffix={lock && <LockOutlined />}
-            size="large"
-          />
-        </Form.Item>
-        {lock && <span className="text-gray-300">{t('You must select the destination network to unlock')}</span>}
-      </Form.Item>
+      <RecipientItem
+        form={form}
+        extraTip="Please be sure to fill in the real Darwinia mainnet account, and keep the account recovery files such as mnemonic properly."
+      />
 
       <Form.Item name={FORM_CONTROL.asset} label={t('Asset')}>
         <Select
           size="large"
           onChange={async (value: E2DAssetEnum) => {
-            form.setFieldsValue({ amount: null });
+            form.setFieldsValue({ amount: '' });
 
             let balance: null | BN = null;
             const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
@@ -326,13 +278,11 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
       </Form.Item>
 
       {isDeposit ? (
-        <Form.Item name={FORM_CONTROL.deposit} label={t('Deposit')} rules={[{ required: true }]}>
-          <DepositSelect
-            address={account}
-            config={form.getFieldValue(FORM_CONTROL.transfer).from}
-            removedIds={removedDepositIds}
-          />
-        </Form.Item>
+        <DepositItem
+          address={account}
+          config={form.getFieldValue(FORM_CONTROL.transfer).from}
+          removedIds={removedDepositIds}
+        />
       ) : (
         <Form.Item className="mb-0">
           <Form.Item
@@ -396,19 +346,14 @@ export function Ethereum({ form, setSubmit }: Ethereum2DarwiniaProps) {
               })}
               className="flex-1"
             >
-              <div
-                className={`px-4 border border-l-0 cursor-pointer duration-200 ease-in flex items-center rounded-r-xl self-stretch transition-colors hover:text-${
-                  form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network
-                }-main`}
-                style={{ borderColor: '#434343' }}
+              <MaxBalance
+                network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
                 onClick={() => {
                   form.setFieldsValue({
                     [FORM_CONTROL.amount]: Web3.utils.fromWei(max && fee ? max?.sub(fee) : new BN(0)),
                   });
                 }}
-              >
-                {t('All')}
-              </div>
+              />
             </Balance>
           </Form.Item>
 

@@ -3,7 +3,7 @@
 import { DisconnectOutlined } from '@ant-design/icons';
 import { mount } from '@cypress/react';
 import React, { Suspense } from 'react';
-import { Destination } from '../components/Destination';
+import { Destination } from '../components/controls/Destination';
 import { NETWORKS } from '../config';
 import '../index.scss';
 import '../theme/antd/index.less';

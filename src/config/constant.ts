@@ -8,6 +8,8 @@ export const SHORT_DURATION = 3 * 10000;
 export enum FORM_CONTROL {
   amount = 'amount',
   asset = 'asset',
+  assets = 'assets',
+  assetType = 'assetType',
   deposit = 'deposit',
   recipient = 'recipient',
   sender = 'sender',

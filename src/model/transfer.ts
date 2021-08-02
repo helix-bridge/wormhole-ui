@@ -12,8 +12,8 @@ export interface CustomFormControlProps<T = string> {
   onChange?: (value: T) => void;
 }
 
-export interface BridgeFormProps {
-  form: FormInstance<TransferFormValues>;
+export interface BridgeFormProps<T = Bridges> {
+  form: FormInstance<TransferFormValues<T>>;
   setSubmit: React.Dispatch<React.SetStateAction<(value: TransferFormValues) => void>>;
 }
 
@@ -35,6 +35,7 @@ export interface TransferAsset<T> {
   asset?: T;
   amount?: string;
   isErc20?: boolean;
+  checked?: boolean;
 }
 
 type Transfer<T> = (T extends Array<unknown> ? { assets?: TransferAsset<T[0]>[] } : TransferAsset<T>) & TransferParty;
