@@ -2,6 +2,7 @@ import { CheckCircleFilled } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
 import { Network, TransferAsset, TxSuccessComponentProps } from '../../model';
+import { fromWei } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
@@ -14,9 +15,10 @@ function Detail({ amount, asset }: TransferAsset<string>) {
   );
 }
 
-export function TransferSuccess({ tx, value }: TxSuccessComponentProps) {
+export function TransferSuccess({ tx, value, hashType = 'txHash' }: TxSuccessComponentProps) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
+  const linkProps = { [hashType]: tx.hash };
 
   return (
     <>
@@ -40,7 +42,14 @@ export function TransferSuccess({ tx, value }: TxSuccessComponentProps) {
         title={t('Details')}
         content={
           (value.asset && value.amount && <Detail {...value} />) ||
-          (value.assets && value.assets.map((item) => <Detail {...item} key={item.asset} />))
+          (value.assets &&
+            value.assets.map((item) => (
+              <Detail
+                {...item}
+                amount={item.unit ? fromWei({ value: item.amount, unit: item.unit }) : item.amount}
+                key={item.asset}
+              />
+            )))
         }
         icon={<CheckCircleFilled className="text-2xl" style={{ color }} />}
       ></Des>
@@ -49,7 +58,7 @@ export function TransferSuccess({ tx, value }: TxSuccessComponentProps) {
         {t('The transaction has been sent, please check the transfer progress in the cross-chain history.')}
       </p>
 
-      <SubscanLink txHash={tx.hash} network={value.transfer.from?.name as Network}>
+      <SubscanLink {...linkProps} network={value.transfer.from?.name as Network}>
         {t('View in subscan browser')}
       </SubscanLink>
     </>

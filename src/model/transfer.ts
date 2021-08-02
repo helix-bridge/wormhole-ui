@@ -1,4 +1,5 @@
 import { FormInstance } from 'antd';
+import { Unit } from 'web3-utils';
 import { Deposit } from './evolution';
 import { NetConfig, Token } from './network';
 import { DeepRequired } from './util';
@@ -27,15 +28,16 @@ export interface TransferNetwork {
 export type NoNullTransferNetwork = DeepRequired<TransferNetwork, ['from' | 'to']>;
 
 interface TransferParty {
-  sender?: string;
   recipient?: string;
+  sender?: string;
 }
 
 export interface TransferAsset<T> {
-  asset?: T;
   amount?: string;
-  isErc20?: boolean;
+  asset?: T;
   checked?: boolean;
+  isErc20?: boolean;
+  unit?: Unit;
 }
 
 type Transfer<T> = (T extends Array<unknown> ? { assets?: TransferAsset<T[0]>[] } : TransferAsset<T>) & TransferParty;

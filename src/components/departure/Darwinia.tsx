@@ -1,15 +1,21 @@
 import { ApiPromise } from '@polkadot/api';
 import { Form, Radio, Select } from 'antd';
+import BN from 'bn.js';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Observable } from 'rxjs';
+import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
-import { useApi } from '../../hooks';
-import { BridgeFormProps, D2E, NoNullTransferNetwork, Token, TransferFormValues } from '../../model';
-import { empty } from '../../utils';
+import { useAfterSuccess, useApi, useTx } from '../../hooks';
+import { BridgeFormProps, D2E, D2EAsset, Token, TransferAsset, Tx } from '../../model';
+import { AfterTxCreator, applyModalObs, createTxObs, empty, toWei } from '../../utils';
+import { backingLock, BackingLockNative } from '../../utils/tx/d2e';
 import { AssetGroup, AvailableBalance } from '../controls/AssetGroup';
 import { Balance } from '../controls/Balance';
 import { MaxBalance } from '../controls/MaxBalance';
 import { RecipientItem } from '../controls/RecipientItem';
+import { TransferConfirm } from '../modal/TransferConfirm';
+import { TransferSuccess } from '../modal/TransferSuccess';
 
 const BALANCES_INITIAL: AvailableBalance[] = [
   { max: 0, asset: 'ring' },
@@ -21,7 +27,9 @@ enum D2EAssetEnum {
   erc20 = 'erc20',
 }
 
-export async function getTokenBalanceDarwinia(api: ApiPromise, account = ''): Promise<[string, string]> {
+/* ----------------------------------------------Base info helpers-------------------------------------------------- */
+
+async function getTokenBalanceDarwinia(api: ApiPromise, account = ''): Promise<[string, string]> {
   try {
     await api?.isReady;
     // type = 0 query ring balance.  type = 1 query kton balance.
@@ -36,11 +44,48 @@ export async function getTokenBalanceDarwinia(api: ApiPromise, account = ''): Pr
   }
 }
 
+async function getFee(api: ApiPromise | null): Promise<BN> {
+  const fixed = Web3.utils.toBN('50000000000');
+
+  try {
+    if (!api) {
+      return fixed;
+    }
+
+    const fee = api.consts.ethereumBacking.advancedFee.toString();
+
+    return Web3.utils.toBN(fee);
+  } catch (error) {
+    return fixed;
+  }
+}
+
+/* ----------------------------------------------Tx section-------------------------------------------------- */
+
+function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCreator, api: ApiPromise): Observable<Tx> {
+  // const { sender, recipient } = value;
+  const beforeTx = applyModalObs({
+    content: <TransferConfirm value={value} />,
+  });
+  const obs = backingLock(value, api);
+
+  return createTxObs(beforeTx, obs, after);
+}
+
+// eslint-disable-next-line complexity
 export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
   const { t } = useTranslation();
   const { accounts, api, chain } = useApi();
   const [isNative, setIsNative] = useState<boolean>(true);
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
+  const [fee, setFee] = useState<BN | null>(null);
+  // const [max, setMax] = useState<BN | null>(null);
+  const { observer } = useTx();
+  const { afterTx } = useAfterSuccess();
+  const getChainInfo = useCallback(
+    (target: Token) => chain.tokens.find((token) => token.symbol.toLowerCase().includes(target)),
+    [chain.tokens]
+  );
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account) => {
       if (!api) {
@@ -48,23 +93,22 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
       }
 
       const [ring, kton] = await getTokenBalanceDarwinia(api, account);
-      const info = (target: Token) => chain.tokens.find((token) => token.symbol.toLowerCase().includes(target));
 
       return [
         {
           max: ring,
           asset: 'ring',
-          chainInfo: info('ring'),
+          chainInfo: getChainInfo('ring'),
           checked: true,
         },
         {
           max: kton,
           asset: 'kton',
-          chainInfo: info('kton'),
+          chainInfo: getChainInfo('kton'),
         },
       ];
     },
-    [api, chain.tokens]
+    [api, getChainInfo]
   );
 
   const updateSubmit = useCallback(
@@ -74,17 +118,39 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
       if (isErc20) {
         fn = console.info;
       } else {
-        fn = () => (data: TransferFormValues<D2E, NoNullTransferNetwork>) => {
-          const { assets, ...others } = data;
-          const assetsToSend = assets?.filter((item) => item.checked);
+        fn = () => (data: BackingLockNative) => {
+          const { assets } = data;
+          const assetsToSend = assets?.map((item) => {
+            const { asset, amount, checked } = item as Required<TransferAsset<D2EAsset>>;
+            const unit = getChainInfo(asset)?.decimal || 'gwei';
 
-          console.info('%c [ data ]-80', 'font-size:13px; background:pink; color:#bf2c9f;', assetsToSend, others);
+            return { asset, unit, amount: checked ? toWei({ value: amount, unit }) : '0' };
+          });
+
+          ethereumBackingLockDarwinia(
+            { ...data, assets: assetsToSend },
+            afterTx(TransferSuccess, {
+              hashType: 'block',
+              onDisappear: () => {
+                form.setFieldsValue({
+                  [FORM_CONTROL.sender]: data.sender,
+                  [FORM_CONTROL.assets]: [
+                    { asset: 'ring', amount: '', checked: true },
+                    { asset: 'kton', amount: '' },
+                  ],
+                });
+                getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
+              },
+            })({ ...data, assets: assetsToSend }),
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            api!
+          ).subscribe(observer);
         };
       }
 
       setSubmit(fn);
     },
-    [setSubmit]
+    [afterTx, api, form, getBalances, getChainInfo, observer, setSubmit]
   );
 
   useEffect(() => {
@@ -99,6 +165,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
         { asset: 'kton', amount: '' },
       ],
     });
+    getFee(api).then((crossFee) => setFee(crossFee));
     updateSubmit();
   }, [form, api, accounts, updateSubmit]);
 
@@ -133,17 +200,23 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
           }}
         >
           <Radio value={D2EAssetEnum.native}>{t('Native')}</Radio>
-          <Radio value={D2EAssetEnum.erc20}>ERC20</Radio>
+          <Radio disabled value={D2EAssetEnum.erc20}>
+            ERC20
+          </Radio>
         </Radio.Group>
       </Form.Item>
 
       {isNative ? (
         <Form.Item name={FORM_CONTROL.assets} label={t('Asset')} rules={[{ required: true }]} className="mb-0">
-          <AssetGroup network={form.getFieldValue(FORM_CONTROL.transfer).from.name} balances={availableBalances} />
+          <AssetGroup
+            network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
+            balances={availableBalances}
+            fee={fee}
+          />
         </Form.Item>
       ) : (
         <Form.Item name={FORM_CONTROL.asset} label={t('Asset')} rules={[{ required: true }]}>
-          <Balance size="large" className="flex-1">
+          <Balance placeholder="developing" disabled size="large" className="flex-1">
             <MaxBalance
               onClick={() => {
                 console.info('xxx');

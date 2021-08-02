@@ -33,4 +33,6 @@ export type TxFn<T> = (value: T) => Observable<Tx>;
 
 export type TxConfirmComponentProps = { value: TransferFormValues<Bridges> };
 
-export type TxSuccessComponentProps = { tx: Tx; value: TransferFormValues<Bridges> };
+export type TxHashType = 'block' | 'extrinsic' | 'address' | 'txHash'; // consistent with the SubscanLink component props;
+
+export type TxSuccessComponentProps = { tx: Tx; value: TransferFormValues<Bridges>; hashType?: TxHashType };

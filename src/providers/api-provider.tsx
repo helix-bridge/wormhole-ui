@@ -11,6 +11,7 @@ import { Action, ConnectStatus, IAccountMeta, NetConfig, Network } from '../mode
 import {
   addEthereumChain,
   getInitialSetting,
+  getUnit,
   isEthereumNetwork,
   isNativeMetamaskChain,
   isNetworkConsistent,
@@ -296,7 +297,8 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
       const chainInfo = tokenDecimals.reduce(
         (acc: Chain, decimal: string, index: number) => {
-          const token = { decimal, symbol: tokenSymbol[index] };
+          const unit = getUnit(+decimal);
+          const token = { decimal: unit, symbol: tokenSymbol[index] };
 
           return { ...acc, tokens: [...acc.tokens, token] };
         },

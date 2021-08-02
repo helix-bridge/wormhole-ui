@@ -1,7 +1,15 @@
 import BigNumber from 'bignumber.js';
+import { Unit, unitMap, Units } from 'web3-utils';
 import BN from 'bn.js';
 import { isNull, isNumber, isString, isUndefined } from 'lodash';
-import { Units, unitMap, Unit } from 'web3-utils';
+import Web3 from 'web3';
+
+export type WeiValue = string | BN | number | null | undefined;
+export interface PrettyNumberOptions {
+  withThousandSplit?: boolean;
+  noDecimal?: boolean;
+  decimal?: number;
+}
 
 export const ETH_UNITS = unitMap as unknown as Units;
 
@@ -33,14 +41,14 @@ export function bn2str(num: BigNumber.Value) {
 }
 
 // eslint-disable-next-line complexity
-const toString = (value: string | BN | number): string => {
+const toStr = (value: WeiValue): string => {
   if (BN.isBN(value)) {
     return value.toString();
   } else if (isString(value)) {
     return value;
   } else if (isNumber(value)) {
     return String(value);
-  } else if (isUndefined(value) || isNaN(value) || isNull(value)) {
+  } else if (isUndefined(value) || isNull(value) || isNaN(value)) {
     return '0';
   } else {
     throw new TypeError(
@@ -50,59 +58,23 @@ const toString = (value: string | BN | number): string => {
   }
 };
 
-/**
- *
- * @param balance - balance
- * @returns string type balance
- */
-// eslint-disable-next-line complexity
-export function formatBalance(
-  balance: string | BN | number,
-  radix: number | keyof Units,
-  { withThousandSplit, noDecimal, decimal }: PrettyNumberOptions = {
-    withThousandSplit: true,
-    noDecimal: true,
-    decimal: 3,
-  }
-): string {
-  const origin = toString(balance);
-
-  if (origin.length === 0 || origin === '0') {
-    return '0';
-  }
-
-  let result = '';
-
-  radix = typeof radix === 'number' ? radix : ETH_UNITS[radix].length;
-
-  if (Number.isSafeInteger(Number(origin))) {
-    result = (Number(origin) / Math.pow(10, radix)).toString();
-  } else {
-    const position = origin.length - radix;
-    const prefix = origin.slice(0, position + 1);
-    // eslint-disable-next-line no-magic-numbers
-    const suffix = origin.substr(position, 3);
-
-    result = `${prefix}.${suffix}`;
-  }
-
-  return withThousandSplit ? prettyNumber(result, { noDecimal, decimal }) : result;
-}
-
-export interface PrettyNumberOptions {
-  withThousandSplit?: boolean;
-  noDecimal?: boolean;
-  decimal?: number;
-}
-
 const isDecimal = (value: number | string) => {
   return /\d+\.\d+/.test(String(value));
 };
 
+// eslint-disable-next-line complexity
 export function prettyNumber(
-  value: string,
+  value: string | number | BN | null | undefined,
   { decimal, noDecimal }: PrettyNumberOptions = { decimal: 3, noDecimal: false }
 ): string {
+  if (value === null || typeof value === 'undefined') {
+    return '-';
+  }
+
+  if (typeof value === 'number' || BN.isBN(value)) {
+    value = value.toString();
+  }
+
   const isDecimalNumber = isDecimal(value);
   let prefix = isDecimalNumber ? value.split('.')[0] : value;
   const suffix = isDecimalNumber
@@ -112,6 +84,26 @@ export function prettyNumber(
   prefix = prefix.replace(/\d{1,3}(?=(\d{3})+(\.\d*)?$)/g, '$&,');
 
   return !noDecimal ? `${prefix}.${suffix}` : prefix;
+}
+
+export function fromWei(
+  { value, unit = 'ether' }: { value: WeiValue; unit?: Unit },
+  ...fns: ((value: string) => string)[]
+): string {
+  return [toStr, (val: string) => Web3.utils.fromWei(val || '0', unit), ...fns].reduce(
+    (acc, fn) => fn(acc as string),
+    value
+  ) as string;
+}
+
+export function toWei(
+  { value, unit = 'ether' }: { value: WeiValue; unit?: Unit },
+  ...fns: ((value: string) => string)[]
+): string {
+  return [toStr, (val: string) => Web3.utils.toWei(val || '0', unit), ...fns].reduce(
+    (acc, fn) => fn(acc as string),
+    value
+  ) as string;
 }
 
 const completeDecimal = (value: string, bits: number): string => {

@@ -2,6 +2,7 @@ import { RightOutlined } from '@ant-design/icons';
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TxConfirmComponentProps } from '../../model';
+import { fromWei } from '../../utils';
 import { Des } from './Des';
 
 export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirmComponentProps>) {
@@ -15,7 +16,7 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
           <>
             {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
             <span className="uppercase">{value.transfer.from!.name}</span>
-            <RightOutlined />
+            <RightOutlined className="mx-4" />
             {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
             <span className="uppercase">{value.transfer.to!.name}</span>
           </>
@@ -42,8 +43,8 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
         <Des
           title={t('Amount')}
           content={value.assets.map((bill) => (
-            <span key={bill.asset}>
-              {bill.amount}
+            <span key={bill.asset} className="mr-6">
+              {fromWei({ value: bill.amount, unit: bill.unit ?? 'ether' })}
               <span className="uppercase ml-2">{bill.asset}</span>
             </span>
           ))}

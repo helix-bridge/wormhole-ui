@@ -14,8 +14,16 @@ const getAlertProps = (tx: Tx): AlertProps => {
     return { type: 'info', message: 'Wait for approve', icon: <InfoCircleOutlined /> };
   }
 
+  if (tx.status === 'broadcast') {
+    return { type: 'info', message: 'Broadcasted, waiting process', icon: <SyncOutlined spin /> };
+  }
+
   if (tx.status === 'queued') {
-    return { type: 'info', message: 'Queue, waiting to processed', icon: <SyncOutlined spin /> };
+    return { type: 'info', message: 'Queue, waiting process', icon: <SyncOutlined spin /> };
+  }
+
+  if (tx.status === 'inblock') {
+    return { type: 'info', message: 'Transfer has been packaged', icon: <SyncOutlined spin /> };
   }
 
   if (tx.status === 'finalized') {

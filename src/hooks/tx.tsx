@@ -9,6 +9,7 @@ import {
   NoNullTransferNetwork,
   TransferFormValues,
   Tx,
+  TxHashType,
   TxSuccessComponentProps,
 } from '../model';
 import { TxContext, TxCtx } from '../providers';
@@ -28,15 +29,17 @@ export function useAfterSuccess<
         Comp: FunctionComponent<TxSuccessComponentProps>,
         {
           onDisappear,
+          hashType = 'txHash',
         }: Exclude<ModalProps, 'onCancel'> & {
           onDisappear: (value: T, tx: Tx) => void;
+          hashType?: TxHashType;
         }
       ) =>
       (value: T) =>
       (tx: Tx) =>
       () => {
         const { destroy } = applyModal({
-          content: <Comp tx={tx} value={value} />,
+          content: <Comp tx={tx} value={value} hashType={hashType} />,
           okText: t('Cross-chain history'),
           okButtonProps: {
             size: 'large',

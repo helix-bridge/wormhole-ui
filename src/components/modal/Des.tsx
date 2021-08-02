@@ -13,7 +13,7 @@ export function Des({ title, content, icon }: DesProps) {
       {icon}
       <div>
         <h4 className="text-gray-400 mb-2">{title}:</h4>
-        <Typography.Link>{content}</Typography.Link>
+        <Typography.Text>{content}</Typography.Text>
       </div>
     </div>
   );

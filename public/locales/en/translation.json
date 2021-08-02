@@ -3,7 +3,7 @@
   "Amount": "Amount",
   "Approve": "Approve",
   "Asset": "Asset",
-  "Available balance {{balance}}": "Available balance: {{balance}}",
+  "Balance {{balance}}": "Available balance: {{balance}}",
   "Both send and receive network are all required": "Both send and receive network are all required",
   "Cancel": "Cancel",
   "Claim Airdrop": "Claim Airdrop",

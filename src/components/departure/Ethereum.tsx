@@ -23,30 +23,29 @@ import {
   approveRingToIssuing,
   createTxObs,
   empty,
-  formatBalance,
+  fromWei,
   getInfoFromHash,
+  prettyNumber,
   RedeemDeposit,
   redeemDeposit,
   RedeemEth,
   redeemToken,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
+import { DepositItem, getDepositTimeRange } from '../controls/DepositItem';
+import { MaxBalance } from '../controls/MaxBalance';
+import { RecipientItem } from '../controls/RecipientItem';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
 import { ApproveSuccess } from '../modal/ApproveSuccess';
 import { Des } from '../modal/Des';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
-import { DepositItem, getDepositTimeRange } from '../controls/DepositItem';
-import { RecipientItem } from '../controls/RecipientItem';
-import { MaxBalance } from '../controls/MaxBalance';
 
 enum E2DAssetEnum {
   ring = 'ring',
   kton = 'kton',
   deposit = 'deposit',
 }
-
-const BALANCE_FORMATTER = { noDecimal: false, decimal: 3, withThousandSplit: true };
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
@@ -341,8 +340,8 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
           >
             <Balance
               size="large"
-              placeholder={t('Available balance {{balance}}', {
-                balance: max === null ? t('Searching') : formatBalance(max, 'ether', BALANCE_FORMATTER),
+              placeholder={t('Balance {{balance}}', {
+                balance: max === null ? t('Searching') : fromWei({ value: max }, prettyNumber),
               })}
               className="flex-1"
             >
@@ -350,17 +349,18 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
                 network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
                 onClick={() => {
                   form.setFieldsValue({
-                    [FORM_CONTROL.amount]: Web3.utils.fromWei(max && fee ? max?.sub(fee) : new BN(0)),
+                    [FORM_CONTROL.amount]: fromWei({ value: max && fee ? max?.sub(fee) : new BN(0) }),
                   });
                 }}
+                size="large"
               />
             </Balance>
           </Form.Item>
 
           <p className={fee && max && fee.lt(max) ? 'text-green-400' : 'text-red-400 animate-pulse'}>
             {t(`Cross-chain transfer fee. {{fee}} RING. (Account Balance. {{balance}} {{token}})`, {
-              fee: formatBalance(fee ?? '', 'ether'),
-              balance: formatBalance(max ?? '', 'ether', BALANCE_FORMATTER),
+              fee: fromWei({ value: fee }),
+              balance: fromWei({ value: max }, prettyNumber),
               token: (form.getFieldValue(FORM_CONTROL.asset) ?? '').toString().toUpperCase(),
             })}
           </p>
