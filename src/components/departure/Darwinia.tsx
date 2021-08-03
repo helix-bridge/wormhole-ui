@@ -1,5 +1,6 @@
+import { ReloadOutlined } from '@ant-design/icons';
 import { ApiPromise } from '@polkadot/api';
-import { Form, Radio, Select } from 'antd';
+import { Button, Form, Radio, Select, Tooltip } from 'antd';
 import BN from 'bn.js';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -159,7 +160,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
 
   useEffect(() => {
     form.setFieldsValue({
-      [FORM_CONTROL.sender]: (accounts || [])[0].address,
+      [FORM_CONTROL.sender]: (accounts && accounts[0] && accounts[0].address) || '',
       [FORM_CONTROL.assets]: [
         { asset: 'ring', amount: '', checked: true },
         { asset: 'kton', amount: '' },
@@ -207,7 +208,31 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
       </Form.Item>
 
       {isNative ? (
-        <Form.Item name={FORM_CONTROL.assets} label={t('Asset')} rules={[{ required: true }]} className="mb-0">
+        <Form.Item
+          name={FORM_CONTROL.assets}
+          label={
+            <span className="flex items-center">
+              <span className="mr-4">{t('Asset')}</span>
+
+              <Tooltip title={t('Refresh balances')} placement="right">
+                <Button
+                  type="link"
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    form.validateFields(['sender']).then(({ sender }) => {
+                      if (sender) {
+                        getBalances(sender).then(setAvailableBalances);
+                      }
+                    });
+                  }}
+                  className="flex items-center"
+                ></Button>
+              </Tooltip>
+            </span>
+          }
+          rules={[{ required: true }]}
+          className="mb-0"
+        >
           <AssetGroup
             network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
             balances={availableBalances}

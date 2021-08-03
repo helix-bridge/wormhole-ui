@@ -1,23 +1,38 @@
 import { typesBundle } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
-import type { InjectedExtension } from '@polkadot/extension-inject/types';
-import { Button, message, notification } from 'antd';
 import { createContext, Dispatch, useCallback, useEffect, useReducer, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Units } from 'web3-utils';
-import { NETWORK_CONFIG } from '../config';
-import { Action, ConnectStatus, IAccountMeta, NetConfig, Network } from '../model';
 import {
-  addEthereumChain,
-  getInitialSetting,
-  getUnit,
-  isEthereumNetwork,
-  isNativeMetamaskChain,
-  isNetworkConsistent,
-  isPolkadotNetwork,
-  switchEthereumChain,
-} from '../utils';
+  catchError,
+  concatMap,
+  EMPTY,
+  from,
+  map,
+  mapTo,
+  merge,
+  Observable,
+  Observer,
+  of,
+  startWith,
+  Subscription,
+  switchMap,
+  switchMapTo,
+  tap,
+} from 'rxjs';
+import { Units } from 'web3-utils';
+import { NETWORK_CONFIG, SHORT_DURATION } from '../config';
+import {
+  Action,
+  ConnectStatus,
+  EthereumConnection,
+  IAccountMeta,
+  MetamaskError,
+  NetConfig,
+  Network,
+  PolkadotConnection,
+} from '../model';
+import { getInitialSetting, getUnit, isEthereumNetwork, isNetworkConsistent, isPolkadotNetwork } from '../utils';
+import { switchMetamaskNetwork } from '../utils/network/switch';
 
 interface StoreState {
   accounts: IAccountMeta[] | null;
@@ -44,6 +59,92 @@ const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
 }
+
+export const getPolkadotConnection: (network: Network) => Observable<PolkadotConnection> = (network) =>
+  from(web3Enable('polkadot-js/apps')).pipe(
+    concatMap((extensions) => from(web3Accounts()).pipe(map((accounts) => ({ accounts, extensions })))),
+    switchMap(({ accounts, extensions }) => {
+      return new Observable((observer: Observer<PolkadotConnection>) => {
+        const url = NETWORK_CONFIG[network].rpc;
+        const provider = new WsProvider(url);
+        const api = new ApiPromise({
+          provider,
+          typesBundle,
+        });
+        const envelop: PolkadotConnection = {
+          status: 'success',
+          accounts: !extensions.length && !accounts.length ? [] : accounts,
+          api,
+        };
+
+        api.on('ready', () => {
+          observer.next(envelop);
+        });
+
+        api.on('connected', () => {
+          api.isReady.then(() => {
+            observer.next(envelop);
+          });
+        });
+
+        api.on('disconnected', () => {
+          observer.next({ ...envelop, status: 'disconnected' });
+          setTimeout(() => {
+            observer.next({ ...envelop, status: 'connecting' });
+            api.connect();
+          }, SHORT_DURATION);
+        });
+
+        api.on('error', (_) => {
+          observer.next({ ...envelop, status: 'error' });
+          setTimeout(() => {
+            observer.next({ ...envelop, status: 'connecting' });
+            api.connect();
+          }, SHORT_DURATION);
+        });
+      });
+    }),
+    startWith<PolkadotConnection>({ status: 'connecting', accounts: [], api: null })
+  );
+
+export const getEthConnection: (network: Network) => Observable<EthereumConnection> = (network) => {
+  return from(window.ethereum.request({ method: 'eth_requestAccounts' })).pipe(
+    switchMap((_) => {
+      const addressToAccounts = (addresses: string[]) =>
+        addresses.map((address) => ({ address, meta: { source: '' } }));
+
+      const request: Observable<EthereumConnection> = from<string[][]>(
+        window.ethereum.request({ method: 'eth_accounts' })
+      ).pipe(map((addresses) => ({ accounts: addressToAccounts(addresses), status: 'success' })));
+
+      const obs = new Observable((observer: Observer<EthereumConnection>) => {
+        window.ethereum.on('accountsChanged', (accounts: string[]) =>
+          observer.next({
+            status: 'success',
+            accounts: addressToAccounts(accounts),
+          })
+        );
+        window.ethereum.on('chainChanged', (chainId: string) => {
+          from(isNetworkConsistent(network, chainId))
+            .pipe(
+              switchMap((isMatch) => (isMatch ? request : of<EthereumConnection>({ status: 'error', accounts: [] })))
+            )
+            .subscribe((state) => observer.next(state));
+        });
+        window.ethereum.on('disconnect', () => {
+          observer.next({ status: 'disconnected', accounts: [] });
+          observer.complete();
+        });
+      });
+
+      return merge(request, obs);
+    }),
+    catchError((_, caught) => {
+      return caught.pipe(mapTo<EthereumConnection>({ status: 'error', accounts: [] }));
+    }),
+    startWith<EthereumConnection>({ status: 'connecting', accounts: [] })
+  );
+};
 
 const initialState: StoreState = {
   network: getInitialSetting<Network>('from', null),
@@ -79,8 +180,8 @@ function accountReducer(state: StoreState, action: Action<ActionType, any>): Sto
 
 export type ApiCtx = StoreState & {
   api: ApiPromise | null;
-  connectToEth: (id?: string | undefined) => Promise<void>;
-  connectToSubstrate: () => Promise<(() => void) | void>;
+  connectToEth: (network: Network, id?: string | undefined) => Subscription;
+  connectToSubstrate: (network: Network) => Subscription;
   disconnect: () => void;
   dispatch: Dispatch<Action<ActionType>>;
   setAccounts: (accounts: IAccountMeta[]) => void;
@@ -90,13 +191,11 @@ export type ApiCtx = StoreState & {
   setApi: (api: ApiPromise) => void;
   networkConfig: NetConfig | null;
   chain: Chain;
-  extensions: InjectedExtension[] | undefined;
 };
 
 export const ApiContext = createContext<ApiCtx | null>(null);
 
 export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
-  const { t } = useTranslation();
   const [state, dispatch] = useReducer(accountReducer, initialState);
   const switchNetwork = useCallback((payload: Network | null) => dispatch({ type: 'switchNetwork', payload }), []);
   const setAccounts = useCallback((payload: IAccountMeta[]) => dispatch({ type: 'setAccounts', payload }), []);
@@ -110,136 +209,76 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   );
   const [api, setApi] = useState<ApiPromise | null>(null);
   const [chain, setChain] = useState<Chain>({ ss58Format: '', tokens: [] });
-  const [extensions, setExtensions] = useState<InjectedExtension[] | undefined>(undefined);
-  const notify = useCallback(
-    (network: Network) => {
-      const key = `key${Date.now()}`;
-      const promise = new Promise((resolve, reject) => {
-        const fail = (err: Record<string, unknown>) => {
-          message.error(t('Network switch failed, please switch it in the metamask plugin'));
-          setNetworkStatus('fail');
-          reject(err);
-        };
-        notification.error({
-          message: t('Incorrect network'),
-          description: t(
-            'Network mismatch, you can switch network manually in metamask or do it automatically by clicking the button below',
-            { type: network }
-          ),
-          btn: (
-            <Button
-              type="primary"
-              onClick={async () => {
-                try {
-                  const isNative = isNativeMetamaskChain(network);
-                  const action = isNative ? switchEthereumChain : addEthereumChain;
-                  const res = await action(network);
-
-                  if (res === null) {
-                    notification.close(key);
-                    resolve(res as null);
-                  } else {
-                    fail(res);
-                  }
-                } catch (err) {
-                  fail(err);
-                }
-              }}
-            >
-              {t('Switch to {{network}}', { network })}
-            </Button>
-          ),
-          key,
-          onClose: () => notification.close(key),
-          duration: null,
-        });
-      });
-
-      return promise;
-    },
-    [setNetworkStatus, t]
-  );
-  const metamaskAccountChanged = useCallback(
-    (accounts: string[]) => {
-      setAccounts(accounts.map((address) => ({ address, meta: { source: '' } })));
-    },
-    [setAccounts]
-  );
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const connectToEth = useCallback(
-    async (chainId?: string) => {
-      if (!isMetamaskInstalled() || !state.network) {
-        return;
+    (network: Network, chainId?: string) => {
+      if (!isMetamaskInstalled() || network === null) {
+        return EMPTY.subscribe();
       }
 
-      setNetworkStatus('connecting');
-
-      const isMatch = await isNetworkConsistent(state.network, chainId);
-      const canRequest = isMatch || !(await notify(state.network));
-
-      if (!canRequest) {
-        return;
-      }
-
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-      const accounts: string[] = await window.ethereum.request({ method: 'eth_accounts' });
-
-      setAccounts(accounts.map((address) => ({ address })));
-      setNetworkStatus('success');
-      window.ethereum.removeListener('accountsChanged', metamaskAccountChanged);
-      window.ethereum.on('accountsChanged', metamaskAccountChanged);
-      window.ethereum.on('disconnect', () => {
-        if (isEthereumNetwork(state.network)) {
-          setNetworkStatus('disconnected');
-        }
-      });
+      return from(isNetworkConsistent(network, chainId))
+        .pipe(
+          tap((is) => console.info('%c [ is ]-194', 'font-size:13px; background:pink; color:#bf2c9f;', is)),
+          switchMap((isMatch) => {
+            if (isMatch) {
+              return getEthConnection(network);
+            } else {
+              return switchMetamaskNetwork(network).pipe(switchMapTo(getEthConnection(network)));
+            }
+          })
+        )
+        .subscribe({
+          next: ({ status, accounts }) => {
+            setAccounts(accounts);
+            setNetworkStatus(status);
+          },
+          error: (err: MetamaskError) => {
+            console.error('%c [ Ethereum connection error ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+            setAccounts([]);
+            setNetworkStatus('error');
+          },
+          complete: () => {
+            console.info('Ethereum connection complete, cancel connection to ', network);
+            setNetworkStatus('fail');
+          },
+        });
     },
-    [metamaskAccountChanged, notify, setAccounts, setNetworkStatus, state.network]
+    [setAccounts, setNetworkStatus]
   );
 
-  const connectToSubstrate = useCallback(async () => {
-    if (!state.network) {
-      return;
-    }
-
-    setNetworkStatus('connecting');
-
-    const url = NETWORK_CONFIG[state.network].rpc;
-    const provider = new WsProvider(url);
-    const nApi = new ApiPromise({
-      provider,
-      typesBundle,
-    });
-
-    const onReady = async () => {
-      const exts = await web3Enable('polkadot-js/apps');
-      const newAccounts = await web3Accounts();
-
-      setExtensions(exts);
-      setApi(nApi);
-      setAccounts(!exts.length && !newAccounts.length ? [] : newAccounts);
-      setNetworkStatus('success');
-    };
-    const onDisconnected = () => {
-      if (isPolkadotNetwork(state.network)) {
-        setNetworkStatus('disconnected');
+  const connectToSubstrate = useCallback(
+    (network: Network) => {
+      if (!network) {
+        return EMPTY.subscribe();
       }
-    };
 
-    nApi.on('ready', onReady);
-    nApi.on('disconnected', onDisconnected);
-
-    return () => {
-      nApi.off('ready', onReady);
-      nApi.off('disconnected', onDisconnected);
-    };
-  }, [setAccounts, setNetworkStatus, state.network]);
+      return getPolkadotConnection(network).subscribe({
+        next: ({ status, accounts, api: nApi }) => {
+          setAccounts(accounts);
+          setApi(nApi);
+          setNetworkStatus(status);
+        },
+        error: (_) => {
+          setAccounts([]);
+          setNetworkStatus('error');
+        },
+        complete: () => {
+          console.info('[ Substrate connection complete, cancel connection to  ]', network);
+        },
+      });
+    },
+    [setAccounts, setNetworkStatus]
+  );
 
   // eslint-disable-next-line complexity
   const disconnect = useCallback(() => {
     const isPolkadot = isPolkadotNetwork(state.network);
 
     if (isPolkadot && api && api.isConnected) {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+
       api.disconnect().then(() => {
         setNetworkStatus('pending');
         setApi(null);
@@ -254,35 +293,31 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       setAccounts([]);
       return;
     }
-  }, [api, setAccounts, setNetworkStatus, state.network]);
+  }, [api, setAccounts, setNetworkStatus, state.network, subscription]);
 
   /**
-   * connect to substrate or metamask when account type changed.
+   * connect to substrate or metamask when network changed.
    */
   useEffect(() => {
-    (async () => {
-      try {
-        if (!state.network) {
-          setNetworkStatus('pending');
-          return;
-        }
+    let sub$$: Subscription = EMPTY.subscribe();
 
-        if (isPolkadotNetwork(state.network)) {
-          connectToSubstrate();
-        }
-
-        if (isEthereumNetwork(state.network)) {
-          connectToEth();
-
-          window.ethereum.on('chainChanged', connectToEth);
-        }
-      } catch (error) {
-        setNetworkStatus('fail');
+    if (state.network === null) {
+      setNetworkStatus('pending');
+    } else {
+      if (isPolkadotNetwork(state.network)) {
+        sub$$ = connectToSubstrate(state.network);
       }
-    })();
+
+      if (isEthereumNetwork(state.network)) {
+        sub$$ = connectToEth(state.network);
+      }
+    }
+
+    setSubscription(sub$$);
 
     return () => {
-      window.ethereum.removeListener('chainChanged', connectToEth);
+      console.info('[Api provider] Cancel network subscription of network', state.network);
+      sub$$.unsubscribe();
     };
   }, [connectToEth, connectToSubstrate, setNetworkStatus, state.network]);
 
@@ -292,6 +327,10 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     }
 
     (async () => {
+      if (!api.isConnected) {
+        await api.connect();
+      }
+
       const chainState = await api?.rpc.system.properties();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
@@ -325,7 +364,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
         api,
         networkConfig: state.network ? NETWORK_CONFIG[state.network] : null,
         chain,
-        extensions,
       }}
     >
       {children}

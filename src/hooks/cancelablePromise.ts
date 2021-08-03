@@ -2,11 +2,11 @@ import { useCallback } from 'react';
 import { useMountedState } from './mountedState';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const useCancelablePromise = <T = any>() => {
+export const useCancelablePromise = () => {
   const isMounted = useMountedState();
 
   return useCallback(
-    (promise: Promise<T>, onCancel?: () => void) =>
+    <T>(promise: Promise<T>, onCancel?: () => void) =>
       new Promise((resolve, reject) => {
         promise
           .then((result: T) => {

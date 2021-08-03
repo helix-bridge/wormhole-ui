@@ -1,7 +1,13 @@
+import { ApiPromise } from '@polkadot/api';
+import { IAccountMeta } from './account';
 import { Config } from './common';
 import { AddEthereumChainParameter } from './metamask';
 
-export type Network = 'pangolin' | 'crab' | 'darwinia' | 'ethereum' | 'ropsten' | 'tron';
+export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia';
+
+export type EthereumTypeNetwork = 'ethereum' | 'ropsten' | 'tron';
+
+export type Network = PolkadotTypeNetwork | EthereumTypeNetwork;
 
 export type NetworkType = 'polkadot' | 'ethereum' | 'tron' | 'darwinia';
 
@@ -37,6 +43,14 @@ export type NetworkConfig<T = NetConfig> = Config<Network, T>;
 /**
  * pending: initial state, indicate that the connection never launched.
  */
-export type ConnectStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected';
+export type ConnectStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected' | 'error';
+
+export type Connection<T = Network> = T extends PolkadotTypeNetwork
+  ? { status: ConnectStatus; api: ApiPromise | null; accounts: IAccountMeta[] }
+  : { status: ConnectStatus; accounts: IAccountMeta[] };
+
+export type PolkadotConnection = Connection<PolkadotTypeNetwork>;
+
+export type EthereumConnection = Connection<EthereumTypeNetwork>;
 
 export type NetworkFilter = (network: Required<NetConfig>) => boolean;

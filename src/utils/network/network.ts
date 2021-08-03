@@ -1,17 +1,7 @@
-import { ApiPromise } from '@polkadot/api';
-import type ExtType from '@polkadot/extension-inject/types';
 import { curry, curryRight, isNull } from 'lodash';
 import Web3 from 'web3';
 import { NetworkEnum, NETWORK_CONFIG, NETWORK_GRAPH, Vertices } from '../../config';
 import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkType } from '../../model';
-
-export interface Connection {
-  accounts: ExtType.InjectedAccountWithMeta[];
-  api: ApiPromise | null;
-  networkStatus: ConnectStatus;
-}
-
-export type ConnectStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected';
 
 function isSpecifyNetworkType(type: NetworkType) {
   return (network: Network | null) => {
@@ -22,7 +12,7 @@ function isSpecifyNetworkType(type: NetworkType) {
     const config = NETWORK_CONFIG[network];
 
     if (!config) {
-      console.warn('🚀 ~ can not find the network config by type: ', network);
+      console.warn('🚀 ~ Can not find the network config by type: ', network);
       return false;
     }
 
@@ -81,8 +71,9 @@ export async function isNetworkConsistent(network: Network, id = ''): Promise<bo
   id = id && Web3.utils.isHex(id) ? parseInt(id, 16).toString() : id;
   // id 1: eth mainnet 3: ropsten 4: rinkeby 5: goerli 42: kovan  43: pangolin 44: crab
   const actualId: string = id ? await Promise.resolve(id) : await window.ethereum.request({ method: 'net_version' });
+  const storedId = NETWORK_CONFIG[network].ethereumChain.chainId;
 
-  return parseInt(NETWORK_CONFIG[network].ethereumChain.chainId, 16).toString() === actualId;
+  return storedId === actualId;
 }
 
 export function isNativeMetamaskChain(network: Network): boolean {
@@ -98,11 +89,12 @@ export function isNativeMetamaskChain(network: Network): boolean {
   return ids.includes(+params.chainId);
 }
 
-export async function switchEthereumChain(network: Network) {
+export async function switchEthereumChain(network: Network): Promise<null> {
   const params = NETWORK_CONFIG[network].ethereumChain;
-  const res = await window.ethereum.request({
+  const chainId = Web3.utils.toHex(+params.chainId);
+  const res: null = await window.ethereum.request({
     method: 'wallet_switchEthereumChain',
-    params: [{ chainId: Web3.utils.toHex(+params.chainId) }],
+    params: [{ chainId }],
   });
 
   return res;
@@ -111,19 +103,15 @@ export async function switchEthereumChain(network: Network) {
 /**
  * @description add chain in metamask
  */
-export async function addEthereumChain(network: Network) {
+export async function addEthereumChain(network: Network): Promise<null> {
+  // TODO check the chaiId field, store in decimal in configuration but may be required hexadecimal in metamask side.
   const params = NETWORK_CONFIG[network].ethereumChain;
+  const result = await window.ethereum.request({
+    method: 'wallet_addEthereumChain',
+    params: [params],
+  });
 
-  try {
-    const result = await window.ethereum.request({
-      method: 'wallet_addEthereumChain',
-      params: [params],
-    });
-
-    return result;
-  } catch (err) {
-    console.warn('%c [ err ]-199', 'font-size:13px; background:pink; color:#bf2c9f;', err);
-  }
+  return result;
 }
 
 export function hasBridge(from: Network, to: Network): boolean {

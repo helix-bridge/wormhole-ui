@@ -42,7 +42,11 @@ const DEPARTURES: Departures = {
   darwinia: Darwinia,
 };
 
-const getDeparture: (from: NetConfig) => FunctionComponent<BridgeFormProps & Bridges> = (from) => {
+const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<BridgeFormProps & Bridges> = (from) => {
+  if (!from) {
+    return () => <></>;
+  }
+
   const Comp = DEPARTURES[from.name];
 
   if (Comp) {
@@ -185,9 +189,9 @@ function SubmitButton({ from, to }: SubmitButtonProps) {
           const isPolkadot = isPolkadotNetwork(from.name);
 
           if (isPolkadot) {
-            connectToSubstrate();
+            connectToSubstrate(network);
           } else {
-            connectToEth();
+            connectToEth(network);
           }
         }}
       >

@@ -104,7 +104,7 @@ export function Nets({ value, onChange }: NetsProps) {
         networks={fromNetworks}
         title={t('From')}
         value={value?.from}
-        extra={Extra}
+        extra={vertices?.status !== 'pending' ? Extra : <></>}
         onChange={(from) => {
           triggerChange({ from, to: value?.to ?? null });
         }}
