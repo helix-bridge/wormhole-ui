@@ -94,7 +94,7 @@ export function TransferForm() {
             { required: true, message: t('Both send and receive network are all required') },
             {
               validator: (_, value: TransferNetwork) => {
-                return value.from && value.to ? Promise.resolve() : Promise.reject();
+                return (value.from && value.to) || (!value.from && !value.to) ? Promise.resolve() : Promise.reject();
               },
               message: t('You maybe forgot to select receive or sending network'),
             },
