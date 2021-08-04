@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { NETWORK_GRAPH } from '../../config';
 import { RecordsParam } from '../../model';
+import { getRecordsParams } from '../../utils';
 
 const { TabPane } = Tabs;
 const NETWORKS = [...NETWORK_GRAPH.keys()];
@@ -11,18 +12,13 @@ const NETWORKS = [...NETWORK_GRAPH.keys()];
 export function Records() {
   const { t } = useTranslation();
   const { search } = useLocation<RecordsParam>();
-  const searchParams = useMemo(() => new URLSearchParams(search), [search]);
-  console.info(
-    '%c [  network, sender, state  ]-6',
-    'font-size:13px; background:pink; color:#bf2c9f;',
-    searchParams.get('network'),
-    searchParams.get('sender'),
-    searchParams.get('state')
-  );
+  const searchParams = useMemo(() => getRecordsParams(search), [search]);
+  console.info('%c [ searchParams ]-16', 'font-size:13px; background:pink; color:#bf2c9f;', searchParams);
+
   return (
     <>
       <Input.Group size="large" className="flex items-center w-full mb-8 select-search">
-        <Select size="large" defaultValue={NETWORKS[0]} className="capitalize">
+        <Select size="large" defaultValue={searchParams?.network || NETWORKS[0]} className="capitalize">
           {NETWORKS.map((net) => {
             return (
               <Select.Option value={net} key={net} className="capitalize">
@@ -32,35 +28,31 @@ export function Records() {
           })}
         </Select>
 
-        <Input.Search loading={false} enterButton="Search" size="large" />
+        <Input.Search defaultValue={searchParams?.sender || ''} loading={false} enterButton="Search" size="large" />
       </Input.Group>
 
-      <Tabs>
+      <Tabs defaultActiveKey={searchParams?.state || 'inprogress'}>
         <TabPane
           tab={
             <Space>
               <span>{t('In Progress')}</span>
-              <span>{}</span>
+              <span>In progress number</span>
             </Space>
           }
-          key="inProgress"
+          key="inprogress"
         >
-          {/* {multisigAccount?.address ? (
-            <Entries source={inProgress} account={multisigAccount} />
-          ) : (
-            <Spin className="w-full mt-4" />
-          )} */}
+          <span>In progress extrinsics</span>
         </TabPane>
         <TabPane
           tab={
             <Space>
               <span>{t('Confirmed Extrinsic')}</span>
-              {/* <span>{data?.transfers.totalCount ?? 0}</span> */}
+              <span>confirmed number</span>
             </Space>
           }
           key="confirmed"
         >
-          {/* <Confirmed account={multisigAccount} multiAddress={multiAddress} /> */}
+          <span>confirmed extrinsics</span>
         </TabPane>
       </Tabs>
     </>

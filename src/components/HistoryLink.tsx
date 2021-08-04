@@ -3,9 +3,8 @@ import { Link, LinkProps } from 'react-router-dom';
 import { Path } from '../config/routes';
 import { useDeparture } from '../hooks';
 import { RecordsParam } from '../model';
-import { getRecordsSearchParams } from '../utils';
+import { genRecordsParams } from '../utils';
 
-// eslint-disable-next-line complexity
 export function HistoryLink({
   network,
   sender,
@@ -15,7 +14,7 @@ export function HistoryLink({
   const { departure } = useDeparture();
   const base = Path.history;
   const { from, sender: payer } = departure;
-  const query = getRecordsSearchParams({
+  const query = genRecordsParams({
     network: network || from?.name,
     sender: sender || payer,
     state,
