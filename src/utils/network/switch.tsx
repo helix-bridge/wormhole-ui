@@ -1,8 +1,35 @@
 import { Button, message, notification } from 'antd';
 import { Trans } from 'react-i18next';
 import { Observable, Observer } from 'rxjs';
+import Web3 from 'web3';
+import { NETWORK_CONFIG } from '../../config';
 import { MetamaskError, Network } from '../../model';
-import { addEthereumChain, isNativeMetamaskChain, switchEthereumChain } from './network';
+import { isNativeMetamaskChain } from './network';
+
+export async function switchEthereumChain(network: Network): Promise<null> {
+  const params = NETWORK_CONFIG[network].ethereumChain;
+  const chainId = Web3.utils.toHex(+params.chainId);
+  const res: null = await window.ethereum.request({
+    method: 'wallet_switchEthereumChain',
+    params: [{ chainId }],
+  });
+
+  return res;
+}
+
+/**
+ * @description add chain in metamask
+ */
+export async function addEthereumChain(network: Network): Promise<null> {
+  // TODO check the chaiId field, store in decimal in configuration but may be required hexadecimal in metamask side.
+  const params = NETWORK_CONFIG[network].ethereumChain;
+  const result = await window.ethereum.request({
+    method: 'wallet_addEthereumChain',
+    params: [params],
+  });
+
+  return result;
+}
 
 export const switchMetamaskNetwork: (network: Network) => Observable<null> = (network: Network) => {
   const key = `key${Date.now()}`;

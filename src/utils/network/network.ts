@@ -89,31 +89,6 @@ export function isNativeMetamaskChain(network: Network): boolean {
   return ids.includes(+params.chainId);
 }
 
-export async function switchEthereumChain(network: Network): Promise<null> {
-  const params = NETWORK_CONFIG[network].ethereumChain;
-  const chainId = Web3.utils.toHex(+params.chainId);
-  const res: null = await window.ethereum.request({
-    method: 'wallet_switchEthereumChain',
-    params: [{ chainId }],
-  });
-
-  return res;
-}
-
-/**
- * @description add chain in metamask
- */
-export async function addEthereumChain(network: Network): Promise<null> {
-  // TODO check the chaiId field, store in decimal in configuration but may be required hexadecimal in metamask side.
-  const params = NETWORK_CONFIG[network].ethereumChain;
-  const result = await window.ethereum.request({
-    method: 'wallet_addEthereumChain',
-    params: [params],
-  });
-
-  return result;
-}
-
 export function hasBridge(from: Network, to: Network): boolean {
   return !!getVertices(from, to);
 }

@@ -1,38 +1,20 @@
-import { typesBundle } from '@darwinia/types/mix';
-import { ApiPromise, WsProvider } from '@polkadot/api';
-import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
+import { ApiPromise } from '@polkadot/api';
 import { createContext, Dispatch, useCallback, useEffect, useReducer, useState } from 'react';
-import {
-  catchError,
-  concatMap,
-  EMPTY,
-  from,
-  map,
-  mapTo,
-  merge,
-  Observable,
-  Observer,
-  of,
-  startWith,
-  Subscription,
-  switchMap,
-  switchMapTo,
-  tap,
-} from 'rxjs';
+import { EMPTY, from, Subscription, switchMap, switchMapTo } from 'rxjs';
 import { Units } from 'web3-utils';
-import { NETWORK_CONFIG, SHORT_DURATION } from '../config';
+import { NETWORK_CONFIG } from '../config';
+import { Action, ConnectStatus, IAccountMeta, MetamaskError, NetConfig, Network } from '../model';
 import {
-  Action,
-  ConnectStatus,
-  EthereumConnection,
-  IAccountMeta,
-  MetamaskError,
-  NetConfig,
-  Network,
-  PolkadotConnection,
-} from '../model';
-import { getInitialSetting, getUnit, isEthereumNetwork, isNetworkConsistent, isPolkadotNetwork } from '../utils';
-import { switchMetamaskNetwork } from '../utils/network/switch';
+  getEthConnection,
+  getInitialSetting,
+  getPolkadotConnection,
+  getUnit,
+  isEthereumNetwork,
+  isMetamaskInstalled,
+  isNetworkConsistent,
+  isPolkadotNetwork,
+  switchMetamaskNetwork,
+} from '../utils';
 
 interface StoreState {
   accounts: IAccountMeta[] | null;
@@ -55,96 +37,6 @@ export interface Chain {
 type ActionType = 'switchNetwork' | 'updateNetworkStatus' | 'setAccounts' | 'setEnableTestNetworks';
 
 const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
-
-export function isMetamaskInstalled(): boolean {
-  return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
-}
-
-export const getPolkadotConnection: (network: Network) => Observable<PolkadotConnection> = (network) =>
-  from(web3Enable('polkadot-js/apps')).pipe(
-    concatMap((extensions) => from(web3Accounts()).pipe(map((accounts) => ({ accounts, extensions })))),
-    switchMap(({ accounts, extensions }) => {
-      return new Observable((observer: Observer<PolkadotConnection>) => {
-        const url = NETWORK_CONFIG[network].rpc;
-        const provider = new WsProvider(url);
-        const api = new ApiPromise({
-          provider,
-          typesBundle,
-        });
-        const envelop: PolkadotConnection = {
-          status: 'success',
-          accounts: !extensions.length && !accounts.length ? [] : accounts,
-          api,
-        };
-
-        api.on('ready', () => {
-          observer.next(envelop);
-        });
-
-        api.on('connected', () => {
-          api.isReady.then(() => {
-            observer.next(envelop);
-          });
-        });
-
-        api.on('disconnected', () => {
-          observer.next({ ...envelop, status: 'disconnected' });
-          setTimeout(() => {
-            observer.next({ ...envelop, status: 'connecting' });
-            api.connect();
-          }, SHORT_DURATION);
-        });
-
-        api.on('error', (_) => {
-          observer.next({ ...envelop, status: 'error' });
-          setTimeout(() => {
-            observer.next({ ...envelop, status: 'connecting' });
-            api.connect();
-          }, SHORT_DURATION);
-        });
-      });
-    }),
-    startWith<PolkadotConnection>({ status: 'connecting', accounts: [], api: null })
-  );
-
-export const getEthConnection: (network: Network) => Observable<EthereumConnection> = (network) => {
-  return from(window.ethereum.request({ method: 'eth_requestAccounts' })).pipe(
-    switchMap((_) => {
-      const addressToAccounts = (addresses: string[]) =>
-        addresses.map((address) => ({ address, meta: { source: '' } }));
-
-      const request: Observable<EthereumConnection> = from<string[][]>(
-        window.ethereum.request({ method: 'eth_accounts' })
-      ).pipe(map((addresses) => ({ accounts: addressToAccounts(addresses), status: 'success' })));
-
-      const obs = new Observable((observer: Observer<EthereumConnection>) => {
-        window.ethereum.on('accountsChanged', (accounts: string[]) =>
-          observer.next({
-            status: 'success',
-            accounts: addressToAccounts(accounts),
-          })
-        );
-        window.ethereum.on('chainChanged', (chainId: string) => {
-          from(isNetworkConsistent(network, chainId))
-            .pipe(
-              switchMap((isMatch) => (isMatch ? request : of<EthereumConnection>({ status: 'error', accounts: [] })))
-            )
-            .subscribe((state) => observer.next(state));
-        });
-        window.ethereum.on('disconnect', () => {
-          observer.next({ status: 'disconnected', accounts: [] });
-          observer.complete();
-        });
-      });
-
-      return merge(request, obs);
-    }),
-    catchError((_, caught) => {
-      return caught.pipe(mapTo<EthereumConnection>({ status: 'error', accounts: [] }));
-    }),
-    startWith<EthereumConnection>({ status: 'connecting', accounts: [] })
-  );
-};
 
 const initialState: StoreState = {
   network: getInitialSetting<Network>('from', null),
@@ -218,7 +110,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
 
       return from(isNetworkConsistent(network, chainId))
         .pipe(
-          tap((is) => console.info('%c [ is ]-194', 'font-size:13px; background:pink; color:#bf2c9f;', is)),
           switchMap((isMatch) => {
             if (isMatch) {
               return getEthConnection(network);
@@ -239,7 +130,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
           },
           complete: () => {
             console.info('Ethereum connection complete, cancel connection to ', network);
-            setNetworkStatus('fail');
           },
         });
     },
@@ -263,7 +153,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
           setNetworkStatus('error');
         },
         complete: () => {
-          console.info('[ Substrate connection complete, cancel connection to  ]', network);
+          console.info('Substrate connection complete, cancel connection to ', network);
         },
       });
     },
