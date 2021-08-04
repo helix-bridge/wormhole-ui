@@ -1,4 +1,11 @@
-import { ArrowRightOutlined, DashOutlined, DisconnectOutlined, LinkOutlined, SyncOutlined } from '@ant-design/icons';
+import {
+  ArrowRightOutlined,
+  ClearOutlined,
+  DashOutlined,
+  DisconnectOutlined,
+  LinkOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 import { Button, Popover, Tooltip } from 'antd';
 import { isBoolean, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -99,7 +106,7 @@ export function Nets({ value, onChange }: NetsProps) {
   }, [value]);
 
   return (
-    <div className="flex sm:grid sm:grid-cols-5 justify-between items-center">
+    <div className="relative flex sm:grid sm:grid-cols-5 justify-between items-center">
       <Destination
         networks={fromNetworks}
         title={t('From')}
@@ -126,6 +133,15 @@ export function Nets({ value, onChange }: NetsProps) {
           triggerChange({ to, from: value?.from ?? null });
         }}
       />
+
+      <Tooltip title={t('Reset Networks')}>
+        <Button
+          className="absolute -top-4 -right-4 flex items-center justify-center"
+          onClick={() => triggerChange({ from: null, to: null })}
+          type="link"
+          icon={<ClearOutlined className="text-xl " />}
+        ></Button>
+      </Tooltip>
     </div>
   );
 }

@@ -41,7 +41,7 @@ export function Destination({
               }
             }}
           >
-            <Menu.Item key="default">{t('Reset Select')}</Menu.Item>
+            <Menu.Item key="default">{t('Clear Selected')}</Menu.Item>
             {networks.map((item) => (
               <Menu.Item key={item.fullName} className="flex justify-between">
                 <span className="capitalize mr-2">{item.fullName}</span>
