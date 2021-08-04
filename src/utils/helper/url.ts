@@ -84,3 +84,23 @@ export function getInitialSetting<T = SettingValue | string>(key: SettingKey, de
 export function apiUrl(domain: string, path: string): string {
   return domain + '/api/' + path;
 }
+
+export const getRecordsSearchParams: (param: Record<string, string | undefined | null>) => string = ({
+  network,
+  sender,
+  state,
+}) => {
+  const params = new URLSearchParams();
+
+  [
+    { key: 'network', value: network || '' },
+    { key: 'sender', value: sender || '' },
+    { key: 'state', value: state || '' },
+  ].forEach(({ key, value }) => {
+    if (value) {
+      params.set(key, value);
+    }
+  });
+
+  return params.toString();
+};

@@ -1,6 +1,6 @@
 export * from './account';
 export * from './api';
-export * from './assets';
+export * from './departure';
 export * from './axios';
 export * from './cancelablePromise';
 export * from './injected';

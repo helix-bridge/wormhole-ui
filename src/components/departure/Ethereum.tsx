@@ -6,7 +6,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useTx } from '../../hooks';
+import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import {
   BridgeFormProps,
   E2D,
@@ -164,6 +164,7 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
   const { accounts } = useApi();
   const { observer } = useTx();
   const { address: account } = (accounts || [])[0] ?? '';
+  const { updateDeparture } = useDeparture();
   const { afterTx } = useAfterSuccess();
   const refreshAmount = useCallback(
     (value: RedeemEth | ApproveValue) =>
@@ -233,7 +234,8 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
     getRingBalance(account, netConfig).then((balance) => setMax(balance));
     getFee(netConfig).then((crossFee) => setFee(crossFee));
     getIssuingAllowance(account, netConfig).then((num) => setAllowance(num));
-  }, [account, form, updateSubmit]);
+    updateDeparture({ from: netConfig || undefined, sender: form.getFieldValue(FORM_CONTROL.sender) });
+  }, [account, form, updateDeparture, updateSubmit]);
 
   return (
     <>

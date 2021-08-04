@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useTx } from '../../hooks';
+import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import { BridgeFormProps, D2E, D2EAsset, Token, TransferAsset, Tx } from '../../model';
 import { AfterTxCreator, applyModalObs, createTxObs, empty, toWei } from '../../utils';
 import { backingLock, BackingLockNative } from '../../utils/tx/d2e';
@@ -80,7 +80,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
   const [isNative, setIsNative] = useState<boolean>(true);
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
   const [fee, setFee] = useState<BN | null>(null);
-  // const [max, setMax] = useState<BN | null>(null);
+  const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess();
   const getChainInfo = useCallback(
@@ -159,8 +159,10 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
   }, [form, getBalances]);
 
   useEffect(() => {
+    const sender = (accounts && accounts[0] && accounts[0].address) || '';
+
     form.setFieldsValue({
-      [FORM_CONTROL.sender]: (accounts && accounts[0] && accounts[0].address) || '',
+      [FORM_CONTROL.sender]: sender,
       [FORM_CONTROL.assets]: [
         { asset: 'ring', amount: '', checked: true },
         { asset: 'kton', amount: '' },
@@ -168,7 +170,8 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
     });
     getFee(api).then((crossFee) => setFee(crossFee));
     updateSubmit();
-  }, [form, api, accounts, updateSubmit]);
+    updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
+  }, [form, api, accounts, updateSubmit, updateDeparture]);
 
   return (
     <>

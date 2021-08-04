@@ -13,11 +13,10 @@ import {
   TxSuccessComponentProps,
 } from '../model';
 import { TxContext, TxCtx } from '../providers';
-import { applyModal } from '../utils';
+import { applyModal, getRecordsSearchParams } from '../utils';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useAfterSuccess<
   T extends TransferFormValues<DeepRequired<Bridges, ['sender']>, NoNullTransferNetwork>
 >() {
@@ -45,7 +44,9 @@ export function useAfterSuccess<
             size: 'large',
             onClick: () => {
               destroy();
-              history.push(Path.history);
+              history.push(
+                Path.history + '?' + getRecordsSearchParams({ network: value.transfer.from.name, sender: value.sender })
+              );
             },
           },
           onCancel: (close) => {

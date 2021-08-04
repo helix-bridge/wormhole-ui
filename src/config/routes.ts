@@ -16,7 +16,7 @@ export const routes: RouteProps[] = [
   {
     exact: true,
     path: Path.history,
-    children: HistoryRecords,
+    component: HistoryRecords,
   },
   {
     exact: true,
