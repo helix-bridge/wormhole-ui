@@ -13,7 +13,7 @@ import {
   TxSuccessComponentProps,
 } from '../model';
 import { TxContext, TxCtx } from '../providers';
-import { applyModal, genRecordsParams } from '../utils';
+import { applyModal, genHistoryRouteParams } from '../utils';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
@@ -45,7 +45,7 @@ export function useAfterSuccess<
             onClick: () => {
               destroy();
               history.push(
-                Path.history + '?' + genRecordsParams({ network: value.transfer.from.name, sender: value.sender })
+                Path.history + '?' + genHistoryRouteParams({ network: value.transfer.from.name, sender: value.sender })
               );
             },
           },

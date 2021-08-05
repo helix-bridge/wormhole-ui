@@ -1,4 +1,5 @@
-import { message, Tooltip } from 'antd';
+import { message, Tooltip, Typography } from 'antd';
+import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { copyTextToClipboard } from '../utils';
 import { CopyIcon } from './icons';
@@ -45,5 +46,26 @@ export function ShortAccount({
         shortAccount
       )}
     </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function EllipsisMiddle({ children }: PropsWithChildren<any>) {
+  return (
+    <p className="w-full whitespace-nowrap px-4 text-left">
+      <span
+        className="whitespace-nowrap overflow-hidden align-middle inline-block overflow-ellipsis"
+        style={{ width: 'calc(37.5% + 1.2em)' }}
+      >
+        {children}
+      </span>
+      <Typography.Text
+        className="whitespace-nowrap overflow-hidden align-middle inline-flex justify-end"
+        copyable
+        style={{ width: 'calc(37.5% - 1.2em)' }}
+      >
+        {children}
+      </Typography.Text>
+    </p>
   );
 }

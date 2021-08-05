@@ -1,4 +1,3 @@
-import { NETWORK_LIGHT_THEME } from '../config';
 import { useApi } from '../hooks';
 import { isPolkadotNetwork } from '../utils';
 import { ShortAccount } from './ShortAccount';
@@ -14,11 +13,7 @@ export function Connection() {
   return (
     <div className="rounded-3xl flex items-center dark:bg-gray-800 bg-gray-100 h-10 px-4">
       <img src="image/metamask-fox.svg" className="h-6 mr-2" />
-      <ShortAccount
-        account={accounts[0].address}
-        className="h-full"
-        color={(network && NETWORK_LIGHT_THEME[network]['@project-main-bg']) || 'inherit'}
-      />
+      <ShortAccount account={accounts[0].address} className="h-full" />
     </div>
   );
 }

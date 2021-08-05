@@ -3,7 +3,7 @@ import { addDays, format, getUnixTime } from 'date-fns';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EvoApiPath, FORM_CONTROL } from '../../config';
-import { useRecords } from '../../hooks';
+import { useGet } from '../../hooks';
 import { CustomFormControlProps, Deposit, DepositResponse, NetConfig } from '../../model';
 import { apiUrl, empty } from '../../utils';
 
@@ -13,7 +13,7 @@ interface DepositItemProps {
   removedIds: number[];
 }
 
-export function getDepositTimeRange({ deposit_time, duration }: Deposit): {
+export function getDepositTimeRange({ deposit_time, duration }: Pick<Deposit, 'deposit_time' | 'duration'>): {
   start: number;
   end: Date;
 } {
@@ -26,18 +26,18 @@ export function getDepositTimeRange({ deposit_time, duration }: Deposit): {
 
 // eslint-disable-next-line complexity
 export function DepositItem({
-  // address,
-  // config,
+  address,
+  config,
   onChange = empty,
   value,
   removedIds = [],
 }: CustomFormControlProps<Deposit | null> & DepositItemProps) {
   const { t } = useTranslation();
-  const { data, error, loading } = useRecords<DepositResponse>({
-    // url: apiUrl(config.api.evolution, EvoApiPath.deposit),
-    // params: { address },
-    url: apiUrl('https://www.evolution.land', EvoApiPath.deposit),
-    params: { address: '0xf916a4ef2de14a9d8aab6d29d122a641ecde2b28' }, // test account;
+  const { data, error, loading } = useGet<DepositResponse>({
+    url: apiUrl(config.api.evolution, EvoApiPath.deposit),
+    params: { address },
+    // url: apiUrl('https://www.evolution.land', EvoApiPath.deposit),
+    // params: { address: '0xf916a4ef2de14a9d8aab6d29d122a641ecde2b28' }, // test account;
   });
   const triggerChange = useCallback(
     (id) => {

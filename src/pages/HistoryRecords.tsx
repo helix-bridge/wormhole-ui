@@ -2,7 +2,7 @@ import { Button, Space } from 'antd';
 import { ComponentProps } from 'react';
 import { Trans } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Records } from '../components/records/records';
+import { Records } from '../components/records/Records';
 import { Path } from '../config/routes';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

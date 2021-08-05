@@ -1,24 +1,36 @@
 import { Input, Select, Space, Tabs } from 'antd';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { NETWORK_GRAPH } from '../../config';
-import { RecordsParam } from '../../model';
-import { getRecordsParams } from '../../utils';
+import { useEthereumRecords } from '../../hooks';
+import { HistoryRouteParam } from '../../model';
+import { getHistoryRouteParams } from '../../utils';
+import { Record } from './Record';
 
 const { TabPane } = Tabs;
 const NETWORKS = [...NETWORK_GRAPH.keys()];
 
 export function Records() {
   const { t } = useTranslation();
-  const { search } = useLocation<RecordsParam>();
-  const searchParams = useMemo(() => getRecordsParams(search), [search]);
-  console.info('%c [ searchParams ]-16', 'font-size:13px; background:pink; color:#bf2c9f;', searchParams);
+  const { search } = useLocation<HistoryRouteParam>();
+  const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
+  const [network, setNetwork] = useState(searchParams.network);
+  const [address, setAddress] = useState(searchParams.sender);
+  const { data, loading } = useEthereumRecords(network, address);
 
   return (
     <>
       <Input.Group size="large" className="flex items-center w-full mb-8 select-search">
-        <Select size="large" defaultValue={searchParams?.network || NETWORKS[0]} className="capitalize">
+        <Select
+          size="large"
+          defaultValue={searchParams?.network || NETWORKS[0]}
+          className="capitalize"
+          onSelect={(value) => {
+            console.info('%c [ value ]-40', 'font-size:13px; background:pink; color:#bf2c9f;', value);
+            setNetwork(value);
+          }}
+        >
           {NETWORKS.map((net) => {
             return (
               <Select.Option value={net} key={net} className="capitalize">
@@ -28,7 +40,16 @@ export function Records() {
           })}
         </Select>
 
-        <Input.Search defaultValue={searchParams?.sender || ''} loading={false} enterButton="Search" size="large" />
+        <Input.Search
+          defaultValue={searchParams?.sender || ''}
+          loading={loading}
+          onSearch={(value) => {
+            console.info('%c [ value ]-53', 'font-size:13px; background:pink; color:#bf2c9f;', value);
+            setAddress(value);
+          }}
+          enterButton="Search"
+          size="large"
+        />
       </Input.Group>
 
       <Tabs defaultActiveKey={searchParams?.state || 'inprogress'}>
@@ -41,7 +62,7 @@ export function Records() {
           }
           key="inprogress"
         >
-          <span>In progress extrinsics</span>
+          {data && <Record source={data}></Record>}
         </TabPane>
         <TabPane
           tab={

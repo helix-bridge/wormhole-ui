@@ -14,11 +14,16 @@ const EVOLUTION_DOMAIN = {
   dev: 'https://www.evolution.land.l2me.com',
 };
 
+/**
+ * TODO：need to implement some helper function to set the common configuration
+ * example: api.dapp, api.evolution just depends on whether the chain is a test chain.
+ */
 export const NETWORK_CONFIG: NetworkConfig = {
   crab: {
     api: {
       subql: 'https://api.subquery.network/sq/wuminzhe/crab',
       evolution: EVOLUTION_DOMAIN.product,
+      dapp: 'https://api.darwinia.network',
     },
     ethereumChain: {
       chainId: '44',
@@ -46,6 +51,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
       evolution: EVOLUTION_DOMAIN.product,
+      dapp: 'https://api.darwinia.network',
     },
     ethereumChain: {
       chainId: '',
@@ -55,7 +61,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       },
       rpcUrls: [],
     },
-    // TODO
     facade: {
       logo: '/image/darwinia-button-mobile.png',
       logoWithText: '/image/darwinia-logo.svg',
@@ -74,6 +79,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       subql: '',
       evolution: EVOLUTION_DOMAIN.product,
+      dapp: 'https://api.darwinia.network',
     },
     ethereumChain: {
       chainId: '1',
@@ -106,6 +112,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       subql: 'http://t3.hkg.itering.com:3000',
       evolution: EVOLUTION_DOMAIN.dev,
+      dapp: 'https://api.darwinia.network.l2me.com',
     },
     ethereumChain: {
       chainId: '43',
@@ -133,6 +140,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       subql: '',
       evolution: EVOLUTION_DOMAIN.dev,
+      dapp: 'https://api.darwinia.network.l2me.com',
     },
     ethereumChain: {
       chainId: '3',
@@ -165,6 +173,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       subql: '',
       evolution: EVOLUTION_DOMAIN.product,
+      dapp: 'https://api.darwinia.network',
     },
     ethereumChain: {
       chainId: '3',

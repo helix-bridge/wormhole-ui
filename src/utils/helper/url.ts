@@ -1,5 +1,5 @@
 import { mapKeys } from 'lodash';
-import { Network, RecordsParam, StorageInfo, ValueOf } from '../../model';
+import { Network, HistoryRouteParam, StorageInfo, ValueOf, WithNull } from '../../model';
 import { readStorage } from './storage';
 
 export interface HashInfo {
@@ -85,7 +85,7 @@ export function apiUrl(domain: string, path: string): string {
   return domain + '/api/' + path;
 }
 
-export const genRecordsParams: (param: Record<string, string | undefined | null>) => string = ({
+export const genHistoryRouteParams: (param: Record<string, string | undefined | null>) => string = ({
   network,
   sender,
   state,
@@ -105,12 +105,12 @@ export const genRecordsParams: (param: Record<string, string | undefined | null>
   return params.toString();
 };
 
-export const getRecordsParams: (search: string) => Nullable<RecordsParam> = (search) => {
+export const getHistoryRouteParams: (search: string) => WithNull<HistoryRouteParam> = (search) => {
   const params = new URLSearchParams(search);
 
   return {
     network: params.get('network'),
     sender: params.get('sender'),
     state: params.get('state'),
-  } as RecordsParam;
+  } as HistoryRouteParam;
 };

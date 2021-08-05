@@ -1,3 +1,6 @@
+/**
+ * api repo: https://github.com/evolutionlandorg/evo-backend/blob/main/wiki.md
+ */
 export interface Deposit {
   amount: string;
   deposit_id: number;
