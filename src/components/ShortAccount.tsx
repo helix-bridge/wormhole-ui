@@ -50,9 +50,9 @@ export function ShortAccount({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function EllipsisMiddle({ children }: PropsWithChildren<any>) {
+export function EllipsisMiddle({ children, className }: PropsWithChildren<any>) {
   return (
-    <p className="w-full whitespace-nowrap px-4 text-left">
+    <div className={`w-full whitespace-nowrap ${className}`}>
       <span
         className="whitespace-nowrap overflow-hidden align-middle inline-block overflow-ellipsis"
         style={{ width: 'calc(37.5% + 1.2em)' }}
@@ -66,6 +66,6 @@ export function EllipsisMiddle({ children }: PropsWithChildren<any>) {
       >
         {children}
       </Typography.Text>
-    </p>
+    </div>
   );
 }

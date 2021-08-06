@@ -1,5 +1,5 @@
 import { Form, Progress, Select } from 'antd';
-import { addDays, format, getUnixTime } from 'date-fns';
+import { addDays, format, fromUnixTime } from 'date-fns';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EvoApiPath, FORM_CONTROL } from '../../config';
@@ -14,11 +14,11 @@ interface DepositItemProps {
 }
 
 export function getDepositTimeRange({ deposit_time, duration }: Pick<Deposit, 'deposit_time' | 'duration'>): {
-  start: number;
+  start: Date;
   end: Date;
 } {
   const base = 30;
-  const start = getUnixTime(new Date(deposit_time));
+  const start = fromUnixTime(deposit_time);
   const end = addDays(start, base * duration);
 
   return { start, end };

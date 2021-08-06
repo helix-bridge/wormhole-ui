@@ -1,8 +1,8 @@
-import { Input, Select, Space, Tabs } from 'antd';
+import { Empty, Input, Select, Space, Tabs } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { NETWORK_GRAPH } from '../../config';
+import { NETWORK_CONFIG, NETWORK_GRAPH } from '../../config';
 import { useEthereumRecords } from '../../hooks';
 import { HistoryRouteParam } from '../../model';
 import { getHistoryRouteParams } from '../../utils';
@@ -11,6 +11,7 @@ import { Record } from './Record';
 const { TabPane } = Tabs;
 const NETWORKS = [...NETWORK_GRAPH.keys()];
 
+// eslint-disable-next-line complexity
 export function Records() {
   const { t } = useTranslation();
   const { search } = useLocation<HistoryRouteParam>();
@@ -62,7 +63,11 @@ export function Records() {
           }
           key="inprogress"
         >
-          {data && <Record source={data}></Record>}
+          {(data || []).map((item) => (
+            <Record record={item} network={NETWORK_CONFIG[network || 'ethereum']} key={item.block_timestamp} />
+          ))}
+
+          {!data || (!data.length && <Empty />)}
         </TabPane>
         <TabPane
           tab={

@@ -26,15 +26,13 @@
 }
 
 .records-progress {
-  width: 75%;
-
   .ant-progress-steps-outer {
     display: flex;
   }
 
   .ant-progress-steps-item {
     flex: 1;
-    max-height: 4px;
+    max-height: 2px;
   }
 }
 
