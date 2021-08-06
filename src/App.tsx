@@ -19,12 +19,12 @@ function App() {
   return (
     <Layout style={{ height: '100vh' }} className="overflow-scroll">
       <Affix offsetTop={1}>
-        <Header className="flex items-center justify-between sm:px-8 px-1" style={{ marginTop: -1 }}>
+        <Header className="flex items-center justify-between sm:px-8 px-2" style={{ marginTop: -1 }}>
           <div className="flex items-center gap-4">
             <Link to={Path.root}>
-              <img src="/image/logo.png" alt="" className="h-6" />
+              <img src="/image/logo.png" alt="" className="h-4 md:h-6" />
             </Link>
-            <span className="text-white text-md">{t('Cross-chain transfer')}</span>
+            <span className="text-white text-md whitespace-nowrap md:inline hidden">{t('Cross-chain transfer')}</span>
           </div>
 
           <div className="flex justify-end items-center flex-1 md:pl-8">

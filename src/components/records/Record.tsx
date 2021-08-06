@@ -4,14 +4,15 @@ import { Collapse, Progress, Tooltip, Typography } from 'antd';
 import { format } from 'date-fns';
 import { fromUnixTime } from 'date-fns/esm';
 import { useTranslation } from 'react-i18next';
-import { NetConfig } from '../../model';
-import { RedeemRecord, RingBurnRecord } from '../../model/darwinia';
-import { fromWei, prettyNumber } from '../../utils';
+import { NetConfig, Network } from '../../model';
+import { E2DRecord, RedeemRecord, RingBurnRecord } from '../../model/darwinia';
+import { fromWei, getLegalName, prettyNumber } from '../../utils';
 import { getDepositTimeRange } from '../controls/DepositItem';
 import { EllipsisMiddle } from '../ShortAccount';
+import { ProgressDetail } from './ProgressDetail';
 
-interface RecordProps {
-  record: RedeemRecord | RingBurnRecord;
+interface RecordProps<T> {
+  record: T;
   network: NetConfig | null;
 }
 
@@ -22,8 +23,8 @@ const DATE_FORMAT = 'yyyy/MM/dd';
 const DATE_TIME_FORMATE = 'yyyy/MM/dd hh:mm:ss';
 
 // eslint-disable-next-line complexity
-export function Record({ record, network }: RecordProps) {
-  const { address, chain, amount, currency, target, block_timestamp } = record;
+export function Record({ record, network }: RecordProps<E2DRecord & Partial<RingBurnRecord & RedeemRecord>>) {
+  const { address, chain, amount, currency, target, block_timestamp, is_relayed, tx, darwinia_tx } = record;
   const decimal = network?.ss58Prefix ?? 0;
 
   return (
@@ -34,14 +35,14 @@ export function Record({ record, network }: RecordProps) {
             <div className="flex gap-4 items-center col-span-3 md:col-span-2 md:mr-8">
               <img className="w-6 md:w-12 mx-auto" src={`/image/${chain.toLowerCase()}-logo.svg`} />
 
-              <div className="relative flex items-center justify-around flex-1 col-span-2 h-12 bg-gray-900 bg-opacity-50">
+              <div className="relative flex items-center justify-around flex-1 col-span-2 h-12 bg-gray-900 bg-opacity-50 record-overview">
                 <AssetOverview
                   amount={amount}
                   deposit={JSON.parse((record as RedeemRecord).deposit || '{}')}
                   currency={currency}
                 />
 
-                <div className="flex items-center arrow-panel">
+                <div className="flex items-center">
                   <RightOutlined className="opacity-30" />
                   <RightOutlined className="opacity-60" />
                   <RightOutlined className="opacity-90" />
@@ -83,7 +84,13 @@ export function Record({ record, network }: RecordProps) {
         key={address}
         className="overflow-hidden"
       >
-        {/* <MemberList data={account} statusRender={(pair) => renderMemberStatus(data, pair)} /> */}
+        <ProgressDetail
+          from={getLegalName(chain) as Network}
+          to="darwinia"
+          isRelayed={is_relayed}
+          fromHash={tx}
+          toHash={darwinia_tx}
+        />
       </Panel>
     </Collapse>
   );

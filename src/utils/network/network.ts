@@ -1,23 +1,53 @@
 import { curry, curryRight, isNull } from 'lodash';
 import Web3 from 'web3';
-import { NetworkEnum, NETWORK_CONFIG, NETWORK_GRAPH, Vertices } from '../../config';
+import { NetworkEnum, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE, Vertices } from '../../config';
 import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkType } from '../../model';
 
 function isSpecifyNetworkType(type: NetworkType) {
+  const findBy = (name: Network) => NETWORK_CONFIG[name] || null;
+
   return (network: Network | null) => {
     if (!network) {
       return false;
     }
 
-    const config = NETWORK_CONFIG[network];
+    let config = findBy(network);
 
     if (!config) {
-      console.warn('🚀 ~ Can not find the network config by type: ', network);
-      return false;
+      const name = byNetworkAlias(network);
+
+      console.warn(
+        `🚀 ~ Can not find the network config by: ${network}. Treat it as an alias, find the a network named ${name} by it `
+      );
+      if (name) {
+        config = findBy(name);
+      }
     }
 
-    return config.type.includes(type);
+    return config && config.type.includes(type);
   };
+}
+
+function byNetworkAlias(network: string): Network | null {
+  const alias = NETWORK_ALIAS.entries();
+  let res = null;
+
+  for (const [name, value] of alias) {
+    if (value.find((item) => item === network.toLowerCase())) {
+      res = name;
+      break;
+    }
+  }
+
+  return res;
+}
+
+export function getLegalName(network: string): Network | string {
+  if (NETWORK_SIMPLE.find((item) => item.name === network)) {
+    return network;
+  }
+
+  return byNetworkAlias(network) || network;
 }
 
 export const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) => {

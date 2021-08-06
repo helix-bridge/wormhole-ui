@@ -9,6 +9,16 @@ export enum NetworkEnum {
   tron = 'tron',
 }
 
+// eslint-disable-next-line no-magic-numbers
+const allowAlias: (full: string, at?: number) => string[] = (fullName, startAt = 3) => {
+  const len = fullName.length;
+  const shortestName = fullName.substr(0, startAt);
+
+  return new Array(len - startAt).fill('').map((_, index) => shortestName + fullName.substr(startAt, index));
+};
+
+export const NETWORK_ALIAS = new Map([[NetworkEnum.ethereum, [...allowAlias(NetworkEnum.ethereum)]]]);
+
 const EVOLUTION_DOMAIN = {
   product: 'https://www.evolution.land',
   dev: 'https://www.evolution.land.l2me.com',

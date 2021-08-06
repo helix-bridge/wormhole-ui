@@ -106,7 +106,7 @@ export function Nets({ value, onChange }: NetsProps) {
   }, [value]);
 
   return (
-    <div className="relative flex sm:grid sm:grid-cols-5 justify-between items-center">
+    <div className="relative flex justify-between items-center">
       <Destination
         networks={fromNetworks}
         title={t('From')}
