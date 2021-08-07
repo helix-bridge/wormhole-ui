@@ -109,3 +109,11 @@
     clip-path: polygon(80% 0, 100% 50%, 80% 100%, 65% 100%, 85% 50%, 65% 0);
   }
 }
+
+.pagination {
+  .anticon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

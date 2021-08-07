@@ -1,5 +1,6 @@
 const AntDesignThemePlugin = require('antd-theme-webpack-plugin');
 const path = require('path');
+const { addBeforeLoader, loaderByName } = require('@craco/craco');
 const antdVarsPath = './src/theme/antd/vars.less';
 const CracoAntDesignPlugin = require('craco-antd');
 const { getLessVars } = require('antd-theme-generator');
@@ -53,14 +54,35 @@ module.exports = {
       add: [themePlugin],
     },
     // add mjs compatibility configuration
-    configure: (webpackConfig) => {
-      webpackConfig.module.rules.push({
+    configure: (config) => {
+      const wasmExtensionRegExp = /\.wasm$/;
+
+      config.resolve.extensions.push('.wasm');
+
+      config.module.rules.forEach((rule) => {
+        (rule.oneOf || []).forEach((oneOf) => {
+          if (oneOf.loader && oneOf.loader.indexOf('file-loader') >= 0) {
+            // make file-loader ignore WASM files
+            oneOf.exclude.push(wasmExtensionRegExp);
+          }
+        });
+      });
+
+      // add a dedicated loader for WASM
+      config.module.rules.push({
+        test: wasmExtensionRegExp,
+        type: 'javascript/auto',
+        include: path.resolve(__dirname, 'src'),
+        use: [{ loader: require.resolve('wasm-loader'), options: {} }],
+      });
+
+      config.module.rules.push({
         test: /\.mjs$/,
         include: /node_modules/,
         type: 'javascript/auto',
       });
 
-      return webpackConfig;
+      return config;
     },
   },
 };

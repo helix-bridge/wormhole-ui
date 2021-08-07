@@ -83,7 +83,9 @@ export function prettyNumber(
 
   prefix = prefix.replace(/\d{1,3}(?=(\d{3})+(\.\d*)?$)/g, '$&,');
 
-  return !noDecimal ? `${prefix}.${suffix}` : prefix;
+  const result = !noDecimal && +suffix !== 0 ? `${prefix}.${suffix}` : prefix;
+
+  return +result === 0 ? '0' : result;
 }
 
 export function fromWei(

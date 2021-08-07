@@ -5,4 +5,5 @@ export interface EResponse<T = any> {
   data?: T;
 }
 
-export type ListRes<T> = { list: T[] };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ListRes<T> = { list: T[]; [key: string]: any };

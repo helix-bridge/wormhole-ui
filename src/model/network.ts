@@ -9,7 +9,7 @@ export type EthereumTypeNetwork = 'ethereum' | 'ropsten' | 'tron';
 
 export type Network = PolkadotTypeNetwork | EthereumTypeNetwork;
 
-export type NetworkType = 'polkadot' | 'ethereum' | 'tron' | 'darwinia';
+export type NetworkCategory = 'polkadot' | 'ethereum' | 'tron' | 'darwinia';
 
 export type Token = 'ring' | 'kton' | 'native';
 
@@ -25,6 +25,12 @@ type TokenContract = { [key in Token]?: string };
 
 type Api = { subql: string; evolution: string; dapp: string; [key: string]: string };
 
+export interface LockEventsStorage {
+  min: number;
+  max: number | null;
+  key: string;
+}
+
 export interface NetConfig {
   facade: Facade;
   fullName: string;
@@ -34,8 +40,9 @@ export interface NetConfig {
   tokenContract: TokenContract & { registryEth?: string; issuingDarwinia?: string; bankDarwinia?: string };
   api: Api;
   isTest: boolean;
-  type: NetworkType[];
+  type: NetworkCategory[];
   name: Network;
+  lockEvents?: LockEventsStorage[];
 }
 
 export type NetworkConfig<T = NetConfig> = Config<Network, T>;
@@ -53,4 +60,4 @@ export type PolkadotConnection = Connection<PolkadotTypeNetwork>;
 
 export type EthereumConnection = Connection<EthereumTypeNetwork>;
 
-export type NetworkFilter = (network: Required<NetConfig>) => boolean;
+export type NetworkFilter = (network: NetConfig) => boolean;

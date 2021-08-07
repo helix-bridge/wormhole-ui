@@ -2,10 +2,10 @@ import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
 import Web3 from 'web3';
 import { NETWORK_CONFIG } from '../../config';
-import { AccountType } from '../../model';
+import { NetworkCategory } from '../../model';
 import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
 
-export const isValidAddress = (address: string, type: AccountType): boolean => {
+export const isValidAddress = (address: string, type: NetworkCategory): boolean => {
   if (type === 'ethereum') {
     const isDvm = Web3.utils.isAddress(address);
     const isSS58 = isSS58Address(address);

@@ -1,15 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { catchError, forkJoin, map, Observable, Subscription } from 'rxjs';
-import { ajax } from 'rxjs/ajax';
+import { catchError, forkJoin, Subscription } from 'rxjs';
 import { DarwiniaApiPath, NETWORK_CONFIG } from '../config';
-import { EResponse, Network } from '../model';
-import { RedeemRecord, RingBurnRecord } from '../model/darwinia';
-import { apiUrl } from '../utils';
-
-interface RecordsQueryRequest {
-  url: string;
-  params: Record<string, string | number>;
-}
+import { D2EHistoryRes, Network, Paginator, RedeemHistory, RingBurnHistory } from '../model';
+import { apiUrl, RecordsQueryRequest, rxGet } from '../utils';
 
 interface RecordsHook<T> {
   loading: boolean;
@@ -17,21 +10,6 @@ interface RecordsHook<T> {
   data: T | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   refetch?: (...args: any) => Subscription;
-}
-
-function rxGet<T>({ url, params }: RecordsQueryRequest): Observable<T | null> {
-  const queryStr = Object.entries(params || {})
-    .filter(([_, value]) => !!value)
-    .reduce((acc, cur) => {
-      const pair = `${cur[0]}=${cur[1]}`;
-
-      return acc !== '' ? `${acc}&${pair}` : pair;
-    }, '');
-
-  return ajax<EResponse<T>>({
-    url: url + (queryStr ? `?${queryStr}` : ''),
-    method: 'GET',
-  }).pipe(map((res) => res.response.data || null));
 }
 
 export function useGet<T = unknown>(req: RecordsQueryRequest): RecordsHook<T> {
@@ -74,21 +52,21 @@ export function useGet<T = unknown>(req: RecordsQueryRequest): RecordsHook<T> {
 export function useEthereumRecords(
   net: Network | null,
   addr: string | null
-): RecordsHook<(RingBurnRecord | RedeemRecord)[]> {
+): RecordsHook<(RingBurnHistory | RedeemHistory)[]> {
   const [loading, setLoading] = useState<boolean>(false);
-  const [data, setData] = useState<(RingBurnRecord | RedeemRecord)[]>([]);
+  const [data, setData] = useState<(RingBurnHistory | RedeemHistory)[]>([]);
   const request = useCallback((network: Network, address: string) => {
     setLoading(true);
 
     const api = NETWORK_CONFIG[network].api.dapp;
     const params = { address };
-    const genesisObs = rxGet<RingBurnRecord[]>({ url: apiUrl(api, DarwiniaApiPath.ringBurn), params }).pipe(
+    const genesisObs = rxGet<RingBurnHistory[]>({ url: apiUrl(api, DarwiniaApiPath.ringBurn), params }).pipe(
       catchError((err) => {
         console.error('%c [ genesis api request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
         return [];
       })
     );
-    const e2dCrossChainObs = rxGet<RedeemRecord[]>({ url: apiUrl(api, DarwiniaApiPath.redeem), params }).pipe(
+    const e2dCrossChainObs = rxGet<RedeemHistory[]>({ url: apiUrl(api, DarwiniaApiPath.redeem), params }).pipe(
       catchError((err) => {
         console.error(
           '%c [ e2d cross chain api request error: ]',
@@ -98,10 +76,6 @@ export function useEthereumRecords(
         return [];
       })
     );
-    // const erc20Obs = rxGet({
-    //   url: apiUrl(api, DarwiniaApiPath.tokenLock),
-    //   params: { sender: address, row: 1, page: 1 },
-    // });
 
     return forkJoin([genesisObs, e2dCrossChainObs]).subscribe(([genesisRes, e2dRes]) => {
       setData([...(genesisRes || []), ...(e2dRes || [])]);
@@ -119,7 +93,49 @@ export function useEthereumRecords(
     return () => {
       sub$$.unsubscribe();
     };
-  }, [net, addr, request]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [net, addr]);
+
+  return { loading, data, refetch: request };
+}
+
+export function useDarwiniaRecords(
+  net: Network | null,
+  addr: string | null /* ss58 address should be transfer to public key */,
+  pagination: Paginator = { row: 100, page: 0 }
+): RecordsHook<D2EHistoryRes> {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [data, setData] = useState<D2EHistoryRes | null>(null);
+  const request = useCallback((network: Network, address: string, paginator?: Paginator) => {
+    setLoading(true);
+
+    const api = NETWORK_CONFIG[network].api.dapp;
+    const params = { address, ...(paginator ?? { row: 100, page: 0 }) };
+    const locksObs = rxGet<D2EHistoryRes>({ url: apiUrl(api, DarwiniaApiPath.locks), params }).pipe(
+      catchError((err) => {
+        console.error('%c [ d2e records request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+        return [];
+      })
+    );
+
+    return locksObs.subscribe((res) => {
+      setData(res);
+      setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!net || !addr) {
+      return;
+    }
+
+    const sub$$ = request(net, addr, pagination);
+
+    return () => {
+      sub$$.unsubscribe();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [net, addr, pagination]);
 
   return { loading, data, refetch: request };
 }

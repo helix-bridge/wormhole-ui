@@ -2,6 +2,7 @@ import { Button, Row } from 'antd';
 import { PropsWithChildren, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Network } from '../../model';
+import { isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import stepCrabIcon from './tx-image/tx-step-crab-icon.svg';
 import stepInactiveCrabIcon from './tx-image/tx-step-crab-inactive-icon.svg';
@@ -15,12 +16,25 @@ import stepStartIcon from './tx-image/tx-step-start-icon.svg';
 import stepTronIcon from './tx-image/tx-step-tron-icon.svg';
 import stepInactiveTronIcon from './tx-image/tx-step-tron-inactive-icon.svg';
 
-interface ProgressDetailProps {
-  from: Network;
-  to: Network;
-  fromHash: string;
-  toHash?: string;
-  isRelayed?: boolean;
+interface ProgressInfo {
+  network: Network;
+  txHash?: string;
+}
+
+export interface ProgressDetailProps {
+  from: ProgressInfo;
+  to: ProgressInfo;
+  hasRelay: boolean;
+  // eslint-disable-next-line no-magic-numbers
+  step: 2 | 3 | 4;
+  claim?: () => void;
+}
+
+export enum CrosseState {
+  // eslint-disable-next-line no-magic-numbers
+  takeOff = 2,
+  relayed,
+  claimed,
 }
 
 export const txProgressIcon = {
@@ -66,8 +80,8 @@ const StepWrapper = ({
   return (
     <Row className={`step flex flex-col justify-around items-center h-36 ${className || ''}`}>
       <Row className="flex flex-col justify-center items-center">
-        <img src={icon} className="w-4 md:w-10 mb-4" />
-        <span className="capitalize">{title}</span>
+        <img src={icon} className="w-4 md:w-10" />
+        <span className="capitalize mt-4">{title}</span>
       </Row>
       <Row style={{ minHeight: 24 }}>{children}</Row>
     </Row>
@@ -75,43 +89,63 @@ const StepWrapper = ({
 };
 
 // eslint-disable-next-line complexity
-export function ProgressDetail({ from, to, fromHash, toHash, isRelayed = false }: ProgressDetailProps) {
+export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDetailProps) {
   const { t } = useTranslation();
-  // eslint-disable-next-line no-magic-numbers
-  const step = isRelayed ? 3 : 4;
+  const { txHash: fromHash, network: fromNetwork } = from;
+  const { txHash: toHash, network: toNetwork } = to;
+  // const needConfirm = step === ProgressStep.confirm;
+  const needClaim = step >= CrosseState.claimed;
+  const relayed = step >= CrosseState.relayed;
   const iconName = useCallback(
-    (chain: string, byRelay = false) => {
-      if (byRelay) {
-        return `step${isRelayed ? 'Inactive' : ''}${textCase(chain, 'capitalize')}Icon` as TxIconName;
+    (chain: string, byNeedConfirm = false) => {
+      const name = isPolkadotNetwork(chain as Network) ? 'Darwinia' : 'Ethereum';
+
+      if (byNeedConfirm) {
+        return `step${needClaim ? '' : 'Inactive'}${textCase(name, 'capitalize')}Icon` as TxIconName;
       } else {
-        return `step${textCase(chain, 'capitalize')}Icon` as TxIconName;
+        return `step${textCase(name, 'capitalize')}Icon` as TxIconName;
       }
     },
-    [isRelayed]
+    [needClaim]
   );
 
   return (
-    <div className={'grid bg-gray-700 bg-opacity-30 progress-steps ' + (isRelayed ? 'grid-cols-4' : 'grid-cols-3')}>
+    <div className={'grid bg-gray-800 bg-opacity-20 progress-steps ' + (hasRelay ? 'grid-cols-4' : 'grid-cols-3')}>
       <StepWrapper icon={stepStartIcon} title="Transaction Send"></StepWrapper>
 
-      <StepWrapper icon={txProgressIcon[iconName(from)]} title={t('{{chain}} Confirmed', { chain: from })}>
-        <SubscanLink txHash={fromHash} network={from} className="">
+      <StepWrapper
+        icon={txProgressIcon[iconName(fromNetwork)]}
+        title={t('{{chain}} Confirmed', { chain: fromNetwork })}
+      >
+        <SubscanLink txHash={fromHash} network={fromNetwork} className="">
           <Button size="small" className="text-xs">
             {t('Txhash')}
           </Button>
         </SubscanLink>
       </StepWrapper>
 
-      {isRelayed && <StepWrapper icon={stepRelayIcon} title={t('ChainRelay Confirmed')}></StepWrapper>}
+      {hasRelay && (
+        <StepWrapper
+          icon={relayed ? stepRelayIcon : stepInactiveRelayIcon}
+          className={relayed ? '' : 'text-gray-300'}
+          title={t('ChainRelay Confirmed')}
+        >
+          {claim && relayed && (
+            <Button onClick={() => claim()} size="small">
+              {t('Claim')}
+            </Button>
+          )}
+        </StepWrapper>
+      )}
 
       <StepWrapper
-        icon={txProgressIcon[iconName(to, true)]}
-        title={t('{{chain}} Confirmed', { chain: to })}
-        className={isRelayed ? 'text-gray-300' : ''}
+        icon={txProgressIcon[iconName(toNetwork, true)]}
+        title={t('{{chain}} Confirmed', { chain: toNetwork })}
+        className={needClaim ? '' : 'text-gray-300'}
       >
         {/* eslint-disable-next-line no-magic-numbers */}
-        {step >= 4 && toHash && (
-          <SubscanLink txHash={toHash} network={to as Network}>
+        {needClaim && toHash && (
+          <SubscanLink txHash={toHash} network={toNetwork as Network}>
             <Button size="small" className="text-xs">
               {t('Txhash')}
             </Button>

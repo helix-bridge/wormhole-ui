@@ -77,6 +77,18 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     fullName: 'Darwinia Mainnet',
     isTest: false,
+    lockEvents: [
+      {
+        min: 0,
+        max: 4344274,
+        key: '0xf8860dda3d08046cf2706b92bf7202eaae7a79191c90e76297e0895605b8b457',
+      },
+      {
+        min: 4344275,
+        max: null,
+        key: '0x50ea63d9616704561328b9e0febe21cfae7a79191c90e76297e0895605b8b457',
+      },
+    ],
     name: 'darwinia',
     rpc: 'wss://rpc.darwinia.network',
     ss58Prefix: 18,
@@ -138,6 +150,13 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     fullName: 'Pangolin Testnet',
     isTest: true,
+    lockEvents: [
+      {
+        min: 0,
+        max: null,
+        key: '0x50ea63d9616704561328b9e0febe21cfae7a79191c90e76297e0895605b8b457',
+      },
+    ],
     name: 'pangolin',
     rpc: 'wss://pangolin-rpc.darwinia.network/',
     ss58Prefix: 18,
@@ -209,7 +228,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
   },
 };
 
-export const NETWORKS: Required<NetConfig>[] = Object.values(NETWORK_CONFIG);
+export const NETWORKS: NetConfig[] = Object.values(NETWORK_CONFIG);
 
 export interface Vertices {
   network: Network;

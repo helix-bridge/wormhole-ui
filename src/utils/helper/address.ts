@@ -71,3 +71,12 @@ export function convertToEth(address: string): string | null {
   // eslint-disable-next-line no-magic-numbers
   return result.startsWith(PREFIX) ? '0x' + result.slice(-42, -2) : null;
 }
+
+export function remove0x(text: string): string {
+  const start = 2;
+
+  if (text.slice(0, start) === '0x') {
+    return text.slice(start);
+  }
+  return text;
+}

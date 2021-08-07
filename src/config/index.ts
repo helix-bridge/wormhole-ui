@@ -4,6 +4,7 @@ export * from './darwinia';
 export * from './evolution';
 export * from './i18n';
 export * from './network';
+export * from './props';
 export * from './query';
 export * from './theme';
 export * from './types';

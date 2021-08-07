@@ -1,9 +1,9 @@
 import { curry, curryRight, isNull } from 'lodash';
 import Web3 from 'web3';
 import { NetworkEnum, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE, Vertices } from '../../config';
-import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkType } from '../../model';
+import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkCategory } from '../../model';
 
-function isSpecifyNetworkType(type: NetworkType) {
+function isSpecifyNetworkType(type: NetworkCategory) {
   const findBy = (name: Network) => NETWORK_CONFIG[name] || null;
 
   return (network: Network | null) => {
@@ -127,4 +127,16 @@ export function isBridgeAvailable(from: Network, to: Network): boolean {
   const bridge = getVertices(from, to);
 
   return !!bridge && bridge.status === 'available';
+}
+
+export function getNetworkCategory(network: Network | NetConfig): NetworkCategory | null {
+  const config = typeof network === 'string' ? NETWORK_CONFIG[network] : network;
+
+  if (config.type.includes('polkadot')) {
+    return 'polkadot';
+  } else if (config.type.includes('ethereum')) {
+    return 'ethereum';
+  }
+
+  return null;
 }

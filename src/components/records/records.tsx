@@ -1,12 +1,30 @@
-import { Empty, Input, Select, Space, Tabs } from 'antd';
-import { useMemo, useState } from 'react';
+import { Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { EMPTY, map, Observable } from 'rxjs';
+import useDeepCompareEffect from 'use-deep-compare-effect';
 import { NETWORK_CONFIG, NETWORK_GRAPH } from '../../config';
-import { useEthereumRecords } from '../../hooks';
-import { HistoryRouteParam } from '../../model';
-import { getHistoryRouteParams } from '../../utils';
-import { Record } from './Record';
+import {
+  D2EHistoryRes,
+  HistoryRouteParam,
+  ListRes,
+  Network,
+  Paginator,
+  RedeemHistory,
+  RingBurnHistory,
+} from '../../model';
+import {
+  getHistoryRouteParams,
+  getNetworkCategory,
+  isEthereumNetwork,
+  isPolkadotNetwork,
+  isValidAddress,
+  queryD2ERecords,
+  queryE2DRecords,
+} from '../../utils';
+import { D2ERecord } from './D2ERecord';
+import { E2DRecord } from './E2DRecord';
 
 const { TabPane } = Tabs;
 const NETWORKS = [...NETWORK_GRAPH.keys()];
@@ -14,11 +32,49 @@ const NETWORKS = [...NETWORK_GRAPH.keys()];
 // eslint-disable-next-line complexity
 export function Records() {
   const { t } = useTranslation();
+  const inputRef = useRef<Input>(null);
   const { search } = useLocation<HistoryRouteParam>();
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [network, setNetwork] = useState(searchParams.network);
   const [address, setAddress] = useState(searchParams.sender);
-  const { data, loading } = useEthereumRecords(network, address);
+  const [paginator, setPaginator] = useState<Paginator>({ row: 10, page: 0 });
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<ListRes<unknown>>();
+  const canUpdate = useCallback((addr: string | null, net: Network | null) => {
+    if (addr && net) {
+      const category = getNetworkCategory(net);
+
+      return category && isValidAddress(addr, category);
+    }
+
+    return false;
+  }, []);
+
+  useDeepCompareEffect(() => {
+    let obs: Observable<ListRes<unknown>> = EMPTY;
+
+    if (isEthereumNetwork(network)) {
+      obs = queryE2DRecords(network, address).pipe(map((list) => ({ list })));
+    } else if (isPolkadotNetwork(network)) {
+      obs = queryD2ERecords(network, address, paginator).pipe(map((res) => res || { list: [] }));
+    } else {
+      // tron
+    }
+
+    setLoading(true);
+    setData(undefined);
+
+    const subscription = obs.subscribe({
+      next: (res) => {
+        setData(res);
+      },
+      complete: () => setLoading(false),
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [network, address, paginator]);
 
   return (
     <>
@@ -28,8 +84,13 @@ export function Records() {
           defaultValue={searchParams?.network || NETWORKS[0]}
           className="capitalize"
           onSelect={(value) => {
-            console.info('%c [ value ]-40', 'font-size:13px; background:pink; color:#bf2c9f;', value);
+            if (!canUpdate(address, value)) {
+              setAddress('');
+              inputRef.current?.setValue('');
+            }
+
             setNetwork(value);
+            setPaginator({ row: 10, page: 0 });
           }}
         >
           {NETWORKS.map((net) => {
@@ -44,9 +105,13 @@ export function Records() {
         <Input.Search
           defaultValue={searchParams?.sender || ''}
           loading={loading}
+          ref={inputRef}
           onSearch={(value) => {
-            console.info('%c [ value ]-53', 'font-size:13px; background:pink; color:#bf2c9f;', value);
-            setAddress(value);
+            if (canUpdate(value, network)) {
+              setAddress(value);
+            } else {
+              message.error(t(`Invalid ${network} format address`));
+            }
           }}
           enterButton="Search"
           size="large"
@@ -58,29 +123,56 @@ export function Records() {
           tab={
             <Space>
               <span>{t('In Progress')}</span>
-              <span>In progress number</span>
+              <span>{data?.count}</span>
             </Space>
           }
           key="inprogress"
         >
-          {(data || []).map((item) => (
-            <Record record={item} network={NETWORK_CONFIG[network || 'ethereum']} key={item.block_timestamp} />
-          ))}
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {isEthereumNetwork(network) &&
+            ((data?.list || []) as (RingBurnHistory | RedeemHistory)[]).map((item) => (
+              <E2DRecord record={item} network={NETWORK_CONFIG[network || 'ethereum']} key={item.block_timestamp} />
+            ))}
 
-          {!data || (!data.length && <Empty />)}
+          {isPolkadotNetwork(network) &&
+            (data as D2EHistoryRes)?.list.map((item) => (
+              <D2ERecord
+                record={{
+                  ...item,
+                  meta: { MMRRoot: (data as D2EHistoryRes).MMRRoot, best: (data as D2EHistoryRes).best },
+                }}
+                network={NETWORK_CONFIG[network || 'darwinia']}
+                key={item.block_timestamp}
+              />
+            ))}
+
+          {loading && <Spin size="large" className="w-full" style={{ marginTop: 16 }} />}
+          {(!data?.list || !data.list.length) && !loading && <Empty />}
         </TabPane>
         <TabPane
           tab={
             <Space>
               <span>{t('Confirmed Extrinsic')}</span>
-              <span>confirmed number</span>
+              {/* <span></span> */}
             </Space>
           }
           key="confirmed"
         >
-          <span>confirmed extrinsics</span>
+          <span>Coming soon ... Need api support</span>
         </TabPane>
       </Tabs>
+
+      {data?.count && (
+        <Pagination
+          onChange={(page: number) => {
+            setPaginator({ ...paginator, page: page - 1 });
+          }}
+          current={paginator.page + 1}
+          pageSize={paginator.row}
+          total={data.count}
+          className="pagination"
+        />
+      )}
     </>
   );
 }

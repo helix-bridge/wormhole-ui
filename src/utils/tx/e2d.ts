@@ -39,7 +39,7 @@ export type RedeemDeposit = TransferFormValues<
   NoNullTransferNetwork
 >;
 
-function createEthContractObs(
+export function createEthContractObs(
   contractAddress: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (contract: Contract) => any,
