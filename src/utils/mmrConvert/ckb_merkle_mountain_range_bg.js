@@ -51,7 +51,7 @@ function getStringFromWasm0(ptr, len) {
   return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
 }
 /**
- * @param {BigInt} block_num
+ * @param {number} block_num
  * @param {BigInt} mmr_size
  * @param {Uint8Array} mmr_proof
  * @param {Uint8Array} leaf

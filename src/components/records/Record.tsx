@@ -2,7 +2,7 @@ import { ClockCircleOutlined, ImportOutlined, RightOutlined } from '@ant-design/
 import { Collapse, Progress, Tooltip } from 'antd';
 import { format } from 'date-fns';
 import { fromUnixTime } from 'date-fns/esm';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useMemo } from 'react';
 import { DATE_TIME_FORMATE } from '../../config';
 import { EllipsisMiddle } from '../ShortAccount';
 import { AssetOverview, AssetOverviewProps } from './AssetOverview';
@@ -16,10 +16,14 @@ export interface RecordProps extends ProgressDetailProps {
   assets: AssetOverviewProps[];
 }
 
+const STEPS_TOTAL = 4;
+const PERCENT_HUNDRED = 100;
+
 export function Record(props: PropsWithChildren<RecordProps>) {
-  const { assets, recipient, blockTimestamp, from, to, children } = props;
+  const { assets, recipient, blockTimestamp, from, to, children, step } = props;
   const { network: fromNetwork } = from;
   const { network: toNetwork } = to;
+  const percent = useMemo(() => (PERCENT_HUNDRED / STEPS_TOTAL) * step, [step]);
 
   return (
     <Collapse key={blockTimestamp} accordion expandIconPosition="right" className="mb-4">
@@ -29,7 +33,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
             <div className="flex gap-4 items-center col-span-3 md:col-span-2 md:mr-8">
               <img className="w-6 md:w-12 mx-auto" src={`/image/${fromNetwork}-button-mobile.png`} />
 
-              <div className="relative flex items-center justify-around flex-1 col-span-2 h-12 bg-gray-900 bg-opacity-50 record-overview">
+              <div className="relative flex items-center justify-around flex-1 col-span-2 h-12 bg-gray-200 dark:bg-gray-900 bg-opacity-50 record-overview">
                 <span>
                   {assets.map((asset) => (
                     <AssetOverview key={asset.currency} {...asset} />
@@ -43,9 +47,10 @@ export function Record(props: PropsWithChildren<RecordProps>) {
                 </div>
 
                 <Progress
-                  percent={50}
-                  steps={4}
+                  percent={percent}
+                  steps={STEPS_TOTAL}
                   showInfo={false}
+                  strokeColor={percent === PERCENT_HUNDRED ? 'green' : 'normal'}
                   className="w-full absolute bottom-0 records-progress"
                   style={{ width: 'calc(100% - 3rem)' }}
                 />

@@ -1,6 +1,8 @@
-import { Button, Row } from 'antd';
+import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Button, Row, Tag } from 'antd';
 import { PropsWithChildren, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTx } from '../../hooks';
 import { Network } from '../../model';
 import { isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
@@ -78,10 +80,14 @@ const StepWrapper = ({
   className,
 }: PropsWithChildren<{ icon: string; title: string; className?: string }>) => {
   return (
-    <Row className={`step flex flex-col justify-around items-center h-36 ${className || ''}`}>
+    <Row
+      className={`step flex flex-col justify-around items-center h-36 text-center text-xs md:text-base after:bg-white dark:after:bg-gray-800 dark:after:bg-opacity-20 ${
+        className || ''
+      }`}
+    >
       <Row className="flex flex-col justify-center items-center">
         <img src={icon} className="w-4 md:w-10" />
-        <span className="capitalize mt-4">{title}</span>
+        <span className="capitalize mt-4 dark:text-gray-200 text-gray-900">{title}</span>
       </Row>
       <Row style={{ minHeight: 24 }}>{children}</Row>
     </Row>
@@ -91,6 +97,7 @@ const StepWrapper = ({
 // eslint-disable-next-line complexity
 export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDetailProps) {
   const { t } = useTranslation();
+  const { tx } = useTx();
   const { txHash: fromHash, network: fromNetwork } = from;
   const { txHash: toHash, network: toNetwork } = to;
   // const needConfirm = step === ProgressStep.confirm;
@@ -131,9 +138,14 @@ export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDeta
           title={t('ChainRelay Confirmed')}
         >
           {claim && relayed && (
-            <Button onClick={() => claim()} size="small">
-              {t('Claim')}
+            <Button disabled={!!tx} icon={tx ? <LoadingOutlined /> : null} onClick={() => claim()} size="small">
+              {t(tx ? 'Claiming' : 'Claim')}
             </Button>
+          )}
+          {relayed && (
+            <Tag color="success" icon={<CheckCircleOutlined />} className="flex items-center">
+              {t('Claimed')}
+            </Tag>
           )}
         </StepWrapper>
       )}

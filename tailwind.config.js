@@ -56,4 +56,17 @@ module.exports = {
       }),
     },
   },
+  plugins: [
+    require('tailwindcss-pseudo-elements')({
+      customPseudoClasses: ['step'],
+      customPseudoElements: ['div'],
+      emptyContent: false,
+    }),
+  ],
+  variants: {
+    extend: {
+      backgroundColor: ['before', 'after'],
+      backgroundOpacity: ['before', 'after'],
+    },
+  },
 };

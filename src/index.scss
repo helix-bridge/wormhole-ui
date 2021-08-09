@@ -89,7 +89,7 @@
   border-radius: 4px;
   overflow: hidden;
 
-  .step:not(:last-child) {
+  .step {
     position: relative;
 
     &::after {
@@ -105,7 +105,6 @@
     right: -15%;
     left: 0;
     bottom: 0;
-    background: #141414;
     clip-path: polygon(80% 0, 100% 50%, 80% 100%, 65% 100%, 85% 50%, 65% 0);
   }
 }

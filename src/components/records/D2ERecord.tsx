@@ -1,13 +1,14 @@
+import { useState } from 'react';
 import { RecordComponentProps } from '../../config';
 import { useTx } from '../../hooks';
 import { D2EHistory as D2ERecordType, D2EMeta } from '../../model';
 import { ClaimNetworkPrefix, claimToken, toUpperCaseFirst } from '../../utils';
-import { ProgressDetail, CrosseState } from './ProgressDetail';
+import { CrosseState, ProgressDetail } from './ProgressDetail';
 import { Record, RecordProps } from './Record';
 
 // eslint-disable-next-line complexity
 export function D2ERecord({ network, record }: RecordComponentProps<D2ERecordType & { meta: D2EMeta }>) {
-  const { observer } = useTx();
+  const { observer, setTx } = useTx();
   const {
     block_timestamp,
     signatures,
@@ -23,19 +24,24 @@ export function D2ERecord({ network, record }: RecordComponentProps<D2ERecordTyp
     block_hash,
     meta,
   } = record;
-  let step = CrosseState.takeOff;
+  const [step, setStep] = useState(() => {
+    let state = CrosseState.takeOff;
 
-  if (signatures) {
-    step = CrosseState.relayed;
-  }
+    if (signatures) {
+      state = CrosseState.relayed;
+    }
 
-  if (signatures && tx !== '') {
-    step = CrosseState.claimed;
-  }
+    if (signatures && tx !== '') {
+      state = CrosseState.claimed;
+    }
+
+    return state;
+  });
+  const [hash, setHash] = useState('');
 
   const data: RecordProps = {
     from: { network: network?.name || 'darwinia', txHash: extrinsic_index },
-    to: { network: network?.name === 'darwinia' ? 'ethereum' : 'ropsten', txHash: tx },
+    to: { network: network?.name === 'darwinia' ? 'ethereum' : 'ropsten', txHash: tx || hash },
     assets: [
       { amount: ring_value, unit: 'gwei', currency: 'RING' },
       { amount: kton_value, unit: 'gwei', currency: 'KTON' },
@@ -50,18 +56,32 @@ export function D2ERecord({ network, record }: RecordComponentProps<D2ERecordTyp
     <Record {...data}>
       <ProgressDetail
         {...data}
-        claim={() => {
-          claimToken({
-            networkPrefix: toUpperCaseFirst(data.from.network) as ClaimNetworkPrefix,
-            mmrIndex: mmr_index,
-            mmrRoot: mmr_root,
-            mmrSignatures: signatures,
-            blockNumber: block_num,
-            blockHeaderStr: block_header,
-            blockHash: block_hash,
-            meta,
-          }).subscribe(observer);
-        }}
+        claim={
+          !hash && !tx
+            ? () => {
+                setTx({ status: 'queued' });
+                claimToken({
+                  networkPrefix: toUpperCaseFirst(data.from.network) as ClaimNetworkPrefix,
+                  mmrIndex: mmr_index,
+                  mmrRoot: mmr_root,
+                  mmrSignatures: signatures,
+                  blockNumber: block_num,
+                  blockHeaderStr: block_header,
+                  blockHash: block_hash,
+                  meta,
+                }).subscribe({
+                  ...observer,
+                  next: (state) => {
+                    if (state.status === 'finalized' && state.hash) {
+                      setStep(CrosseState.claimed);
+                      setHash(hash);
+                    }
+                    observer.next(state);
+                  },
+                });
+              }
+            : undefined
+        }
       />
     </Record>
   );

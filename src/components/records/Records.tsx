@@ -1,4 +1,4 @@
-import { Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
+import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -78,45 +78,47 @@ export function Records() {
 
   return (
     <>
-      <Input.Group size="large" className="flex items-center w-full mb-8 select-search">
-        <Select
-          size="large"
-          defaultValue={searchParams?.network || NETWORKS[0]}
-          className="capitalize"
-          onSelect={(value) => {
-            if (!canUpdate(address, value)) {
-              setAddress('');
-              inputRef.current?.setValue('');
-            }
+      <Affix offsetTop={0} target={() => document.getElementById('history-records')}>
+        <Input.Group size="large" className="flex items-center w-full mb-8 select-search dark:bg-black">
+          <Select
+            size="large"
+            defaultValue={searchParams?.network || NETWORKS[0]}
+            className="capitalize"
+            onSelect={(value) => {
+              if (!canUpdate(address, value)) {
+                setAddress('');
+                inputRef.current?.setValue('');
+              }
 
-            setNetwork(value);
-            setPaginator({ row: 10, page: 0 });
-          }}
-        >
-          {NETWORKS.map((net) => {
-            return (
-              <Select.Option value={net} key={net} className="capitalize">
-                {net}
-              </Select.Option>
-            );
-          })}
-        </Select>
+              setNetwork(value);
+              setPaginator({ row: 10, page: 0 });
+            }}
+          >
+            {NETWORKS.map((net) => {
+              return (
+                <Select.Option value={net} key={net} className="capitalize">
+                  {net}
+                </Select.Option>
+              );
+            })}
+          </Select>
 
-        <Input.Search
-          defaultValue={searchParams?.sender || ''}
-          loading={loading}
-          ref={inputRef}
-          onSearch={(value) => {
-            if (canUpdate(value, network)) {
-              setAddress(value);
-            } else {
-              message.error(t(`Invalid ${network} format address`));
-            }
-          }}
-          enterButton="Search"
-          size="large"
-        />
-      </Input.Group>
+          <Input.Search
+            defaultValue={searchParams?.sender || ''}
+            loading={loading}
+            ref={inputRef}
+            onSearch={(value) => {
+              if (canUpdate(value, network)) {
+                setAddress(value);
+              } else {
+                message.error(t(`Invalid ${network} format address`));
+              }
+            }}
+            enterButton="Search"
+            size="large"
+          />
+        </Input.Group>
+      </Affix>
 
       <Tabs defaultActiveKey={searchParams?.state || 'inprogress'}>
         <TabPane
@@ -170,7 +172,7 @@ export function Records() {
           current={paginator.page + 1}
           pageSize={paginator.row}
           total={data.count}
-          className="pagination"
+          className="text-right fixed bottom-2 right-2 sm:right-16 lg:right-36"
         />
       )}
     </>

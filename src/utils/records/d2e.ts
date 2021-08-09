@@ -1,13 +1,13 @@
-import { typesBundle } from '@darwinia/types/mix';
+import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { TypeRegistry } from '@polkadot/types';
 import { hexToU8a } from '@polkadot/util';
 import { decodeAddress } from '@polkadot/util-crypto';
-import { catchError, EMPTY, filter, from, map, Observable, switchMap, zip } from 'rxjs';
+import { catchError, EMPTY, filter, from, map, Observable, switchMap, take, zip } from 'rxjs';
 import { abi, DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
 import { D2EHistoryRes, D2EMeta, LockEventsStorage, Network, Paginator, Tx } from '../../model';
 import { apiUrl, remove0x } from '../helper';
-import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg.wasm';
+import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
 import { getEthConnection } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
@@ -66,10 +66,10 @@ export interface AppendedProof extends Proof {
 }
 
 interface EncodeMMRoot {
-  networkPrefix: ClaimNetworkPrefix;
+  prefix: ClaimNetworkPrefix;
   methodID: string;
-  mmrIndex: number;
-  mmrRoot: string;
+  index: number;
+  root: string;
 }
 
 export function claimToken({
@@ -85,13 +85,19 @@ export function claimToken({
   const network = networkPrefix.toLowerCase() as Network;
   const config = NETWORK_CONFIG[network];
   const provider = new WsProvider(config.rpc);
-  const apiObs = from(ApiPromise.create({ provider, typesBundle }));
+  const apiObs = from(
+    ApiPromise.create({
+      provider,
+      typesBundle: typesBundleForPolkadotApps,
+    })
+  );
   const toNetwork: Network = network === 'pangolin' ? 'ropsten' : 'ethereum'; // FIXME: find from by to
   const header = encodeBlockHeader(blockHeaderStr);
   const storageKey = geD2ELockEventsStorageKey(blockNumber, config.lockEvents);
   const accountObs = getEthConnection(toNetwork).pipe(
     filter(({ status }) => status === 'success'),
-    map(({ accounts }) => accounts[0].address)
+    map(({ accounts }) => accounts[0].address),
+    take(1)
   );
 
   return apiObs.pipe(
@@ -126,7 +132,12 @@ export function claimToken({
               abi.tokenIssuingABI
             );
           } else {
-            const mmrRootMessage = encodeMMRRootMessage({ networkPrefix, methodID: '0x479fbdf9', mmrIndex, mmrRoot });
+            const mmrRootMessage = encodeMMRRootMessage({
+              prefix: networkPrefix,
+              methodID: '0x479fbdf9',
+              index: mmrIndex,
+              root: mmrRoot,
+            });
 
             return getContractTxObs(
               contractAddress,
@@ -135,8 +146,8 @@ export function claimToken({
                   .appendRootAndVerifyProof(
                     mmrRootMessage.toHex(),
                     mmrSignatures.split(','),
-                    root,
-                    MMRIndex,
+                    mmrRoot,
+                    mmrIndex,
                     blockHeader,
                     peaks,
                     siblings,
@@ -178,10 +189,12 @@ async function getMMRProof(api: ApiPromise, blockNumber: number, mmrBlockNumber:
     return remove0x(item.replace(/(^\s*)|(\s*$)/g, ''));
   });
   const encodeProof = proofHexStr.join('');
-  const mmrProof = [blockNumber, proof.mmrSize, hexToU8a('0x' + encodeProof), hexToU8a(blockHash)];
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const mmrProofConverted: string = convert(...mmrProof);
+  const mmrProofConverted: string = convert(
+    blockNumber,
+    proof.mmrSize,
+    hexToU8a('0x' + encodeProof),
+    hexToU8a(blockHash)
+  );
 
   const [mmrSize, peaksStr, siblingsStr] = mmrProofConverted.split('|');
   const peaks = peaksStr.split(',');
@@ -209,7 +222,7 @@ async function getMPTProof(
 
 function geD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsStorage[] = []) {
   const matchedStorageKey = lockEvents?.find(
-    (item) => item.min <= blockNumber && ((item.max && item.max >= blockNumber) || item.max === null)
+    (item) => item.min <= blockNumber && (item.max === null || item?.max >= blockNumber)
   );
 
   return matchedStorageKey?.key;

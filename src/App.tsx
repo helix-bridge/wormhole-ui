@@ -62,17 +62,18 @@ function App() {
             </Dropdown>
 
             <ThemeSwitch network={net} defaultTheme={THEME.DARK} />
+
+            <Language simpleMode network={net} className="ml-4" />
           </div>
         </Header>
       </Affix>
 
-      <Content className="sm:px-16 sm:py-8 px-2 py-1">
+      <Content className="sm:px-16 sm:pt-4 px-2 py-1">
         <Switch>
           {routes.map((item, index) => (
             <Route key={index} {...item}></Route>
           ))}
         </Switch>
-        <Language className="fixed bottom-8 right-8" network={net} />
       </Content>
     </Layout>
   );
