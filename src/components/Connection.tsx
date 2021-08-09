@@ -2,7 +2,6 @@ import { useApi } from '../hooks';
 import { isPolkadotNetwork } from '../utils';
 import { ShortAccount } from './ShortAccount';
 
-// eslint-disable-next-line complexity
 export function Connection() {
   const { network, networkStatus, accounts } = useApi();
 

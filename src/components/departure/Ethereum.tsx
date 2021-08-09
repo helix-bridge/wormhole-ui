@@ -21,7 +21,7 @@ import {
   AfterTxCreator,
   applyModalObs,
   approveRingToIssuing,
-  createTxObs,
+  createTxWorkflow,
   empty,
   fromWei,
   getInfoFromHash,
@@ -115,7 +115,7 @@ function createApproveRingTx(value: ApproveValue, after: AfterTxCreator): Observ
   });
   const txObs = approveRingToIssuing(value);
 
-  return createTxObs(beforeTx, txObs, after);
+  return createTxWorkflow(beforeTx, txObs, after);
 }
 
 function createCrossTokenTx(value: RedeemEth, after: AfterTxCreator): Observable<Tx> {
@@ -124,7 +124,7 @@ function createCrossTokenTx(value: RedeemEth, after: AfterTxCreator): Observable
   });
   const txObs = redeemToken(value);
 
-  return createTxObs(beforeTx, txObs, after);
+  return createTxWorkflow(beforeTx, txObs, after);
 }
 
 function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Observable<Tx> {
@@ -150,7 +150,7 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
   });
   const txObs = redeemDeposit(value);
 
-  return createTxObs(beforeTx, txObs, after);
+  return createTxWorkflow(beforeTx, txObs, after);
 }
 
 // eslint-disable-next-line complexity

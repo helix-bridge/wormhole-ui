@@ -9,7 +9,7 @@ import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import { BridgeFormProps, D2E, D2EAsset, Token, TransferAsset, Tx } from '../../model';
-import { AfterTxCreator, applyModalObs, createTxObs, empty, toWei } from '../../utils';
+import { AfterTxCreator, applyModalObs, createTxWorkflow, empty, toWei } from '../../utils';
 import { backingLock, BackingLockNative } from '../../utils/tx/d2e';
 import { AssetGroup, AvailableBalance } from '../controls/AssetGroup';
 import { Balance } from '../controls/Balance';
@@ -70,7 +70,7 @@ function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCre
   });
   const obs = backingLock(value, api);
 
-  return createTxObs(beforeTx, obs, after);
+  return createTxWorkflow(beforeTx, obs, after);
 }
 
 // eslint-disable-next-line complexity

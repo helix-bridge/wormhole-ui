@@ -9,7 +9,7 @@ import { D2EHistoryRes, D2EMeta, LockEventsStorage, Network, Paginator, Tx } fro
 import { apiUrl, remove0x } from '../helper';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg.wasm';
 import { getEthConnection } from '../network';
-import { buf2hex, createEthContractObs } from '../tx';
+import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
 
 export function queryD2ERecords(
@@ -116,7 +116,7 @@ export function claimToken({
           const contractAddress = NETWORK_CONFIG[toNetwork].tokenContract.issuingDarwinia || '';
 
           if (MMRRoot && best && best > blockNumber) {
-            return createEthContractObs(
+            return getContractTxObs(
               contractAddress,
               (contract) => {
                 contract.methods
@@ -128,7 +128,7 @@ export function claimToken({
           } else {
             const mmrRootMessage = encodeMMRRootMessage({ networkPrefix, methodID: '0x479fbdf9', mmrIndex, mmrRoot });
 
-            return createEthContractObs(
+            return getContractTxObs(
               contractAddress,
               (contract) =>
                 contract.methods

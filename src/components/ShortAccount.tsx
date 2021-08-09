@@ -49,8 +49,7 @@ export function ShortAccount({
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function EllipsisMiddle({ children, className }: PropsWithChildren<any>) {
+export function EllipsisMiddle({ children, className }: PropsWithChildren<{ className?: string }>) {
   return (
     <div className={`w-full whitespace-nowrap ${className}`}>
       <span
