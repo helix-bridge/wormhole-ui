@@ -64,7 +64,6 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
 function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCreator, api: ApiPromise): Observable<Tx> {
-  // const { sender, recipient } = value;
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });

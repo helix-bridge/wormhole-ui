@@ -26,6 +26,9 @@ export const getPolkadotConnection: (network: Network) => Observable<PolkadotCon
         };
 
         const reconnect = () => {
+          // eslint-disable-next-line no-magic-numbers
+          console.info(`Reconnect after ${(counter * SHORT_DURATION) / 1000} seconds`);
+
           setTimeout(() => {
             try {
               console.info(`Reconnect Start: Attempting to reconnect for the ${counter}th times`);

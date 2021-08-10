@@ -169,8 +169,8 @@ export function AssetGroup({
                       onChange={(amount) => {
                         triggerChange({ ...target, amount }, index, value);
                       }}
-                      step={1}
-                      precision={0}
+                      step={100}
+                      precision={9}
                       className="flex-1"
                       size="large"
                     >
@@ -179,9 +179,14 @@ export function AssetGroup({
                         network={network}
                         size="large"
                         onClick={() => {
+                          // FIXME: treat the first one as the one to pay the fee
+                          const max =
+                            balance?.asset === balances[0].asset
+                              ? new BN(balance?.max || '0').sub(fee || new BN(0))
+                              : balance?.max;
                           const val = {
                             ...target,
-                            amount: fromWei({ value: balance?.max }),
+                            amount: fromWei({ value: max, unit }),
                           };
 
                           triggerChange(val, index, value);

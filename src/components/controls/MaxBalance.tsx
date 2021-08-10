@@ -14,7 +14,7 @@ export function MaxBalance({ onClick, ...others }: { network: Network } & Button
       onClick={onClick}
       className="ant-input-number"
     >
-      <Trans>All</Trans>
+      <Trans>Max</Trans>
     </Button>
   );
 }
