@@ -47,7 +47,9 @@ function App() {
                     </Menu.Item>
                   )}
                   <Menu.Item key="claim">
-                    <Button type="primary">{t('Claim Airdrop')}</Button>
+                    <Link to={Path.airdrop}>
+                      <Button type="primary">{t('Claim Airdrop')}</Button>
+                    </Link>
                   </Menu.Item>
                 </Menu>
               }

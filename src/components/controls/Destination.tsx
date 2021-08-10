@@ -23,10 +23,9 @@ export function Destination({
 }: DestinationProps) {
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
-  // const [selected, setSelected] = useState<NetConfig | null>(value ?? null);
 
   return (
-    <div>
+    <div className="flex-1">
       <p className="mb-2">{title}</p>
       <Dropdown
         trigger={['click']}
@@ -56,7 +55,7 @@ export function Destination({
             'flex items-center justify-between text-lg p-2 pr-1 rounded-xl bg-gray-300 dark:bg-gray-800 max-w-full text-white'
           }
         >
-          <div className={`rounded-xl flex flex-col gap-4 py-2 flex-1 md:mr-4 bg-${value?.name}`}>
+          <div className={`rounded-xl flex flex-col gap-4 py-2 flex-1 mr-1 md:mr-4 bg-${value?.name}`}>
             <img src={value?.facade.logo || defaultLogo} className="h-8 sm:h-12 md:16 ml-2 self-start" alt="" />
             <span className="capitalize mr-0 text-xs dark:text-white px-2 py-0.5 whitespace-nowrap">
               {!value ? t('Select Network') : value.fullName}

@@ -1,12 +1,10 @@
 import { Button } from 'antd';
-import { ComponentProps } from 'react';
 import { Trans } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, RouteComponentProps } from 'react-router-dom';
 import { Records } from '../components/records/Records';
 import { Path } from '../config/routes';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function HistoryRecords(_: ComponentProps<any>) {
+export function HistoryRecords(_: RouteComponentProps) {
   return (
     <div
       id="history-records"

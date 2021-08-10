@@ -14,6 +14,7 @@ import {
   TransferNetwork,
 } from '../model';
 import { empty, getInitialSetting, getNetworkByName, hasBridge, isBridgeAvailable, isPolkadotNetwork } from '../utils';
+import { Airport } from './Airport';
 import { Nets } from './controls/Nets';
 import { Darwinia } from './departure/Darwinia';
 import { Ethereum } from './departure/Ethereum';
@@ -63,7 +64,7 @@ const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<Br
 };
 
 // eslint-disable-next-line complexity
-export function TransferForm() {
+export function TransferForm({ isCross = true }: { isCross?: boolean }) {
   const { t, i18n } = useTranslation();
   const [form] = useForm<TransferFormValues>();
   const { network, networkStatus, disconnect } = useApi();
@@ -108,11 +109,14 @@ export function TransferForm() {
             onChange={(value) => {
               setTransfer(value);
             }}
+            isCross={isCross}
           />
         </Form.Item>
 
-        {isFromReady && (
-          <>{React.createElement(getDeparture(form.getFieldValue(FORM_CONTROL.transfer).from), { form, setSubmit })}</>
+        {isCross && isFromReady ? (
+          React.createElement(getDeparture(form.getFieldValue(FORM_CONTROL.transfer).from), { form, setSubmit })
+        ) : (
+          <Airport form={form} setSubmit={setSubmit} />
         )}
 
         <div className={networkStatus === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>

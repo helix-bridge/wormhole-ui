@@ -34,6 +34,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       subql: 'https://api.subquery.network/sq/wuminzhe/crab',
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
+      subscan: 'https://crab.subscan.io',
     },
     ethereumChain: {
       chainId: '44',
@@ -62,6 +63,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
+      subscan: '',
     },
     ethereumChain: {
       chainId: '',
@@ -102,6 +104,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       subql: '',
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
+      subscan: '',
     },
     ethereumChain: {
       chainId: '1',
@@ -135,6 +138,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       subql: 'http://t3.hkg.itering.com:3000',
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
+      subscan: '',
     },
     ethereumChain: {
       chainId: '43',
@@ -170,6 +174,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       subql: '',
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
+      subscan: '',
     },
     ethereumChain: {
       chainId: '3',
@@ -203,6 +208,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       subql: '',
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
+      subscan: '',
     },
     ethereumChain: {
       chainId: '3',
@@ -229,6 +235,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
 };
 
 export const NETWORKS: NetConfig[] = Object.values(NETWORK_CONFIG);
+export const AIRPORTS: NetConfig[] = NETWORKS.filter((item) => ['ethereum', 'crab'].includes(item.name));
 
 export interface Vertices {
   network: Network;
@@ -243,6 +250,10 @@ export const NETWORK_GRAPH = new Map<Network, Vertices[]>([
   [NetworkEnum.pangolin, [{ network: NetworkEnum.ropsten, status: 'available' }]],
   [NetworkEnum.ropsten, [{ network: NetworkEnum.pangolin, status: 'available' }]],
   [NetworkEnum.tron, [{ network: NetworkEnum.darwinia, status: 'pending' }]],
+]);
+
+export const AIRDROP_GRAPH = new Map<Network, Vertices[]>([
+  [NetworkEnum.ethereum, [{ network: NetworkEnum.crab, status: 'available' }]],
 ]);
 
 /* -------------------------------------------------Network Simple-------------------------------------------------------- */

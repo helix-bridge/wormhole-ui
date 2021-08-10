@@ -19,9 +19,9 @@ import { Destination } from './Destination';
 
 export type NetsProps = CustomFormControlProps<TransferNetwork>;
 
-export function Nets({ value, onChange }: NetsProps) {
+export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?: boolean }) {
   const { t } = useTranslation();
-  const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks();
+  const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(isCross);
   const { networkStatus, network, switchNetwork } = useApi();
   const [vertices, setVertices] = useState<Vertices | null>(null);
   // eslint-disable-next-line complexity
@@ -91,9 +91,9 @@ export function Nets({ value, onChange }: NetsProps) {
           : truth
         : (net: NetConfig) => (isBoolean(from?.isTest) && isBoolean(to?.isTest) ? net.isTest === from?.isTest : true);
 
-    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from)]);
-    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to)]);
-  }, [value, setFromFilters, setToFilters]);
+    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from, isCross)]);
+    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to, isCross)]);
+  }, [value, setFromFilters, setToFilters, isCross]);
 
   useEffect(() => {
     const { from, to } = value || {};
@@ -119,10 +119,10 @@ export function Nets({ value, onChange }: NetsProps) {
 
       {vertices?.status === 'pending' ? (
         <Tooltip title={t('Coming Soon')}>
-          <DashOutlined className="mt-6 text-2xl" />
+          <DashOutlined className="mt-6 mx-4 text-2xl" />
         </Tooltip>
       ) : (
-        <ArrowRightOutlined className="mt-6 text-2xl" />
+        <ArrowRightOutlined className="mt-6 mx-4 text-2xl" />
       )}
 
       <Destination

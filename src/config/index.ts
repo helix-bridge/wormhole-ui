@@ -6,6 +6,7 @@ export * from './i18n';
 export * from './network';
 export * from './props';
 export * from './query';
+export * from './subscan';
 export * from './theme';
 export * from './types';
 export * from './validate-msg';

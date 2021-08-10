@@ -7,6 +7,7 @@ export * from './modal';
 export * from './network';
 export * from './route';
 export * from './storage';
+export * from './subscan';
 export * from './transfer';
 export * from './tx';
 export * from './util';

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { NETWORKS } from '../config';
+import { AIRPORTS, NETWORKS } from '../config';
 import { NetConfig, NetworkFilter } from '../model';
 import { useApi } from './api';
 
@@ -12,7 +12,7 @@ const omitTestChain: NetworkFilter = (net) => !net.isTest;
 
 const getGlobalFilters = (isTestDisplay: boolean) => (isTestDisplay ? [] : [omitTestChain]);
 
-export function useNetworks() {
+export function useNetworks(isCross: boolean) {
   const { enableTestNetworks } = useApi();
   const [fromFilters, setFromFilters] = useState<NetworkFilter[]>([]);
   const [fromNetworks, setFromNetworks] = useState<NetConfig[]>([]);
@@ -22,10 +22,10 @@ export function useNetworks() {
     (filters: NetworkFilter[]) => {
       return [...getGlobalFilters(enableTestNetworks), ...filters].reduce(
         (networks, predicateFn) => networks.filter((network) => predicateFn(network)),
-        NETWORKS
+        isCross ? NETWORKS : AIRPORTS
       );
     },
-    [enableTestNetworks]
+    [enableTestNetworks, isCross]
   );
 
   useEffect(() => {

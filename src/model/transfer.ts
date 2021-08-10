@@ -6,7 +6,8 @@ import { DeepRequired } from './util';
 
 /* ---------------------------------------------------Components props--------------------------------------------------- */
 
-export type TransferFormValues<T = Record<string, unknown>, U = TransferNetwork> = { transfer: U } & T;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type TransferFormValues<T = any, U = TransferNetwork> = { transfer: U } & T;
 
 export interface CustomFormControlProps<T = string> {
   value?: T;

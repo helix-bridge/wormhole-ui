@@ -21,7 +21,8 @@ interface Receipt {
   gasUsed: number;
 }
 
-type ModalSpyFn = (observer: Observer<boolean>) => void;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ModalSpyFn<T = any> = (observer: Observer<T>, closeFn: () => void) => void;
 
 type IModalFuncs = {
   afterDisappear?: ModalSpyFn;
@@ -56,7 +57,10 @@ export function applyModal(props: RequiredPartial<ModalFuncProps, 'content'> & I
   return confirm(config);
 }
 
-export function applyModalObs(props: RequiredPartial<ModalFuncProps, 'content'> & IModalFuncs): Observable<boolean> {
+export function applyModalObs<T = boolean>(
+  props: RequiredPartial<ModalFuncProps, 'content'> & IModalFuncs
+): Observable<T | boolean> {
+  const { handleOk } = props;
   const config = txModalConfig(props);
   const { afterClose, ...others } = config;
 
@@ -68,8 +72,12 @@ export function applyModalObs(props: RequiredPartial<ModalFuncProps, 'content'> 
         close();
       },
       onOk: (close) => {
-        observer.next(true);
-        close();
+        if (handleOk) {
+          handleOk(observer, close);
+        } else {
+          observer.next(true);
+          close();
+        }
       },
       afterClose: () => {
         if (afterClose) {

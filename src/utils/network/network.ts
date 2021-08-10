@@ -1,6 +1,14 @@
 import { curry, curryRight, isNull } from 'lodash';
 import Web3 from 'web3';
-import { NetworkEnum, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE, Vertices } from '../../config';
+import {
+  NetworkEnum,
+  NETWORK_ALIAS,
+  NETWORK_CONFIG,
+  NETWORK_GRAPH,
+  NETWORK_SIMPLE,
+  Vertices,
+  AIRDROP_GRAPH,
+} from '../../config';
 import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkCategory } from '../../model';
 
 function isSpecifyNetworkType(type: NetworkCategory) {
@@ -50,7 +58,7 @@ export function getLegalName(network: string): Network | string {
   return byNetworkAlias(network) || network;
 }
 
-export const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) => {
+const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) => {
   if ([net1, net2].some(isNull)) {
     return false;
   }
@@ -58,19 +66,24 @@ export const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) =>
   return typeof net1 === typeof net2 && net1?.fullName === net2?.fullName;
 };
 
-export const isInNodeList = (net1: NetConfig | null, net2: NetConfig | null) => {
+const isInNodeList = (source: Map<Network, Vertices[]>) => (net1: NetConfig | null, net2: NetConfig | null) => {
   if (!net1 || !net2) {
     return true;
   }
 
-  const vertices = NETWORK_GRAPH.get(NetworkEnum[net1.name]) ?? [];
+  const vertices = source.get(NetworkEnum[net1.name]) ?? [];
   const nets = vertices.map((ver) => ver.network);
 
   return nets.includes(net2.name);
 };
 
-export const isReachable = curry(isInNodeList); // relation: net1 -> net2 ---- Find the relation by net1
-export const isTraceable = curryRight(isInNodeList); // relation: net1 -> net2 ---- Find the relation by net2
+const isInCrossList = isInNodeList(NETWORK_GRAPH);
+const isInAirportList = isInNodeList(AIRDROP_GRAPH);
+
+export const isReachable = (net: NetConfig | null, isCross = true) =>
+  isCross ? curry(isInCrossList)(net) : curry(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net1
+export const isTraceable = (net: NetConfig | null, isCross = true) =>
+  isCross ? curryRight(isInCrossList)(net) : curryRight(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net2
 export const isSameNetworkCurry = curry(isSameNetwork);
 export const isPolkadotNetwork = isSpecifyNetworkType('polkadot');
 export const isEthereumNetwork = isSpecifyNetworkType('ethereum');
