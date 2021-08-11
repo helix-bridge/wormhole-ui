@@ -114,7 +114,7 @@ export function Records() {
                 message.error(t(`Invalid ${network} format address`));
               }
             }}
-            enterButton="Search"
+            enterButton={t('Search')}
             size="large"
           />
         </Input.Group>

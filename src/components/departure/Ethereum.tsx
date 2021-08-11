@@ -245,7 +245,9 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
 
       <RecipientItem
         form={form}
-        extraTip="Please be sure to fill in the real Darwinia mainnet account, and keep the account recovery files such as mnemonic properly."
+        extraTip={t(
+          'Please be sure to fill in the real Darwinia mainnet account, and keep the account recovery files such as mnemonic properly.'
+        )}
       />
 
       <Form.Item name={FORM_CONTROL.asset} label={t('Asset')}>

@@ -23,11 +23,11 @@ export function Home(props: RouteComponentProps) {
 
       <p className="mt-4 text-center xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto">
         {isCross ? (
-          <Trans i18nKey="crossChainHistory" className="mt-4 text-center">
+          <Trans i18nKey="viewCrossHistory" className="mt-4 text-center">
             You can view your <HistoryLink>Cross-chain history</HistoryLink>
           </Trans>
         ) : (
-          <Trans i18nKey="crossChainHistory" className="mt-4 text-center">
+          <Trans i18nKey="viewAirdropHistory" className="mt-4 text-center">
             You can view your <Link to={Path.airdropHistory}>Airdrop history</Link>
           </Trans>
         )}

@@ -1,7 +1,8 @@
-import { EllipsisOutlined } from '@ant-design/icons';
-import { Affix, Button, Dropdown, Layout, Menu } from 'antd';
+import { EllipsisOutlined, WarningOutlined } from '@ant-design/icons';
+import { Affix, Button, Dropdown, Layout, Menu, Tooltip } from 'antd';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Route, Switch } from 'react-router-dom';
+import { Link, Route, Switch, useLocation } from 'react-router-dom';
 import { Connection } from './components/Connection';
 import { Language } from './components/Language';
 import { ThemeSwitch } from './components/ThemeSwitch';
@@ -14,6 +15,8 @@ const { Header, Content } = Layout;
 function App() {
   const { t } = useTranslation();
   const { isDev, enableTestNetworks, setEnableTestNetworks } = useApi();
+  const location = useLocation();
+  const [isAirdrop, setIsAirdrop] = useState<boolean>(location.pathname.includes('airdrop'));
   const net = 'pangolin';
 
   return (
@@ -25,6 +28,10 @@ function App() {
               <img src="/image/logo.png" alt="" className="h-4 md:h-6" />
             </Link>
             <span className="text-white text-md whitespace-nowrap md:inline hidden">{t('Cross-chain transfer')}</span>
+
+            <Tooltip title={t('Wormhole is in beta. Please trade at your own risk level')}>
+              <WarningOutlined className="ml-4 cursor-pointer text-xl" style={{ color: 'yellow' }} />
+            </Tooltip>
           </div>
 
           <div className="flex justify-end items-center flex-1 md:pl-8">
@@ -47,8 +54,8 @@ function App() {
                     </Menu.Item>
                   )}
                   <Menu.Item key="claim">
-                    <Link to={Path.airdrop}>
-                      <Button type="primary">{t('Claim Airdrop')}</Button>
+                    <Link to={isAirdrop ? Path.root : Path.airdrop} onClick={() => setIsAirdrop(!isAirdrop)}>
+                      <Button type="primary">{t(isAirdrop ? 'Cross-chain' : 'Claim Airdrop')}</Button>
                     </Link>
                   </Menu.Item>
                 </Menu>

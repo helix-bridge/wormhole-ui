@@ -118,7 +118,7 @@ export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDeta
 
   return (
     <div className={'grid bg-gray-800 bg-opacity-20 progress-steps ' + (hasRelay ? 'grid-cols-4' : 'grid-cols-3')}>
-      <StepWrapper icon={stepStartIcon} title="Transaction Send"></StepWrapper>
+      <StepWrapper icon={stepStartIcon} title={t('Transaction Send')}></StepWrapper>
 
       <StepWrapper
         icon={txProgressIcon[iconName(fromNetwork)]}

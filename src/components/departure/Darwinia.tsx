@@ -186,7 +186,9 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
 
       <RecipientItem
         form={form}
-        extraTip="After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account."
+        extraTip={t(
+          'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
+        )}
       />
 
       <Form.Item initialValue={D2EAssetEnum.native} name={FORM_CONTROL.assetType} label={t('Asset Type')}>
