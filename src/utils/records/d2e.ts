@@ -93,7 +93,7 @@ export function claimToken({
   );
   const toNetwork: Network = network === 'pangolin' ? 'ropsten' : 'ethereum'; // FIXME: find from by to
   const header = encodeBlockHeader(blockHeaderStr);
-  const storageKey = geD2ELockEventsStorageKey(blockNumber, config.lockEvents);
+  const storageKey = getD2ELockEventsStorageKey(blockNumber, config.lockEvents);
   const accountObs = getEthConnection(toNetwork).pipe(
     filter(({ status }) => status === 'success'),
     map(({ accounts }) => accounts[0].address),
@@ -220,7 +220,7 @@ async function getMPTProof(
   return registry.createType('Vec<Bytes>', proof.proof.toJSON());
 }
 
-function geD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsStorage[] = []) {
+function getD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsStorage[] = []) {
   const matchedStorageKey = lockEvents?.find(
     (item) => item.min <= blockNumber && (item.max === null || item?.max >= blockNumber)
   );

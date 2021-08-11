@@ -2,19 +2,23 @@ import { catchError, EMPTY, forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { apiUrl } from '../helper';
 import { NETWORK_CONFIG, DarwiniaApiPath } from '../../config';
-import { Network, RedeemHistory, RingBurnHistory } from '../../model';
+import { Network, Paginator, RedeemHistory, RingBurnHistory } from '../../model';
 import { rxGet } from './api';
 
 export function queryE2DRecords(
   network: Network | null,
-  address: string | null
+  address: string | null,
+  paginator?: Paginator
 ): Observable<(RingBurnHistory | RedeemHistory)[]> {
   if (network === null || address === null || address === '') {
     return EMPTY;
   }
 
   const api = NETWORK_CONFIG[network].api.dapp;
-  const params = { address };
+  const params = {
+    address,
+    ...(paginator ?? { row: 50, page: 0 }),
+  };
   const genesisObs = rxGet<(RingBurnHistory & { isGenesis: boolean })[]>({
     url: apiUrl(api, DarwiniaApiPath.ringBurn),
     params,

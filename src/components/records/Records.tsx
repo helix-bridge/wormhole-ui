@@ -132,8 +132,12 @@ export function Records() {
         >
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {isEthereumNetwork(network) &&
-            ((data?.list || []) as (RingBurnHistory | RedeemHistory)[]).map((item) => (
-              <E2DRecord record={item} network={NETWORK_CONFIG[network || 'ethereum']} key={item.block_timestamp} />
+            ((data?.list || []) as (RingBurnHistory | RedeemHistory)[]).map((item, index) => (
+              <E2DRecord
+                record={item}
+                network={NETWORK_CONFIG[network || 'ethereum']}
+                key={item.block_timestamp || index}
+              />
             ))}
 
           {isPolkadotNetwork(network) &&
