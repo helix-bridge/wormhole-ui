@@ -46,8 +46,8 @@ function App() {
                   <Menu.Item key="faq" onClick={() => window.open('', '_blank')}>
                     {t('FAQ')}
                   </Menu.Item>
-                  <Menu.Item key="submit" onClick={() => window.open('', '_blank')}>
-                    {t('Submit Your Token')}
+                  <Menu.Item key="submit">
+                    <Link to={Path.register}>{t('Submit Your Token')}</Link>
                   </Menu.Item>
                   {!isDev && (
                     <Menu.Item key="tests" onClick={() => setEnableTestNetworks(!enableTestNetworks)}>

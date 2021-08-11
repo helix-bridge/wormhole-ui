@@ -11,3 +11,5 @@ export declare global {
     /* eslint-enable */
   }
 }
+
+declare module '@metamask/contract-metadata' {}

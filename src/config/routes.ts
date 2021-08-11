@@ -1,6 +1,7 @@
 import { RouteProps } from 'react-router-dom';
 import { AirdropHistory } from '../pages/AirdropHistory';
 import { HistoryRecords } from '../pages/CrossHistory';
+import { Erc20Register } from '../pages/Erc20Register';
 import { Home } from '../pages/Home';
 
 export enum Path {
@@ -8,6 +9,7 @@ export enum Path {
   history = '/history',
   airdrop = '/airdrop',
   airdropHistory = '/airdropHistory',
+  register = 'register',
 }
 
 export const routes: RouteProps[] = [
@@ -30,6 +32,11 @@ export const routes: RouteProps[] = [
     exact: true,
     path: Path.airdropHistory,
     children: AirdropHistory,
+  },
+  {
+    exact: true,
+    path: Path.register,
+    component: Erc20Register,
   },
   {
     exact: true,

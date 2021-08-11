@@ -31,18 +31,31 @@ export interface LockEventsStorage {
   key: string;
 }
 
+export interface Erc20TokenConfig {
+  proofAddress: string;
+  bankingAddress: string;
+  mappingAddress: string;
+}
+
+export interface Provider {
+  rpc: string;
+  etherscan: string;
+}
+
 export interface NetConfig {
+  api: Api;
+  erc20Token: Erc20TokenConfig;
+  ethereumChain: AddEthereumChainParameter;
   facade: Facade;
   fullName: string;
-  ethereumChain: AddEthereumChainParameter;
+  isTest: boolean;
+  lockEvents?: LockEventsStorage[];
+  name: Network;
+  provider: Provider;
   rpc: string;
   ss58Prefix: SS58Prefix;
   tokenContract: TokenContract & { registryEth?: string; issuingDarwinia?: string; bankDarwinia?: string };
-  api: Api;
-  isTest: boolean;
   type: NetworkCategory[];
-  name: Network;
-  lockEvents?: LockEventsStorage[];
 }
 
 export type NetworkConfig<T = NetConfig> = Config<Network, T>;

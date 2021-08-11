@@ -36,6 +36,11 @@ export const NETWORK_CONFIG: NetworkConfig = {
       dapp: 'https://api.darwinia.network',
       subscan: 'https://crab.subscan.io',
     },
+    erc20Token: {
+      proofAddress: '',
+      bankingAddress: '', // erc20 banking address
+      mappingAddress: '',
+    },
     ethereumChain: {
       chainId: '44',
       chainName: '',
@@ -51,6 +56,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
     fullName: 'Crab Mainnet',
     isTest: false,
     name: 'crab',
+    provider: {
+      rpc: 'wss://crab-rpc.darwinia.network',
+      etherscan: '',
+    },
     rpc: 'wss://crab-rpc.darwinia.network',
     ss58Prefix: 42,
     tokenContract: {
@@ -64,6 +73,11 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: '',
+    },
+    erc20Token: {
+      bankingAddress: '',
+      mappingAddress: '',
+      proofAddress: '',
     },
     ethereumChain: {
       chainId: '',
@@ -92,6 +106,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
       },
     ],
     name: 'darwinia',
+    provider: {
+      rpc: 'wss://rpc.darwinia.network',
+      etherscan: '',
+    },
     rpc: 'wss://rpc.darwinia.network',
     ss58Prefix: 18,
     tokenContract: {
@@ -105,6 +123,11 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: '',
+    },
+    erc20Token: {
+      bankingAddress: '',
+      mappingAddress: '',
+      proofAddress: '',
     },
     ethereumChain: {
       chainId: '1',
@@ -121,6 +144,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
     fullName: 'Ethereum Mainnet',
     isTest: false,
     name: 'ethereum',
+    provider: {
+      rpc: '',
+      etherscan: 'wss://mainnet.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
+    },
     rpc: '',
     ss58Prefix: 18,
     tokenContract: {
@@ -139,6 +166,11 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
+    },
+    erc20Token: {
+      bankingAddress: '',
+      mappingAddress: '0xcB8531Bc0B7C8F41B55CF4E94698C37b130597B9',
+      proofAddress: '0xe66f3de22eed97c730152f373193b5a0485b407d88f37d5fd6a2c59e5a696691',
     },
     ethereumChain: {
       chainId: '43',
@@ -162,6 +194,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
       },
     ],
     name: 'pangolin',
+    provider: {
+      rpc: 'wss://pangolin-rpc.darwinia.network',
+      etherscan: '',
+    },
     rpc: 'wss://pangolin-rpc.darwinia.network',
     ss58Prefix: 18,
     tokenContract: {
@@ -175,6 +211,11 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
+    },
+    erc20Token: {
+      bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
+      mappingAddress: '',
+      proofAddress: '0xe66f3de22eed97c730152f373193b5a0485b407d88f37d5fd6a2c59e5a696691',
     },
     ethereumChain: {
       chainId: '3',
@@ -191,6 +232,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
     fullName: 'Ropsten Testnet',
     isTest: true,
     name: 'ropsten',
+    provider: {
+      rpc: '',
+      etherscan: 'wss://ropsten.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
+    },
     rpc: '',
     ss58Prefix: 18,
     tokenContract: {
@@ -210,6 +255,11 @@ export const NETWORK_CONFIG: NetworkConfig = {
       dapp: 'https://api.darwinia.network',
       subscan: '',
     },
+    erc20Token: {
+      bankingAddress: '',
+      mappingAddress: '',
+      proofAddress: '',
+    },
     ethereumChain: {
       chainId: '3',
       chainName: '',
@@ -225,6 +275,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
     fullName: 'Tron Mainnet',
     isTest: false,
     name: 'tron',
+    provider: {
+      rpc: '',
+      etherscan: '',
+    },
     rpc: '',
     ss58Prefix: null,
     tokenContract: {

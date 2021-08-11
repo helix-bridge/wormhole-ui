@@ -1,13 +1,17 @@
 import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { TypeRegistry } from '@polkadot/types';
-import { hexToU8a } from '@polkadot/util';
 import { decodeAddress } from '@polkadot/util-crypto';
 import { catchError, EMPTY, filter, from, map, Observable, switchMap, take, zip } from 'rxjs';
 import { abi, DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
 import { D2EHistoryRes, D2EMeta, LockEventsStorage, Network, Paginator, Tx } from '../../model';
-import { apiUrl, remove0x } from '../helper';
-import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
+import {
+  apiUrl,
+  ClaimNetworkPrefix,
+  encodeBlockHeader,
+  encodeMMRRootMessage,
+  getMMRProof,
+  getMPTProof,
+} from '../helper';
 import { getEthConnection } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
@@ -37,8 +41,6 @@ export function queryD2ERecords(
   );
 }
 
-export type ClaimNetworkPrefix = 'Darwinia' | 'Pangolin';
-
 export interface ClaimInfo {
   networkPrefix: ClaimNetworkPrefix;
   mmrIndex: number;
@@ -63,13 +65,6 @@ export interface Proof {
 export interface AppendedProof extends Proof {
   message: string;
   signatures: string[];
-}
-
-interface EncodeMMRoot {
-  prefix: ClaimNetworkPrefix;
-  methodID: string;
-  index: number;
-  root: string;
 }
 
 export function claimToken({
@@ -163,77 +158,10 @@ export function claimToken({
   );
 }
 
-function encodeBlockHeader(blockHeaderStr: string) {
-  const blockHeaderObj = JSON.parse(blockHeaderStr);
-  const registry = new TypeRegistry();
-
-  return registry.createType('Header', {
-    parentHash: blockHeaderObj.parent_hash,
-    // eslint-disable-next-line id-denylist
-    number: blockHeaderObj.block_number,
-    stateRoot: blockHeaderObj.state_root,
-    extrinsicsRoot: blockHeaderObj.extrinsics_root,
-    digest: {
-      logs: blockHeaderObj.digest,
-    },
-  });
-}
-
-async function getMMRProof(api: ApiPromise, blockNumber: number, mmrBlockNumber: number, blockHash: string) {
-  await api.isReady;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const proof = await api.rpc.headerMMR.genProof(blockNumber, mmrBlockNumber);
-  const proofStr = proof.proof.substring(1, proof.proof.length - 1);
-  const proofHexStr = proofStr.split(',').map((item: string) => {
-    return remove0x(item.replace(/(^\s*)|(\s*$)/g, ''));
-  });
-  const encodeProof = proofHexStr.join('');
-  const mmrProofConverted: string = convert(
-    blockNumber,
-    proof.mmrSize,
-    hexToU8a('0x' + encodeProof),
-    hexToU8a(blockHash)
-  );
-
-  const [mmrSize, peaksStr, siblingsStr] = mmrProofConverted.split('|');
-  const peaks = peaksStr.split(',');
-  const siblings = siblingsStr.split(',');
-
-  return {
-    mmrSize,
-    peaks,
-    siblings,
-  };
-}
-
-async function getMPTProof(
-  api: ApiPromise,
-  hash = '',
-  proofAddress = '0xf8860dda3d08046cf2706b92bf7202eaae7a79191c90e76297e0895605b8b457'
-) {
-  await api.isReady;
-
-  const proof = await api.rpc.state.getReadProof([proofAddress], hash);
-  const registry = new TypeRegistry();
-
-  return registry.createType('Vec<Bytes>', proof.proof.toJSON());
-}
-
 function getD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsStorage[] = []) {
   const matchedStorageKey = lockEvents?.find(
     (item) => item.min <= blockNumber && (item.max === null || item?.max >= blockNumber)
   );
 
   return matchedStorageKey?.key;
-}
-
-function encodeMMRRootMessage(root: EncodeMMRoot) {
-  const registry = new TypeRegistry();
-
-  return registry.createType(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    '{"prefix": "Vec<u8>", "methodID": "[u8; 4; methodID]", "index": "Compact<u32>", "root": "H256"}' as any,
-    root
-  );
 }
