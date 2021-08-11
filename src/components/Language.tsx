@@ -1,15 +1,15 @@
 import { Button, Dropdown, Menu } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NETWORK_LIGHT_THEME } from '../config';
+import { NETWORK_LIGHT_THEME, THEME } from '../config';
 import { Network } from '../model';
-import { readStorage } from '../utils/helper/storage';
 import { EarthIcon } from './icons';
 
 export interface LanguageProps {
   className?: string;
   network?: Network;
   simpleMode?: boolean;
+  theme?: THEME;
 }
 
 const lang: { name: string; short: string }[] = [
@@ -18,11 +18,11 @@ const lang: { name: string; short: string }[] = [
 ];
 
 // eslint-disable-next-line complexity
-export function Language({ network, simpleMode = false, className = '' }: LanguageProps) {
+export function Language({ network, theme = THEME.LIGHT, simpleMode = false, className = '' }: LanguageProps) {
   const { t, i18n } = useTranslation();
   const [current, setCurrent] = useState(i18n.language.includes('-') ? i18n.language.split('-')[0] : i18n.language);
   const textColor = useMemo(() => (network ? 'text-' + network + '-main' : ''), [network]);
-  const color = readStorage().theme === 'dark' ? network && NETWORK_LIGHT_THEME[network]['@project-main-bg'] : '#fff';
+  const color = theme === THEME.DARK ? network && NETWORK_LIGHT_THEME[network]['@project-main-bg'] : '#fff';
 
   return (
     <Dropdown

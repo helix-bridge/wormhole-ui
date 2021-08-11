@@ -23,9 +23,10 @@ export const toggleTheme = (theme: THEME, network: Network) => {
 export interface ThemeSwitchProps {
   network: Network;
   defaultTheme?: THEME;
+  onThemeChange?: (theme: THEME) => void;
 }
 
-export function ThemeSwitch({ network, defaultTheme = THEME.LIGHT }: ThemeSwitchProps) {
+export function ThemeSwitch({ network, onThemeChange, defaultTheme = THEME.LIGHT }: ThemeSwitchProps) {
   const [theme, setTheme] = useState<THEME>(readStorage()?.theme || defaultTheme);
 
   useEffect(() => {
@@ -44,7 +45,13 @@ export function ThemeSwitch({ network, defaultTheme = THEME.LIGHT }: ThemeSwitch
       checkedChildren="🌙"
       unCheckedChildren="☀️"
       onChange={() => {
-        setTheme(theme === THEME.DARK ? THEME.LIGHT : THEME.DARK);
+        const current = theme === THEME.DARK ? THEME.LIGHT : THEME.DARK;
+
+        setTheme(current);
+
+        if (onThemeChange) {
+          onThemeChange(current);
+        }
       }}
       className="ml-4"
     />

@@ -17,6 +17,7 @@ function App() {
   const { isDev, enableTestNetworks, setEnableTestNetworks } = useApi();
   const location = useLocation();
   const [isAirdrop, setIsAirdrop] = useState<boolean>(location.pathname.includes('airdrop'));
+  const [theme, setTheme] = useState<THEME>(THEME.DARK);
   const net = 'pangolin';
 
   return (
@@ -70,9 +71,9 @@ function App() {
               />
             </Dropdown>
 
-            <ThemeSwitch network={net} defaultTheme={THEME.DARK} />
+            <ThemeSwitch network={net} defaultTheme={THEME.DARK} onThemeChange={setTheme} />
 
-            <Language simpleMode network={net} className="ml-4" />
+            <Language simpleMode network={net} theme={theme} className="ml-4" />
           </div>
         </Header>
       </Affix>
