@@ -1,6 +1,7 @@
 export * from './account';
 export * from './common';
 export * from './darwinia';
+export * from './erc20';
 export * from './evolution';
 export * from './metamask';
 export * from './modal';

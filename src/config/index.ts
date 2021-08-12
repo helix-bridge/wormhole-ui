@@ -1,6 +1,7 @@
 export * from './abi';
 export * from './constant';
 export * from './darwinia';
+export * from './erc20';
 export * from './evolution';
 export * from './i18n';
 export * from './network';

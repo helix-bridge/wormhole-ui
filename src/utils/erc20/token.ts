@@ -5,8 +5,8 @@ import { from, iif, NEVER, Observable, of, Subject, zip } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
 import { catchError, delay, distinctUntilKeyChanged, map, retryWhen, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
-import { abi, NETWORK_CONFIG } from '../../config';
-import { NetConfig, Network } from '../../model';
+import { abi, NETWORK_CONFIG, RegisterStatus } from '../../config';
+import { Erc20Token, NetConfig, Network } from '../../model';
 import {
   ClaimNetworkPrefix,
   encodeBlockHeader,
@@ -47,18 +47,6 @@ const getTokenInfo = async (tokenAddress: string, config: NetConfig) => {
     logo,
   };
 };
-
-interface Erc20Token {
-  address: string;
-  source: string;
-  backing: string;
-  symbol: string;
-  decimals: string;
-  name: string;
-  logo: string;
-  status: string;
-  balance: BN;
-}
 
 /**
  *
@@ -272,12 +260,6 @@ export const popupRegisterProof = (address: string, network: Network) => {
     }
   });
 };
-
-enum RegisterStatus {
-  unregister,
-  registered,
-  registering,
-}
 
 /**
  *

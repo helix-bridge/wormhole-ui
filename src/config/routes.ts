@@ -9,19 +9,19 @@ export enum Path {
   history = '/history',
   airdrop = '/airdrop',
   airdropHistory = '/airdropHistory',
-  register = 'register',
+  register = '/register',
 }
 
 export const routes: RouteProps[] = [
   {
     exact: true,
     path: Path.root,
-    component: Home,
+    children: Home,
   },
   {
     exact: true,
     path: Path.history,
-    component: HistoryRecords,
+    children: HistoryRecords,
   },
   {
     exact: true,

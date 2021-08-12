@@ -1,23 +1,16 @@
-import { Button, ButtonProps, Form } from 'antd';
+import { Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
-import {
-  BridgeFormProps,
-  Bridges,
-  ConnectStatus,
-  NetConfig,
-  Network,
-  TransferFormValues,
-  TransferNetwork,
-} from '../model';
-import { empty, getInitialSetting, getNetworkByName, hasBridge, isBridgeAvailable, isPolkadotNetwork } from '../utils';
+import { BridgeFormProps, Bridges, NetConfig, Network, TransferFormValues, TransferNetwork } from '../model';
+import { empty, getInitialSetting, getNetworkByName } from '../utils';
 import { Airport } from './Airport';
 import { Nets } from './controls/Nets';
 import { Darwinia } from './departure/Darwinia';
 import { Ethereum } from './departure/Ethereum';
+import { FromItemButton, SubmitButton } from './SubmitButton';
 
 type Departures = { [key in Network]?: FunctionComponent<BridgeFormProps & Bridges> };
 
@@ -120,7 +113,7 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         )}
 
         <div className={networkStatus === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
-          <SubmitButton {...transfer} />
+          <SubmitButton {...transfer} requireTo />
 
           {networkStatus === 'success' && (
             <FromItemButton type="default" onClick={() => disconnect()} disabled={!!tx}>
@@ -130,87 +123,5 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         </div>
       </Form>
     </>
-  );
-}
-
-function FromItemButton({ children, className, ...others }: ButtonProps) {
-  return (
-    <Form.Item className="mt-8">
-      <Button
-        type="primary"
-        size="large"
-        {...others}
-        className={`ax-auto w-full rounded-xl text-white flex items-center uppercase ${className} `}
-      >
-        <span className="whitespace-nowrap overflow-hidden overflow-ellipsis w-full">{children}</span>
-      </Button>
-    </Form.Item>
-  );
-}
-
-interface SubmitButtonProps {
-  from: NetConfig | null;
-  to: NetConfig | null;
-}
-
-// eslint-disable-next-line complexity
-function SubmitButton({ from, to }: SubmitButtonProps) {
-  const { t } = useTranslation();
-  const { networkStatus, network, switchNetwork, connectToEth, connectToSubstrate } = useApi();
-  const { tx } = useTx();
-  const errorConnections: ConnectStatus[] = ['pending', 'disconnected', 'fail'];
-
-  if (tx) {
-    return <FromItemButton disabled>{t(tx.status)}</FromItemButton>;
-  }
-
-  if (from?.name && to?.name && hasBridge(from.name, to.name) && !isBridgeAvailable(from.name, to.name)) {
-    return <FromItemButton disabled>{t('Coming soon')}</FromItemButton>;
-  }
-
-  if (networkStatus === 'connecting') {
-    return <FromItemButton disabled>{t('Connecting ...')}</FromItemButton>;
-  }
-
-  if (networkStatus === 'success' && from && from.name !== network) {
-    return (
-      <FromItemButton onClick={() => switchNetwork(from.name)}>
-        {t('Switch to {{network}}', { network: from.name })}
-      </FromItemButton>
-    );
-  }
-
-  if (errorConnections.includes(networkStatus) && !!from?.name) {
-    return (
-      <FromItemButton
-        onClick={() => {
-          if (network !== from.name) {
-            switchNetwork(from.name);
-
-            return;
-          }
-
-          const isPolkadot = isPolkadotNetwork(from.name);
-
-          if (isPolkadot) {
-            connectToSubstrate(network);
-          } else {
-            connectToEth(network);
-          }
-        }}
-      >
-        {t('Connect to {{network}}', { network: from.name })}
-      </FromItemButton>
-    );
-  }
-
-  if ((networkStatus === 'success' && !from?.name) || networkStatus === 'pending') {
-    return null;
-  }
-
-  return (
-    <FromItemButton disabled={!to} htmlType="submit">
-      {t('Submit')}
-    </FromItemButton>
   );
 }
