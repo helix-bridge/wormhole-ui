@@ -1,14 +1,15 @@
 import BN from 'bn.js';
+import { RegisterStatus } from '../config';
 
 export interface Erc20Token {
   address: string;
   source: string;
   backing: string;
   symbol: string;
-  decimals: string;
+  decimals: string | number;
   name: string;
   logo: string;
-  status: string;
+  status: RegisterStatus | null;
   balance: BN;
 }
 

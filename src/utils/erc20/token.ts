@@ -26,7 +26,7 @@ import {
   tokenInfoGetter,
 } from './token-util';
 
-type StoredProof = MMRProof & Erc20Token & { eventsProofStr: string };
+export type StoredProof = MMRProof & Erc20Token & { eventsProofStr: string };
 
 const proofSubject = new Subject<StoredProof>();
 const proofMemo: StoredProof[] = [];
@@ -43,8 +43,8 @@ const getTokenInfo = async (tokenAddress: string, config: NetConfig) => {
   return {
     symbol,
     decimals,
-    name,
-    logo,
+    name: name ?? '',
+    logo: logo ?? '',
   };
 };
 
@@ -61,7 +61,7 @@ export const getAllTokens = async (currentAccount: string, network: Network): Pr
   }
   const config = NETWORK_CONFIG[network];
 
-  return network === 'ethereum'
+  return config.type.includes('ethereum')
     ? await getAllTokensEthereum(currentAccount, config)
     : await getAllTokensDvm(currentAccount, config);
 };
@@ -98,7 +98,10 @@ const getAllTokensDvm = async (currentAccount: string, config: NetConfig) => {
  * @function getAllTokensEthereum - get all tokens at ethereum side
  * @returns tokens that status maybe registered or registering
  */
-const getAllTokensEthereum = async (currentAccount: string, config: NetConfig) => {
+const getAllTokensEthereum: (cur: string, con: NetConfig) => Promise<Erc20Token[]> = async (
+  currentAccount: string,
+  config: NetConfig
+) => {
   const web3 = new Web3(window.ethereum);
   const backingContract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
   const length = await backingContract.methods.assetLength().call();
@@ -248,10 +251,10 @@ const generateRegisterProof: (address: string, config: NetConfig) => Observable<
  * @description - Check register proof in cache, if exists emit it directly, otherwise get it through api request.
  * @params {Address} address - token address
  */
-export const popupRegisterProof = (address: string, network: Network) => {
+export const popupRegisterProof = (address: string, config: NetConfig) => {
   const DELAY = 2000;
   const proof = proofMemo.find((item) => item.source === address);
-  const fromQuery = generateRegisterProof(address, NETWORK_CONFIG[network]);
+  const fromQuery = generateRegisterProof(address, config);
   const fromMemo = of(proof).pipe(delay(DELAY));
 
   return iif(() => !!proof, fromMemo, fromQuery).subscribe((pro) => {

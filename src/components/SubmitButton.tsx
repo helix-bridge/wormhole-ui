@@ -38,7 +38,7 @@ export function SubmitButton({ from, to, children, requireTo, disabled }: PropsW
   }
 
   if (from?.name && to?.name && hasBridge(from.name, to.name) && !isBridgeAvailable(from.name, to.name)) {
-    return <FromItemButton disabled>{t('Coming soon')}</FromItemButton>;
+    return <FromItemButton disabled>{t('Coming Soon')}</FromItemButton>;
   }
 
   if (networkStatus === 'connecting') {

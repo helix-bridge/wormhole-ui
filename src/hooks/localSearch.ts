@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Erc20Token } from '../model';
 
-export function useLocalSearch(filterFn: (addr: string) => Erc20Token[]) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useLocalSearch<T = any>(filterFn: (addr: string) => T[]) {
   const [search, setSearch] = useState('');
-  const [data, setData] = useState<Erc20Token[]>([]);
+  const [data, setData] = useState<T[]>([]);
 
   useEffect(() => {
     const result = filterFn(search);

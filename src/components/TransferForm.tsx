@@ -53,7 +53,7 @@ const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<Br
     return DEPARTURES[typeName] as FunctionComponent<BridgeFormProps & Bridges>;
   }
 
-  return () => <span>Coming soon...</span>;
+  return () => <span>Coming Soon...</span>;
 };
 
 // eslint-disable-next-line complexity

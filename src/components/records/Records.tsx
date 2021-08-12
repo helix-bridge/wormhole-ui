@@ -164,7 +164,7 @@ export function Records() {
           }
           key="confirmed"
         >
-          <span>Coming soon ... Need api support</span>
+          <span>Coming Soon ... Need api support</span>
         </TabPane>
       </Tabs>
 
