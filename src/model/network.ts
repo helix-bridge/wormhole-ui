@@ -54,7 +54,12 @@ export interface NetConfig {
   provider: Provider;
   rpc: string;
   ss58Prefix: SS58Prefix;
-  tokenContract: TokenContract & { registryEth?: string; issuingDarwinia?: string; bankDarwinia?: string };
+  tokenContract: TokenContract & {
+    registryEth?: string;
+    issuingDarwinia?: string;
+    issuingEthereum?: string;
+    bankDarwinia?: string;
+  };
   type: NetworkCategory[];
 }
 
