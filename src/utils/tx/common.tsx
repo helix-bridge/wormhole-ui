@@ -113,6 +113,12 @@ export function createTxWorkflow(
   );
 }
 
+/**
+ * @param contractAddress - Contract address in ethereum
+ * @param fn - Contract method to be call, will receive the contract instance as the incoming parameter;
+ * @param contractAbi - Contract ABI
+ * @returns An Observable which will emit the tx events that includes signing, queued, finalized and error.
+ */
 export function getContractTxObs(
   contractAddress: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
