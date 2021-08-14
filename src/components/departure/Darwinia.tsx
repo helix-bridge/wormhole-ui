@@ -8,11 +8,21 @@ import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
-import { BridgeFormProps, D2E, D2EAsset, Token, TransferAsset, Tx } from '../../model';
-import { AfterTxCreator, applyModalObs, createTxWorkflow, empty, toWei } from '../../utils';
-import { backingLock, BackingLockNative } from '../../utils/tx/d2e';
+import { BridgeFormProps, D2E, D2EAsset, Erc20Token, Network, Token, TransferAsset, Tx } from '../../model';
+import {
+  AfterTxCreator,
+  applyModalObs,
+  createTxWorkflow,
+  empty,
+  fromWei,
+  getUnit,
+  prettyNumber,
+  toWei,
+} from '../../utils';
+import { backingLock, backingLockErc20, BackingLockERC20, BackingLockNative } from '../../utils/tx/d2e';
 import { AssetGroup, AvailableBalance } from '../controls/AssetGroup';
 import { Balance } from '../controls/Balance';
+import { Erc20Control } from '../controls/Erc20Control';
 import { MaxBalance } from '../controls/MaxBalance';
 import { RecipientItem } from '../controls/RecipientItem';
 import { TransferConfirm } from '../modal/TransferConfirm';
@@ -72,13 +82,26 @@ function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCre
   return createTxWorkflow(beforeTx, obs, after);
 }
 
+function ethereumBackingLockErc20(value: BackingLockERC20, after: AfterTxCreator): Observable<Tx> {
+  const beforeTx = applyModalObs({
+    content: <TransferConfirm value={value} />,
+  });
+  const obs = backingLockErc20(value);
+
+  return createTxWorkflow(beforeTx, obs, after);
+}
+
 // eslint-disable-next-line complexity
 export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
   const { t } = useTranslation();
   const { accounts, api, chain } = useApi();
-  const [isNative, setIsNative] = useState<boolean>(true);
+  const [assetType, setAssetType] = useState<D2EAssetEnum>(
+    () => form.getFieldValue(FORM_CONTROL.assetType) ?? D2EAssetEnum.native
+  );
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
   const [fee, setFee] = useState<BN | null>(null);
+  const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
+  const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess();
@@ -116,7 +139,12 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
       let fn = empty;
 
       if (isErc20) {
-        fn = console.info;
+        fn = () => (data: BackingLockERC20) => {
+          return ethereumBackingLockErc20(
+            data,
+            afterTx(TransferSuccess, { onDisappear: () => updateErc20(data.erc20.address) })(data)
+          ).subscribe(observer);
+        };
       } else {
         fn = () => (data: BackingLockNative) => {
           const { assets } = data;
@@ -150,7 +178,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
 
       setSubmit(fn);
     },
-    [afterTx, api, form, getBalances, getChainInfo, observer, setSubmit]
+    [afterTx, api, form, getBalances, getChainInfo, observer, setSubmit, updateErc20]
   );
 
   useEffect(() => {
@@ -168,9 +196,14 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
       ],
     });
     getFee(api).then((crossFee) => setFee(crossFee));
-    updateSubmit();
     updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
   }, [form, api, accounts, updateSubmit, updateDeparture]);
+
+  useEffect(() => {
+    const isErc20 = assetType === D2EAssetEnum.erc20;
+
+    updateSubmit(isErc20);
+  }, [assetType, updateSubmit]);
 
   return (
     <>
@@ -189,29 +222,22 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
+        isDvm={assetType === D2EAssetEnum.erc20}
       />
 
       <Form.Item initialValue={D2EAssetEnum.native} name={FORM_CONTROL.assetType} label={t('Asset Type')}>
         <Radio.Group
           onChange={(event) => {
-            const is = event.target.value === D2EAssetEnum.native;
-
-            setIsNative(is);
-            if (is) {
-              getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
-            } else {
-              // erc20 query
-            }
+            setAssetType(event.target.value);
+            form.validateFields([FORM_CONTROL.assets, FORM_CONTROL.recipient]);
           }}
         >
           <Radio value={D2EAssetEnum.native}>{t('Native')}</Radio>
-          <Radio disabled value={D2EAssetEnum.erc20}>
-            ERC20
-          </Radio>
+          <Radio value={D2EAssetEnum.erc20}>ERC20</Radio>
         </Radio.Group>
       </Form.Item>
 
-      {isNative ? (
+      {assetType === D2EAssetEnum.native ? (
         <Form.Item
           name={FORM_CONTROL.assets}
           label={
@@ -244,17 +270,76 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
           />
         </Form.Item>
       ) : (
-        <Form.Item name={FORM_CONTROL.asset} label={t('Asset')} rules={[{ required: true }]}>
-          <Balance placeholder="developing" disabled size="large" className="flex-1">
-            <MaxBalance
-              onClick={() => {
-                console.info('xxx');
-              }}
+        <>
+          <Form.Item name={FORM_CONTROL.erc20} label={t('Asset')} rules={[{ required: true }]} className="mb-2">
+            <Erc20Control
               network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
-              size="large"
+              onChange={(erc20) => {
+                setSelectedErc20(erc20);
+              }}
+              updateBalance={setUpdateErc20}
             />
-          </Balance>
-        </Form.Item>
+          </Form.Item>
+          <Form.Item
+            name={FORM_CONTROL.amount}
+            label={t('Amount')}
+            rules={[
+              { required: true },
+              {
+                // eslint-disable-next-line complexity
+                validator: () => {
+                  const ring = availableBalances.find((item) => item.asset === 'ring');
+                  // eslint-disable-next-line no-magic-numbers
+                  const unit = getUnit(+ring!.chainInfo!.decimal ?? 18) ?? 'ether';
+                  const feeFormatted = fromWei({ value: fee, unit: ring?.chainInfo?.decimal ?? 'ether' });
+                  const feeBn = new BN(toWei({ value: feeFormatted, unit }));
+                  const maxRingBn = new BN(ring?.max ?? '0');
+
+                  return maxRingBn.lte(feeBn)
+                    ? Promise.resolve()
+                    : Promise.reject('The RING balance is not enough to cover the fee.');
+                },
+                message: t('The RING balance is not enough to cover the fee.'),
+              },
+              {
+                validator: (_, value: string) => {
+                  const ring = availableBalances.find((item) => item.asset === 'ring');
+                  // eslint-disable-next-line no-magic-numbers
+                  const unit = getUnit(+ring!.chainInfo!.decimal ?? 18) ?? 'ether';
+                  const val = new BN(toWei({ value, unit }));
+
+                  return val.gt(selectedErc20?.balance ?? new BN(0))
+                    ? Promise.resolve()
+                    : Promise.reject('The transfer amount must less or equal than the balance');
+                },
+                message: t('The transfer amount must less or equal than the balance'),
+              },
+            ]}
+          >
+            <Balance
+              size="large"
+              placeholder={t('Balance {{balance}}', {
+                balance: fromWei({
+                  value: selectedErc20?.balance.toString(),
+                  // eslint-disable-next-line no-magic-numbers
+                  unit: getUnit((selectedErc20 && +selectedErc20.decimals) || 18),
+                }),
+              })}
+              className="flex-1"
+            >
+              <MaxBalance
+                network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
+                onClick={() => {
+                  const unit = getUnit(+(selectedErc20?.decimals ?? '18'));
+                  const amount = fromWei({ value: selectedErc20?.balance, unit }, prettyNumber);
+
+                  form.setFieldsValue({ [FORM_CONTROL.amount]: amount });
+                }}
+                size="large"
+              />
+            </Balance>
+          </Form.Item>
+        </>
       )}
     </>
   );

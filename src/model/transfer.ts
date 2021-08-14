@@ -43,7 +43,10 @@ export interface TransferAsset<T> {
   erc20?: Erc20Token;
 }
 
-type Transfer<T> = (T extends Array<unknown> ? { assets?: TransferAsset<T[0]>[] } : TransferAsset<T>) & TransferParty;
+type Transfer<T> = (T extends Array<unknown>
+  ? { assets?: TransferAsset<T[0]>[] } & Omit<TransferAsset<T>, 'asset'>
+  : TransferAsset<T>) &
+  TransferParty;
 
 /* ---------------------------------------------------E2D--------------------------------------------------- */
 
@@ -55,7 +58,7 @@ export type E2D = Transfer<E2DAsset> & { deposit?: Deposit };
 
 export type D2EAsset = Exclude<Token, 'native'>;
 
-export type D2E = Transfer<D2EAsset[]>;
+export type D2E<T = D2EAsset[]> = Transfer<T>;
 
 /* ---------------------------------------------------Bridge--------------------------------------------------- */
 

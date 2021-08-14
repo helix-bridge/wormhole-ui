@@ -1,7 +1,9 @@
 import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import { from, Observable, Observer, switchMapTo, tap } from 'rxjs';
-import { D2E, DeepRequired, NoNullTransferNetwork, TransferFormValues, Tx } from '../../model';
+import { abi } from '../../config';
+import { D2E, D2EAsset, DeepRequired, NoNullTransferNetwork, TransferFormValues, Tx } from '../../model';
+import { getContractTxObs } from './common';
 
 export type BackingLockNative = TransferFormValues<
   DeepRequired<D2E, ['sender' | 'assets' | 'recipient']>,
@@ -9,7 +11,7 @@ export type BackingLockNative = TransferFormValues<
 >;
 
 export type BackingLockERC20 = TransferFormValues<
-  DeepRequired<D2E, ['sender' | 'asset' | 'recipient' | 'amount']>,
+  DeepRequired<D2E<D2EAsset>, ['sender' | 'recipient' | 'amount' | 'erc20']>,
   NoNullTransferNetwork
 >;
 
@@ -59,5 +61,16 @@ export function backingLock(value: BackingLockNative, api: ApiPromise): Observab
   return from(web3FromAddress(sender)).pipe(
     tap((injector) => api.setSigner(injector.signer)),
     switchMapTo(obs)
+  );
+}
+
+export function backingLockErc20(value: BackingLockERC20): Observable<Tx> {
+  const { erc20, recipient, amount, transfer, sender } = value;
+  const { address } = erc20;
+
+  return getContractTxObs(
+    transfer.from.erc20Token.mappingAddress,
+    (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
+    abi.mappingTokenABI
   );
 }

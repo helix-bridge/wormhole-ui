@@ -44,7 +44,7 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
 
         setAllTokens(tokens);
       } catch (error) {
-        console.info(
+        console.warn(
           '%c [ error in useAllToken hook ]-56',
           'font-size:13px; background:pink; color:#bf2c9f;',
           error.message
