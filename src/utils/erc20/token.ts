@@ -16,15 +16,8 @@ import {
   MMRProof,
   toUpperCaseFirst,
 } from '../helper';
-import {
-  getMetamaskActiveAccount,
-  getNameAndLogo,
-  getSymbolAndDecimals,
-  getTokenBalance,
-  getUnitFromAddress,
-  isNetworkMatch,
-  tokenInfoGetter,
-} from './token-util';
+import { getMetamaskActiveAccount, isNetworkMatch } from '../network';
+import { getNameAndLogo, getSymbolAndDecimals, getTokenBalance, getUnitFromAddress, tokenInfoGetter } from './meta';
 
 export type StoredProof = MMRProof & Erc20Token & { eventsProofStr: string };
 
@@ -440,7 +433,7 @@ export async function crossSendErc20FromDvmToEth(
 
     return tx.transactionHash;
   } else {
-    throw new Error('common:Ethereum network type does not match, please switch to {{network}} network in metamask.');
+    throw new Error('Ethereum network type does not match, please switch to {{network}} network in metamask.');
   }
 }
 

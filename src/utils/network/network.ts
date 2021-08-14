@@ -153,3 +153,33 @@ export function getNetworkCategory(network: Network | NetConfig): NetworkCategor
 
   return null;
 }
+
+/**
+ * @returns - current active account in metamask;
+ */
+export async function getMetamaskActiveAccount() {
+  if (typeof window.ethereum === 'undefined') {
+    return;
+  }
+
+  await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+  const accounts = await window.ethereum.request({
+    method: 'eth_accounts',
+  });
+
+  // metamask just return the active account now, so the result array contains only one account;
+  return accounts[0];
+}
+
+/**
+ *
+ * @params network id
+ * @description is acutal network id match with expected.
+ */
+export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> {
+  const web3 = new Web3(window.ethereum);
+  const networkId = await web3.eth.net.getId();
+
+  return expectNetworkId === networkId;
+}

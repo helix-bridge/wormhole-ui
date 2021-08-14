@@ -127,7 +127,7 @@ export function getContractTxObs(
 ): Observable<Tx> {
   return new Observable((observer) => {
     try {
-      const web3js = new Web3(window.ethereum || window.web3.currentProvider);
+      const web3js = new Web3(window.ethereum);
       const contract = new web3js.eth.Contract(contractAbi, contractAddress);
 
       observer.next({ status: 'signing' });

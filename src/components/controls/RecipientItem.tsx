@@ -11,7 +11,8 @@ import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../.
 export function RecipientItem({
   form,
   extraTip,
-}: Omit<BridgeFormProps, 'setSubmit'> & { extraTip?: string | ReactNode }) {
+  isDvm = false,
+}: Omit<BridgeFormProps, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
   const { t } = useTranslation();
   const [lock] = useLock(form);
 
@@ -37,10 +38,10 @@ export function RecipientItem({
           },
           {
             validator(_, value) {
-              return isValidAddress(value, type) ? Promise.resolve() : Promise.reject();
+              return isValidAddress(value, !isDvm ? type : 'ethereum') ? Promise.resolve() : Promise.reject();
             },
             message: t('The address is wrong, please fill in a {{type}} address of the {{network}} network.', {
-              type,
+              type: !isDvm ? type : 'DVM',
               network: to?.name,
             }),
           },

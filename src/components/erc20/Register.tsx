@@ -22,7 +22,7 @@ import {
   registerToken,
   tokenSearchFactory,
 } from '../../utils/erc20/token';
-import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/token-util';
+import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/meta';
 import { updateStorage } from '../../utils/helper/storage';
 import { Destination } from '../controls/Destination';
 import { SubmitButton } from '../SubmitButton';

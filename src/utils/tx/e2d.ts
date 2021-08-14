@@ -1,5 +1,4 @@
 import { decodeAddress } from '@polkadot/util-crypto';
-import { of } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../config';
 import {
@@ -20,6 +19,11 @@ export type RedeemEth = TransferFormValues<
 
 export type RedeemDeposit = TransferFormValues<
   DeepRequired<E2D, ['sender' | 'deposit' | 'recipient']>,
+  NoNullTransferNetwork
+>;
+
+export type RedeemErc20 = TransferFormValues<
+  DeepRequired<E2D, ['sender' | 'erc20' | 'recipient']>,
   NoNullTransferNetwork
 >;
 
@@ -60,11 +64,19 @@ export const redeemDeposit: TxFn<RedeemDeposit> = ({ transfer: { to, from }, rec
   );
 };
 
-/**
- * TODO
- */
-export const redeemErc20: TxFn<RedeemEth> = (value) => {
-  console.info(value);
+export const redeemErc20: TxFn<RedeemErc20> = (value) => {
+  const {
+    erc20,
+    recipient,
+    amount,
+    transfer: { from },
+    sender,
+  } = value;
+  const { address } = erc20;
 
-  return of({ status: 'finalized', hash: '' });
+  return getContractTxObs(
+    from.erc20Token.bankingAddress,
+    (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
+    abi.bankErc20ABI
+  );
 };

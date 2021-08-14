@@ -15,6 +15,7 @@ function Detail({ amount, asset }: TransferAsset<string>) {
   );
 }
 
+// eslint-disable-next-line complexity
 export function TransferSuccess({ tx, value, hashType = 'txHash' }: TxSuccessComponentProps) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
@@ -49,7 +50,8 @@ export function TransferSuccess({ tx, value, hashType = 'txHash' }: TxSuccessCom
                 amount={item.unit ? fromWei({ value: item.amount, unit: item.unit }) : item.amount}
                 key={item.asset}
               />
-            )))
+            ))) ||
+          (value.erc20 && value.amount && <Detail amount={value.amount} asset={value.erc20.symbol} />)
         }
         icon={<CheckCircleFilled className="text-2xl" style={{ color }} />}
       ></Des>

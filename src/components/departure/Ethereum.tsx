@@ -35,6 +35,8 @@ import {
   prettyNumber,
   RedeemDeposit,
   redeemDeposit,
+  redeemErc20,
+  RedeemErc20,
   RedeemEth,
   redeemToken,
   toWei,
@@ -262,6 +264,26 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
   return createTxWorkflow(beforeTx, txObs, after);
 }
 
+function createErc20Tx(value: RedeemErc20, after: AfterTxCreator): Observable<Tx> {
+  const beforeTx = applyModalObs({
+    content: (
+      <TransferConfirm value={value}>
+        <Des
+          title={<Trans>Amount</Trans>}
+          content={
+            <span>
+              {value.amount} {value.erc20.symbol}
+            </span>
+          }
+        ></Des>
+      </TransferConfirm>
+    ),
+  });
+  const txObs = redeemErc20(value);
+
+  return createTxWorkflow(beforeTx, txObs, after);
+}
+
 // eslint-disable-next-line complexity
 export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
   const { t } = useTranslation();
@@ -270,10 +292,13 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
   const [fee, setFee] = useState<BN | null>(null);
   const [ringBalance, setRingBalance] = useState<BN | null>(null);
   const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
-  const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount));
-  const [assetType, setAssetType] = useState<E2DAssetCategory>(() => form.getFieldValue(FORM_CONTROL.assetType));
-  const [asset, setAsset] = useState<E2DAssetEnum>(() => form.getFieldValue(FORM_CONTROL.asset));
+  const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
+  const [assetType, setAssetType] = useState<E2DAssetCategory>(
+    () => form.getFieldValue(FORM_CONTROL.assetType) ?? E2DAssetCategory.darwinia
+  );
+  const [asset, setAsset] = useState<E2DAssetEnum>(() => form.getFieldValue(FORM_CONTROL.asset) ?? E2DAssetEnum.ring);
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
+  const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
   const { accounts } = useApi();
   const { observer } = useTx();
   const { address: account } = (accounts || [])[0] ?? '';
@@ -292,7 +317,7 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
     () => getAmountRules({ fee, balance: max, ringBalance, asset, assetType, form, t }),
     [asset, assetType, fee, form, max, ringBalance, t]
   );
-  const refreshAmount = useCallback(
+  const refreshAllowance = useCallback(
     (value: RedeemEth | ApproveValue) =>
       getIssuingAllowance(account, value.transfer.from).then((num) => {
         setAllowance(num);
@@ -303,24 +328,32 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
 
   const refreshBalance = useCallback(
     (value: RedeemEth | ApproveValue) => {
-      if (value.asset === 'ring') {
-        refreshAmount(value);
-        getRingBalance(account, value.transfer.from).then((balance) => {
-          setMax(balance);
-          setRingBalance(balance);
-        });
-      } else {
+      if (value.assetType === E2DAssetCategory.erc20) {
+        updateErc20(value.erc20!.address);
+      }
+
+      if (value.asset === E2DAssetEnum.kton && value.assetType !== E2DAssetCategory.erc20) {
         getKtonBalance(account, value.transfer.from).then((balance) => setMax(balance));
       }
+
+      getRingBalance(account, value.transfer.from).then((balance) => {
+        if (value.assetType === E2DAssetCategory.darwinia && value.asset === E2DAssetEnum.ring) {
+          setMax(balance);
+        }
+
+        setRingBalance(balance);
+      });
+      refreshAllowance(value);
     },
-    [account, refreshAmount]
+    [account, refreshAllowance, updateErc20]
   );
 
   const refreshDeposit = useCallback(
     (value: RedeemDeposit) => {
       setRemovedDepositIds(() => [...removedDepositIds, value.deposit.deposit_id]);
+      getRingBalance(account, value.transfer.from).then((balance) => setRingBalance(balance));
     },
-    [removedDepositIds]
+    [account, removedDepositIds]
   );
 
   const updateSubmit = useCallback(
@@ -328,7 +361,8 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
       let fn = empty;
 
       if (isErc20) {
-        fn = () => console.info;
+        fn = () => (value: RedeemErc20) =>
+          createErc20Tx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(observer);
       } else if (curAsset === E2DAssetEnum.deposit) {
         fn = () => (value: RedeemDeposit) =>
           createCrossDepositTx(
@@ -337,15 +371,32 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
             afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as any })(value)
           ).subscribe(observer);
       } else {
-        fn = () => (value: RedeemEth) =>
-          createCrossTokenTx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(
-            observer
-          );
+        fn = () => (value: RedeemEth) => {
+          const { amount, asset: iAsset, ...rest } = value;
+          const actual = {
+            ...rest,
+            asset: iAsset,
+            amount:
+              iAsset === E2DAssetEnum.ring
+                ? fromWei({
+                    value: Web3.utils
+                      .toBN(toWei({ value: amount }))
+                      .sub(fee!)
+                      .toString(),
+                  })
+                : amount,
+          };
+
+          return createCrossTokenTx(
+            actual,
+            afterTx(TransferSuccess, { onDisappear: refreshBalance })(actual)
+          ).subscribe(observer);
+        };
       }
 
       setSubmit(fn);
     },
-    [afterTx, observer, refreshBalance, refreshDeposit, setSubmit]
+    [afterTx, fee, observer, refreshBalance, refreshDeposit, setSubmit]
   );
 
   useEffect(() => {
@@ -360,7 +411,7 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
       [FORM_CONTROL.recipient]: recipient ?? '',
       [FORM_CONTROL.sender]: account,
     });
-    // updateSubmit(E2DAssetEnum.ring);
+
     Promise.all([getRingBalance(account, netConfig), getFee(netConfig), getIssuingAllowance(account, netConfig)]).then(
       ([balance, crossFee, allow]) => {
         setRingBalance(balance);
@@ -373,9 +424,11 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
   }, [account, form, updateDeparture]);
 
   useEffect(() => {
-    updateSubmit(E2DAssetEnum.ring);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const isErc20 = assetType === E2DAssetCategory.erc20;
+    const curAsset = isErc20 ? selectedErc20 : asset;
+
+    updateSubmit(curAsset, isErc20);
+  }, [asset, assetType, selectedErc20, updateSubmit]);
 
   return (
     <>
@@ -393,16 +446,14 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
             </Trans>
           </span>
         }
+        isDvm={assetType === E2DAssetCategory.erc20}
       />
 
       <Form.Item initialValue={E2DAssetCategory.darwinia} name={FORM_CONTROL.assetType} label={t('Asset Type')}>
         <Radio.Group
           onChange={(event) => {
-            const isErc20 = event.target.value === E2DAssetCategory.erc20;
-
             setAssetType(event.target.value);
-            updateSubmit(isErc20 ? selectedErc20 : form.getFieldValue(FORM_CONTROL.asset), isErc20);
-            form.validateFields([FORM_CONTROL.amount]);
+            form.validateFields([FORM_CONTROL.amount, FORM_CONTROL.recipient]);
           }}
         >
           <Radio value={E2DAssetCategory.darwinia}>Darwinia</Radio>
@@ -431,6 +482,7 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
             onChange={(erc20) => {
               setSelectedErc20(erc20);
             }}
+            updateBalance={setUpdateErc20}
           />
         </Form.Item>
       ) : (
@@ -455,7 +507,6 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
 
               setAsset(value);
               setMax(balance);
-              updateSubmit(value);
             }}
           >
             <Select.Option value={E2DAssetEnum.ring}>RING</Select.Option>
@@ -506,7 +557,7 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
 
                       createApproveRingTx(
                         value,
-                        afterTx(ApproveSuccess, { onDisappear: refreshAmount })(value)
+                        afterTx(ApproveSuccess, { onDisappear: refreshAllowance })(value)
                       ).subscribe(observer);
                     }}
                     size="small"

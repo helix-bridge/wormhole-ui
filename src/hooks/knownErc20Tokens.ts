@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RegisterStatus } from '../config';
 import { Erc20RegisterStatus, Erc20Token, Network, RequiredPartial } from '../model';
 import { getKnownErc20Tokens, StoredProof } from '../utils/erc20/token';
+import { getTokenBalance } from '../utils/erc20/meta';
 import { useApi } from './api';
 
 export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'> & {
@@ -19,6 +20,19 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
   const [allTokens, setAllTokens] = useState<MemoedTokenInfo[]>([]);
   const { accounts } = useApi();
   const { address: currentAccount } = (accounts || [])[0] ?? '';
+  const refreshTokenBalance = useCallback(
+    async (tokenAddress: string) => {
+      const balance = await getTokenBalance(tokenAddress, currentAccount, true);
+      const tokens = [...allTokens];
+      const index = tokens.findIndex((item) => item.address === tokenAddress);
+
+      if (index > 0) {
+        tokens[index].balance = balance;
+        setAllTokens(tokens);
+      }
+    },
+    [allTokens, currentAccount]
+  );
 
   useEffect(() => {
     (async () => {
@@ -41,5 +55,5 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
     })();
   }, [currentAccount, network, status]);
 
-  return { loading, allTokens, setAllTokens };
+  return { loading, allTokens, setAllTokens, refreshTokenBalance };
 };

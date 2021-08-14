@@ -1,5 +1,5 @@
 import { Erc20Token, RequiredPartial } from '../../model';
-import { getTokenName } from '../../utils/erc20/token-util';
+import { getTokenName } from '../../utils/erc20/meta';
 import { JazzIcon } from '../icons';
 import { EllipsisMiddle } from '../EllipsisMiddle';
 
