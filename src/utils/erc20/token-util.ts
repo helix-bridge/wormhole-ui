@@ -1,10 +1,11 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import contractMap from '@metamask/contract-metadata';
+import { memoize } from 'lodash';
 import Web3 from 'web3';
-import { Unit } from 'web3-utils';
 import { abi, NETWORK_CONFIG } from '../../config';
 import { NetConfig, Network } from '../../model';
+import { getUnit } from '../helper';
 
 interface TokenCache {
   address: string;
@@ -40,11 +41,16 @@ const contractList = Object.entries(contractMap as Record<string, TokenCache>)
   .map(([address, tokenData]) => ({ ...tokenData, address }))
   .filter((tokenData) => Boolean(tokenData.erc20));
 
-export function getContractAtAddress(tokenAddress: string, config: NetConfig) {
-  const web3 = new Web3(config.provider.etherscan);
+const getProvider = memoize(
+  (config: NetConfig) => new Web3(config.provider.etherscan),
+  (config) => config.provider.etherscan
+);
+
+const getContractAtAddress = memoize((tokenAddress: string, config: NetConfig) => {
+  const web3 = getProvider(config);
 
   return new web3.eth.Contract(abi.Erc20ABI, tokenAddress);
-}
+});
 
 /**
  *
@@ -190,14 +196,14 @@ export const tokenInfoGetter = ((cacheFirst = true) => {
 })();
 
 export function getTokenName(name: string, symbol: string) {
-  return typeof name === 'undefined' ? symbol : `${name} (${symbol})`;
+  return !name ? symbol : `${name} (${symbol})`;
 }
 
 export async function getUnitFromAddress(address: string, network: Network) {
   const config = NETWORK_CONFIG[network];
   const { decimals } = await getSymbolAndDecimals(address, config);
 
-  return getUnitFromValue(+decimals);
+  return getUnit(+decimals);
 }
 
 /**
@@ -228,15 +234,4 @@ export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> 
   const networkId = await web3.eth.net.getId();
 
   return expectNetworkId === networkId;
-}
-
-export function getUnitFromValue(num: number): Unit {
-  const pow = Math.pow(10, num).toString();
-  try {
-    const [unit] = (Object.entries(Web3.utils.unitMap).find(([_, value]) => value === pow) ?? []) as [Unit, string];
-
-    return unit;
-  } catch (err) {
-    return 'ether';
-  }
 }

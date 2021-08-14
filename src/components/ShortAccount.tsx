@@ -1,5 +1,4 @@
-import { message, Tooltip, Typography } from 'antd';
-import { PropsWithChildren } from 'react';
+import { message, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { copyTextToClipboard } from '../utils';
 import { CopyIcon } from './icons';
@@ -45,26 +44,6 @@ export function ShortAccount({
       ) : (
         shortAccount
       )}
-    </div>
-  );
-}
-
-export function EllipsisMiddle({ children, className }: PropsWithChildren<{ className?: string }>) {
-  return (
-    <div className={`w-full whitespace-nowrap ${className}`}>
-      <span
-        className="whitespace-nowrap overflow-hidden align-middle inline-block overflow-ellipsis"
-        style={{ width: 'calc(37.5% + 1.2em)' }}
-      >
-        {children}
-      </span>
-      <Typography.Text
-        className="whitespace-nowrap overflow-hidden align-middle inline-flex justify-end"
-        copyable
-        style={{ width: 'calc(37.5% - 1.2em)' }}
-      >
-        {children}
-      </Typography.Text>
     </div>
   );
 }

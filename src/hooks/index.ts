@@ -1,5 +1,5 @@
 export * from './account';
-export * from './allTokens';
+export * from './knownErc20Tokens';
 export * from './api';
 export * from './cancelablePromise';
 export * from './departure';

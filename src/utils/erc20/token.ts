@@ -55,23 +55,23 @@ const getTokenInfo = async (tokenAddress: string, config: NetConfig) => {
  * for eth: both address and source fields in result are all represent the token's ethereum address, actually equal
  * for dvm: the address field represent the token's dvm address, the source field represent the token's ethereum address.
  */
-export const getAllTokens = async (currentAccount: string, network: Network): Promise<Erc20Token[]> => {
+export const getKnownErc20Tokens = async (currentAccount: string, network: Network): Promise<Erc20Token[]> => {
   if (!currentAccount) {
     return [];
   }
   const config = NETWORK_CONFIG[network];
 
   return config.type.includes('ethereum')
-    ? await getAllTokensEthereum(currentAccount, config)
-    : await getAllTokensDvm(currentAccount, config);
+    ? await getFromEthereum(currentAccount, config)
+    : await getFromDvm(currentAccount, config);
 };
 
 /**
- * @function getAllTokensDvm - get all tokens at dvm side
+ * @function getFromDvm - get all tokens at dvm side
  * @params {string} currentAccount
  * @returns tokens that status maybe registered or registering
  */
-const getAllTokensDvm = async (currentAccount: string, config: NetConfig) => {
+const getFromDvm = async (currentAccount: string, config: NetConfig) => {
   const web3Darwinia = new Web3(config.rpc);
   const mappingContract = new web3Darwinia.eth.Contract(abi.mappingTokenABI, config.erc20Token.mappingAddress);
   const length = await mappingContract.methods.tokenLength().call(); // length: string
@@ -95,10 +95,10 @@ const getAllTokensDvm = async (currentAccount: string, config: NetConfig) => {
 };
 
 /**
- * @function getAllTokensEthereum - get all tokens at ethereum side
+ * @description get all tokens at ethereum side
  * @returns tokens that status maybe registered or registering
  */
-const getAllTokensEthereum: (cur: string, con: NetConfig) => Promise<Erc20Token[]> = async (
+const getFromEthereum: (cur: string, con: NetConfig) => Promise<Erc20Token[]> = async (
   currentAccount: string,
   config: NetConfig
 ) => {
@@ -455,4 +455,18 @@ export function decodeUint256(source: string, config: NetConfig): BN {
   const result = web3.eth.abi.decodeParameter('uint256', hex);
 
   return Web3.utils.toBN(result.toString());
+}
+
+export function tokenSearchFactory<T extends Pick<Erc20Token, 'address' | 'symbol'>>(tokens: T[]) {
+  return (value: string) => {
+    if (!value) {
+      return tokens;
+    }
+
+    const isAddress = Web3.utils.isAddress(value);
+
+    return isAddress
+      ? tokens.filter((token) => token.address === value)
+      : tokens.filter((token) => token.symbol.toLowerCase().includes(value.toLowerCase()));
+  };
 }

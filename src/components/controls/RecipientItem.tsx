@@ -1,5 +1,6 @@
 import { LockOutlined } from '@ant-design/icons';
 import { Form, Input } from 'antd';
+import { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
 import { useLock } from '../../hooks';
@@ -7,7 +8,10 @@ import { BridgeFormProps } from '../../model';
 import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../../utils';
 
 // eslint-disable-next-line complexity
-export function RecipientItem({ form, extraTip }: Omit<BridgeFormProps, 'setSubmit'> & { extraTip?: string }) {
+export function RecipientItem({
+  form,
+  extraTip,
+}: Omit<BridgeFormProps, 'setSubmit'> & { extraTip?: string | ReactNode }) {
   const { t } = useTranslation();
   const [lock] = useLock(form);
 

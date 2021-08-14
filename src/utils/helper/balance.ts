@@ -15,9 +15,13 @@ export const ETH_UNITS = unitMap as unknown as Units;
 
 export function getUnit(num: number): Unit {
   const str = Math.pow(10, num).toString();
-  const [key] = Object.entries(ETH_UNITS).find(([_, value]) => value === str) as [Unit, string];
+  try {
+    const [key] = Object.entries(ETH_UNITS).find(([_, value]) => value === str) as [Unit, string];
 
-  return key;
+    return key;
+  } catch (err) {
+    return 'ether';
+  }
 }
 
 export function accuracyFormat(num: BigNumber.Value, accuracy: number | string) {
@@ -45,7 +49,7 @@ const toStr = (value: WeiValue): string => {
   if (BN.isBN(value)) {
     return value.toString();
   } else if (isString(value)) {
-    return value;
+    return value.replace(',', '');
   } else if (isNumber(value)) {
     return String(value);
   } else if (isUndefined(value) || isNull(value) || isNaN(value)) {

@@ -70,6 +70,7 @@ module.exports = {
         lib: 'always',
       },
     ],
+    '@typescript-eslint/no-non-null-assertion': 'off',
     // eslint-plugin-react, react-hooks rules
     'react/react-in-jsx-scope': 'off',
     'react-hooks/rules-of-hooks': 'error',

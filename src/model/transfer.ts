@@ -1,5 +1,6 @@
 import { FormInstance } from 'antd';
 import { Unit } from 'web3-utils';
+import { Erc20Token } from './erc20';
 import { Deposit } from './evolution';
 import { NetConfig, Token } from './network';
 import { DeepRequired } from './util';
@@ -35,10 +36,11 @@ interface TransferParty {
 
 export interface TransferAsset<T> {
   amount?: string;
-  asset?: T;
+  asset?: T | null;
   checked?: boolean;
-  isErc20?: boolean;
   unit?: Unit;
+  assetType?: 'erc20' | 'native' | 'darwinia';
+  erc20?: Erc20Token;
 }
 
 type Transfer<T> = (T extends Array<unknown> ? { assets?: TransferAsset<T[0]>[] } : TransferAsset<T>) & TransferParty;

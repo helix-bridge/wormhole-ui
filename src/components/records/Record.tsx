@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { fromUnixTime } from 'date-fns/esm';
 import { PropsWithChildren, useMemo } from 'react';
 import { DATE_TIME_FORMATE } from '../../config';
-import { EllipsisMiddle } from '../ShortAccount';
+import { EllipsisMiddle } from '../EllipsisMiddle';
 import { AssetOverview, AssetOverviewProps } from './AssetOverview';
 import { ProgressDetailProps } from './ProgressDetail';
 

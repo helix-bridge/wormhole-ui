@@ -7,12 +7,11 @@ import {
 } from '@ant-design/icons';
 import { Button, Descriptions, Empty, Form, Input, List, message, Popover, Progress, Spin, Tabs, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import Web3 from 'web3';
+import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
-import { MemoedTokenInfo, useAllTokens, useApi, useLocalSearch } from '../../hooks';
+import { MemoedTokenInfo, useApi, useKnownErc20Tokens, useLocalSearch } from '../../hooks';
 import { Erc20Token, NetConfig } from '../../model';
 import { isValidAddress } from '../../utils';
 import {
@@ -21,30 +20,18 @@ import {
   popupRegisterProof,
   proofObservable,
   registerToken,
+  tokenSearchFactory,
 } from '../../utils/erc20/token';
-import { getNameAndLogo, getSymbolAndDecimals, getTokenName } from '../../utils/erc20/token-util';
+import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/token-util';
 import { updateStorage } from '../../utils/helper/storage';
 import { Destination } from '../controls/Destination';
-import { JazzIcon } from '../icons';
-import { EllipsisMiddle } from '../ShortAccount';
 import { SubmitButton } from '../SubmitButton';
+import { Erc20ListInfo } from './Erc20ListInfo';
 
 const DEFAULT_REGISTER_NETWORK = NETWORK_CONFIG.ropsten;
 
-const tokenSearchFactory = (tokens: Pick<Erc20Token, 'address' | 'symbol'>[]) => (value: string) => {
-  if (!value) {
-    return tokens;
-  }
-
-  const isAddress = Web3.utils.isAddress(value);
-
-  return isAddress
-    ? tokens.filter((token) => token.address === value)
-    : tokens.filter((token) => token.symbol.toLowerCase().includes(value.toLowerCase()));
-};
-
 // eslint-disable-next-line complexity
-export function Manager() {
+export function Register() {
   const { t } = useTranslation();
   const [form] = useForm();
   const [net, setNet] = useState<NetConfig>(DEFAULT_REGISTER_NETWORK);
@@ -56,7 +43,7 @@ export function Manager() {
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { allTokens, setAllTokens } = useAllTokens(network!, RegisterStatus.registering);
+  const { allTokens, setAllTokens } = useKnownErc20Tokens(network!, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
@@ -218,12 +205,10 @@ export function Manager() {
             {t('Register')}
           </SubmitButton>
 
-          <Form.Item className="-mb-1">
-            {t(
-              'Tips After submit the registration, please wait for the {{type}} network to return the result, click [Upcoming] to view the progress.',
-              { type: net.name }
-            )}
-          </Form.Item>
+          <Tip>
+            After submit the registration, please wait for the {{ type: network }} network to return the result, click
+            [Upcoming] to view the progress.
+          </Tip>
         </Tabs.TabPane>
 
         {/* eslint-disable-next-line no-magic-numbers */}
@@ -241,7 +226,7 @@ interface UpcomingProps {
 
 function Upcoming({ netConfig }: UpcomingProps) {
   const { t } = useTranslation();
-  const { loading, allTokens, setAllTokens } = useAllTokens(netConfig.name, RegisterStatus.registering);
+  const { loading, allTokens, setAllTokens } = useKnownErc20Tokens(netConfig.name, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
   const { data, setSearch } = useLocalSearch<MemoedTokenInfo>(searchFn as (arg: string) => MemoedTokenInfo[]);
@@ -281,59 +266,41 @@ function Upcoming({ netConfig }: UpcomingProps) {
       {loading ? (
         <Spin className="mx-auto w-full mt-4"></Spin>
       ) : (
-        <List className="token-list">
+        <List>
           {!data.length && <Empty />}
-          {data?.map((token, index) => {
-            const { address, logo, source, name, symbol } = token;
+          {data?.map((token, index) => (
+            <List.Item key={token.address}>
+              <Erc20ListInfo token={token}></Erc20ListInfo>
+              <UpcomingTokenState
+                token={token}
+                onConfirm={() => {
+                  const newData = [...allTokens];
 
-            return (
-              <List.Item key={token.address}>
-                <div className="flex w-2/3">
-                  {token.logo ? (
-                    <img src={`/images/${logo}`} alt="" />
-                  ) : (
-                    <JazzIcon address={source || address}></JazzIcon>
-                  )}
-                  <div className="ml-4 w-full">
-                    <h6>{getTokenName(name, symbol)}</h6>
-                    <EllipsisMiddle>{address}</EllipsisMiddle>
-                  </div>
-                </div>
+                  newData[index].confirmed = 0;
 
-                <UpcomingTokenState
-                  token={token}
-                  onConfirm={() => {
-                    const newData = [...allTokens];
+                  setAllTokens([...newData]);
 
-                    newData[index].confirmed = 0;
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  confirmRegister(token.proof as unknown as any, netConfig)
+                    .then((tx) => {
+                      message.success(`Register success transaction hash: ${tx.transactionHash}`);
 
-                    setAllTokens([...newData]);
+                      newData[index].confirmed = 1;
 
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    confirmRegister(token.proof as unknown as any, netConfig)
-                      .then((tx) => {
-                        message.success(`Register success transaction hash: ${tx.transactionHash}`);
-
-                        newData[index].confirmed = 1;
-
-                        setAllTokens(newData);
-                      })
-                      .catch((err) => {
-                        message.error(err.message);
-                      });
-                  }}
-                />
-              </List.Item>
-            );
-          })}
+                      setAllTokens(newData);
+                    })
+                    .catch((err) => {
+                      message.error(err.message);
+                    });
+                }}
+              />
+            </List.Item>
+          ))}
         </List>
       )}
-
-      <Form.Item className="-mb-1">
-        {t('Tips After {{type}} network returns the result, click [Confirm] to complete the token registration.', {
-          type: netConfig.name,
-        })}
-      </Form.Item>
+      <Tip>
+        After {{ type: netConfig.name }} network returns the result, click [Confirm] to complete the token registration.
+      </Tip>
     </>
   );
 }
@@ -372,5 +339,15 @@ function UpcomingTokenState({ token, onConfirm }: UpcomingTokenStateProps) {
     >
       {t('Confirm')}
     </Button>
+  );
+}
+
+function Tip({ children }: PropsWithChildren<string | ReactNode>) {
+  return (
+    <Form.Item className="-mb-1 px-4 text-xs">
+      <span className="text-gray-600">
+        <Trans>{children}</Trans>
+      </span>
+    </Form.Item>
   );
 }

@@ -83,7 +83,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess();
   const getChainInfo = useCallback(
-    (target: Token) => chain.tokens.find((token) => token.symbol.toLowerCase().includes(target)),
+    (target: Token) => target && chain.tokens.find((token) => token.symbol.toLowerCase().includes(target)),
     [chain.tokens]
   );
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
@@ -122,7 +122,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
           const { assets } = data;
           const assetsToSend = assets?.map((item) => {
             const { asset, amount, checked } = item as Required<TransferAsset<D2EAsset>>;
-            const unit = getChainInfo(asset)?.decimal || 'gwei';
+            const unit = getChainInfo(asset as Token)?.decimal || 'gwei';
 
             return { asset, unit, amount: checked ? toWei({ value: amount, unit }) : '0' };
           });
@@ -194,7 +194,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
       <Form.Item initialValue={D2EAssetEnum.native} name={FORM_CONTROL.assetType} label={t('Asset Type')}>
         <Radio.Group
           onChange={(event) => {
-            const is = event.target.value === 'native';
+            const is = event.target.value === D2EAssetEnum.native;
 
             setIsNative(is);
             if (is) {

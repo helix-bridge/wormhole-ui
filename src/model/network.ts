@@ -11,7 +11,7 @@ export type Network = PolkadotTypeNetwork | EthereumTypeNetwork;
 
 export type NetworkCategory = 'polkadot' | 'ethereum' | 'tron' | 'darwinia';
 
-export type Token = 'ring' | 'kton' | 'native';
+export type Token = 'ring' | 'kton' | 'native' | 'erc20';
 
 // eslint-disable-next-line no-magic-numbers
 export type SS58Prefix = 0 | 2 | 18 | 42 | null;

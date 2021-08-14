@@ -1,4 +1,5 @@
 import { Form, Progress, Select } from 'antd';
+import { Rule } from 'antd/lib/form';
 import { addDays, format, fromUnixTime } from 'date-fns';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +12,7 @@ interface DepositItemProps {
   address: string;
   config: NetConfig;
   removedIds: number[];
+  rules?: Rule[];
 }
 
 export function getDepositTimeRange({ deposit_time, duration }: Pick<Deposit, 'deposit_time' | 'duration'>): {
@@ -31,6 +33,7 @@ export function DepositItem({
   onChange = empty,
   value,
   removedIds = [],
+  rules = [],
 }: CustomFormControlProps<Deposit | null> & DepositItemProps) {
   const { t } = useTranslation();
   const { data, error, loading } = useGet<DepositResponse>({
@@ -49,7 +52,7 @@ export function DepositItem({
   if (loading) {
     return (
       <Form.Item name={FORM_CONTROL.deposit} label={t('Deposit')} rules={[{ required: true }]}>
-        <Progress percent={99.9} status="active" strokeColor={{ from: '#5745de', to: '#ec3783' }} />
+        <Progress percent={99} status="active" strokeColor={{ from: '#5745de', to: '#ec3783' }} />
       </Form.Item>
     );
   }
@@ -71,7 +74,7 @@ export function DepositItem({
   }
 
   return (
-    <Form.Item name={FORM_CONTROL.deposit} label={t('Deposit')} rules={[{ required: true }]}>
+    <Form.Item name={FORM_CONTROL.deposit} label={t('Deposit')} rules={[{ required: true }, ...rules]}>
       <Select
         placeholder={t('Please select deposit')}
         value={value?.deposit_id}

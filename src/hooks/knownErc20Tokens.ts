@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { RegisterStatus } from '../config';
 import { Erc20RegisterStatus, Erc20Token, Network, RequiredPartial } from '../model';
-import { getAllTokens, StoredProof } from '../utils/erc20/token';
+import { getKnownErc20Tokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
-import { useCancelablePromise } from './cancelablePromise';
 
 export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'> & {
   proof?: StoredProof;
@@ -15,10 +14,9 @@ export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'dec
  * @params {string} networkType
  * @params {number} status - token register status 1:registered 2:registering
  */
-export const useAllTokens = (network: Network, status: Erc20RegisterStatus = RegisterStatus.unregister) => {
+export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatus = RegisterStatus.unregister) => {
   const [loading, setLoading] = useState(true);
   const [allTokens, setAllTokens] = useState<MemoedTokenInfo[]>([]);
-  const makeCancelable = useCancelablePromise();
   const { accounts } = useApi();
   const { address: currentAccount } = (accounts || [])[0] ?? '';
 
@@ -27,7 +25,7 @@ export const useAllTokens = (network: Network, status: Erc20RegisterStatus = Reg
       setLoading(true);
 
       try {
-        const all = (await makeCancelable(getAllTokens(currentAccount, network))) as Erc20Token[];
+        const all = (await getKnownErc20Tokens(currentAccount, network)) as Erc20Token[];
         const tokens = status > 0 ? all.filter((item) => item.status && +item.status === status) : all;
 
         setAllTokens(tokens);
@@ -41,7 +39,7 @@ export const useAllTokens = (network: Network, status: Erc20RegisterStatus = Reg
 
       setLoading(false);
     })();
-  }, [currentAccount, makeCancelable, network, status]);
+  }, [currentAccount, network, status]);
 
   return { loading, allTokens, setAllTokens };
 };
