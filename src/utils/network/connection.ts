@@ -11,6 +11,7 @@ export const getPolkadotConnection: (network: Network) => Observable<PolkadotCon
     concatMap((extensions) => from(web3Accounts()).pipe(map((accounts) => ({ accounts, extensions })))),
     switchMap(({ accounts, extensions }) => {
       let counter = 1;
+      let reconnecting = false;
 
       return new Observable((observer: Observer<PolkadotConnection>) => {
         const url = NETWORK_CONFIG[network].rpc;
@@ -31,14 +32,19 @@ export const getPolkadotConnection: (network: Network) => Observable<PolkadotCon
 
           setTimeout(() => {
             try {
-              console.info(`Reconnect Start: Attempting to reconnect for the ${counter}th times`);
-              counter += 1;
-              if (!api.isConnected) {
+              if (!api.isConnected && !reconnecting) {
+                console.info(`Reconnect Start: Attempting to reconnect for the ${counter}th times`);
+                counter += 1;
+                reconnecting = true;
                 observer.next({ ...envelop, status: 'connecting' });
-                api.connect();
+                api.connect().finally(() => {
+                  reconnecting = false;
+                });
+              } else {
+                console.info(`Reconnect launch failed, because of the ${counter}th reconnection still in process`);
               }
             } catch (error: unknown) {
-              console.info(`Reconnect End: The ${counter - 1}th reconnecting failed`, error);
+              console.warn(`Reconnect Error: The ${counter - 1}th reconnecting failed`, error);
             }
           }, SHORT_DURATION * counter);
         };

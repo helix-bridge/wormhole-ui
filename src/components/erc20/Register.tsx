@@ -5,24 +5,24 @@ import {
   LoadingOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
-import { Button, Descriptions, Empty, Form, Input, List, message, Popover, Progress, Spin, Tabs, Tooltip } from 'antd';
+import { Button, Descriptions, Empty, Form, Input, List, Popover, Progress, Spin, Tabs, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
-import { MemoedTokenInfo, useApi, useKnownErc20Tokens, useLocalSearch } from '../../hooks';
+import { MemoedTokenInfo, useApi, useKnownErc20Tokens, useLocalSearch, useTx } from '../../hooks';
 import { Erc20Token, NetConfig } from '../../model';
 import { isValidAddress } from '../../utils';
+import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/meta';
 import {
   confirmRegister,
   getTokenRegisterStatus,
+  launchRegister,
   popupRegisterProof,
   proofObservable,
-  registerToken,
   tokenSearchFactory,
 } from '../../utils/erc20/token';
-import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/meta';
 import { updateStorage } from '../../utils/helper/storage';
 import { Destination } from '../controls/Destination';
 import { SubmitButton } from '../SubmitButton';
@@ -47,6 +47,7 @@ export function Register() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
+  const { observer } = useTx();
   const networks = useMemo(() => NETWORKS.filter((item) => item.type.includes('ethereum')), []);
   const canStart = useMemo(
     () =>
@@ -127,7 +128,7 @@ export function Register() {
       form={form}
       initialValues={{ host: DEFAULT_REGISTER_NETWORK }}
       onFinish={() => {
-        registerToken(inputValue, net);
+        launchRegister(inputValue, net).subscribe(observer);
         setAllTokens([token as Erc20Token, ...data]);
       }}
       validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
@@ -230,6 +231,7 @@ function Upcoming({ netConfig }: UpcomingProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
   const { data, setSearch } = useLocalSearch<MemoedTokenInfo>(searchFn as (arg: string) => MemoedTokenInfo[]);
+  const { observer } = useTx();
 
   useEffect(() => {
     if (!allTokens.length) {
@@ -281,17 +283,17 @@ function Upcoming({ netConfig }: UpcomingProps) {
                   setAllTokens([...newData]);
 
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  confirmRegister(token.proof as unknown as any, netConfig)
-                    .then((tx) => {
-                      message.success(`Register success transaction hash: ${tx.transactionHash}`);
+                  confirmRegister(token.proof as unknown as any, netConfig).subscribe({
+                    ...observer,
+                    next: (state) => {
+                      observer.next(state);
+                      if (state.status === 'finalized') {
+                        newData[index].confirmed = 1;
 
-                      newData[index].confirmed = 1;
-
-                      setAllTokens(newData);
-                    })
-                    .catch((err) => {
-                      message.error(err.message);
-                    });
+                        setAllTokens(newData);
+                      }
+                    },
+                  });
                 }}
               />
             </List.Item>

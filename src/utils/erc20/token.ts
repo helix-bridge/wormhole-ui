@@ -1,12 +1,12 @@
 import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import BN from 'bn.js';
-import { from, iif, NEVER, Observable, of, Subject, zip } from 'rxjs';
+import { EMPTY, from, iif, NEVER, Observable, of, Subject, zip } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
-import { catchError, delay, distinctUntilKeyChanged, map, retryWhen, switchMap, tap } from 'rxjs/operators';
+import { catchError, delay, distinctUntilKeyChanged, finalize, map, retryWhen, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
 import { abi, NETWORK_CONFIG, RegisterStatus } from '../../config';
-import { Erc20Token, NetConfig, Network } from '../../model';
+import { Erc20Token, NetConfig, Network, Tx } from '../../model';
 import {
   ClaimNetworkPrefix,
   encodeBlockHeader,
@@ -17,6 +17,7 @@ import {
   toUpperCaseFirst,
 } from '../helper';
 import { getMetamaskActiveAccount, isNetworkMatch } from '../network';
+import { getContractTxObs } from '../tx';
 import { getNameAndLogo, getSymbolAndDecimals, getTokenBalance, getUnitFromAddress, tokenInfoGetter } from './meta';
 
 export type StoredProof = MMRProof & Erc20Token & { eventsProofStr: string };
@@ -127,26 +128,29 @@ const getFromEthereum: (cur: string, con: NetConfig) => Promise<Erc20Token[]> = 
  * @description test address 0x1F4E71cA23f2390669207a06dDDef70BDE75b679;
  * @params { Address } address - erc20 token address
  */
-export const registerToken = async (address: string, config: NetConfig) => {
-  const isRegistered = await hasRegistered(address, config);
-  const web3 = new Web3(window.ethereum);
-  const backingContract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
+export function launchRegister(address: string, config: NetConfig): Observable<Tx> {
+  const senderObs = from(getMetamaskActiveAccount());
+  const symbolObs = from(getSymbolType(address, config));
 
-  if (!isRegistered) {
-    const sender = await getMetamaskActiveAccount();
-    const { isString } = await getSymbolType(address, config);
-    const register = isString ? backingContract.methods.registerToken : backingContract.methods.registerTokenBytes32;
-    const txHash = await register(address).send({ from: sender });
+  return from(hasRegistered(address, config)).pipe(
+    switchMap((has) =>
+      has
+        ? EMPTY
+        : getContractTxObs(
+            config.erc20Token.bankingAddress,
+            (contract) =>
+              zip(senderObs, symbolObs).pipe(
+                map(([sender, { isString }]) => {
+                  const register = isString ? contract.methods.registerToken : contract.methods.registerTokenBytes32;
 
-    console.info(
-      '%c [ register token transaction hash ]-118',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      txHash
-    );
-
-    return generateRegisterProof(address, config).subscribe((proof) => proofSubject.next(proof));
-  }
-};
+                  return register(address).send({ from: sender });
+                })
+              ),
+            abi.bankErc20ABI
+          ).pipe(finalize(() => generateRegisterProof(address, config).subscribe((proof) => proofSubject.next(proof))))
+    )
+  );
+}
 
 /**
  * @function getSymbolType - Predicate the return type of the symbol method in erc20 token abi;
@@ -311,9 +315,9 @@ export const hasRegistered: (address: string, config: NetConfig) => Promise<bool
   return !!status;
 };
 
-export const confirmRegister = async (proof: StoredProof & Record<string, string>, config: NetConfig) => {
+export function confirmRegister(proof: StoredProof & Record<string, string>, config: NetConfig): Observable<Tx> {
   const { signatures, mmr_root, mmr_index, block_header, peaks, siblings, eventsProofStr } = proof;
-  const sender = await getMetamaskActiveAccount();
+  const senderObs = from(getMetamaskActiveAccount());
   const mmrRootMessage = encodeMMRRootMessage({
     root: mmr_root,
     prefix: toUpperCaseFirst(config.name) as ClaimNetworkPrefix,
@@ -321,32 +325,29 @@ export const confirmRegister = async (proof: StoredProof & Record<string, string
     index: +mmr_index,
   });
   const blockHeader = encodeBlockHeader(block_header);
-  const web3 = new Web3(window.ethereum);
-  const backingContract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
-  // !FIXME: unhandled reject error [object object] on Firefox;
-  const tx = await backingContract.methods
-    .crossChainSync(
-      mmrRootMessage.toHex(),
-      signatures.split(','),
-      mmr_root,
-      mmr_index,
-      blockHeader.toHex(),
-      peaks,
-      siblings,
-      eventsProofStr
+
+  return senderObs.pipe(
+    switchMap((sender) =>
+      getContractTxObs(
+        config.erc20Token.bankingAddress,
+        (contract) =>
+          contract.methods
+            .crossChainSync(
+              mmrRootMessage.toHex(),
+              signatures.split(','),
+              mmr_root,
+              mmr_index,
+              blockHeader.toHex(),
+              peaks,
+              siblings,
+              eventsProofStr
+            )
+            .send({ from: sender }),
+        abi.bankErc20ABI
+      )
     )
-    .send({ from: sender })
-    .on('transactionHash', (hash: string) => {
-      console.info('%c [ hash ]-331', 'font-size:13px; background:pink; color:#bf2c9f;', hash);
-    })
-    .on('error', (error: Record<string, unknown>) => {
-      console.info('%c [ error ]-334', 'font-size:13px; background:pink; color:#bf2c9f;', error);
-    });
-
-  return tx;
-};
-
-export const claimErc20Token = confirmRegister;
+  );
+}
 
 export async function canCrossSendToDvm(token: Erc20Token, currentAccount: string) {
   return canCrossSend(token, currentAccount, 'ethereum');
