@@ -1,10 +1,10 @@
-import { EllipsisOutlined, WarningOutlined } from '@ant-design/icons';
-import { Affix, Button, Dropdown, Layout, Menu, Tooltip } from 'antd';
+import { LockOutlined, UnlockOutlined, UnorderedListOutlined, WarningOutlined } from '@ant-design/icons';
+import { Affix, Switch as ASwitch, Dropdown, Layout, Menu, Tooltip, Typography, Button } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Route, Switch, useLocation } from 'react-router-dom';
+import { Link, Route, Switch } from 'react-router-dom';
 import { Connection } from './components/Connection';
-import { Language } from './components/Language';
+import { Footer } from './components/Footer';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { THEME } from './config';
 import { Path, routes } from './config/routes';
@@ -12,11 +12,10 @@ import { useApi } from './hooks';
 
 const { Header, Content } = Layout;
 
+// eslint-disable-next-line complexity
 function App() {
   const { t } = useTranslation();
   const { isDev, enableTestNetworks, setEnableTestNetworks } = useApi();
-  const location = useLocation();
-  const [isAirdrop, setIsAirdrop] = useState<boolean>(location.pathname.includes('airdrop'));
   const [theme, setTheme] = useState<THEME>(THEME.DARK);
   const net = 'pangolin';
 
@@ -35,45 +34,69 @@ function App() {
             </Tooltip>
           </div>
 
-          <div className="flex justify-end items-center flex-1 md:pl-8">
-            <Connection />
+          <div className="flex justify-between items-center flex-1 ml-32">
+            <div className="hidden gap-8 xl:flex">
+              <Typography.Link key="guide">
+                <Link to="xxx">{t('Guide')}</Link>
+              </Typography.Link>
+              <Typography.Link key="submit">
+                <Link to={Path.register}>{t('Token Manager')}</Link>
+              </Typography.Link>
+              <Typography.Link key="claim">
+                <Link to={Path.airdrop}>{t('Airdrop')}</Link>
+              </Typography.Link>
+            </div>
+
             <Dropdown
               overlay={
                 <Menu>
                   <Menu.Item key="guide" onClick={() => window.open('', '_blank')}>
-                    {t('User Guide')}
-                  </Menu.Item>
-                  <Menu.Item key="faq" onClick={() => window.open('', '_blank')}>
-                    {t('FAQ')}
+                    {t('Guide')}
                   </Menu.Item>
                   <Menu.Item key="submit">
-                    <Link to={Path.register}>{t('Submit Your Token')}</Link>
+                    <Link to={Path.register}>{t('Token Manager')}</Link>
                   </Menu.Item>
-                  {!isDev && (
-                    <Menu.Item key="tests" onClick={() => setEnableTestNetworks(!enableTestNetworks)}>
-                      {t('{{enable}} Test Network', { enable: enableTestNetworks ? 'Disable' : 'Enable' })}
-                    </Menu.Item>
-                  )}
                   <Menu.Item key="claim">
-                    <Link to={isAirdrop ? Path.root : Path.airdrop} onClick={() => setIsAirdrop(!isAirdrop)}>
-                      <Button type="primary">{t(isAirdrop ? 'Cross-chain' : 'Claim Airdrop')}</Button>
-                    </Link>
+                    <Link to={Path.airdrop}>{t('Airdrop')}</Link>
                   </Menu.Item>
                 </Menu>
               }
+              className="xl:hidden"
             >
-              <EllipsisOutlined
-                className="text-4xl"
-                style={{
-                  // color: (net && NETWORK_LIGHT_THEME[net]['@project-main-bg']) || 'inherit',
-                  color: '#fff',
-                }}
-              />
+              <Button type="link" icon={<UnorderedListOutlined />} size="large"></Button>
             </Dropdown>
 
-            <ThemeSwitch network={net} defaultTheme={THEME.DARK} onThemeChange={setTheme} />
+            <div className="flex justify-end items-center flex-1 md:pl-8">
+              <Connection />
 
-            <Language mode="text" size="small" network={net} theme={theme} className="ml-4" />
+              <div className="flex flex-col items-center gap-2 ml-4">
+                {!isDev && (
+                  <Tooltip
+                    title={t('{{enable}} the test networks to appear in the network selection panel', {
+                      enable: enableTestNetworks ? t('Disable') : t('Enable'),
+                    })}
+                  >
+                    <ASwitch
+                      onChange={() => setEnableTestNetworks(!enableTestNetworks)}
+                      checked={enableTestNetworks}
+                      checkedChildren={<UnlockOutlined />}
+                      unCheckedChildren={<LockOutlined />}
+                      size="small"
+                      className="w-12"
+                      style={{ lineHeight: 0.5 }}
+                    />
+                  </Tooltip>
+                )}
+
+                <ThemeSwitch
+                  size="small"
+                  network={net}
+                  defaultTheme={THEME.DARK}
+                  onThemeChange={setTheme}
+                  className="w-12"
+                />
+              </div>
+            </div>
           </div>
         </Header>
       </Affix>
@@ -85,6 +108,8 @@ function App() {
           ))}
         </Switch>
       </Content>
+
+      <Footer theme={theme} />
     </Layout>
   );
 }

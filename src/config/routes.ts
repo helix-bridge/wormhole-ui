@@ -1,4 +1,5 @@
 import { RouteProps } from 'react-router-dom';
+import { Page404 } from '../components/Page404';
 import { AirdropHistory } from '../pages/AirdropHistory';
 import { HistoryRecords } from '../pages/CrossHistory';
 import { Erc20Register } from '../pages/Erc20Register';
@@ -39,13 +40,7 @@ export const routes: RouteProps[] = [
     component: Erc20Register,
   },
   {
-    exact: true,
-    path: '/404',
-    children: null,
-  },
-  {
-    exact: true,
-    path: '/noData',
-    children: null,
+    path: '*',
+    children: Page404,
   },
 ];

@@ -1,4 +1,4 @@
-import { Switch } from 'antd';
+import { Switch, SwitchProps } from 'antd';
 import { useEffect, useState } from 'react';
 import { NETWORK_DARK_THEME, NETWORK_LIGHT_THEME, SKIN_THEME, THEME } from '../config';
 import { Network } from '../model';
@@ -20,13 +20,19 @@ export const toggleTheme = (theme: THEME, network: Network) => {
     });
 };
 
-export interface ThemeSwitchProps {
+export interface ThemeSwitchProps extends SwitchProps {
   network: Network;
   defaultTheme?: THEME;
   onThemeChange?: (theme: THEME) => void;
 }
 
-export function ThemeSwitch({ network, onThemeChange, defaultTheme = THEME.LIGHT }: ThemeSwitchProps) {
+export function ThemeSwitch({
+  network,
+  onThemeChange,
+  defaultTheme = THEME.LIGHT,
+  className,
+  ...others
+}: ThemeSwitchProps) {
   const [theme, setTheme] = useState<THEME>(readStorage()?.theme || defaultTheme);
 
   useEffect(() => {
@@ -41,6 +47,7 @@ export function ThemeSwitch({ network, onThemeChange, defaultTheme = THEME.LIGHT
 
   return (
     <Switch
+      {...others}
       checked={theme === THEME.DARK}
       checkedChildren="🌙"
       unCheckedChildren="☀️"
@@ -53,7 +60,7 @@ export function ThemeSwitch({ network, onThemeChange, defaultTheme = THEME.LIGHT
           onThemeChange(current);
         }
       }}
-      className="ml-4"
+      className={className}
     />
   );
 }
