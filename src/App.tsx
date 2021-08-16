@@ -20,7 +20,7 @@ function App() {
   const net = 'pangolin';
 
   return (
-    <Layout style={{ height: '100vh' }} className="overflow-scroll">
+    <Layout style={{ height: 'calc(100vh - 74px)' }} className="overflow-scroll">
       <Affix offsetTop={1}>
         <Header className="flex items-center justify-between sm:px-8 px-2" style={{ marginTop: -1 }}>
           <div className="flex items-center gap-4">
@@ -34,7 +34,7 @@ function App() {
             </Tooltip>
           </div>
 
-          <div className="flex justify-between items-center flex-1 ml-32">
+          <div className="flex xl:justify-between lg:justify-end items-center flex-1 ml-32">
             <div className="hidden gap-8 xl:flex">
               <Typography.Link key="guide">
                 <Link to="xxx">{t('Guide')}</Link>
@@ -66,7 +66,7 @@ function App() {
               <Button type="link" icon={<UnorderedListOutlined />} size="large"></Button>
             </Dropdown>
 
-            <div className="flex justify-end items-center flex-1 md:pl-8">
+            <div className="flex justify-end items-center md:pl-8">
               <Connection />
 
               <div className="flex flex-col items-center gap-2 ml-4">
@@ -101,7 +101,7 @@ function App() {
         </Header>
       </Affix>
 
-      <Content className="sm:px-16 sm:pt-4 px-2 py-1">
+      <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-12 sm:my-6">
         <Switch>
           {routes.map((item, index) => (
             <Route key={index} {...item}></Route>
