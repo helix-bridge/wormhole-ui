@@ -38,7 +38,7 @@ export function Airdrop({ sender, transfer, form }: AirdropProps) {
         ></Des>
 
         <Des
-          title={<span className="capitalize">{t('Claim Token')}</span>}
+          title={<span className="capitalize">{t('Snapshot data')}</span>}
           content={
             <div className="flex flex-col">
               <span>{amount} RING</span>

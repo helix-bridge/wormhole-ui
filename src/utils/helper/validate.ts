@@ -2,27 +2,39 @@ import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
 import Web3 from 'web3';
 import { NETWORK_CONFIG } from '../../config';
-import { NetworkCategory } from '../../model';
+import { Network, NetworkCategory, SS58Prefix } from '../../model';
+import { isPolkadotNetwork } from '../network';
 import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
 
-export const isValidAddress = (address: string, type: NetworkCategory): boolean => {
-  if (type === 'ethereum') {
+// eslint-disable-next-line complexity
+export const isValidAddress = (address: string, network: Network | NetworkCategory, strict = false): boolean => {
+  if (network === 'ethereum') {
     const isDvm = Web3.utils.isAddress(address);
     const isSS58 = isSS58Address(address);
 
     return isDvm || (isSS58 && canConvertToEth(address));
   }
 
-  if (type === 'polkadot') {
+  if (network === 'polkadot') {
     return isSS58Address(address);
+  }
+
+  if (isPolkadotNetwork(network as Network)) {
+    return strict ? isSS58Address(address, NETWORK_CONFIG[network as Network].ss58Prefix) : isSS58Address(address);
   }
 
   return false;
 };
 
-export const isSS58Address = (address: string) => {
+export const isSS58Address = (address: string, ss58Prefix?: SS58Prefix) => {
   try {
-    encodeAddress(isHex(address) ? hexToU8a(address) : decodeAddress(address));
+    encodeAddress(
+      isHex(address)
+        ? hexToU8a(address)
+        : ss58Prefix
+        ? decodeAddress(address, false, ss58Prefix)
+        : decodeAddress(address)
+    );
 
     return true;
   } catch (error) {

@@ -1,4 +1,5 @@
 import { Network } from '../network';
+import { DListRes } from './api';
 
 export interface Paginator {
   row: number;
@@ -9,6 +10,8 @@ export interface Paginator {
 export interface RingBurnHistory extends E2DHistory {
   id: number;
 }
+
+export type RingBurnHistoryRes = DListRes<RingBurnHistory>;
 
 export interface E2DHistory {
   address: string;
@@ -27,6 +30,8 @@ export interface RedeemHistory extends E2DHistory {
   deposit: string; // json string
   is_relayed: boolean;
 }
+
+export type RedeemHistoryRes = DListRes<RedeemHistory>;
 
 /* ------------------------------------D2E section-------------------------------------------- */
 

@@ -4,3 +4,8 @@ export interface DResponse<T = any> {
   msg: string;
   data?: T;
 }
+
+export interface DListRes<T> {
+  count: number;
+  list: T[];
+}
