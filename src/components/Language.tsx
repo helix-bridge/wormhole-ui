@@ -1,14 +1,14 @@
-import { Button, Dropdown, Menu } from 'antd';
+import { Button, ButtonProps, Dropdown, Menu } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME, THEME } from '../config';
 import { Network } from '../model';
 import { EarthIcon } from './icons';
 
-export interface LanguageProps {
+export interface LanguageProps extends ButtonProps {
   className?: string;
   network?: Network;
-  simpleMode?: boolean;
+  mode?: 'full' | 'icon' | 'text';
   theme?: THEME;
 }
 
@@ -18,7 +18,7 @@ const lang: { name: string; short: string }[] = [
 ];
 
 // eslint-disable-next-line complexity
-export function Language({ network, theme = THEME.LIGHT, simpleMode = false, className = '' }: LanguageProps) {
+export function Language({ network, theme = THEME.LIGHT, mode = 'full', className = '', ...other }: LanguageProps) {
   const { t, i18n } = useTranslation();
   const [current, setCurrent] = useState(i18n.language.includes('-') ? i18n.language.split('-')[0] : i18n.language);
   const textColor = useMemo(() => (network ? 'text-' + network + '-main' : ''), [network]);
@@ -45,14 +45,15 @@ export function Language({ network, theme = THEME.LIGHT, simpleMode = false, cla
       }
       className={className}
     >
-      {simpleMode ? (
+      {mode === 'icon' ? (
         <EarthIcon style={{ color }} className="cursor-pointer" />
       ) : (
         <Button
+          {...other}
           className={`${textColor} flex items-center justify-around uppercase`}
-          icon={<EarthIcon style={{ color }} />}
+          icon={mode === 'full' && <EarthIcon style={{ color }} />}
         >
-          <span className={textColor}>{current}</span>
+          <span>{current}</span>
         </Button>
       )}
     </Dropdown>

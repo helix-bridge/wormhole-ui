@@ -73,7 +73,7 @@ function App() {
 
             <ThemeSwitch network={net} defaultTheme={THEME.DARK} onThemeChange={setTheme} />
 
-            <Language simpleMode network={net} theme={theme} className="ml-4" />
+            <Language mode="text" size="small" network={net} theme={theme} className="ml-4" />
           </div>
         </Header>
       </Affix>

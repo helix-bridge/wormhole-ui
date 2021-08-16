@@ -42,7 +42,6 @@ export const approveRingToIssuing: TxFn<
 export const redeemToken: TxFn<RedeemEth> = ({ sender, transfer, asset, amount, recipient }) => {
   const contractAddress = transfer.from.tokenContract[asset as Token] as string;
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   recipient = buf2hex(decodeAddress(recipient, false, transfer.to.ss58Prefix!).buffer);
   amount = Web3.utils.toWei(amount, 'ether');
 
@@ -54,7 +53,6 @@ export const redeemToken: TxFn<RedeemEth> = ({ sender, transfer, asset, amount, 
 };
 
 export const redeemDeposit: TxFn<RedeemDeposit> = ({ transfer: { to, from }, recipient, sender, deposit }) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   recipient = buf2hex(decodeAddress(recipient, false, to.ss58Prefix!).buffer);
 
   return getContractTxObs(

@@ -22,7 +22,6 @@ export function Airdrop({ sender, transfer, form }: AirdropProps) {
   const color = NETWORK_LIGHT_THEME[transfer.from?.name as Network]['@project-main-bg'];
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const num = getAirdropData(sender, transfer.from!.name);
 
     setAmount(num.toString());

@@ -22,7 +22,6 @@ export function AssetOverview({ amount, deposit, currency, unit = 'ether' }: Ass
   }
 
   if (currency.toUpperCase() === depositFlag) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const { deposit_id, start, month } = deposit!;
     const { start: startTime, end: endTime } = getDepositTimeRange({ deposit_time: start, duration: month });
 

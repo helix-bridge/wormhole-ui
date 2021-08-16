@@ -5,7 +5,20 @@ import {
   LoadingOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
-import { Button, Descriptions, Empty, Form, Input, List, Popover, Progress, Spin, Tabs, Tooltip } from 'antd';
+import {
+  Button,
+  Descriptions,
+  Empty,
+  Form,
+  Input,
+  List,
+  Popover,
+  Progress,
+  Spin,
+  Tabs,
+  Tooltip,
+  Typography,
+} from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -30,19 +43,23 @@ import { Erc20ListInfo } from './Erc20ListInfo';
 
 const DEFAULT_REGISTER_NETWORK = NETWORK_CONFIG.ropsten;
 
+enum TabKeys {
+  register = 'register',
+  upcoming = 'upcoming',
+}
+
 // eslint-disable-next-line complexity
 export function Register() {
   const { t } = useTranslation();
   const [form] = useForm();
   const [net, setNet] = useState<NetConfig>(DEFAULT_REGISTER_NETWORK);
   const { networkStatus, network, switchNetwork } = useApi();
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(TabKeys.register);
   const [inputValue, setInputValue] = useState('');
   const [registeredStatus, setRegisteredStatus] = useState(-1);
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { allTokens, setAllTokens } = useKnownErc20Tokens(network!, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
@@ -146,13 +163,8 @@ export function Register() {
         />
       </Form.Item>
 
-      <Tabs
-        type="card"
-        onTabClick={(key) => {
-          setActive(+key);
-        }}
-      >
-        <Tabs.TabPane tab={t('Register Token')} active={active === 1} key={1}>
+      <Tabs type="card" activeKey={active} onTabClick={(key) => setActive(key as TabKeys)}>
+        <Tabs.TabPane tab={t('Register Token')} key={TabKeys.register}>
           <Form.Item
             name="address"
             label={t('Token Contract Address')}
@@ -207,13 +219,15 @@ export function Register() {
           </SubmitButton>
 
           <Tip>
-            After submit the registration, please wait for the {{ type: network }} network to return the result, click
-            [Upcoming] to view the progress.
+            <Trans i18nKey="erc20RegistrationTip">
+              After submit the registration, please wait for the {{ network }} network to return the result, click
+              <Typography.Link onClick={() => setActive(TabKeys.upcoming)}> Upcoming </Typography.Link>to view the
+              progress.
+            </Trans>
           </Tip>
         </Tabs.TabPane>
 
-        {/* eslint-disable-next-line no-magic-numbers */}
-        <Tabs.TabPane tab={t('Upcoming')} key={2} active={active === 2}>
+        <Tabs.TabPane tab={t('Upcoming')} key={TabKeys.upcoming}>
           <Upcoming netConfig={net} />
         </Tabs.TabPane>
       </Tabs>
@@ -301,7 +315,10 @@ function Upcoming({ netConfig }: UpcomingProps) {
         </List>
       )}
       <Tip>
-        After {{ type: netConfig.name }} network returns the result, click [Confirm] to complete the token registration.
+        <Trans i18nKey="erc20CompletionTip">
+          After {{ type: netConfig.name }} network returns the result, click [Confirm] to complete the token
+          registration.
+        </Trans>
       </Tip>
     </>
   );
@@ -346,10 +363,8 @@ function UpcomingTokenState({ token, onConfirm }: UpcomingTokenStateProps) {
 
 function Tip({ children }: PropsWithChildren<string | ReactNode>) {
   return (
-    <Form.Item className="-mb-1 px-4 text-xs">
-      <span className="text-gray-600">
-        <Trans>{children}</Trans>
-      </span>
+    <Form.Item className="px-4 text-xs mb-0 mt-8">
+      <span className="text-gray-600">{children}</span>
     </Form.Item>
   );
 }

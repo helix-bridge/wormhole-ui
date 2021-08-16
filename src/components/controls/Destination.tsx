@@ -1,4 +1,4 @@
-import { Dropdown, Menu } from 'antd';
+import { Dropdown, Menu, Tag } from 'antd';
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NetConfig } from '../../model';
@@ -42,8 +42,11 @@ export function Destination({
           >
             <Menu.Item key="default">{t('Clear Selected')}</Menu.Item>
             {networks.map((item) => (
-              <Menu.Item key={item.fullName} className="flex justify-between">
-                <span className="capitalize mr-2">{item.fullName}</span>
+              <Menu.Item key={item.fullName}>
+                <span className="flex justify-between items-center">
+                  <span className="capitalize mr-2">{item.fullName}</span>
+                  {item.isTest && <Tag color="cyan">{t('Test')}</Tag>}
+                </span>
               </Menu.Item>
             ))}
           </Menu>

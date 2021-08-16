@@ -49,7 +49,6 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
                   </span>
                   <Button
                     onClick={() => {
-                      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                       switchNetwork(value!.from!.name);
                     }}
                     className="self-end mt-2"

@@ -28,7 +28,6 @@ export function queryD2ERecords(
   const config = NETWORK_CONFIG[network];
   const api = config.api.dapp;
   const params = {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     address: buf2hex(decodeAddress(address).buffer),
     ...(paginator ?? { row: 100, page: 0 }),
   };

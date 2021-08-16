@@ -53,7 +53,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logo: '/image/crab-button-mobile.png',
       logoWithText: '/image/crab-logo.svg',
     },
-    fullName: 'Crab Mainnet',
+    fullName: 'Darwinia Crab',
     isTest: false,
     name: 'crab',
     provider: {
@@ -91,7 +91,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logo: '/image/darwinia-button-mobile.png',
       logoWithText: '/image/darwinia-logo.svg',
     },
-    fullName: 'Darwinia Mainnet',
+    fullName: 'Darwinia',
     isTest: false,
     lockEvents: [
       {
@@ -141,7 +141,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logo: 'image/eth-logo.svg',
       logoWithText: '',
     },
-    fullName: 'Ethereum Mainnet',
+    fullName: 'Ethereum',
     isTest: false,
     name: 'ethereum',
     provider: {
@@ -185,7 +185,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logo: '/image/pangolin-button-mobile.png',
       logoWithText: '/image/pangolin-logo.svg',
     },
-    fullName: 'Pangolin Testnet',
+    fullName: 'Pangolin',
     isTest: true,
     lockEvents: [
       {
@@ -230,7 +230,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logo: '',
       logoWithText: '',
     },
-    fullName: 'Ropsten Testnet',
+    fullName: 'Ropsten',
     isTest: true,
     name: 'ropsten',
     provider: {
@@ -274,7 +274,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logo: '',
       logoWithText: '',
     },
-    fullName: 'Tron Mainnet',
+    fullName: 'Tron',
     isTest: false,
     name: 'tron',
     provider: {

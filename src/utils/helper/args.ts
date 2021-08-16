@@ -29,7 +29,6 @@ export function parseArgs(api: ApiPromise, data: IExtrinsic | undefined): Arg[] 
       const argsMeta = meta.toHuman() as any;
       const aryReg = /\[(.*)\]/;
       const hashReg = /0x\w+/;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const address = args.match(aryReg)![1];
       const addressJson = JSON.stringify(address.split(',').map((item) => item.trim()));
       let str = args.replace(aryReg, addressJson);

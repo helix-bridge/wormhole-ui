@@ -170,7 +170,6 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
                 getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
               },
             })({ ...data, assets: assetsToSend }),
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             api!
           ).subscribe(observer);
         };

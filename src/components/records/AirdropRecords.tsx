@@ -32,12 +32,10 @@ export function AirdropRecords({ from, to }: AirdropProps) {
   const fromNetwork = NETWORK_CONFIG[from];
   const toNetwork = NETWORK_CONFIG[to];
   const color = NETWORK_LIGHT_THEME[fromNetwork.name as Network]['@project-main-bg'];
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const amount = useMemo(() => getAirdropData(sender, fromNetwork.name), [sender, fromNetwork]);
 
   useEffect(() => {
     const sub$$ = ajax<SResponse<ClaimsRes>>({
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       url: apiUrl(toNetwork!.api.subscan, SubscanApiPath.claims),
       method: 'POST',
       body: { address: sender },

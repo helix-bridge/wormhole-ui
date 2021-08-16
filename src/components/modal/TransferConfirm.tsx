@@ -14,10 +14,8 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
         title={t('Cross-chain direction')}
         content={
           <>
-            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
             <span className="uppercase">{value.transfer.from!.name}</span>
             <RightOutlined className="mx-4" />
-            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
             <span className="uppercase">{value.transfer.to!.name}</span>
           </>
         }

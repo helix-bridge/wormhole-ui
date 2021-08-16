@@ -153,7 +153,7 @@ export function Records() {
             ))}
 
           {loading && <Spin size="large" className="w-full" style={{ marginTop: 16 }} />}
-          {(!data?.list || !data.list.length) && !loading && <Empty />}
+          {(!data?.list || !data.list.length) && !loading && <Empty description={t('No Data')} />}
         </TabPane>
         <TabPane
           tab={

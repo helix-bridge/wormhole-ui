@@ -187,7 +187,7 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
 }
 
 // eslint-disable-next-line complexity
-export function TransferInfo({
+function TransferInfo({
   fee,
   balance,
   ringBalance,
@@ -205,7 +205,7 @@ export function TransferInfo({
   return (
     <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400 px-2">
       {assetType === E2DAssetCategory.darwinia && asset === E2DAssetEnum.ring && value.gte(fee) && (
-        <Descriptions.Item label={<Trans>Recipient will receive </Trans>} contentStyle={{ color: 'inherit' }}>
+        <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
           {fromWei({ value: value.sub(fee) })} RING
         </Descriptions.Item>
       )}
