@@ -32,6 +32,7 @@ import {
   fromWei,
   getInfoFromHash,
   getUnit,
+  isValidAddress,
   prettyNumber,
   RedeemDeposit,
   redeemDeposit,
@@ -301,9 +302,13 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
   const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
   const { accounts } = useApi();
   const { observer } = useTx();
-  const { address: account } = (accounts || [])[0] ?? '';
   const { updateDeparture } = useDeparture();
   const { afterTx } = useAfterSuccess();
+  const account = useMemo(() => {
+    const acc = (accounts || [])[0];
+
+    return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
+  }, [accounts]);
   const availableBalance = useMemo(() => {
     if (assetType === E2DAssetCategory.erc20) {
       return !selectedErc20

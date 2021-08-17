@@ -1,5 +1,5 @@
 import { LockOutlined, UnlockOutlined, UnorderedListOutlined, WarningOutlined } from '@ant-design/icons';
-import { Affix, Switch as ASwitch, Dropdown, Layout, Menu, Tooltip, Typography, Button } from 'antd';
+import { Affix, Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch } from 'react-router-dom';
@@ -36,22 +36,16 @@ function App() {
 
           <div className="flex xl:justify-between lg:justify-end items-center flex-1 ml-32">
             <div className="hidden gap-8 xl:flex">
-              <Typography.Link key="guide">
-                <Link to="xxx">{t('Guide')}</Link>
-              </Typography.Link>
-              <Typography.Link key="submit">
-                <Link to={Path.register}>{t('Token Manager')}</Link>
-              </Typography.Link>
-              <Typography.Link key="claim">
-                <Link to={Path.airdrop}>{t('Airdrop')}</Link>
-              </Typography.Link>
+              <Link to="xxx">{t('Guide')}</Link>
+              <Link to={Path.register}>{t('Token Manager')}</Link>
+              <Link to={Path.airdrop}>{t('Airdrop')}</Link>
             </div>
 
             <Dropdown
               overlay={
                 <Menu>
-                  <Menu.Item key="guide" onClick={() => window.open('', '_blank')}>
-                    {t('Guide')}
+                  <Menu.Item key="guide">
+                    <Link to="xxx">{t('Guide')}</Link>
                   </Menu.Item>
                   <Menu.Item key="submit">
                     <Link to={Path.register}>{t('Token Manager')}</Link>
