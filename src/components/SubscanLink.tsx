@@ -54,7 +54,7 @@ export function SubscanLink({
   if (txHash) {
     const isSubscan = isPolkadotNetwork(network);
     const mapObj = isSubscan ? { scan: 'subscan', txPath: 'extrinsic' } : { scan: 'etherscan', txPath: 'tx' };
-    const omitNetwork: string[] = [NetworkEnum.ethereum, NetworkEnum.tron];
+    const omitNetwork: string[] = [NetworkEnum.ethereum];
 
     return (
       <Link

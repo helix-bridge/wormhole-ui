@@ -5,11 +5,11 @@ import { AddEthereumChainParameter } from './metamask';
 
 export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia';
 
-export type EthereumTypeNetwork = 'ethereum' | 'ropsten' | 'tron';
+export type EthereumTypeNetwork = 'ethereum' | 'ropsten';
 
 export type Network = PolkadotTypeNetwork | EthereumTypeNetwork;
 
-export type NetworkCategory = 'polkadot' | 'ethereum' | 'tron' | 'darwinia';
+export type NetworkCategory = 'polkadot' | 'ethereum' | 'darwinia';
 
 export type Token = 'ring' | 'kton' | 'native' | 'erc20';
 

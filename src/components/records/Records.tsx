@@ -77,7 +77,7 @@ export function Records() {
         complete: () => setLoading(false),
       });
     } else {
-      // tron
+      // do nothing
     }
 
     setLoading(true);

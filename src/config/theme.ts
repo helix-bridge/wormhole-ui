@@ -15,7 +15,6 @@ export const NETWORK_LIGHT_THEME: NetworkConfig<{ [key in keyof typeof darwinia]
   pangolin,
   ethereum: pangolin,
   ropsten: pangolin,
-  tron: crab,
 };
 
 export const SKIN_THEME = {
@@ -30,7 +29,6 @@ export const NETWORK_DARK_THEME: NetworkConfig<{ [key in keyof typeof darwiniaDa
   pangolin: pangolinDark,
   ethereum: pangolinDark,
   ropsten: pangolinDark,
-  tron: crabDark,
 };
 
 export enum THEME {
