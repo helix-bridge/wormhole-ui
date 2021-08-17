@@ -3,6 +3,7 @@ import { Affix, Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip } fro
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { Connection } from './components/Connection';
 import { Footer } from './components/Footer';
 import { ThemeSwitch } from './components/ThemeSwitch';
@@ -125,11 +126,15 @@ function App() {
       </Affix>
 
       <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-12 sm:my-6">
-        <Switch>
-          {routes.map((item, index) => (
-            <Route key={index} {...item}></Route>
-          ))}
-        </Switch>
+        <TransitionGroup>
+          <CSSTransition in={true} key={location.key} timeout={300} classNames="fade">
+            <Switch location={location}>
+              {routes.map((item, index) => (
+                <Route key={index} {...item}></Route>
+              ))}
+            </Switch>
+          </CSSTransition>
+        </TransitionGroup>
       </Content>
 
       <Footer theme={theme} />

@@ -116,3 +116,22 @@
     justify-content: center;
   }
 }
+
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-exit {
+  opacity: 1;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: all 1000ms;
+}
+
+.fade-exit-active {
+  opacity: 0;
+  display: none;
+  transition: all 100ms;
+}
