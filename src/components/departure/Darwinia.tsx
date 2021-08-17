@@ -95,9 +95,11 @@ function ethereumBackingLockErc20(value: BackingLockERC20, after: AfterTxCreator
 export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
   const { t } = useTranslation();
   const { accounts, api, chain } = useApi();
-  const [assetType, setAssetType] = useState<D2EAssetEnum>(
-    () => form.getFieldValue(FORM_CONTROL.assetType) ?? D2EAssetEnum.native
-  );
+  const [assetType, setAssetType] = useState<D2EAssetEnum>(() => {
+    const value = form.getFieldValue(FORM_CONTROL.assetType);
+
+    return !value || value === 'darwinia' ? D2EAssetEnum.native : value;
+  });
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
   const [fee, setFee] = useState<BN | null>(null);
   const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
@@ -184,8 +186,10 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
     getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
   }, [form, getBalances]);
 
+  // eslint-disable-next-line complexity
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
+    const type = form.getFieldValue(FORM_CONTROL.assetType);
 
     form.setFieldsValue({
       [FORM_CONTROL.sender]: sender,
@@ -193,6 +197,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
         { asset: 'ring', amount: '', checked: true },
         { asset: 'kton', amount: '' },
       ],
+      [FORM_CONTROL.assetType]: !type || type === 'darwinia' ? D2EAssetEnum.native : type,
     });
     getFee(api).then((crossFee) => setFee(crossFee));
     updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });

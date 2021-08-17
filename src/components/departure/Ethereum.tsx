@@ -294,9 +294,11 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
   const [ringBalance, setRingBalance] = useState<BN | null>(null);
   const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
-  const [assetType, setAssetType] = useState<E2DAssetCategory>(
-    () => form.getFieldValue(FORM_CONTROL.assetType) ?? E2DAssetCategory.darwinia
-  );
+  const [assetType, setAssetType] = useState<E2DAssetCategory>(() => {
+    const value = form.getFieldValue(FORM_CONTROL.assetType);
+
+    return !value || value === 'native' ? E2DAssetCategory.darwinia : value;
+  });
   const [asset, setAsset] = useState<E2DAssetEnum>(() => form.getFieldValue(FORM_CONTROL.asset) ?? E2DAssetEnum.ring);
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
   const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
@@ -404,6 +406,7 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
     [afterTx, fee, observer, refreshBalance, refreshDeposit, setSubmit]
   );
 
+  // eslint-disable-next-line complexity
   useEffect(() => {
     if (!account) {
       return;
@@ -411,10 +414,12 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
 
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
     const { recipient } = getInfoFromHash();
+    const type = form.getFieldValue(FORM_CONTROL.assetType);
 
     form.setFieldsValue({
       [FORM_CONTROL.recipient]: recipient ?? '',
       [FORM_CONTROL.sender]: account,
+      [FORM_CONTROL.assetType]: !type || type === 'native' ? E2DAssetCategory.darwinia : type,
     });
 
     Promise.all([getRingBalance(account, netConfig), getFee(netConfig), getIssuingAllowance(account, netConfig)]).then(
