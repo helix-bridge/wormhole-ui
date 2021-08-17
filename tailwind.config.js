@@ -53,6 +53,9 @@ module.exports = {
         xl: '10px',
         lg: '8px',
       },
+      boxShadow: {
+        'mock-bottom-border': '0px 10px 1px -8px #ccc',
+      },
       colors: (_) => ({
         pangolin: {
           main: '#5745DE',

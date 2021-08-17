@@ -7,6 +7,7 @@ import { EarthIcon } from './icons';
 
 export interface LanguageProps extends ButtonProps {
   className?: string;
+  color?: string;
   network?: Network;
   mode?: 'full' | 'icon' | 'text';
   theme?: THEME;
@@ -18,11 +19,21 @@ const lang: { name: string; short: string }[] = [
 ];
 
 // eslint-disable-next-line complexity
-export function Language({ network, theme = THEME.LIGHT, mode = 'full', className = '', ...other }: LanguageProps) {
+export function Language({
+  network,
+  color,
+  theme = THEME.LIGHT,
+  mode = 'full',
+  className = '',
+  ...other
+}: LanguageProps) {
   const { t, i18n } = useTranslation();
   const [current, setCurrent] = useState(i18n.language.includes('-') ? i18n.language.split('-')[0] : i18n.language);
   const textColor = useMemo(() => (network ? 'text-' + network + '-main' : ''), [network]);
-  const color = theme === THEME.DARK ? network && NETWORK_LIGHT_THEME[network]['@project-main-bg'] : '#fff';
+  const calcColor = useMemo(
+    () => (theme === THEME.DARK ? network && NETWORK_LIGHT_THEME[network]['@project-main-bg'] : '#fff'),
+    [network, theme]
+  );
 
   return (
     <Dropdown
@@ -46,14 +57,15 @@ export function Language({ network, theme = THEME.LIGHT, mode = 'full', classNam
       className={className}
     >
       {mode === 'icon' ? (
-        <EarthIcon style={{ color }} className="cursor-pointer" />
+        <EarthIcon style={{ color: color ?? calcColor }} className="cursor-pointer" />
       ) : (
         <Button
           {...other}
           className={`${textColor} flex items-center justify-around uppercase`}
-          icon={mode === 'full' && <EarthIcon style={{ color }} />}
+          icon={mode === 'full' && <EarthIcon style={{ color: color ?? calcColor }} />}
+          style={{ color: color ?? calcColor }}
         >
-          <span>{current}</span>
+          <span>{current === 'zh' ? '中文' : current}</span>
         </Button>
       )}
     </Dropdown>
