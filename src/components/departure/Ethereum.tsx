@@ -69,6 +69,7 @@ enum E2DAssetCategory {
 }
 
 interface AmountCheckInfo {
+  amount?: string;
   fee: BN | null;
   balance: BN | null;
   ringBalance: BN | null;
@@ -174,7 +175,7 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
         const value = new BN(Web3.utils.toWei(curVal));
         return value.gte(fee!) ? Promise.resolve() : Promise.reject();
       },
-      message: t('The transfer amount is not enough cover the fee'),
+      message: t('The transfer amount is not enough to cover the fee'),
     };
 
     return [...commonRules, gtThanFee];
@@ -188,19 +189,16 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
 }
 
 // eslint-disable-next-line complexity
-function TransferInfo({
-  fee,
-  balance,
-  ringBalance,
-  amount,
-  assetType,
-  asset,
-  t,
-}: AmountCheckInfo & { amount: string }) {
+function TransferInfo({ fee, balance, ringBalance, amount, assetType, asset, t }: AmountCheckInfo) {
   const value = new BN(toWei({ value: amount || '0' }));
 
   if (!fee || !ringBalance || !balance) {
-    return <p className="text-red-400 animate-pulse px-2">{t('Transfer information querying')}</p>;
+    return (
+      // eslint-disable-next-line no-magic-numbers
+      <p className="text-red-400 animate-pulse px-2" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
+        {t('Transfer information querying')}
+      </p>
+    );
   }
 
   return (

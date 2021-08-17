@@ -1,8 +1,8 @@
 import { Checkbox, Form } from 'antd';
 import FormList from 'antd/lib/form/FormList';
 import BN from 'bn.js';
-import { useCallback, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback, useMemo } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { CustomFormControlProps, Network, Token, TransferAsset } from '../../model';
@@ -17,7 +17,7 @@ export interface AvailableBalance {
   chainInfo?: TokenChainInfo;
 }
 
-type AssetGroupValue = TransferAsset<Exclude<Token, 'native'>>[];
+export type AssetGroupValue = TransferAsset<Exclude<Token, 'native'>>[];
 
 // eslint-disable-next-line complexity
 export function AssetGroup({
@@ -32,7 +32,6 @@ export function AssetGroup({
   balances: AvailableBalance[];
 }) {
   const { t } = useTranslation();
-  const [error, setError] = useState<string>('');
   const triggerChange = useCallback(
     (
       val: TransferAsset<Exclude<Token, 'native'>>,
@@ -59,56 +58,7 @@ export function AssetGroup({
 
   return (
     <>
-      <FormList
-        name={FORM_CONTROL.assets}
-        initialValue={value}
-        rules={[
-          {
-            validator(_, data: AssetGroupValue) {
-              const pass = data.filter((item) => !!item.checked).length > 0;
-              if (!pass) {
-                setError('You must select at least one of theses assets');
-                return Promise.reject();
-              } else {
-                setError('');
-                return Promise.resolve();
-              }
-            },
-            message: 'You must select at least one of theses assets',
-          },
-          {
-            validator(_, data: AssetGroupValue) {
-              const ring = data.find((item) => item.asset === 'ring');
-              const unit = ring?.unit ?? 'gwei';
-              const feeBn = new BN(toWei({ value: feeFormatted, unit }));
-              const maxRingBn = new BN(ringBalance?.max ?? '0');
-              const curRingBn = new BN(toWei({ value: ring?.amount, unit }));
-              // console.info(
-              //   '%c [ current, max, fee ]-86',
-              //   'font-size:13px; background:pink; color:#bf2c9f;',
-              //   curRingBn.toString(),
-              //   ring?.amount,
-              //   maxRingBn.toString(),
-              //   ringBalance?.max,
-              //   feeBn.toString()
-              // );
-
-              if (feeBn.add(curRingBn).gt(maxRingBn)) {
-                setError('The RING balance is not enough to cover the fee and transfer amount');
-                return Promise.reject();
-              }
-
-              if (feeBn.gt(maxRingBn)) {
-                setError('The RING balance is not enough to cover the fee.');
-                return Promise.reject();
-              }
-
-              setError('');
-              return Promise.resolve();
-            },
-          },
-        ]}
-      >
+      <FormList name={FORM_CONTROL.assets} initialValue={value}>
         {(fields) => (
           <>
             {/* eslint-disable-next-line complexity */}
@@ -120,7 +70,7 @@ export function AssetGroup({
               const unit = balance?.chainInfo?.decimal || 'gwei';
 
               return (
-                <div className="flex items-center" key={field.key}>
+                <div className="flex items-center" key={field.key + index}>
                   <Form.Item name={[field.name, 'asset']} fieldKey={[field.fieldKey, 'asset']} className="w-20">
                     <Checkbox
                       disabled={insufficient}
@@ -143,21 +93,44 @@ export function AssetGroup({
                       { required: !!target.checked, message: t('Transfer amount is required') },
                       {
                         validator(_, val) {
+                          const cur = new BN(toWei({ value: val, unit }));
+                          let pass = true;
+
+                          if (balance?.asset === 'ring') {
+                            pass = cur.gte(fee || new BN(0));
+                          }
+
+                          return pass ? Promise.resolve() : Promise.reject();
+                        },
+                        message: 'The transfer amount is not enough to cover the fee',
+                      },
+                      {
+                        validator(_, val) {
+                          const max = new BN(Web3.utils.fromWei(balance?.max + '' || '0', unit));
+                          const cur = new BN(toWei({ value: val, unit }));
+                          let pass = true;
+
+                          if (balance?.asset === 'ring') {
+                            pass = cur.lte(max.sub(new BN(fromWei({ value: fee || '50000000000' }))));
+                          }
+
+                          return pass ? Promise.resolve() : Promise.reject();
+                        },
+                        message: t(`The ring balance can't cover the fee and the transfer amount`),
+                      },
+                      {
+                        validator(_, val) {
                           const max = new BN(Web3.utils.fromWei(balance?.max + '' || '0', unit));
                           const cur = new BN(val);
-                          // console.info(
-                          //   `%c [ ${target.asset} amount validation AssetGroup ]`,
-                          //   'font-size:13px; background:lightgreen; color:black;',
-                          //   cur.toString(),
-                          //   unit,
-                          //   max.toString()
-                          // );
+                          let pass = true;
 
-                          return cur.lte(max.sub(new BN(fromWei({ value: fee || '50000000000' }))))
-                            ? Promise.resolve()
-                            : Promise.reject();
+                          if (balance?.asset !== 'ring') {
+                            pass = cur.lte(max);
+                          }
+
+                          return pass ? Promise.resolve() : Promise.reject();
                         },
-                        message: t('Insufficient balance'),
+                        message: t('Transfer amount must not be greater than the max balance'),
                       },
                     ]}
                   >
@@ -170,7 +143,6 @@ export function AssetGroup({
                         triggerChange({ ...target, amount }, index, value);
                       }}
                       step={100}
-                      precision={9}
                       className="flex-1"
                       size="large"
                     >
@@ -179,9 +151,9 @@ export function AssetGroup({
                         network={network}
                         size="large"
                         onClick={() => {
-                          // FIXME: treat the first one as the one to pay the fee
+                          // FIXME: trigger amount validation
                           const max =
-                            balance?.asset === balances[0].asset
+                            balance?.asset === 'ring'
                               ? new BN(balance?.max || '0').sub(fee || new BN(0))
                               : balance?.max;
                           const val = {
@@ -200,22 +172,17 @@ export function AssetGroup({
           </>
         )}
       </FormList>
-      {/* TODO: form list error tip */}
-      <span className="text-red-500">{t(error)}</span>
-
-      {ringBalance && (
-        <p
-          className={
-            fee && balances && fee.lt(new BN(toWei({ value: ringBalance.max })))
-              ? 'text-green-400'
-              : 'text-red-400 animate-pulse'
-          }
-        >
-          {t(`Cross-chain transfer fee {{fee}} RING.`, {
-            fee: fromWei({ value: fee, unit: ringBalance.chainInfo?.decimal ?? 'gwei' }),
-          })}
-        </p>
+      {!value?.filter((item) => !!item.checked).length && (
+        <span className="text-red-400">
+          <Trans>You must select at least one of theses assets</Trans>
+        </span>
       )}
+      {new BN(ringBalance?.max || '0').lt(fee || new BN(0)) && (
+        <span className="text-red-400">
+          <Trans>The ring balance it not enough to cover the fee</Trans>
+        </span>
+      )}
+      {insufficient && <span className="text-red-400">{t('The ring balance it not enough to cover the fee')}</span>}
     </>
   );
 }

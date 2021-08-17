@@ -82,10 +82,9 @@
   "The address is wrong, please fill in a {{type}} address of the {{network}} network.": "The address is wrong, please fill in a {{type}} address of the {{network}} network.",
   "The connected network is not the same as the network selected, do you want switch to the {{network}} network?": "The connected network is not the same as the network selected, do you want switch to the {{network}} network?",
   "The current network is connected to {{network}}": "The current network is connected to {{network}}",
-  "The ring balance it not enough to cover the fee": "The ring balance it not enough to cover the fee",
   "The sending address and the receiving address cannot be the same": "The sending address and the receiving address cannot be the same",
   "The transaction has been sent, please check the transfer progress in the cross-chain history.": "The transaction has been sent, please check the transfer progress in the cross-chain history.",
-  "The transfer amount is not enough cover the fee": "The transfer amount is not enough cover the fee",
+  "The transfer amount is not enough to cover the fee": "The transfer amount is not enough to cover the fee",
   "The transfer amount must be greater than the fee and less than or equal to the maximum": "The transfer amount must be greater than the fee and less than or equal to the maximum",
   "The transfer amount must less or equal than the balance": "The transfer amount must less or equal than the balance",
   "Time": "Time",
@@ -114,6 +113,6 @@
   "Guide": "Guide",
   "Cross-chain transfer fee {{fee}} RING.": "Cross-chain transfer fee {{fee}} RING.",
   "Test": "Test",
-  "The RING balance is not enough to cover the fee.": "The RING balance is not enough to cover the fee.",
+  "The ring balance it not enough to cover the fee": "The ring balance it not enough to cover the fee",
   "©{{year}} Darwinia": "©{{year}} Darwinia"
 }
