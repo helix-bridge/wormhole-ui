@@ -1,7 +1,7 @@
 import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import BN from 'bn.js';
-import { EMPTY, from, iif, NEVER, Observable, of, Subject, zip } from 'rxjs';
+import { EMPTY, forkJoin, from, iif, NEVER, Observable, of, Subject, zip } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
 import { catchError, delay, distinctUntilKeyChanged, finalize, map, retryWhen, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
@@ -131,24 +131,22 @@ const getFromEthereum: (cur: string, con: NetConfig) => Promise<Erc20Token[]> = 
 export function launchRegister(address: string, config: NetConfig): Observable<Tx> {
   const senderObs = from(getMetamaskActiveAccount());
   const symbolObs = from(getSymbolType(address, config));
+  const hasRegisteredObs = from(hasRegistered(address, config));
 
-  return from(hasRegistered(address, config)).pipe(
-    switchMap((has) =>
-      has
+  return forkJoin([senderObs, symbolObs, hasRegisteredObs]).pipe(
+    switchMap(([sender, { isString }, has]) => {
+      return has
         ? EMPTY
         : getContractTxObs(
             config.erc20Token.bankingAddress,
-            (contract) =>
-              zip(senderObs, symbolObs).pipe(
-                map(([sender, { isString }]) => {
-                  const register = isString ? contract.methods.registerToken : contract.methods.registerTokenBytes32;
+            (contract) => {
+              const register = isString ? contract.methods.registerToken : contract.methods.registerTokenBytes32;
 
-                  return register(address).send({ from: sender });
-                })
-              ),
+              return register(address).send({ from: sender });
+            },
             abi.bankErc20ABI
-          ).pipe(finalize(() => generateRegisterProof(address, config).subscribe((proof) => proofSubject.next(proof))))
-    )
+          ).pipe(finalize(() => generateRegisterProof(address, config).subscribe((proof) => proofSubject.next(proof))));
+    })
   );
 }
 

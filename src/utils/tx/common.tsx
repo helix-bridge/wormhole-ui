@@ -143,7 +143,8 @@ export function getContractTxObs(
         .catch((error: { code: number; message: string }) => {
           observer.error({ status: 'error', error: error.message });
         });
-    } catch (_) {
+    } catch (error) {
+      console.warn('%c contract tx observable error', 'font-size:13px; background:pink; color:#bf2c9f;', error);
       observer.error({ status: 'error', error: 'Contract construction/call failed!' });
     }
   });
