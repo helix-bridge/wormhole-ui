@@ -20,7 +20,7 @@ export function Destination({
   networks,
   onChange,
   value,
-  defaultLogo = 'image/eth-logo.svg',
+  defaultLogo = 'image/network.png',
   animationRandom: animationRadom = null,
 }: DestinationProps) {
   const { t } = useTranslation();

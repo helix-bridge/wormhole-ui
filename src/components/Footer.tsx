@@ -13,7 +13,7 @@ export function Footer({ network, theme, className = '' }: FooterProps) {
 
   return (
     <Layout.Footer
-      className={`flex items-center justify-between lg:px-40 px-4 text-gray-400 z-10 fixed bottom-0 left-0 right-0 py-4 ${className}`}
+      className={`flex items-center justify-between lg:px-40 px-4 text-gray-400 z-10 md:fixed bottom-0 left-0 right-0 py-4 ${className}`}
       style={{ background: '#2d2d2d' }}
     >
       <div className="md:flex md:gap-4 md:flex-wrap text-gray-400">

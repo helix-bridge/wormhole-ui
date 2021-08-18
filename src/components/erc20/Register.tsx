@@ -118,6 +118,7 @@ export function Register() {
   useEffect(() => {
     if (!canStart) {
       setRegisteredStatus(-1);
+      setToken(null);
       return;
     }
 
@@ -196,22 +197,20 @@ export function Register() {
             <Form.Item>
               <Spin size="small" className="w-full text-center"></Spin>
             </Form.Item>
-          ) : canStart ? (
-            <Form.Item
-              label={t('Token Info')}
-              style={{
-                display: form.getFieldError(['address']).length || !inputValue ? 'none' : 'block',
-              }}
-            >
-              <Descriptions bordered>
-                <Descriptions.Item label={t('Symbol')}>{token?.symbol}</Descriptions.Item>
-                <Descriptions.Item label={t('Decimals of Precision')}>{token?.decimals}</Descriptions.Item>
-              </Descriptions>
-            </Form.Item>
           ) : (
-            <Form.Item>
-              <div className="flex justify-center items-center w-full text-lg">{t('Coming Soon')}</div>
-            </Form.Item>
+            token && (
+              <Form.Item
+                label={t('Token Info')}
+                style={{
+                  display: form.getFieldError(['address']).length || !inputValue ? 'none' : 'block',
+                }}
+              >
+                <Descriptions bordered>
+                  <Descriptions.Item label={t('Symbol')}>{token?.symbol}</Descriptions.Item>
+                  <Descriptions.Item label={t('Decimals of Precision')}>{token?.decimals}</Descriptions.Item>
+                </Descriptions>
+              </Form.Item>
+            )
           )}
 
           <SubmitButton disabled={isLoading || registeredStatus !== 0} from={net} to={null}>
