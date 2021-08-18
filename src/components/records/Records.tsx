@@ -32,7 +32,7 @@ import { E2DRecord } from './E2DRecord';
 const { TabPane } = Tabs;
 const NETWORKS = [...NETWORK_GRAPH.keys()];
 
-const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list.length || 0;
+const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list?.length || 0;
 
 // eslint-disable-next-line complexity
 export function Records() {
