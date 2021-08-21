@@ -3,11 +3,12 @@ import { mount } from '@cypress/react';
 import { ThemeSwitch } from '../components/ThemeSwitch';
 import '../index.scss';
 import '../theme/antd/index.less';
-import { THEME } from '../config';
+import { NETWORK_DARK_THEME, THEME } from '../config';
 
 describe('render', () => {
   before(() => {
     window.less = {
+      // @ts-ignore
       modifyVars: () => {
         return Promise.resolve();
       },
@@ -31,6 +32,8 @@ describe('render', () => {
       </Suspense>
     );
 
-    cy.get('.ant-switch-checked').should('be.visible');
+    cy.get('.ant-switch-checked')
+      .should('be.visible')
+      .and('have.css', { 'background-color': NETWORK_DARK_THEME['pangolin']['@project-main-bg'] });
   });
 });
