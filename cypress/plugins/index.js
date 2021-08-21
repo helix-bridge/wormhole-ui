@@ -23,7 +23,13 @@ const cracoConf = require(path.join(__dirname, '../../craco.config.js'));
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
+  require('@carlos0202/cypress-metamask/plugins')(on);
   cracoPlugin(on, config, cracoConf);
+  on('before:browser:launch', (browser = {}, launchOptions) => {
+    launchOptions.args.push('--auto-open-devtools-for-tabs');
+
+    return launchOptions;
+  });
 
   return config;
-}
+};
