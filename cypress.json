@@ -12,5 +12,7 @@
     "fileServerFolder": "public"
   },
   "ignoreTestFiles": "*/examples/**",
-  "nodeVersion": "system"
+  "downloadsFolder": "./public/image",
+  "nodeVersion": "system",
+  "chromeWebSecurity": true
 }

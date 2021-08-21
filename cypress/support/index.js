@@ -15,10 +15,13 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands';
+// import '@carlos0202/cypress-metamask';
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
 Cypress.on('window:before:load', (window) => {
-  Object.defineProperty(window.navigator, 'language', { value: 'en' });
+  Object.defineProperty(window.navigator, 'language', { value: 'en-US' });
+  Object.defineProperty(window.navigator, 'languages', { value: ['en'] });
+  Object.defineProperty(window.navigator, 'accept_languages', { value: ['en'] });
 });
