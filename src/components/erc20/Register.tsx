@@ -169,6 +169,7 @@ export function Register() {
           <Form.Item
             name="address"
             label={t('Token Contract Address')}
+            validateFirst
             rules={[
               { required: true },
               {
@@ -184,10 +185,12 @@ export function Register() {
               size="large"
               disabled={!net.erc20Token.bankingAddress}
               onChange={(event) => {
-                const errors = form.getFieldError(['address']);
+                let value = event.target.value;
+                const isValid = isValidAddress(value, 'ethereum');
 
-                if (errors.length === 0) {
-                  setInputValue(event.target.value);
+                if (isValid) {
+                  value = !value.startsWith('0x') ? '0x' + value : value;
+                  setInputValue(value);
                 }
               }}
             />
