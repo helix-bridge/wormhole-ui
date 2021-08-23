@@ -8,4 +8,5 @@ export enum DarwiniaApiPath {
   tokenLock = 'ethereumBacking/tokenlock',
   locks = 'ethereumBacking/locks',
   issuingBurns = 'ethereumIssuing/burns',
+  issuingRegister = 'ethereumIssuing/register',
 }

@@ -1,14 +1,44 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import { RegisterStatus } from '../config';
-import { Erc20RegisterStatus, Erc20Token, Network, RequiredPartial } from '../model';
-import { getKnownErc20Tokens, StoredProof } from '../utils/erc20/token';
+import { Action, Erc20RegisterStatus, Erc20Token, Network, RequiredPartial } from '../model';
 import { getTokenBalance } from '../utils/erc20/meta';
+import { getKnownErc20Tokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
 
-export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'> & {
-  proof?: StoredProof;
-  confirmed?: 0 | 1;
+export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'>;
+
+export type ActionType = 'updateTokens' | 'updateProof' | 'switchToConfirmed';
+
+interface State {
+  tokens: MemoedTokenInfo[];
+  proofs: StoredProof[];
+}
+
+const initialState: State = {
+  tokens: [],
+  proofs: [],
 };
+
+function reducer(state = initialState, action: Action<ActionType, MemoedTokenInfo[] | StoredProof | string>) {
+  switch (action.type) {
+    case 'updateTokens':
+      return { ...state, tokens: action.payload as MemoedTokenInfo[] };
+    case 'updateProof':
+      return { ...state, proofs: [...state.proofs, action.payload as StoredProof] };
+    case 'switchToConfirmed': {
+      const address = action.payload as string;
+      const index = state.tokens.findIndex((item) => item.address === address);
+      const data = [...state.tokens];
+
+      if (index > -1) {
+        data[index].status = RegisterStatus.registered;
+      }
+      return { ...state, tokens: data };
+    }
+    default:
+      return state;
+  }
+}
 
 /**
  *
@@ -17,21 +47,27 @@ export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'dec
  */
 export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatus = RegisterStatus.unregister) => {
   const [loading, setLoading] = useState(true);
-  const [allTokens, setAllTokens] = useState<MemoedTokenInfo[]>([]);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const updateTokens = useCallback(
+    (tokens: MemoedTokenInfo[]) => dispatch({ payload: tokens, type: 'updateTokens' }),
+    []
+  );
+  const addKnownProof = useCallback((proofs: StoredProof) => dispatch({ payload: proofs, type: 'updateProof' }), []);
+  const switchToConfirmed = useCallback((token: string) => dispatch({ payload: token, type: 'switchToConfirmed' }), []);
   const { accounts } = useApi();
   const { address: currentAccount } = (accounts || [])[0] ?? '';
   const refreshTokenBalance = useCallback(
     async (tokenAddress: string) => {
       const balance = await getTokenBalance(tokenAddress, currentAccount, true);
-      const tokens = [...allTokens];
+      const tokens = [...state.tokens];
       const index = tokens.findIndex((item) => item.address === tokenAddress);
 
       if (index > 0) {
         tokens[index].balance = balance;
-        setAllTokens(tokens);
+        updateTokens(tokens);
       }
     },
-    [allTokens, currentAccount]
+    [currentAccount, updateTokens, state.tokens]
   );
 
   useEffect(() => {
@@ -42,7 +78,7 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
         const all = (await getKnownErc20Tokens(currentAccount, network)) as Erc20Token[];
         const tokens = status > 0 ? all.filter((item) => item.status && +item.status === status) : all;
 
-        setAllTokens(tokens);
+        updateTokens(tokens);
       } catch (error) {
         console.warn(
           '%c [ error in useAllToken hook ]-56',
@@ -53,7 +89,14 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
 
       setLoading(false);
     })();
-  }, [currentAccount, network, status]);
+  }, [currentAccount, network, updateTokens, status]);
 
-  return { loading, allTokens, setAllTokens, refreshTokenBalance };
+  return {
+    ...state,
+    loading,
+    updateTokens,
+    addKnownProof,
+    switchToConfirmed,
+    refreshTokenBalance,
+  };
 };

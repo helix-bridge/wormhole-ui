@@ -1,13 +1,14 @@
 import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import BN from 'bn.js';
-import { EMPTY, forkJoin, from, iif, NEVER, Observable, of, Subject, zip } from 'rxjs';
-import { fromFetch } from 'rxjs/fetch';
-import { catchError, delay, distinctUntilKeyChanged, finalize, map, retryWhen, switchMap, tap } from 'rxjs/operators';
+import { memoize } from 'lodash';
+import { EMPTY, forkJoin, from, NEVER, Observable, of, zip } from 'rxjs';
+import { catchError, delay, map, retryWhen, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
-import { abi, NETWORK_CONFIG, RegisterStatus } from '../../config';
-import { Erc20Token, NetConfig, Network, Tx } from '../../model';
+import { abi, DarwiniaApiPath, LONG_DURATION, NETWORK_CONFIG, RegisterStatus } from '../../config';
+import { Erc20RegisterProof, Erc20RegisterProofRes, Erc20Token, NetConfig, Network, Tx } from '../../model';
 import {
+  apiUrl,
   ClaimNetworkPrefix,
   encodeBlockHeader,
   encodeMMRRootMessage,
@@ -16,19 +17,18 @@ import {
   MMRProof,
   toUpperCaseFirst,
 } from '../helper';
-import { getMetamaskActiveAccount, isNetworkMatch } from '../network';
+import { getAvailableNetworks, getMetamaskActiveAccount, isNetworkMatch } from '../network';
+import { rxGet } from '../records';
 import { getContractTxObs } from '../tx';
 import { getNameAndLogo, getSymbolAndDecimals, getTokenBalance, getUnitFromAddress, tokenInfoGetter } from './meta';
 
-export type StoredProof = MMRProof & Erc20Token & { eventsProofStr: string };
+export type StoredProof = {
+  mmrProof: MMRProof;
+  registerProof: Erc20RegisterProof;
+  eventsProof: string;
+};
 
-const proofSubject = new Subject<StoredProof>();
 const proofMemo: StoredProof[] = [];
-
-/**
- * proof events stream
- */
-export const proofObservable = proofSubject.asObservable().pipe(distinctUntilKeyChanged('source'));
 
 const getTokenInfo = async (tokenAddress: string, config: NetConfig) => {
   const { symbol = '', decimals = 0 } = await tokenInfoGetter(tokenAddress, config);
@@ -145,7 +145,7 @@ export function launchRegister(address: string, config: NetConfig): Observable<T
               return register(address).send({ from: sender });
             },
             abi.bankErc20ABI
-          ).pipe(finalize(() => generateRegisterProof(address, config).subscribe((proof) => proofSubject.next(proof))));
+          );
     })
   );
 }
@@ -168,36 +168,53 @@ export const getSymbolType: (address: string, config: NetConfig) => Promise<{ sy
     }
   };
 
-const loopQuery = (url: string) => {
-  return fromFetch(url, { selector: (response) => response.json() }).pipe(
-    map(({ data }) => {
-      if (!data || !data.mmr_root || !data.signatures) {
-        const msg = `The ${url} api has no result, refetch it after 5 seconds`;
+export const getDarwiniaApiObs = memoize((network: Network) => {
+  const targetConfig = getAvailableNetworks(network);
+  const provider = new WsProvider(targetConfig?.rpc);
+  const apiObs = from(
+    ApiPromise.create({
+      provider,
+      typesBundle: typesBundleForPolkadotApps,
+    })
+  );
+  return apiObs;
+});
 
-        // console.info(msg);
+/**
+ * @description - 1. querying proof of the register token until the get it.
+ * 2. calculate mpt proof and mmr proof then combine them together
+ * 3. cache the result and emit it to proof subject.
+ */
+export const getRegisterProof: (address: string, config: NetConfig) => Observable<StoredProof> = (
+  address: string,
+  config: NetConfig
+) => {
+  const proofMemoItem = proofMemo.find((item) => item.registerProof.source === address);
+
+  if (proofMemoItem) {
+    return of(proofMemoItem);
+  }
+
+  const apiObs = getDarwiniaApiObs(config.name);
+
+  return rxGet<Erc20RegisterProofRes>({
+    url: apiUrl(config.api.dapp, DarwiniaApiPath.issuingRegister),
+    params: { source: address },
+  }).pipe(
+    map((data) => {
+      if (!data || !data.mmr_root || !data.signatures) {
+        const msg = `The proof of the register token address(${address}) is null, refetch it after ${LONG_DURATION} seconds`;
+
         throw new Error(msg);
       }
 
       return data;
     }),
-    // eslint-disable-next-line no-magic-numbers
-    retryWhen((error) => error.pipe(delay(5000)))
-  );
-};
-
-/**
- * @description - 1. fetch block hash from server, if block hash has not generated yet, send request every five seconds.
- * 2. calculate mpt proof and mmr proof then combine them together
- * 3. cache the result and emit it to proof subject.
- */
-const generateRegisterProof: (address: string, config: NetConfig) => Observable<StoredProof> = (
-  address: string,
-  config: NetConfig
-) => {
-  return loopQuery(`${config.api.dapp}/api/ethereumIssuing/register?source=${address}`).pipe(
-    switchMap((data) => {
-      const { block_hash, block_num, mmr_index } = data;
-      const mptProof = from(getMPTProof(block_hash, config.erc20Token.proofAddress)).pipe(
+    retryWhen((error) => error.pipe(delay(LONG_DURATION))),
+    switchMap((registerProof) => {
+      const { block_hash, block_num, mmr_index } = registerProof;
+      const mptProof = apiObs.pipe(
+        switchMap((api) => getMPTProof(api, block_hash, config.erc20Token.proofAddress)),
         map((proof) => proof.toHex()),
         catchError((err) => {
           console.warn(
@@ -210,14 +227,7 @@ const generateRegisterProof: (address: string, config: NetConfig) => Observable<
           return NEVER;
         })
       );
-      const provider = new WsProvider(config.rpc);
-      const apiObs = from(
-        ApiPromise.create({
-          provider,
-          typesBundle: typesBundleForPolkadotApps,
-        })
-      );
-      const mmrProof = apiObs.pipe(switchMap((api) => getMMRProof(api, block_num, mmr_index, block_hash))).pipe(
+      const mmr = apiObs.pipe(switchMap((api) => getMMRProof(api, block_num, mmr_index, block_hash))).pipe(
         catchError((err) => {
           console.warn(
             '%c [ get MMR proof error ]-228',
@@ -232,31 +242,14 @@ const generateRegisterProof: (address: string, config: NetConfig) => Observable<
         })
       );
 
-      return zip(mptProof, mmrProof, (eventsProofStr, proof) => ({
-        ...data,
-        ...proof,
-        eventsProofStr,
+      return zip(mptProof, mmr, (eventsProof, mmrProof) => ({
+        registerProof,
+        mmrProof,
+        eventsProof,
       }));
     }),
     tap((proof) => proofMemo.push(proof))
   );
-};
-
-/**
- * @description - Check register proof in cache, if exists emit it directly, otherwise get it through api request.
- * @params {Address} address - token address
- */
-export const popupRegisterProof = (address: string, config: NetConfig) => {
-  const DELAY = 2000;
-  const proof = proofMemo.find((item) => item.source === address);
-  const fromQuery = generateRegisterProof(address, config);
-  const fromMemo = of(proof).pipe(delay(DELAY));
-
-  return iif(() => !!proof, fromMemo, fromQuery).subscribe((pro) => {
-    if (pro) {
-      proofSubject.next(pro);
-    }
-  });
 };
 
 /**
@@ -313,8 +306,10 @@ export const hasRegistered: (address: string, config: NetConfig) => Promise<bool
   return !!status;
 };
 
-export function confirmRegister(proof: StoredProof & Record<string, string>, config: NetConfig): Observable<Tx> {
-  const { signatures, mmr_root, mmr_index, block_header, peaks, siblings, eventsProofStr } = proof;
+export function confirmRegister(proof: StoredProof, config: NetConfig): Observable<Tx> {
+  const { eventsProof, mmrProof, registerProof } = proof;
+  const { signatures, mmr_root, mmr_index, block_header } = registerProof;
+  const { peaks, siblings } = mmrProof;
   const senderObs = from(getMetamaskActiveAccount());
   const mmrRootMessage = encodeMMRRootMessage({
     root: mmr_root,
@@ -338,7 +333,7 @@ export function confirmRegister(proof: StoredProof & Record<string, string>, con
               blockHeader.toHex(),
               peaks,
               siblings,
-              eventsProofStr
+              eventsProof
             )
             .send({ from: sender }),
         abi.bankErc20ABI

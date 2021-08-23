@@ -7,7 +7,7 @@ import { DownIcon } from '../icons';
 interface DestinationProps {
   extra?: string | JSX.Element;
   networks: NetConfig[];
-  title: string;
+  title?: string;
   onChange?: (net: NetConfig | null) => void;
   value?: NetConfig | null;
   defaultLogo?: string;

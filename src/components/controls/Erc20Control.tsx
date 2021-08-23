@@ -17,17 +17,17 @@ interface Erc20ControlProps extends CustomFormControlProps<Erc20Token | null> {
 
 export function Erc20Control({ network, value, onChange, updateBalance }: PropsWithRef<Erc20ControlProps>) {
   const { t } = useTranslation();
-  const { loading, allTokens, refreshTokenBalance } = useKnownErc20Tokens(network);
-  const data = groupBy(allTokens, (token) => RegisterStatus[token.status ?? 0]);
+  const { loading, tokens, refreshTokenBalance } = useKnownErc20Tokens(network);
+  const data = groupBy(tokens, (token) => RegisterStatus[token.status ?? 0]);
   const triggerChange = useCallback(
     (val: string) => {
       if (onChange) {
-        const result = allTokens.find((item) => item.address === val) ?? null;
+        const result = tokens.find((item) => item.address === val) ?? null;
 
         onChange(result as Erc20Token);
       }
     },
-    [allTokens, onChange]
+    [tokens, onChange]
   );
   const option = useCallback(
     (token: Erc20Token, disabled = false) => (
