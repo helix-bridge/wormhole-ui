@@ -21,7 +21,7 @@ export function RecipientItem({
   const type = isPolkadot ? to.name : 'ethereum';
 
   return (
-    <Form.Item>
+    <Form.Item className="mb-0">
       <Form.Item
         label={t('Recipient')}
         name={FORM_CONTROL.recipient}
@@ -47,6 +47,7 @@ export function RecipientItem({
           },
         ]}
         extra={to ? extraTip : ''}
+        className="mb-2"
       >
         <Input
           onChange={(event) => {

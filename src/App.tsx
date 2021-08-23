@@ -69,7 +69,7 @@ function App() {
             <Dropdown
               overlay={
                 <Menu>
-                  <Menu.Item>
+                  <Menu.Item key="cross-chain">
                     <Link to={Path.root}>{t('Cross-chain')}</Link>
                   </Menu.Item>
                   <Menu.Item key="submit">
