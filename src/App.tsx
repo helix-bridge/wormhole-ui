@@ -17,7 +17,6 @@ const { Header, Content } = Layout;
 const navs: { label: string; path: Path | string }[] = [
   { label: 'Cross-chain', path: Path.root },
   { label: 'Token Manager', path: Path.register },
-  { label: 'Airdrop', path: Path.airdrop },
   { label: 'Guide', path: 'xxx' },
 ];
 
@@ -28,7 +27,6 @@ function App() {
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
   const history = useHistory();
-  const [active, setActive] = useState(location.pathname);
   const net = 'pangolin';
 
   return (
@@ -53,11 +51,10 @@ function App() {
             {navs.map((nav) => (
               <span
                 onClick={() => {
-                  setActive(nav.path);
                   history.push(nav.path);
                 }}
                 className={`${
-                  nav.path === active ? 'shadow-mock-bottom-border' : ''
+                  nav.path === location.pathname ? 'shadow-mock-bottom-border' : ''
                 } transition-all duration-300 ease-in-out text-gray-300 hover:text-gray-100 cursor-pointer`}
                 key={nav.label}
               >
@@ -66,37 +63,34 @@ function App() {
             ))}
           </div>
 
-          <Dropdown
-            overlay={
-              <Menu>
-                <Menu.Item>
-                  <Link to={Path.root}>{t('Cross-chain')}</Link>
-                </Menu.Item>
-                <Menu.Item key="submit">
-                  <Link to={Path.register}>{t('Token Manager')}</Link>
-                </Menu.Item>
-                <Menu.Item key="claim">
-                  <Link to={Path.airdrop}>{t('Airdrop')}</Link>
-                </Menu.Item>
-                <Menu.Item key="guide">
-                  <Link to="xxx">{t('Guide')}</Link>
-                </Menu.Item>
-              </Menu>
-            }
-            className="lg:hidden"
-          >
-            <Button
-              type="link"
-              icon={<UnorderedListOutlined style={{ color: theme === THEME.LIGHT ? 'white' : 'inherit' }} />}
-              size="large"
-              className="flex items-center justify-center"
-            ></Button>
-          </Dropdown>
-
           <div className="flex justify-end items-center md:pl-8">
             <Connection />
 
-            <div className="flex flex-col items-center gap-2 sm:ml-4">
+            <Dropdown
+              overlay={
+                <Menu>
+                  <Menu.Item>
+                    <Link to={Path.root}>{t('Cross-chain')}</Link>
+                  </Menu.Item>
+                  <Menu.Item key="submit">
+                    <Link to={Path.register}>{t('Token Manager')}</Link>
+                  </Menu.Item>
+                  <Menu.Item key="guide">
+                    <Link to="xxx">{t('Guide')}</Link>
+                  </Menu.Item>
+                </Menu>
+              }
+              className="lg:hidden"
+            >
+              <Button
+                type="link"
+                icon={<UnorderedListOutlined style={{ color: theme === THEME.LIGHT ? 'white' : 'inherit' }} />}
+                size="large"
+                className="flex items-center justify-center sm:mx-4"
+              ></Button>
+            </Dropdown>
+
+            <div className="flex flex-col items-center gap-2">
               {!isDev && (
                 <Tooltip
                   title={t('{{enable}} the test networks to appear in the network selection panel', {

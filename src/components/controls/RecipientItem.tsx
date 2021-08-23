@@ -21,7 +21,7 @@ export function RecipientItem({
   const type = isPolkadot ? to.name : 'ethereum';
 
   return (
-    <Form.Item className="mb-0">
+    <Form.Item>
       <Form.Item
         label={t('Recipient')}
         name={FORM_CONTROL.recipient}
@@ -57,7 +57,7 @@ export function RecipientItem({
           size="large"
         />
       </Form.Item>
-      {lock && <span className="text-gray-300 pl-2">{t('You must select the destination network to unlock')}</span>}
+      {lock && <span className="text-gray-300">{t('You must select the destination network to unlock')}</span>}
     </Form.Item>
   );
 }
