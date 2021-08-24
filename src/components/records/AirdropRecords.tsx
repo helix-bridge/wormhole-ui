@@ -1,10 +1,8 @@
 import { CheckCircleFilled, CloseCircleOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
 import BN from 'bn.js';
 import { format, fromUnixTime } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useHistory } from 'react-router-dom';
 import { map } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
 import Web3 from 'web3';
@@ -25,7 +23,6 @@ const SNAPSHOT_TIMESTAMP = 1584683400;
 export function AirdropRecords({ from, to }: AirdropProps) {
   const { t } = useTranslation();
   const { accounts } = useApi();
-  const history = useHistory();
   const { address: sender } = (accounts || [])[0] ?? '';
   const [claimAmount, setClaimAmount] = useState(new BN(0));
   const [target, setTarget] = useState('');
@@ -91,16 +88,6 @@ export function AirdropRecords({ from, to }: AirdropProps) {
           )
         }
       ></Des>
-
-      <Button
-        onClick={() => {
-          history.goBack();
-        }}
-        className="w-full"
-        size="large"
-      >
-        {t('Go Back')}
-      </Button>
     </>
   );
 }
