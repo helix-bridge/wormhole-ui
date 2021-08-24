@@ -311,9 +311,10 @@ export function confirmRegister(proof: StoredProof, config: NetConfig): Observab
   const { signatures, mmr_root, mmr_index, block_header } = registerProof;
   const { peaks, siblings } = mmrProof;
   const senderObs = from(getMetamaskActiveAccount());
+  const toConfig = getAvailableNetworks(config.name)!;
   const mmrRootMessage = encodeMMRRootMessage({
     root: mmr_root,
-    prefix: toUpperCaseFirst(config.name) as ClaimNetworkPrefix,
+    prefix: toUpperCaseFirst(toConfig.name) as ClaimNetworkPrefix,
     methodID: '0x479fbdf9',
     index: +mmr_index,
   });
