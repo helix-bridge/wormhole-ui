@@ -15,6 +15,7 @@ import {
   isPolkadotNetwork,
   switchMetamaskNetwork,
 } from '../utils';
+import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
   accounts: IAccountMeta[] | null;
@@ -43,7 +44,7 @@ const initialState: StoreState = {
   accounts: null,
   networkStatus: 'pending',
   isDev,
-  enableTestNetworks: isDev,
+  enableTestNetworks: !!getInitialSetting('enableTestNetworks', isDev),
 };
 
 // eslint-disable-next-line complexity, @typescript-eslint/no-explicit-any
@@ -91,10 +92,10 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [state, dispatch] = useReducer(accountReducer, initialState);
   const switchNetwork = useCallback((payload: Network | null) => dispatch({ type: 'switchNetwork', payload }), []);
   const setAccounts = useCallback((payload: IAccountMeta[]) => dispatch({ type: 'setAccounts', payload }), []);
-  const setEnableTestNetworks = useCallback(
-    (payload: boolean) => dispatch({ type: 'setEnableTestNetworks', payload }),
-    []
-  );
+  const setEnableTestNetworks = useCallback((payload: boolean) => {
+    dispatch({ type: 'setEnableTestNetworks', payload });
+    updateStorage({ enableTestNetworks: payload });
+  }, []);
   const setNetworkStatus = useCallback(
     (payload: ConnectStatus) => dispatch({ type: 'updateNetworkStatus', payload }),
     []

@@ -1,25 +1,14 @@
+import store from 'store';
 import { StorageInfo } from '../../model';
 
 export const STORAGE_KEY = 'wormhole';
 
 export function updateStorage(data: Partial<StorageInfo>): void {
-  if (localStorage) {
-    const origin = readStorage();
+  const origin = store.get(STORAGE_KEY);
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...origin, ...data }));
-  }
+  store.set(STORAGE_KEY, { ...origin, ...data });
 }
 
 export function readStorage(): StorageInfo {
-  if (localStorage) {
-    const info = localStorage.getItem(STORAGE_KEY);
-
-    try {
-      return JSON.parse(info || '{}');
-    } catch (err) {
-      console.error('🚀 ~ file: storage.ts ~ line 20 ~ readStorage ~ err', err);
-    }
-  }
-
-  return {};
+  return store.get(STORAGE_KEY);
 }
