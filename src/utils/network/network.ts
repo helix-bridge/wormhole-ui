@@ -25,7 +25,7 @@ function isSpecifyNetworkType(type: NetworkCategory) {
       const name = byNetworkAlias(network);
 
       console.warn(
-        `🚀 ~ Can not find the network config by: ${network}. Treat it as an alias, find the a network named ${name} by it `
+        `🚀 ~ Can not find the network config by: ${network}. Treat it as an alias, find a network named ${name} by it `
       );
       if (name) {
         config = findBy(name);

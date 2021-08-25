@@ -115,7 +115,7 @@ Some cross-chain transfers require special conditions, e.g.
 
 When the transfer amount is filled in, if the authorization amount is not sufficient, the following error will appear. This is usually the case when transferring funds for the first time using an account.
 
-![e2d-approve](./screenshot/e2d-approve.png)
+![e2d-approve](./doc/screenshot/e2d-approve.png)
 
 ### ERC20
 

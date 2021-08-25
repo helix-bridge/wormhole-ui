@@ -4,7 +4,7 @@ import { Button, Descriptions, Form, Radio, Select, Tooltip } from 'antd';
 import BN from 'bn.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TFunction, Trans, useTranslation } from 'react-i18next';
-import { Observable } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
@@ -156,7 +156,7 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
         };
       } else {
         fn = () => (data: BackingLockNative) => {
-          const { assets } = data;
+          const { assets, sender } = data;
           const assetsToSend = assets?.map((item) => {
             const { asset, amount, checked } = item as Required<TransferAsset<D2EAsset>>;
             const unit = getChainInfo(asset as Token)?.decimal || 'gwei';
@@ -170,13 +170,13 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
               hashType: 'block',
               onDisappear: () => {
                 form.setFieldsValue({
-                  [FORM_CONTROL.sender]: data.sender,
+                  [FORM_CONTROL.sender]: sender,
                   [FORM_CONTROL.assets]: [
                     { asset: 'ring', amount: '', checked: true },
                     { asset: 'kton', amount: '' },
                   ],
                 });
-                getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
+                getBalances(sender).then(setAvailableBalances);
               },
             })({ ...data, assets: assetsToSend }),
             api!
@@ -190,7 +190,9 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
   );
 
   useEffect(() => {
-    getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
+    const sub$$ = from(getBalances(form.getFieldValue(FORM_CONTROL.sender))).subscribe(setAvailableBalances);
+
+    return () => sub$$.unsubscribe();
   }, [form, getBalances]);
 
   // eslint-disable-next-line complexity
@@ -206,8 +208,12 @@ export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
       ],
       [FORM_CONTROL.assetType]: !type || type === 'darwinia' ? D2EAssetEnum.native : type,
     });
-    getFee(api).then((crossFee) => setFee(crossFee));
+
+    const sub$$ = from(getFee(api)).subscribe((crossFee) => setFee(crossFee));
+
     updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
+
+    return () => sub$$.unsubscribe();
   }, [form, api, accounts, updateSubmit, updateDeparture]);
 
   useEffect(() => {
