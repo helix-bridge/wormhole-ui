@@ -34,7 +34,7 @@ function App() {
     <Layout className="min-h-screen overflow-scroll">
       <Header
         className="fixed left-0 right-0 top-0 z-10 flex items-center justify-between sm:px-8 px-2"
-        style={{ marginTop: -1 }}
+        style={{ marginTop: -1, background: 'transparent' }}
       >
         <div className="flex items-center gap-4">
           <Link to={Path.root}>
@@ -122,7 +122,7 @@ function App() {
         </div>
       </Header>
 
-      <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-24 sm:my-20">
+      <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-24 sm:my-20 z-10">
         <BridgeStatus className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow max-w-full mb-8" />
         <TransitionGroup>
           <CSSTransition in={true} key={location.key} timeout={300} classNames="fade">
