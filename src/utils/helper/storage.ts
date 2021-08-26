@@ -10,5 +10,5 @@ export function updateStorage(data: Partial<StorageInfo>): void {
 }
 
 export function readStorage(): StorageInfo {
-  return store.get(STORAGE_KEY);
+  return store.get(STORAGE_KEY) || {};
 }

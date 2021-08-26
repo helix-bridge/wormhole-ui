@@ -5,7 +5,7 @@
   "scripts": {
     "start": "PORT=3007 craco start",
     "start:dev": "PORT=3007 REACT_APP_HOST_TYPE=dev craco start",
-    "build": "CI=false GENERATE_SOURCEMAP=false craco build --max_old_space_size=2048",
+    "build": "CI=false craco build --max_old_space_size=2048",
     "test:unit": "REACT_APP_HOST_TYPE=cy cypress open-ct",
     "test:e2e": "REACT_APP_HOST_TYPE=cy cypress open",
     "eject": "react-scripts eject",
