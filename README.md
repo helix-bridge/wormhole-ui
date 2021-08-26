@@ -2,6 +2,10 @@
 
 [中文](./doc/README_ZH.md)
 
+[For Developer](./DEV.md)
+
+[中文开发文档](./doc/DEV_ZH.md)
+
 ---
 
 ## Definition of Terms

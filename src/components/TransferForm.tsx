@@ -8,8 +8,8 @@ import { BridgeFormProps, Bridges, NetConfig, Network, TransferFormValues, Trans
 import { empty, getInitialSetting, getNetworkByName } from '../utils';
 import { Airport } from './Airport';
 import { Nets } from './controls/Nets';
-import { Darwinia } from './departure/Darwinia';
-import { Ethereum } from './departure/Ethereum';
+import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
+import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
 type Departures = { [key in Network]?: FunctionComponent<BridgeFormProps & Bridges> };
@@ -32,10 +32,13 @@ const initTransfer: () => TransferNetwork = () => {
 const TRANSFER = initTransfer();
 
 const DEPARTURES: Departures = {
-  ethereum: Ethereum,
-  darwinia: Darwinia,
+  ethereum: Ethereum2Darwinia,
+  darwinia: Darwinia2Ethereum,
 };
 
+/**
+ * TODO: add departures to network_graph config
+ */
 const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<BridgeFormProps & Bridges> = (from) => {
   if (!from) {
     return () => <></>;

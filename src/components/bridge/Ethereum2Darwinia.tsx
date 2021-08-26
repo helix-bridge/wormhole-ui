@@ -284,7 +284,7 @@ function createErc20Tx(value: RedeemErc20, after: AfterTxCreator): Observable<Tx
 }
 
 // eslint-disable-next-line complexity
-export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
+export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(BN_ZERO);
   const [max, setMax] = useState<BN | null>(null);

@@ -94,7 +94,7 @@ function ethereumBackingLockErc20(value: BackingLockERC20, after: AfterTxCreator
 }
 
 // eslint-disable-next-line complexity
-export function Darwinia({ form, setSubmit }: BridgeFormProps<D2E>) {
+export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
   const { t } = useTranslation();
   const { accounts, api, chain } = useApi();
   const [assetType, setAssetType] = useState<D2EAssetEnum>(() => {
