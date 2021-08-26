@@ -47,6 +47,7 @@ export function RecipientItem({
           },
         ]}
         extra={to ? extraTip : ''}
+        className="mb-2"
       >
         <Input
           onChange={(event) => {
@@ -57,7 +58,7 @@ export function RecipientItem({
           size="large"
         />
       </Form.Item>
-      {lock && <span className="text-gray-300 pl-2">{t('You must select the destination network to unlock')}</span>}
+      {lock && <span className="text-gray-300">{t('You must select the destination network to unlock')}</span>}
     </Form.Item>
   );
 }

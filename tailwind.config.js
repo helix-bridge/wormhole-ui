@@ -2,28 +2,44 @@ module.exports = {
   darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {
-      // animation: {
-      //   "ra-1": "animate-arrow-1 1s ease-in-out infinite",
-      //   "ra-2": "animate-arrow-2 1s ease-in-out infinite 0.1s",
-      //   "ra-3": "animate-arrow-3 1s ease-in-out infinite 0.2s",
-      // },
-      // keyframes: {
-      //   'right-arrow-1': {
-      //     '0%': { transform: 'translateX(-40px);opacity: 0;' },
-      //     '70%': { transform: 'translateX(0px);opacity: 1;' },
-      //     '100%': { transform: 'translateX(0px);opacity: 1;' },
-      //   },
-      //   'right-arrow-2': {
-      //     '0%': { transform: 'translateX(-20px);opacity: 0;' },
-      //     '70%': { transform: 'translateX(0px);opacity: .5;' },
-      //     '100%': { transform: 'translateX(0px);opacity: .5;' },
-      //   },
-      //   'right-arrow-3': {
-      //     '0%': { transform: 'translateX(-10px);opacity: 0;' },
-      //     '70%': { transform: 'translateX(0px);opacity: .3;' },
-      //     '100%': { transform: 'translateX(0px);opacity: .3;' },
-      //   },
-      // },
+      animation: {
+        whirl: 'whirl 1s linear',
+        'whirl-reverse': 'whirl-reverse 1s linear',
+        //   "ra-1": "animate-arrow-1 1s ease-in-out infinite",
+        //   "ra-2": "animate-arrow-2 1s ease-in-out infinite 0.1s",
+        //   "ra-3": "animate-arrow-3 1s ease-in-out infinite 0.2s",
+      },
+      keyframes: {
+        whirl: {
+          '0%': { transform: 'rotateY(0deg)', opacity: 1 },
+          '25%': { transform: 'rotateY(90deg)', opacity: 0.3 },
+          '50%': { transform: 'rotateY(120deg)', opacity: 0 },
+          '75%': { transform: 'rotateY(150deg)', opacity: 0.3 },
+          '100%': { transform: 'rotateY(180deg)', opacity: 1 },
+        },
+        'whirl-reverse': {
+          '0%': { transform: 'rotateY(180deg)', opacity: 1 },
+          '25%': { transform: 'rotateY(150deg)', opacity: 0.3 },
+          '50%': { transform: 'rotateY(120deg)', opacity: 0 },
+          '75%': { transform: 'rotateY(90deg)', opacity: 0.3 },
+          '100%': { transform: 'rotateY(180deg)', opacity: 1 },
+        },
+        //   'right-arrow-1': {
+        //     '0%': { transform: 'translateX(-40px);opacity: 0;' },
+        //     '70%': { transform: 'translateX(0px);opacity: 1;' },
+        //     '100%': { transform: 'translateX(0px);opacity: 1;' },
+        //   },
+        //   'right-arrow-2': {
+        //     '0%': { transform: 'translateX(-20px);opacity: 0;' },
+        //     '70%': { transform: 'translateX(0px);opacity: .5;' },
+        //     '100%': { transform: 'translateX(0px);opacity: .5;' },
+        //   },
+        //   'right-arrow-3': {
+        //     '0%': { transform: 'translateX(-10px);opacity: 0;' },
+        //     '70%': { transform: 'translateX(0px);opacity: .3;' },
+        //     '100%': { transform: 'translateX(0px);opacity: .3;' },
+        //   },
+      },
       backgroundImage: (_) => ({
         darwinia: 'linear-gradient(-45deg, #fe3876 0%, #7c30dd 71%, #3a30dd 100%)',
       }),
@@ -36,6 +52,9 @@ module.exports = {
       borderRadius: {
         xl: '10px',
         lg: '8px',
+      },
+      boxShadow: {
+        'mock-bottom-border': '0px 10px 1px -8px #ccc',
       },
       colors: (_) => ({
         pangolin: {

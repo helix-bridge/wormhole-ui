@@ -1,5 +1,5 @@
 import { Dropdown, Menu, Tag } from 'antd';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NetConfig } from '../../model';
 import { DownIcon } from '../icons';
@@ -7,10 +7,11 @@ import { DownIcon } from '../icons';
 interface DestinationProps {
   extra?: string | JSX.Element;
   networks: NetConfig[];
-  title: string;
+  title?: string;
   onChange?: (net: NetConfig | null) => void;
   value?: NetConfig | null;
   defaultLogo?: string;
+  animationRandom?: number | null;
 }
 
 export function Destination({
@@ -19,10 +20,28 @@ export function Destination({
   networks,
   onChange,
   value,
-  defaultLogo = 'image/eth-logo.svg',
+  defaultLogo = 'image/network.png',
+  animationRandom: animationRadom = null,
 }: DestinationProps) {
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
+  const whirl = 'animate-whirl';
+  const whirlReverse = 'animate-whirl-reverse';
+
+  useEffect(() => {
+    const textRef = panelRef.current?.querySelector(`.bg-${value?.name}`);
+
+    panelRef.current?.classList.remove(whirl);
+    textRef?.classList.remove(whirlReverse);
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        panelRef.current?.classList.add(whirl);
+        textRef?.classList.add(whirlReverse);
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animationRadom]);
 
   return (
     <div className="flex-1">

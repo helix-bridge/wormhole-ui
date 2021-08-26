@@ -15,8 +15,6 @@ import stepInactiveEthereumIcon from './tx-image/tx-step-eth-inactive-icon.svg';
 import stepRelayIcon from './tx-image/tx-step-relay-icon.svg';
 import stepInactiveRelayIcon from './tx-image/tx-step-relay-inactive-icon.svg';
 import stepStartIcon from './tx-image/tx-step-start-icon.svg';
-import stepTronIcon from './tx-image/tx-step-tron-icon.svg';
-import stepInactiveTronIcon from './tx-image/tx-step-tron-inactive-icon.svg';
 
 interface ProgressInfo {
   network: Network;
@@ -45,8 +43,6 @@ export const txProgressIcon = {
   stepInactiveEthereumIcon,
   stepDarwiniaIcon,
   stepInactiveDarwiniaIcon,
-  stepTronIcon,
-  stepInactiveTronIcon,
   stepCrabIcon,
   stepInactiveCrabIcon,
   stepRelayIcon,

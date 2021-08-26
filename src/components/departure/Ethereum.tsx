@@ -32,6 +32,7 @@ import {
   fromWei,
   getInfoFromHash,
   getUnit,
+  isValidAddress,
   prettyNumber,
   RedeemDeposit,
   redeemDeposit,
@@ -68,6 +69,7 @@ enum E2DAssetCategory {
 }
 
 interface AmountCheckInfo {
+  amount?: string;
   fee: BN | null;
   balance: BN | null;
   ringBalance: BN | null;
@@ -173,7 +175,7 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
         const value = new BN(Web3.utils.toWei(curVal));
         return value.gte(fee!) ? Promise.resolve() : Promise.reject();
       },
-      message: t('The transfer amount is not enough cover the fee'),
+      message: t('The transfer amount is not enough to cover the fee'),
     };
 
     return [...commonRules, gtThanFee];
@@ -187,19 +189,16 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
 }
 
 // eslint-disable-next-line complexity
-function TransferInfo({
-  fee,
-  balance,
-  ringBalance,
-  amount,
-  assetType,
-  asset,
-  t,
-}: AmountCheckInfo & { amount: string }) {
+function TransferInfo({ fee, balance, ringBalance, amount, assetType, asset, t }: AmountCheckInfo) {
   const value = new BN(toWei({ value: amount || '0' }));
 
   if (!fee || !ringBalance || !balance) {
-    return <p className="text-red-400 animate-pulse px-2">{t('Transfer information querying')}</p>;
+    return (
+      // eslint-disable-next-line no-magic-numbers
+      <p className="text-red-400 animate-pulse px-2" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
+        {t('Transfer information querying')}
+      </p>
+    );
   }
 
   return (
@@ -293,17 +292,23 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
   const [ringBalance, setRingBalance] = useState<BN | null>(null);
   const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
-  const [assetType, setAssetType] = useState<E2DAssetCategory>(
-    () => form.getFieldValue(FORM_CONTROL.assetType) ?? E2DAssetCategory.darwinia
-  );
+  const [assetType, setAssetType] = useState<E2DAssetCategory>(() => {
+    const value = form.getFieldValue(FORM_CONTROL.assetType);
+
+    return !value || value === 'native' ? E2DAssetCategory.darwinia : value;
+  });
   const [asset, setAsset] = useState<E2DAssetEnum>(() => form.getFieldValue(FORM_CONTROL.asset) ?? E2DAssetEnum.ring);
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
   const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
   const { accounts } = useApi();
   const { observer } = useTx();
-  const { address: account } = (accounts || [])[0] ?? '';
   const { updateDeparture } = useDeparture();
   const { afterTx } = useAfterSuccess();
+  const account = useMemo(() => {
+    const acc = (accounts || [])[0];
+
+    return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
+  }, [accounts]);
   const availableBalance = useMemo(() => {
     if (assetType === E2DAssetCategory.erc20) {
       return !selectedErc20
@@ -399,6 +404,7 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
     [afterTx, fee, observer, refreshBalance, refreshDeposit, setSubmit]
   );
 
+  // eslint-disable-next-line complexity
   useEffect(() => {
     if (!account) {
       return;
@@ -406,10 +412,12 @@ export function Ethereum({ form, setSubmit }: BridgeFormProps<E2D>) {
 
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
     const { recipient } = getInfoFromHash();
+    const type = form.getFieldValue(FORM_CONTROL.assetType);
 
     form.setFieldsValue({
       [FORM_CONTROL.recipient]: recipient ?? '',
       [FORM_CONTROL.sender]: account,
+      [FORM_CONTROL.assetType]: !type || type === 'native' ? E2DAssetCategory.darwinia : type,
     });
 
     Promise.all([getRingBalance(account, netConfig), getFee(netConfig), getIssuingAllowance(account, netConfig)]).then(

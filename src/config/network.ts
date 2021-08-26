@@ -6,7 +6,6 @@ export enum NetworkEnum {
   darwinia = 'darwinia',
   ethereum = 'ethereum',
   ropsten = 'ropsten',
-  tron = 'tron',
 }
 
 // eslint-disable-next-line no-magic-numbers
@@ -171,7 +170,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     erc20Token: {
       bankingAddress: '',
       mappingAddress: '0xcB8531Bc0B7C8F41B55CF4E94698C37b130597B9',
-      proofAddress: '0xe66f3de22eed97c730152f373193b5a0485b407d88f37d5fd6a2c59e5a696691',
+      proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
     },
     ethereumChain: {
       chainId: '43',
@@ -216,7 +215,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     erc20Token: {
       bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
       mappingAddress: '',
-      proofAddress: '0xe66f3de22eed97c730152f373193b5a0485b407d88f37d5fd6a2c59e5a696691',
+      proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
     },
     ethereumChain: {
       chainId: '3',
@@ -227,7 +226,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpcUrls: [],
     },
     facade: {
-      logo: '',
+      logo: '/image/ropsten-button-mobile.png',
       logoWithText: '',
     },
     fullName: 'Ropsten',
@@ -250,44 +249,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     type: ['ethereum'],
   },
-  tron: {
-    api: {
-      subql: '',
-      evolution: EVOLUTION_DOMAIN.product,
-      dapp: 'https://api.darwinia.network',
-      subscan: '',
-    },
-    erc20Token: {
-      bankingAddress: '',
-      mappingAddress: '',
-      proofAddress: '',
-    },
-    ethereumChain: {
-      chainId: '3',
-      chainName: '',
-      nativeCurrency: {
-        decimals: 18,
-      },
-      rpcUrls: [],
-    },
-    facade: {
-      logo: '',
-      logoWithText: '',
-    },
-    fullName: 'Tron',
-    isTest: false,
-    name: 'tron',
-    provider: {
-      rpc: '',
-      etherscan: '',
-    },
-    rpc: '',
-    ss58Prefix: null,
-    tokenContract: {
-      native: 'tron',
-    },
-    type: ['tron'],
-  },
 };
 
 export const NETWORKS: NetConfig[] = Object.values(NETWORK_CONFIG);
@@ -305,7 +266,6 @@ export const NETWORK_GRAPH = new Map<Network, Vertices[]>([
   [NetworkEnum.ethereum, [{ network: NetworkEnum.darwinia, status: 'available' }]],
   [NetworkEnum.pangolin, [{ network: NetworkEnum.ropsten, status: 'available' }]],
   [NetworkEnum.ropsten, [{ network: NetworkEnum.pangolin, status: 'available' }]],
-  [NetworkEnum.tron, [{ network: NetworkEnum.darwinia, status: 'pending' }]],
 ]);
 
 export const AIRDROP_GRAPH = new Map<Network, Vertices[]>([

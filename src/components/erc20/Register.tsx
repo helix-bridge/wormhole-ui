@@ -22,6 +22,7 @@ import {
 import { useForm } from 'antd/lib/form/Form';
 import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { from, mergeMap } from 'rxjs';
 import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useKnownErc20Tokens, useLocalSearch, useTx } from '../../hooks';
@@ -30,10 +31,10 @@ import { isValidAddress } from '../../utils';
 import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/meta';
 import {
   confirmRegister,
+  getRegisterProof,
   getTokenRegisterStatus,
   launchRegister,
-  popupRegisterProof,
-  proofObservable,
+  StoredProof,
   tokenSearchFactory,
 } from '../../utils/erc20/token';
 import { updateStorage } from '../../utils/helper/storage';
@@ -60,19 +61,19 @@ export function Register() {
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { allTokens, setAllTokens } = useKnownErc20Tokens(network!, RegisterStatus.registering);
+  const { tokens, updateTokens } = useKnownErc20Tokens(network!, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
+  const searchFn = useCallback(tokenSearchFactory(tokens), [tokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
   const { observer } = useTx();
   const networks = useMemo(() => NETWORKS.filter((item) => item.type.includes('ethereum')), []);
   const canStart = useMemo(
     () =>
-      !form.getFieldError('address').length &&
       networkStatus === 'success' &&
       network === net.name &&
-      net.erc20Token.bankingAddress,
-    [form, net.erc20Token.bankingAddress, net.name, network, networkStatus]
+      !!net.erc20Token.bankingAddress &&
+      isValidAddress(inputValue, 'ethereum'),
+    [inputValue, net.erc20Token.bankingAddress, net.name, network, networkStatus]
   );
   const Extra = useMemo(() => {
     if (networkStatus === 'connecting') {
@@ -118,18 +119,20 @@ export function Register() {
   useEffect(() => {
     if (!canStart) {
       setRegisteredStatus(-1);
+      setToken(null);
       return;
     }
 
     (async () => {
       setIsLoading(true);
 
-      const status = await getTokenRegisterStatus(inputValue, net);
-      const result = await getSymbolAndDecimals(inputValue, net);
-      const { name, logo } = getNameAndLogo(inputValue);
+      const searchValue = !inputValue.startsWith('0x') ? '0x' + inputValue : inputValue;
+      const status = await getTokenRegisterStatus(searchValue, net);
+      const result = await getSymbolAndDecimals(searchValue, net);
+      const { name, logo } = getNameAndLogo(searchValue);
 
       setRegisteredStatus(status === null ? -1 : status);
-      setToken({ ...result, name: name ?? '', logo: logo ?? '', address: inputValue });
+      setToken({ ...result, name: name ?? '', logo: logo ?? '', address: searchValue });
       setIsLoading(false);
     })();
   }, [canStart, inputValue, net]);
@@ -145,14 +148,21 @@ export function Register() {
       form={form}
       initialValues={{ host: DEFAULT_REGISTER_NETWORK }}
       onFinish={() => {
-        launchRegister(inputValue, net).subscribe(observer);
-        setAllTokens([token as Erc20Token, ...data]);
+        launchRegister(inputValue, net).subscribe({
+          ...observer,
+          next: (tx) => {
+            observer.next(tx);
+
+            if (tx.status === 'finalized') {
+              updateTokens([token as Erc20Token, ...data]);
+            }
+          },
+        });
       }}
       validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
     >
-      <Form.Item name="host" rules={[{ required: true }]}>
+      <Form.Item name="host" label={t('Host network')} rules={[{ required: true }]}>
         <Destination
-          title={t('Host Network')}
           networks={networks}
           extra={Extra}
           onChange={(value) => {
@@ -168,6 +178,7 @@ export function Register() {
           <Form.Item
             name="address"
             label={t('Token Contract Address')}
+            validateFirst
             rules={[
               { required: true },
               {
@@ -183,11 +194,7 @@ export function Register() {
               size="large"
               disabled={!net.erc20Token.bankingAddress}
               onChange={(event) => {
-                const errors = form.getFieldError(['address']);
-
-                if (errors.length === 0) {
-                  setInputValue(event.target.value);
-                }
+                setInputValue(event.target.value);
               }}
             />
           </Form.Item>
@@ -196,22 +203,20 @@ export function Register() {
             <Form.Item>
               <Spin size="small" className="w-full text-center"></Spin>
             </Form.Item>
-          ) : canStart ? (
-            <Form.Item
-              label={t('Token Info')}
-              style={{
-                display: form.getFieldError(['address']).length || !inputValue ? 'none' : 'block',
-              }}
-            >
-              <Descriptions bordered>
-                <Descriptions.Item label={t('Symbol')}>{token?.symbol}</Descriptions.Item>
-                <Descriptions.Item label={t('Decimals of Precision')}>{token?.decimals}</Descriptions.Item>
-              </Descriptions>
-            </Form.Item>
           ) : (
-            <Form.Item>
-              <div className="flex justify-center items-center w-full text-lg">{t('Coming Soon')}</div>
-            </Form.Item>
+            token && (
+              <Form.Item
+                label={t('Token Info')}
+                style={{
+                  display: form.getFieldError(['address']).length || !inputValue ? 'none' : 'block',
+                }}
+              >
+                <Descriptions bordered>
+                  <Descriptions.Item label={t('Symbol')}>{token?.symbol}</Descriptions.Item>
+                  <Descriptions.Item label={t('Decimals of Precision')}>{token?.decimals}</Descriptions.Item>
+                </Descriptions>
+              </Form.Item>
+            )
           )}
 
           <SubmitButton disabled={isLoading || registeredStatus !== 0} from={net} to={null}>
@@ -241,31 +246,38 @@ interface UpcomingProps {
 
 function Upcoming({ netConfig }: UpcomingProps) {
   const { t } = useTranslation();
-  const { loading, allTokens, setAllTokens } = useKnownErc20Tokens(netConfig.name, RegisterStatus.registering);
+  const {
+    loading,
+    tokens: allTokens,
+    proofs: knownProofs,
+    updateTokens,
+    addKnownProof,
+    switchToConfirmed,
+  } = useKnownErc20Tokens(netConfig.name, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
   const { data, setSearch } = useLocalSearch<MemoedTokenInfo>(searchFn as (arg: string) => MemoedTokenInfo[]);
   const { observer } = useTx();
+  const [inQueryingQueue, setInQueryingQueue] = useState<string[]>([]);
+  const tokens = useMemo(() => {
+    const proofs = knownProofs.map((item) => item.registerProof.source);
+
+    return allTokens.filter((item) => !proofs.includes(item.address) && !inQueryingQueue.includes(item.address));
+  }, [allTokens, inQueryingQueue, knownProofs]);
 
   useEffect(() => {
-    if (!allTokens.length) {
+    if (!tokens.length) {
       return;
     }
 
-    const subscription = proofObservable.subscribe((proof) => {
-      const updated = allTokens.map((token) => (proof.source === token.address ? { ...token, proof } : token));
+    from(tokens)
+      .pipe(mergeMap(({ address }) => getRegisterProof(address, netConfig)))
+      .subscribe((proof) => {
+        addKnownProof(proof);
+      });
 
-      setAllTokens(updated);
-    });
-
-    allTokens.forEach(({ address }) => {
-      const sub$$ = popupRegisterProof(address, netConfig);
-
-      subscription.add(sub$$);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [allTokens, netConfig, setAllTokens]);
+    setInQueryingQueue(tokens.map((item) => item.address));
+  }, [tokens, netConfig, updateTokens, addKnownProof]);
 
   return (
     <>
@@ -284,27 +296,21 @@ function Upcoming({ netConfig }: UpcomingProps) {
       ) : (
         <List>
           {!data.length && <Empty />}
-          {data?.map((token, index) => (
+          {data?.map((token) => (
             <List.Item key={token.address}>
               <Erc20ListInfo token={token}></Erc20ListInfo>
               <UpcomingTokenState
                 token={token}
+                proofs={knownProofs}
                 onConfirm={() => {
-                  const newData = [...allTokens];
+                  const proof: StoredProof = knownProofs.find((item) => item.registerProof.source === token.address)!;
 
-                  newData[index].confirmed = 0;
-
-                  setAllTokens([...newData]);
-
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  confirmRegister(token.proof as unknown as any, netConfig).subscribe({
+                  confirmRegister(proof, netConfig).subscribe({
                     ...observer,
                     next: (state) => {
                       observer.next(state);
                       if (state.status === 'finalized') {
-                        newData[index].confirmed = 1;
-
-                        setAllTokens(newData);
+                        switchToConfirmed(token.address);
                       }
                     },
                   });
@@ -325,26 +331,26 @@ function Upcoming({ netConfig }: UpcomingProps) {
 }
 
 /**
- * confirmed - 0: confirming 1: confirmed
+ * confirmed - -1: waiting for proof; 0: confirming 1: confirmed
  */
 interface UpcomingTokenStateProps {
   token: MemoedTokenInfo;
+  proofs: StoredProof[];
+  animate?: boolean;
   onConfirm: () => void;
 }
 
-function UpcomingTokenState({ token, onConfirm }: UpcomingTokenStateProps) {
+function UpcomingTokenState({ token, onConfirm, proofs, animate = true }: UpcomingTokenStateProps) {
   const { t } = useTranslation();
-  const { proof, confirmed } = token;
 
-  if (!proof) {
-    return <LoadingOutlined />;
+  if (
+    token.status === RegisterStatus.registering &&
+    !proofs.map((item) => item.registerProof.source).includes(token.address)
+  ) {
+    return animate ? <LoadingOutlined /> : <Progress type="circle" percent={50} format={() => ''} />;
   }
 
-  if (confirmed === 0) {
-    return <Progress type="circle" percent={50} format={() => ''} />;
-  }
-
-  if (confirmed === 1) {
+  if (token.status === RegisterStatus.registered) {
     return <CheckCircleOutlined />;
   }
 

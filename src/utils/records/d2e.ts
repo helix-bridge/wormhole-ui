@@ -12,7 +12,7 @@ import {
   getMMRProof,
   getMPTProof,
 } from '../helper';
-import { getEthConnection } from '../network';
+import { getAvailableNetworks, getEthConnection } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
 
@@ -85,10 +85,10 @@ export function claimToken({
       typesBundle: typesBundleForPolkadotApps,
     })
   );
-  const toNetwork: Network = network === 'pangolin' ? 'ropsten' : 'ethereum'; // FIXME: find from by to
+  const toNetworkConfig = getAvailableNetworks(network)!;
   const header = encodeBlockHeader(blockHeaderStr);
   const storageKey = getD2ELockEventsStorageKey(blockNumber, config.lockEvents);
-  const accountObs = getEthConnection(toNetwork).pipe(
+  const accountObs = getEthConnection(toNetworkConfig.name).pipe(
     filter(({ status }) => status === 'success'),
     map(({ accounts }) => accounts[0].address),
     take(1)
@@ -113,7 +113,7 @@ export function claimToken({
       })).pipe(
         switchMap(({ account, proof }) => {
           const { root, MMRIndex, blockHeader, peaks, siblings, eventsProofStr } = proof;
-          const contractAddress = NETWORK_CONFIG[toNetwork].tokenContract.issuingDarwinia || '';
+          const contractAddress = toNetworkConfig.tokenContract.issuingDarwinia || '';
 
           if (MMRRoot && best && best > blockNumber) {
             return getContractTxObs(

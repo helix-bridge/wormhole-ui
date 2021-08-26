@@ -1,12 +1,35 @@
 import { typesBundle } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
-import { catchError, concatMap, from, map, mapTo, merge, Observable, Observer, of, startWith, switchMap } from 'rxjs';
+import {
+  catchError,
+  concatMap,
+  EMPTY,
+  from,
+  map,
+  mapTo,
+  merge,
+  Observable,
+  Observer,
+  of,
+  startWith,
+  switchMap,
+  switchMapTo,
+} from 'rxjs';
 import { NETWORK_CONFIG, SHORT_DURATION } from '../../config';
-import { EthereumConnection, Network, PolkadotConnection } from '../../model';
-import { isNetworkConsistent } from './network';
+import { Connection, EthereumConnection, Network, NetworkCategory, PolkadotConnection } from '../../model';
+import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent } from './network';
+import { switchMetamaskNetwork } from './switch';
 
-export const getPolkadotConnection: (network: Network) => Observable<PolkadotConnection> = (network) =>
+type ConnectionFn<T extends Connection> = (network: Network) => Observable<T>;
+
+type ConnectFn<T extends Connection> = (network: Network, chainId?: string) => Observable<T>;
+
+type ConnectConfig = {
+  [key in NetworkCategory]: ConnectFn<Connection>;
+};
+
+export const getPolkadotConnection: ConnectionFn<PolkadotConnection> = (network) =>
   from(web3Enable('polkadot-js/apps')).pipe(
     concatMap((extensions) => from(web3Accounts()).pipe(map((accounts) => ({ accounts, extensions })))),
     switchMap(({ accounts, extensions }) => {
@@ -73,7 +96,7 @@ export const getPolkadotConnection: (network: Network) => Observable<PolkadotCon
     startWith<PolkadotConnection>({ status: 'connecting', accounts: [], api: null })
   );
 
-export const getEthConnection: (network: Network) => Observable<EthereumConnection> = (network) => {
+export const getEthConnection: ConnectionFn<EthereumConnection> = (network) => {
   return from(window.ethereum.request({ method: 'eth_requestAccounts' })).pipe(
     switchMap((_) => {
       const addressToAccounts = (addresses: string[]) =>
@@ -110,4 +133,40 @@ export const getEthConnection: (network: Network) => Observable<EthereumConnecti
     }),
     startWith<EthereumConnection>({ status: 'connecting', accounts: [] })
   );
+};
+
+const connectToPolkadot: ConnectFn<PolkadotConnection> = (network: Network) => {
+  if (!network) {
+    return EMPTY;
+  }
+
+  return getPolkadotConnection(network);
+};
+
+const connectToEth: ConnectFn<EthereumConnection> = (network: Network, chainId?: string) => {
+  if (!isMetamaskInstalled() || network === null) {
+    return EMPTY;
+  }
+
+  return from(isNetworkConsistent(network, chainId)).pipe(
+    switchMap((isMatch) =>
+      isMatch ? getEthConnection(network) : switchMetamaskNetwork(network).pipe(switchMapTo(getEthConnection(network)))
+    )
+  );
+};
+
+const config: ConnectConfig = {
+  polkadot: connectToPolkadot,
+  ethereum: connectToEth,
+  darwinia: connectToPolkadot,
+};
+
+export const connect: ConnectFn<Connection> = (network, chainId) => {
+  const category = getNetworkCategory(network);
+
+  if (category === null) {
+    return EMPTY;
+  }
+
+  return config[category](network, chainId);
 };

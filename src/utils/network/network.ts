@@ -25,7 +25,7 @@ function isSpecifyNetworkType(type: NetworkCategory) {
       const name = byNetworkAlias(network);
 
       console.warn(
-        `🚀 ~ Can not find the network config by: ${network}. Treat it as an alias, find the a network named ${name} by it `
+        `🚀 ~ Can not find the network config by: ${network}. Treat it as an alias, find a network named ${name} by it `
       );
       if (name) {
         config = findBy(name);
@@ -110,6 +110,14 @@ export function getVertices(from: Network, to: Network): Vertices | null {
   return NETWORK_GRAPH.get(from)?.find((item) => item.network === to) ?? null;
 }
 
+function getVerticesList(from: Network): Vertices[] {
+  if (!from) {
+    return [];
+  }
+
+  return NETWORK_GRAPH.get(from) || [];
+}
+
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {
   id = id && Web3.utils.isHex(id) ? parseInt(id, 16).toString() : id;
   // id 1: eth mainnet 3: ropsten 4: rinkeby 5: goerli 42: kovan  43: pangolin 44: crab
@@ -182,4 +190,15 @@ export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> 
   const networkId = await web3.eth.net.getId();
 
   return expectNetworkId === networkId;
+}
+
+export function getAvailableNetworks(net: Network): NetConfig | null {
+  // FIXME: by default we use the first vertices here.
+  const [vertices] = getVerticesList(net).filter((item) => item.status === 'available');
+
+  if (!vertices) {
+    return null;
+  }
+
+  return NETWORK_CONFIG[vertices.network];
 }

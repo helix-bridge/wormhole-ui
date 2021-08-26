@@ -4,16 +4,26 @@ import {
   DashOutlined,
   DisconnectOutlined,
   LinkOutlined,
+  SwapOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import { Button, Popover, Tooltip } from 'antd';
-import { isBoolean, negate } from 'lodash';
+import { isBoolean, isNull, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Vertices } from '../../config';
 import { useApi, useNetworks } from '../../hooks';
 import { CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../../model';
-import { getVertices, HashInfo, isReachable, isSameNetworkCurry, isTraceable, patchUrl, truth } from '../../utils';
+import {
+  getNetworkByName,
+  getVertices,
+  HashInfo,
+  isReachable,
+  isSameNetworkCurry,
+  isTraceable,
+  patchUrl,
+  truth,
+} from '../../utils';
 import { updateStorage } from '../../utils/helper/storage';
 import { Destination } from './Destination';
 
@@ -24,6 +34,8 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(isCross);
   const { networkStatus, network, switchNetwork } = useApi();
   const [vertices, setVertices] = useState<Vertices | null>(null);
+  const [reverseVertices, setReverseVertices] = useState<Vertices | null>(null);
+  const [random, setRandom] = useState(0); // just for trigger animation when from and to reversed.
   // eslint-disable-next-line complexity
   const Extra = useMemo(() => {
     if (networkStatus === 'connecting') {
@@ -72,6 +84,12 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
     );
   }, [networkStatus, value, network, t, vertices?.status, switchNetwork]);
 
+  const canReverse = useMemo(() => {
+    const vers = [vertices, reverseVertices];
+
+    return (vers.every(isNull) || vers.every(negate(isNull))) && !!value && (!!value.from || !!value.to);
+  }, [reverseVertices, value, vertices]);
+
   const triggerChange = useCallback(
     (val: TransferNetwork) => {
       if (onChange) {
@@ -98,8 +116,10 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
     const { from, to } = value || {};
     const info = { from: from?.name ?? '', to: to?.name ?? '' } as HashInfo;
     const ver = getVertices(info.from as Network, info.to as Network);
+    const reverseVer = getVertices(info.to as Network, info.from as Network);
 
     setVertices(ver);
+    setReverseVertices(reverseVer);
     patchUrl(info);
     updateStorage(info);
   }, [value]);
@@ -114,6 +134,7 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
         onChange={(from) => {
           triggerChange({ from, to: value?.to ?? null });
         }}
+        animationRandom={random}
       />
 
       {vertices?.status === 'pending' ? (
@@ -121,7 +142,24 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
           <DashOutlined className="mt-6 mx-4 text-2xl" />
         </Tooltip>
       ) : (
-        <ArrowRightOutlined className="mt-6 mx-4 text-2xl" />
+        <>
+          {canReverse ? (
+            <Tooltip title={t('Swap from and to')}>
+              <SwapOutlined
+                onClick={() => {
+                  triggerChange({
+                    from: getNetworkByName(value?.to?.name),
+                    to: getNetworkByName(value?.from?.name),
+                  });
+                  setRandom(Math.random());
+                }}
+                className="mt-6 mx-4 text-2xl"
+              />
+            </Tooltip>
+          ) : (
+            <ArrowRightOutlined className="mt-6 mx-4 text-2xl" />
+          )}
+        </>
       )}
 
       <Destination
@@ -131,6 +169,7 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
         onChange={(to) => {
           triggerChange({ to, from: value?.from ?? null });
         }}
+        animationRandom={random}
       />
 
       <Tooltip title={t('Reset Networks')}>

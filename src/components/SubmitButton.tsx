@@ -2,8 +2,8 @@ import { Button, ButtonProps, Form } from 'antd';
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi, useTx } from '../hooks';
-import { NetConfig, ConnectStatus } from '../model';
-import { hasBridge, isBridgeAvailable, isPolkadotNetwork } from '../utils';
+import { ConnectStatus, NetConfig } from '../model';
+import { hasBridge, isBridgeAvailable } from '../utils';
 
 interface SubmitButtonProps extends ButtonProps {
   from: NetConfig | null;
@@ -29,7 +29,7 @@ export function FromItemButton({ children, className, ...others }: ButtonProps) 
 // eslint-disable-next-line complexity
 export function SubmitButton({ from, to, children, requireTo, disabled }: PropsWithChildren<SubmitButtonProps>) {
   const { t } = useTranslation();
-  const { networkStatus, network, switchNetwork, connectToEth, connectToSubstrate } = useApi();
+  const { networkStatus, network, switchNetwork } = useApi();
   const { tx } = useTx();
   const errorConnections: ConnectStatus[] = ['pending', 'disconnected', 'fail'];
 
@@ -57,19 +57,7 @@ export function SubmitButton({ from, to, children, requireTo, disabled }: PropsW
     return (
       <FromItemButton
         onClick={() => {
-          if (network !== from.name) {
-            switchNetwork(from.name);
-
-            return;
-          }
-
-          const isPolkadot = isPolkadotNetwork(from.name);
-
-          if (isPolkadot) {
-            connectToSubstrate(network);
-          } else {
-            connectToEth(network);
-          }
+          switchNetwork(from.name);
         }}
       >
         {t('Connect to {{network}}', { network: from.name })}

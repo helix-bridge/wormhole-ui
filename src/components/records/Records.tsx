@@ -1,11 +1,10 @@
-import { Affix, Button, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
+import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
-import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { forkJoin, Subscription } from 'rxjs';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { NETWORK_CONFIG, NETWORK_GRAPH } from '../../config';
-import { Path } from '../../config/routes';
 import {
   D2EHistoryRes,
   HistoryRouteParam,
@@ -32,7 +31,7 @@ import { E2DRecord } from './E2DRecord';
 const { TabPane } = Tabs;
 const NETWORKS = [...NETWORK_GRAPH.keys()];
 
-const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list.length || 0;
+const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list?.length || 0;
 
 // eslint-disable-next-line complexity
 export function Records() {
@@ -77,7 +76,7 @@ export function Records() {
         complete: () => setLoading(false),
       });
     } else {
-      // tron
+      // do nothing
     }
 
     setLoading(true);
@@ -97,7 +96,7 @@ export function Records() {
 
   return (
     <>
-      <Affix offsetTop={0} target={() => document.getElementById('history-records')}>
+      <Affix offsetTop={63}>
         <Input.Group size="large" className="flex items-center w-full mb-8 select-search dark:bg-black">
           <Select
             size="large"
@@ -183,6 +182,7 @@ export function Records() {
 
             {!total && !loading && <Empty description={t('No Data')} />}
           </TabPane>
+
           <TabPane
             tab={
               <Space>
@@ -196,13 +196,7 @@ export function Records() {
           </TabPane>
         </Tabs>
 
-        <div className="w-full max-w-6xl flex justify-between items-center mx-auto mt-4">
-          <Link to={Path.root} className="">
-            <Button>
-              <Trans>Go Back</Trans>
-            </Button>
-          </Link>
-
+        <div className="w-full max-w-6xl flex justify-center items-center mx-auto mt-4">
           {!!total && (
             <Pagination
               onChange={(page: number) => {
@@ -211,7 +205,6 @@ export function Records() {
               current={paginator.page + 1}
               pageSize={paginator.row}
               total={total}
-              className=""
             />
           )}
         </div>

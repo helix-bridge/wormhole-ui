@@ -1,18 +1,19 @@
-import { Result, Button } from 'antd';
+import { Button, Result } from 'antd';
 import { Trans } from 'react-i18next';
-import { useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Path } from '../config/routes';
 
 export function Page404() {
-  const history = useHistory();
-
   return (
     <Result
       status="404"
       title="404"
       subTitle="Sorry, the page you visited does not exist."
       extra={
-        <Button type="primary" onClick={() => history.goBack()}>
-          <Trans>Back Home</Trans>
+        <Button type="primary">
+          <Link to={Path.root}>
+            <Trans>Back Home</Trans>
+          </Link>
         </Button>
       }
     />
