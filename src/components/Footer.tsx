@@ -11,6 +11,7 @@ type FooterProps = LanguageProps & { className?: string };
 
 export function Footer({ network, theme, className = '' }: FooterProps) {
   const { t } = useTranslation();
+  const color = theme === THEME.LIGHT ? '#ccc' : undefined;
 
   return (
     <Layout.Footer
@@ -30,12 +31,12 @@ export function Footer({ network, theme, className = '' }: FooterProps) {
 
       <div className="flex items-center">
         <Link to={Path.airdrop} className="mr-4">
-          <Button type="ghost" icon={<SendOutlined />} className=" flex items-center justify-center">
+          <Button type="ghost" icon={<SendOutlined />} className="flex items-center justify-center" style={{ color }}>
             {t('Airdrop')}
           </Button>
         </Link>
 
-        <Language network={network} theme={theme} type="ghost" color={theme === THEME.LIGHT ? '#ccc' : undefined} />
+        <Language network={network} theme={theme} type="ghost" color={color} />
       </div>
     </Layout.Footer>
   );

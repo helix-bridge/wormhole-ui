@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import { BridgeStatus } from './components/BridgeStatus';
 import { Connection } from './components/Connection';
 import { Footer } from './components/Footer';
 import { ThemeSwitch } from './components/ThemeSwitch';
@@ -122,6 +123,7 @@ function App() {
       </Header>
 
       <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-24 sm:my-20">
+        <BridgeStatus className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow max-w-full mb-8" />
         <TransitionGroup>
           <CSSTransition in={true} key={location.key} timeout={300} classNames="fade">
             <Switch location={location}>
