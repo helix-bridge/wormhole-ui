@@ -56,7 +56,12 @@ export function backingLock(value: BackingLockNative, api: ApiPromise): Observab
   const { amount: ring } = assets.find((item) => item.asset === 'ring') || { amount: '0' };
   const { amount: kton } = assets.find((item) => item.asset === 'kton') || { amount: '0' };
   const obs = new Observable((observer: Observer<Tx>) => {
-    api.tx.ethereumBacking.lock(ring, kton, recipient).signAndSend(sender, extrinsicSpy(observer));
+    api.tx.ethereumBacking
+      .lock(ring, kton, recipient)
+      .signAndSend(sender, extrinsicSpy(observer))
+      .catch((error) => {
+        observer.error({ status: 'error', error });
+      });
   });
 
   return from(web3FromAddress(sender)).pipe(
