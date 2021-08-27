@@ -7,7 +7,7 @@ import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { CustomFormControlProps, Network, Token, TransferAsset } from '../../model';
 import { TokenChainInfo } from '../../providers';
-import { fromWei, toWei } from '../../utils';
+import { fromWei, getPrecisionByUnit, toWei } from '../../utils';
 import { Balance } from './Balance';
 import { MaxBalance } from './MaxBalance';
 
@@ -163,6 +163,7 @@ CustomFormControlProps<AssetGroupValue> & {
                       triggerChange({ ...target, amount }, index, value);
                     }}
                     step={100}
+                    precision={getPrecisionByUnit(unit)}
                     className="flex-1"
                     size="large"
                   >
