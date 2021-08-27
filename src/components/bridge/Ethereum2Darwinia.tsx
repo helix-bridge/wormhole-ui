@@ -1,4 +1,5 @@
-import { Button, Descriptions, Form, Input, Radio, Select } from 'antd';
+import { QuestionCircleFilled } from '@ant-design/icons';
+import { Button, Descriptions, Form, Input, Radio, Select, Tooltip } from 'antd';
 import { FormInstance, Rule } from 'antd/lib/form';
 import BN from 'bn.js';
 import { format } from 'date-fns';
@@ -209,7 +210,20 @@ function TransferInfo({ fee, balance, ringBalance, amount, assetType, asset, t }
         </Descriptions.Item>
       )}
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
-        {fromWei({ value: fee })} RING
+        <span className="flex items-center">
+          {fromWei({ value: fee })} RING
+          <Tooltip
+            title={
+              <ul className="pl-4 list-disc">
+                <li>
+                  <Trans>Fee paid per transaction, event if the asset type is not RING</Trans>
+                </li>
+              </ul>
+            }
+          >
+            <QuestionCircleFilled className="ml-2 cursor-pointer" />
+          </Tooltip>
+        </span>
       </Descriptions.Item>
     </Descriptions>
   );
@@ -282,6 +296,8 @@ function createErc20Tx(value: RedeemErc20, after: AfterTxCreator): Observable<Tx
 
   return createTxWorkflow(beforeTx, txObs, after);
 }
+
+/* ----------------------------------------------Main Section-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
 export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {

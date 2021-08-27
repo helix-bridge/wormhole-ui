@@ -110,6 +110,7 @@
   "Wormhole is in beta. Please trade at your own risk level": "Wormhole is in beta. Please trade at your own risk level",
   "You maybe forgot to select receive or sending network": "You maybe forgot to select receive or sending network",
   "You must select the destination network to unlock": "You must select the destination network to unlock",
+  "You must select at least one of these assets": "You must select at least one of these assets",
   "erc20CompletionTip": "After {{type}} network returns the result, click [Confirm] to complete the token registration.",
   "erc20RegistrationTip": "After submit the registration, please wait for the {{network}} network to return the result, click <3> Upcoming </3> to view the progress.",
   "registrationTip": "If you can not find the token you want to send in the list, highly recommended to <1> go to the registration page</1>, where you will find it after completing the registration steps.",

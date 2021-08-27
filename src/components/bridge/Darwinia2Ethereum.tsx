@@ -1,4 +1,4 @@
-import { ReloadOutlined } from '@ant-design/icons';
+import { QuestionCircleFilled, ReloadOutlined } from '@ant-design/icons';
 import { ApiPromise } from '@polkadot/api';
 import { Button, Descriptions, Form, Radio, Select, Tooltip } from 'antd';
 import BN from 'bn.js';
@@ -27,6 +27,14 @@ import { MaxBalance } from '../controls/MaxBalance';
 import { RecipientItem } from '../controls/RecipientItem';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
+
+interface AmountCheckInfo {
+  fee: BN | null;
+  ringBalance?: BN | null;
+  assetType: D2EAssetEnum;
+  assets: AssetGroupValue;
+  t: TFunction;
+}
 
 const BALANCES_INITIAL: AvailableBalance[] = [
   { max: 0, asset: 'ring' },
@@ -73,6 +81,111 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
   }
 }
 
+// eslint-disable-next-line complexity
+function TransferInfo({ fee, ringBalance, assetType, assets, t }: AmountCheckInfo) {
+  // eslint-disable-next-line complexity
+  const isRingBalanceEnough = useMemo(() => {
+    if (!fee || !ringBalance) {
+      return false;
+    }
+
+    if (assetType === D2EAssetEnum.erc20) {
+      return ringBalance.gte(fee);
+    }
+
+    if (assetType === D2EAssetEnum.native) {
+      const ring = assets.find((item) => item.asset === 'ring' && item.checked);
+      const ringAmount = new BN(toWei({ value: ring?.amount || '0', unit: 'gwei' }));
+
+      return ring ? ringAmount.add(fee).lte(ringBalance) : ringBalance.gte(fee);
+    }
+
+    return false;
+  }, [assetType, assets, fee, ringBalance]);
+
+  const hasAssetSet = useMemo(() => {
+    if (assetType === D2EAssetEnum.erc20) {
+      return false;
+    }
+    const target = assets.find((item) => item.asset === 'ring');
+    const origin = new BN(toWei({ value: target?.amount ?? '0', unit: 'gwei' }));
+
+    return (
+      origin.gte(fee || BN_ZERO) &&
+      !!assets.filter((item) => !!item.checked && new BN(item?.amount || '0').gt(BN_ZERO)).length
+    );
+  }, [assetType, assets, fee]);
+  const animationCount = 5;
+
+  if (!fee || !ringBalance) {
+    return (
+      <p
+        className="text-red-400 animate-pulse px-2"
+        style={{ animationIterationCount: !fee ? 'infinite' : animationCount }}
+      >
+        {t('Transfer information querying')}
+      </p>
+    );
+  }
+
+  return (
+    <Descriptions
+      size="small"
+      column={1}
+      labelStyle={{ color: 'inherit' }}
+      className={`${isRingBalanceEnough ? 'text-green-400' : 'text-red-400 animate-pulse'}`}
+      style={{ animationIterationCount: animationCount }}
+    >
+      {assetType === D2EAssetEnum.native && hasAssetSet && (
+        <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
+          <p className="flex flex-col">
+            {assets.map((item) => {
+              if (!item.checked) {
+                return null;
+              } else {
+                const { asset, amount } = item;
+
+                if (asset === 'ring') {
+                  const origin = new BN(toWei({ value: amount, unit: 'gwei' }));
+
+                  return (
+                    <span className="mr-2" key={asset}>{`${fromWei({
+                      value: origin.sub(fee),
+                      unit: 'gwei',
+                    })} ${asset.toUpperCase()}`}</span>
+                  );
+                } else {
+                  return <span className="mr-2" key={asset}>{`${amount ?? 0} ${asset?.toUpperCase()}`}</span>;
+                }
+              }
+            })}
+          </p>
+        </Descriptions.Item>
+      )}
+
+      <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
+        <span className="flex items-center">
+          {fromWei({ value: fee, unit: 'gwei' })} RING{' '}
+          <Tooltip
+            title={
+              <ul className="pl-4 list-disc">
+                <li>
+                  <Trans>Fee paid per transaction</Trans>
+                </li>
+                <li>
+                  <Trans>If the transaction includes RING, the number of RING cannot be less than the fee</Trans>
+                </li>
+              </ul>
+            }
+          >
+            <QuestionCircleFilled className="ml-2 cursor-pointer" />
+          </Tooltip>
+        </span>
+      </Descriptions.Item>
+    </Descriptions>
+  );
+}
+
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
 function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCreator, api: ApiPromise): Observable<Tx> {
@@ -92,6 +205,8 @@ function ethereumBackingLockErc20(value: BackingLockERC20, after: AfterTxCreator
 
   return createTxWorkflow(beforeTx, obs, after);
 }
+
+/* ----------------------------------------------Main Section-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
 export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
@@ -278,12 +393,12 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
             </span>
           }
           rules={[{ required: true }]}
-          className="mb-0"
         >
           <AssetGroup
             network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
             balances={availableBalances}
             fee={fee}
+            form={form}
             onChange={(value) => setCurAssets(value)}
           />
         </Form.Item>
@@ -368,99 +483,5 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
         t={t}
       />
     </>
-  );
-}
-
-interface AmountCheckInfo {
-  fee: BN | null;
-  ringBalance?: BN | null;
-  assetType: D2EAssetEnum;
-  assets: AssetGroupValue;
-  t: TFunction;
-}
-
-// eslint-disable-next-line complexity
-function TransferInfo({ fee, ringBalance, assetType, assets, t }: AmountCheckInfo) {
-  // eslint-disable-next-line complexity
-  const isRingBalanceEnough = useMemo(() => {
-    if (!fee || !ringBalance) {
-      return false;
-    }
-
-    if (assetType === D2EAssetEnum.erc20) {
-      return ringBalance.gte(fee);
-    }
-
-    if (assetType === D2EAssetEnum.native) {
-      const ring = assets.find((item) => item.asset === 'ring' && item.checked);
-      const ringAmount = new BN(toWei({ value: ring?.amount || '0', unit: 'gwei' }));
-
-      return ring ? ringAmount.add(fee).lte(ringBalance) : ringBalance.gte(fee);
-    }
-
-    return false;
-  }, [assetType, assets, fee, ringBalance]);
-
-  const hasAssetSet = useMemo(() => {
-    if (assetType === D2EAssetEnum.erc20) {
-      return false;
-    }
-    const target = assets.find((item) => item.asset === 'ring');
-    const origin = new BN(toWei({ value: target?.amount ?? '0', unit: 'gwei' }));
-
-    return (
-      origin.gte(fee || BN_ZERO) &&
-      !!assets.filter((item) => !!item.checked && new BN(item?.amount || '0').gt(BN_ZERO)).length
-    );
-  }, [assetType, assets, fee]);
-
-  if (!fee || !ringBalance) {
-    return (
-      // eslint-disable-next-line no-magic-numbers
-      <p className="text-red-400 animate-pulse px-2" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
-        {t('Transfer information querying')}
-      </p>
-    );
-  }
-
-  return (
-    <Descriptions
-      size="small"
-      column={1}
-      labelStyle={{ color: 'inherit' }}
-      className={`${isRingBalanceEnough ? 'text-green-400' : 'text-red-400 animate-pulse'}`}
-      style={{ animationIterationCount: 5 }}
-    >
-      {assetType === D2EAssetEnum.native && hasAssetSet && (
-        <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
-          <p className="flex flex-col">
-            {assets.map((item) => {
-              if (!item.checked) {
-                return null;
-              } else {
-                const { asset, amount } = item;
-
-                if (asset === 'ring') {
-                  const origin = new BN(toWei({ value: amount, unit: 'gwei' }));
-
-                  return (
-                    <span className="mr-2" key={asset}>{`${fromWei({
-                      value: origin.sub(fee),
-                      unit: 'gwei',
-                    })} ${asset.toUpperCase()}`}</span>
-                  );
-                } else {
-                  return <span className="mr-2" key={asset}>{`${amount ?? 0} ${asset?.toUpperCase()}`}</span>;
-                }
-              }
-            })}
-          </p>
-        </Descriptions.Item>
-      )}
-
-      <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
-        {fromWei({ value: fee, unit: 'gwei' })} RING
-      </Descriptions.Item>
-    </Descriptions>
   );
 }
