@@ -1,10 +1,11 @@
 import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
+import { uniq } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { forkJoin, Subscription } from 'rxjs';
 import useDeepCompareEffect from 'use-deep-compare-effect';
-import { NETWORK_CONFIG, NETWORK_GRAPH } from '../../config';
+import { NETWORKS, NETWORK_CONFIG } from '../../config';
 import {
   D2EHistoryRes,
   HistoryRouteParam,
@@ -29,7 +30,7 @@ import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
 
 const { TabPane } = Tabs;
-const NETWORKS = [...NETWORK_GRAPH.keys()];
+const departures = uniq(NETWORKS.map((item) => item.name));
 
 const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list?.length || 0;
 
@@ -100,7 +101,7 @@ export function Records() {
         <Input.Group size="large" className="flex items-center w-full mb-8 select-search dark:bg-black">
           <Select
             size="large"
-            defaultValue={searchParams?.network || NETWORKS[0]}
+            defaultValue={searchParams?.network || departures[0]}
             className="capitalize"
             onSelect={(value) => {
               if (!canUpdate(address, value)) {
@@ -112,7 +113,7 @@ export function Records() {
               setPaginator({ row: 10, page: 0 });
             }}
           >
-            {NETWORKS.map((net) => {
+            {departures.map((net) => {
               return (
                 <Select.Option value={net} key={net} className="capitalize">
                   {net}

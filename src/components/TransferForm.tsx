@@ -1,24 +1,35 @@
 import { Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
+import { isEqual } from 'lodash';
 import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
-import { BridgeFormProps, Bridges, NetConfig, Network, TransferFormValues, TransferNetwork } from '../model';
-import { empty, getInitialSetting, getNetworkByName } from '../utils';
+import {
+  BridgeFormProps,
+  Bridges,
+  Departure,
+  NetConfig,
+  Network,
+  NetworkMode,
+  TransferFormValues,
+  TransferNetwork,
+} from '../model';
+import { empty, getConfig, getConfigMode, getInitialSetting } from '../utils';
 import { Airport } from './Airport';
-import { Nets } from './controls/Nets';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
+import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
+import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
-
-type Departures = { [key in Network]?: FunctionComponent<BridgeFormProps & Bridges> };
 
 const initTransfer: () => TransferNetwork = () => {
   const come = getInitialSetting('from', '') as Network;
   const go = getInitialSetting('to', '') as Network;
-  const from = getNetworkByName(come);
-  const to = getNetworkByName(go);
+  const fromMode = getInitialSetting('fMode', '') as NetworkMode;
+  const toMode = getInitialSetting('tMode', '') as NetworkMode;
+  const from = getConfig({ network: come, mode: fromMode });
+  const to = getConfig({ network: go, mode: toMode });
 
   if (from?.isTest === to?.isTest) {
     return { from, to };
@@ -31,10 +42,14 @@ const initTransfer: () => TransferNetwork = () => {
 
 const TRANSFER = initTransfer();
 
-const DEPARTURES: Departures = {
-  ethereum: Ethereum2Darwinia,
-  darwinia: Darwinia2Ethereum,
-};
+const DEPARTURES: Map<Departure, FunctionComponent<BridgeFormProps & Bridges>> = new Map([
+  [{ network: 'ethereum', mode: 'native' }, Ethereum2Darwinia],
+  [{ network: 'ropsten', mode: 'native' }, Ethereum2Darwinia],
+  [{ network: 'darwinia', mode: 'native' }, Darwinia2Ethereum],
+  [{ network: 'pangolin', mode: 'native' }, Darwinia2Ethereum],
+  [{ network: 'darwinia', mode: 'dvm' }, DarwiniaDVM2Ethereum],
+  [{ network: 'pangolin', mode: 'dvm' }, DarwiniaDVM2Ethereum],
+]);
 
 /**
  * TODO: add departures to network_graph config
@@ -44,16 +59,15 @@ const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<Br
     return () => <></>;
   }
 
-  const Comp = DEPARTURES[from.name];
+  const source = [...DEPARTURES];
+  const mode = getConfigMode(from);
 
-  if (Comp) {
-    return Comp;
-  }
+  const findBy = (network: Network) => source.find(([departure]) => isEqual(departure, { network, mode }));
 
-  const typeName = from.type.reverse().find((type) => DEPARTURES[type as Network]) as Network;
+  const target = findBy(from.name);
 
-  if (typeName) {
-    return DEPARTURES[typeName] as FunctionComponent<BridgeFormProps & Bridges>;
+  if (target) {
+    return target[1];
   }
 
   return () => <span>Coming Soon...</span>;

@@ -63,6 +63,7 @@ function accountReducer(state: StoreState, action: Action<ActionType, any>): Sto
 
 export type ApiCtx = StoreState & {
   api: ApiPromise | null;
+  connectNetwork: (network: Network) => void;
   disconnect: () => void;
   setNetworkStatus: (status: ConnectStatus) => void;
   switchNetwork: (type: Network | null) => void;
@@ -73,6 +74,8 @@ export type ApiCtx = StoreState & {
 };
 
 export const ApiContext = createContext<ApiCtx | null>(null);
+
+let subscription: Subscription = EMPTY.subscribe();
 
 export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [state, dispatch] = useReducer(accountReducer, initialState);
@@ -88,7 +91,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   );
   const [api, setApi] = useState<ApiPromise | null>(null);
   const [chain, setChain] = useState<Chain>({ ss58Format: '', tokens: [] });
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const observer = useMemo(
     () => ({
       next: (connection: Connection) => {
@@ -110,16 +112,21 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     }),
     [setAccounts, setNetworkStatus]
   );
+  const connectNetwork = useCallback(
+    (network: Network) => {
+      subscription.unsubscribe();
+
+      subscription = connect(network).subscribe(observer);
+    },
+    [observer]
+  );
 
   // eslint-disable-next-line complexity
   const disconnect = useCallback(() => {
     const isPolkadot = isPolkadotNetwork(state.network);
 
     if (isPolkadot && api && api.isConnected) {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-
+      subscription.unsubscribe();
       api.disconnect().then(() => {
         setNetworkStatus('pending');
         setAccounts([]);
@@ -135,22 +142,18 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       setAccounts([]);
       return;
     }
-  }, [api, setAccounts, setNetworkStatus, state.network, subscription]);
+  }, [api, setAccounts, setNetworkStatus, state.network]);
 
   useEffect(() => {
-    let sub$$: Subscription = EMPTY.subscribe();
-
     if (state.network === null) {
       setNetworkStatus('pending');
     } else {
-      sub$$ = connect(state.network).subscribe(observer);
+      subscription = connect(state.network).subscribe(observer);
     }
-
-    setSubscription(sub$$);
 
     return () => {
       console.info('[Api provider] Cancel network subscription of network', state.network);
-      sub$$.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [observer, setNetworkStatus, state.network]);
 
@@ -185,6 +188,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     <ApiContext.Provider
       value={{
         ...state,
+        connectNetwork,
         disconnect,
         switchNetwork,
         setNetworkStatus,

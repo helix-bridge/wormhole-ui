@@ -1,24 +1,5 @@
-import {
-  CheckCircleOutlined,
-  DisconnectOutlined,
-  LinkOutlined,
-  LoadingOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
-import {
-  Button,
-  Descriptions,
-  Empty,
-  Form,
-  Input,
-  List,
-  Popover,
-  Progress,
-  Spin,
-  Tabs,
-  Tooltip,
-  Typography,
-} from 'antd';
+import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Button, Descriptions, Empty, Form, Input, List, Progress, Spin, Tabs, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -39,6 +20,7 @@ import {
 } from '../../utils/erc20/token';
 import { updateStorage } from '../../utils/helper/storage';
 import { Destination } from '../controls/Destination';
+import { LinkIndicator } from '../LinkIndicator';
 import { SubmitButton } from '../SubmitButton';
 import { Erc20ListInfo } from './Erc20ListInfo';
 
@@ -54,7 +36,7 @@ export function Register() {
   const { t } = useTranslation();
   const [form] = useForm();
   const [net, setNet] = useState<NetConfig>(DEFAULT_REGISTER_NETWORK);
-  const { networkStatus, network, switchNetwork } = useApi();
+  const { networkStatus, network } = useApi();
   const [active, setActive] = useState(TabKeys.register);
   const [inputValue, setInputValue] = useState('');
   const [registeredStatus, setRegisteredStatus] = useState(-1);
@@ -75,46 +57,6 @@ export function Register() {
       isValidAddress(inputValue, 'ethereum'),
     [inputValue, net.erc20Token.bankingAddress, net.name, network, networkStatus]
   );
-  const Extra = useMemo(() => {
-    if (networkStatus === 'connecting') {
-      return <SyncOutlined spin style={{ color: '#1890ff' }} />;
-    }
-
-    const existAndConsistent = net.name === network;
-
-    return networkStatus === 'success' ? (
-      <Popover
-        content={
-          existAndConsistent ? (
-            t('Network connected')
-          ) : (
-            <div className="max-w-sm flex flex-col">
-              <span>
-                {t(
-                  'The connected network is not the same as the network selected, do you want switch to the {{network}} network?',
-                  { network: net.name }
-                )}
-              </span>
-              <Button
-                onClick={() => {
-                  switchNetwork(net.name);
-                }}
-                className="self-end mt-2"
-              >
-                {t('Switch')}
-              </Button>
-            </div>
-          )
-        }
-      >
-        <LinkOutlined style={{ color: existAndConsistent ? '#10b981' : '#fbbf24' }} />
-      </Popover>
-    ) : (
-      <Tooltip title={t('Network disconnected')}>
-        <DisconnectOutlined style={{ color: '#ef4444' }} />
-      </Tooltip>
-    );
-  }, [networkStatus, net.name, network, t, switchNetwork]);
 
   useEffect(() => {
     if (!canStart) {
@@ -164,7 +106,7 @@ export function Register() {
       <Form.Item name="host" label={t('Host network')} rules={[{ required: true }]}>
         <Destination
           networks={networks}
-          extra={Extra}
+          extra={<LinkIndicator config={net} />}
           onChange={(value) => {
             if (value) {
               setNet(value);

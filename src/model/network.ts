@@ -37,6 +37,11 @@ export interface Erc20TokenConfig {
   mappingAddress: string;
 }
 
+export interface DVMConfig {
+  ring: string;
+  kton: string;
+}
+
 export interface Provider {
   rpc: string;
   etherscan: string;
@@ -44,6 +49,7 @@ export interface Provider {
 
 export interface NetConfig {
   api: Api;
+  dvm?: DVMConfig;
   erc20Token: Erc20TokenConfig;
   ethereumChain: AddEthereumChainParameter;
   facade: Facade;
@@ -52,7 +58,6 @@ export interface NetConfig {
   lockEvents?: LockEventsStorage[];
   name: Network;
   provider: Provider;
-  rpc: string;
   ss58Prefix: SS58Prefix;
   tokenContract: TokenContract & {
     registryEth?: string;
@@ -63,7 +68,7 @@ export interface NetConfig {
   type: NetworkCategory[];
 }
 
-export type NetworkConfig<T = NetConfig> = Config<Network, T>;
+export type NetworkConfig<T = NetConfig> = Config<PolkadotTypeNetwork, T> & Config<EthereumTypeNetwork, Omit<T, 'dvm'>>;
 
 /**
  * pending: initial state, indicate that the connection never launched.
@@ -79,3 +84,16 @@ export type PolkadotConnection = Connection<PolkadotTypeNetwork>;
 export type EthereumConnection = Connection<EthereumTypeNetwork>;
 
 export type NetworkFilter = (network: NetConfig) => boolean;
+
+export type NetworkMode = 'native' | 'dvm';
+
+export interface Vertices {
+  network: Network;
+  mode: NetworkMode;
+}
+
+export type Departure = Vertices;
+
+export interface Arrival extends Vertices {
+  status: 'pending' | 'available';
+}

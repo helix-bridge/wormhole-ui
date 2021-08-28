@@ -1,15 +1,16 @@
 import { curry, curryRight, isNull } from 'lodash';
 import Web3 from 'web3';
+import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
 import {
-  NetworkEnum,
-  NETWORK_ALIAS,
-  NETWORK_CONFIG,
-  NETWORK_GRAPH,
-  NETWORK_SIMPLE,
+  Arrival,
+  Departure,
+  MetamaskNativeNetworkIds,
+  NetConfig,
+  Network,
+  NetworkCategory,
+  NetworkMode,
   Vertices,
-  AIRDROP_GRAPH,
-} from '../../config';
-import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkCategory } from '../../model';
+} from '../../model';
 
 function isSpecifyNetworkType(type: NetworkCategory) {
   const findBy = (name: Network) => NETWORK_CONFIG[name] || null;
@@ -66,12 +67,19 @@ const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) => {
   return typeof net1 === typeof net2 && net1?.fullName === net2?.fullName;
 };
 
-const isInNodeList = (source: Map<Network, Vertices[]>) => (net1: NetConfig | null, net2: NetConfig | null) => {
+const getArrivals = (source: Map<Departure, Arrival[]>, departure: NetConfig) => {
+  const mode: NetworkMode = departure.dvm ? 'dvm' : 'native';
+  const target = [...source].find(([item]) => item.network === departure.name && item.mode === mode);
+
+  return target ? target[1] : [];
+};
+
+const isInNodeList = (source: Map<Departure, Arrival[]>) => (net1: NetConfig | null, net2: NetConfig | null) => {
   if (!net1 || !net2) {
     return true;
   }
 
-  const vertices = source.get(NetworkEnum[net1.name]) ?? [];
+  const vertices = getArrivals(source, net1);
   const nets = vertices.map((ver) => ver.network);
 
   return nets.includes(net2.name);
@@ -92,6 +100,20 @@ export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
 }
 
+export function getConfigMode(config: NetConfig): NetworkMode {
+  return config.dvm ? 'dvm' : 'native';
+}
+
+export function getConfig(vertices: Vertices) {
+  if (!vertices) {
+    return null;
+  }
+
+  const { mode, network } = vertices;
+
+  return NETWORKS.find((item) => item.name === network && mode === getConfigMode(item)) ?? null;
+}
+
 export function getNetworkByName(name: Network | null | undefined) {
   if (name) {
     return NETWORK_CONFIG[name];
@@ -102,20 +124,20 @@ export function getNetworkByName(name: Network | null | undefined) {
   return null;
 }
 
-export function getVertices(from: Network, to: Network): Vertices | null {
+export function getVertices(from: Network, to: Network): Arrival | null {
   if (!from || !to) {
     return null;
   }
 
-  return NETWORK_GRAPH.get(from)?.find((item) => item.network === to) ?? null;
+  return getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[from]).find((item) => item.network === to) ?? null;
 }
 
-function getVerticesList(from: Network): Vertices[] {
+function getVerticesList(from: Network): Arrival[] {
   if (!from) {
     return [];
   }
 
-  return NETWORK_GRAPH.get(from) || [];
+  return getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[from]);
 }
 
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {

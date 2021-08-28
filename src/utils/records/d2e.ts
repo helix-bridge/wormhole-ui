@@ -78,7 +78,7 @@ export function claimToken({
 }: ClaimInfo): Observable<Tx> {
   const network = networkPrefix.toLowerCase() as Network;
   const config = NETWORK_CONFIG[network];
-  const provider = new WsProvider(config.rpc);
+  const provider = new WsProvider(config.provider.rpc);
   const apiObs = from(
     ApiPromise.create({
       provider,

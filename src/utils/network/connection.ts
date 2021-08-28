@@ -37,7 +37,7 @@ export const getPolkadotConnection: ConnectionFn<PolkadotConnection> = (network)
       let reconnecting = false;
 
       return new Observable((observer: Observer<PolkadotConnection>) => {
-        const url = NETWORK_CONFIG[network].rpc;
+        const url = NETWORK_CONFIG[network].provider.rpc;
         const provider = new WsProvider(url);
         const api = new ApiPromise({
           provider,

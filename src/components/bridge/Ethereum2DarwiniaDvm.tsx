@@ -1,5 +1,5 @@
 import { QuestionCircleFilled } from '@ant-design/icons';
-import { Button, Descriptions, Form, Input, Select, Tooltip } from 'antd';
+import { Button, Descriptions, Form, Input, Tooltip } from 'antd';
 import { FormInstance, Rule } from 'antd/lib/form';
 import BN from 'bn.js';
 import { format } from 'date-fns';
@@ -7,9 +7,11 @@ import { TFunction } from 'i18next';
 import { isNull } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
+import { Path } from '../../config/routes';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import {
   BridgeFormProps,
@@ -30,16 +32,20 @@ import {
   empty,
   fromWei,
   getInfoFromHash,
+  getUnit,
   isValidAddress,
   prettyNumber,
   RedeemDeposit,
   redeemDeposit,
+  redeemErc20,
+  RedeemErc20,
   RedeemEth,
   redeemToken,
   toWei,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
-import { DepositItem, getDepositTimeRange } from '../controls/DepositItem';
+import { getDepositTimeRange } from '../controls/DepositItem';
+import { Erc20Control } from '../controls/Erc20Control';
 import { MaxBalance } from '../controls/MaxBalance';
 import { RecipientItem } from '../controls/RecipientItem';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
@@ -59,7 +65,7 @@ interface AmountCheckInfo {
   fee: BN | null;
   balance: BN | null;
   ringBalance: BN | null;
-  asset: E2DAssetEnum;
+  asset: 'ring' | 'kton' | string;
   form?: FormInstance<E2D>;
   t: TFunction;
 }
@@ -124,7 +130,7 @@ async function getFee(config: NetConfig): Promise<BN> {
   return web3js.utils.toBN(fee || 0);
 }
 
-function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo): Rule[] {
+function getAmountRules({ fee, ringBalance, balance, asset, form, t }: AmountCheckInfo): Rule[] {
   const required: Rule = { required: true };
   const isExit: (target: BN | null, name: string) => Rule = (target, name) => {
     const message = t('{{name}} query failed, please wait and try again', { name: t(name) });
@@ -145,7 +151,8 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
   const isLessThenMax = {
     validator: (_r: Rule, curVal: string) => {
       const value = new BN(Web3.utils.toWei(curVal));
-      const maximum = balance;
+      const { erc20 } = form?.getFieldsValue() || {};
+      const maximum = erc20?.balance || BN_ZERO;
 
       return value.lte(maximum!) ? Promise.resolve() : Promise.reject(amountGtBalanceMsg);
     },
@@ -165,10 +172,6 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
     return [...commonRules, gtThanFee];
   }
 
-  if (asset === E2DAssetEnum.deposit) {
-    return [required, isFeeExist, isRingExist, ringGtThanFee];
-  }
-
   return commonRules;
 }
 
@@ -179,14 +182,14 @@ function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountChe
   if (!fee || !ringBalance || !balance) {
     return (
       // eslint-disable-next-line no-magic-numbers
-      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
+      <p className="text-red-400 animate-pulse px-2" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
         {t('Transfer information querying')}
       </p>
     );
   }
 
   return (
-    <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
+    <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400 px-2">
       {asset === E2DAssetEnum.ring && value.gte(fee) && (
         <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
           {fromWei({ value: value.sub(fee) })} RING
@@ -260,18 +263,39 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
   return createTxWorkflow(beforeTx, txObs, after);
 }
 
+function createErc20Tx(value: RedeemErc20, after: AfterTxCreator): Observable<Tx> {
+  const beforeTx = applyModalObs({
+    content: (
+      <TransferConfirm value={value}>
+        <Des
+          title={<Trans>Amount</Trans>}
+          content={
+            <span>
+              {value.amount} {value.erc20.symbol}
+            </span>
+          }
+        ></Des>
+      </TransferConfirm>
+    ),
+  });
+  const txObs = redeemErc20(value);
+
+  return createTxWorkflow(beforeTx, txObs, after);
+}
+
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
-export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
+export function Ethereum2DarwiniaDVM({ form, setSubmit }: BridgeFormProps<E2D>) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(BN_ZERO);
   const [max, setMax] = useState<BN | null>(null);
   const [fee, setFee] = useState<BN | null>(null);
   const [ringBalance, setRingBalance] = useState<BN | null>(null);
+  const [selectedToken, setSelectedToken] = useState<Erc20Token | null>(null);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
-  const [asset, setAsset] = useState<E2DAssetEnum>(() => form.getFieldValue(FORM_CONTROL.asset) ?? E2DAssetEnum.ring);
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
+  const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
   const { accounts } = useApi();
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();
@@ -282,11 +306,13 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
     return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
   }, [accounts]);
   const availableBalance = useMemo(() => {
-    return max === null ? null : fromWei({ value: max }, prettyNumber);
-  }, [max]);
+    return !selectedToken
+      ? null
+      : fromWei({ value: selectedToken.balance, unit: getUnit(+selectedToken.decimals) }, prettyNumber);
+  }, [selectedToken]);
   const amountRules = useMemo(
-    () => getAmountRules({ fee, balance: max, ringBalance, asset, t }),
-    [asset, fee, max, ringBalance, t]
+    () => getAmountRules({ fee, balance: max, ringBalance, asset: selectedToken!.name, form, t }),
+    [fee, form, max, ringBalance, selectedToken, t]
   );
   const refreshAllowance = useCallback(
     (value: RedeemEth | ApproveValue) =>
@@ -299,6 +325,10 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
 
   const refreshBalance = useCallback(
     (value: RedeemEth | ApproveValue) => {
+      if (value.erc20) {
+        updateErc20(value.erc20!.address);
+      }
+
       if (value.asset === E2DAssetEnum.kton) {
         getKtonBalance(account, value.transfer.from).then((balance) => setMax(balance));
       }
@@ -312,7 +342,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
       });
       refreshAllowance(value);
     },
-    [account, refreshAllowance]
+    [account, refreshAllowance, updateErc20]
   );
 
   const refreshDeposit = useCallback(
@@ -327,7 +357,10 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
     (curAsset: E2DAssetEnum | Erc20Token | null) => {
       let fn = empty;
 
-      if (curAsset === E2DAssetEnum.deposit) {
+      if (curAsset === null) {
+        fn = () => (value: RedeemErc20) =>
+          createErc20Tx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(observer);
+      } else if (curAsset === E2DAssetEnum.deposit) {
         fn = () => (value: RedeemDeposit) =>
           createCrossDepositTx(
             value,
@@ -389,15 +422,14 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
   }, [account, form, updateDeparture]);
 
   useEffect(() => {
-    updateSubmit(asset);
-  }, [asset, updateSubmit]);
+    updateSubmit(selectedToken);
+  }, [selectedToken, updateSubmit]);
 
   return (
     <>
       <Form.Item name={FORM_CONTROL.sender} className="hidden" rules={[{ required: true }]}>
         <Input disabled value={account} />
       </Form.Item>
-
       <RecipientItem
         form={form}
         extraTip={
@@ -408,114 +440,108 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
             </Trans>
           </span>
         }
+        isDvm={true}
       />
 
-      <Form.Item name={FORM_CONTROL.asset} initialValue={E2DAssetEnum.ring} label={t('Asset')}>
-        <Select
-          size="large"
-          onChange={async (value: E2DAssetEnum) => {
-            form.setFieldsValue({ amount: '' });
-
-            let balance: BN | null = null;
-            const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
-
-            if (value === E2DAssetEnum.ring) {
-              balance = await getRingBalance(account, netConfig);
-
-              setRingBalance(balance);
-            }
-
-            if (value === E2DAssetEnum.kton) {
-              balance = await getKtonBalance(account, netConfig);
-            }
-
-            setAsset(value);
-            setMax(balance);
+      <Form.Item
+        name={FORM_CONTROL.asset}
+        label={t('Asset')}
+        extra={
+          <span className="inline-block mt-2 px-2">
+            <Trans i18nKey="registrationTip">
+              If you can not find the token you want to send in the list, highly recommended to
+              <Link to={Path.register}> go to the registration page</Link>, where you will find it after completing the
+              registration steps.
+            </Trans>
+          </span>
+        }
+        rules={[{ required: true }]}
+        className="mb-2"
+      >
+        <Erc20Control
+          network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
+          onChange={(erc20) => {
+            setSelectedToken(erc20);
           }}
-        >
-          <Select.Option value={E2DAssetEnum.ring}>RING</Select.Option>
-          <Select.Option value={E2DAssetEnum.kton}>KTON</Select.Option>
-          <Select.Option value={E2DAssetEnum.deposit} className="uppercase">
-            {t('Deposit')}
-          </Select.Option>
-        </Select>
+          updateBalance={setUpdateErc20}
+        />
       </Form.Item>
 
-      {asset === E2DAssetEnum.deposit ? (
-        <DepositItem
-          address={account}
-          config={form.getFieldValue(FORM_CONTROL.transfer).from}
-          removedIds={removedDepositIds}
-          rules={amountRules}
-        />
-      ) : (
-        <Form.Item
-          name={FORM_CONTROL.amount}
-          validateFirst
-          label={t('Amount')}
-          rules={[
-            ...amountRules,
-            {
-              // eslint-disable-next-line complexity
-              validator: (_, value: string) => {
-                const val =
-                  form.getFieldValue(FORM_CONTROL.asset) !== E2DAssetEnum.ring
-                    ? fee ?? BN_ZERO
-                    : new BN(Web3.utils.toWei(value));
+      <Form.Item
+        name={FORM_CONTROL.amount}
+        validateFirst
+        label={t('Amount')}
+        rules={[
+          ...amountRules,
+          {
+            // eslint-disable-next-line complexity
+            validator: (_, value: string) => {
+              const val =
+                form.getFieldValue(FORM_CONTROL.asset) !== E2DAssetEnum.ring
+                  ? fee ?? BN_ZERO
+                  : new BN(Web3.utils.toWei(value));
 
-                return allowance.gte(val) ? Promise.resolve() : Promise.reject();
-              },
-
-              message: (
-                <div className="my-2">
-                  <span className="mr-4">
-                    {t('Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount')}
-                  </span>
-                  <Button
-                    onClick={() => {
-                      const value = {
-                        sender: account,
-                        transfer: form.getFieldValue(FORM_CONTROL.transfer),
-                      };
-
-                      createApproveRingTx(
-                        value,
-                        afterTx(ApproveSuccess, { onDisappear: refreshAllowance })(value)
-                      ).subscribe(observer);
-                    }}
-                    size="small"
-                  >
-                    {t('Approve')}
-                  </Button>
-                </div>
-              ),
+              return allowance.gte(val) ? Promise.resolve() : Promise.reject();
             },
-          ]}
-        >
-          <Balance
-            size="large"
-            placeholder={t('Balance {{balance}}', {
-              balance: isNull(availableBalance) ? t('Searching') : availableBalance,
-            })}
-            className="flex-1"
-            onChange={(val) => setCurAmount(val)}
-          >
-            <MaxBalance
-              network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
-              onClick={() => {
-                const amount = fromWei({ value: max, unit: 'ether' }, prettyNumber);
 
-                form.setFieldsValue({ [FORM_CONTROL.amount]: amount });
-                setCurAmount(amount);
-              }}
-              size="large"
-            />
-          </Balance>
-        </Form.Item>
-      )}
+            message: (
+              <div className="my-2">
+                <span className="mr-4">
+                  {t('Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount')}
+                </span>
+                <Button
+                  onClick={() => {
+                    const value = {
+                      sender: account,
+                      transfer: form.getFieldValue(FORM_CONTROL.transfer),
+                    };
+
+                    createApproveRingTx(
+                      value,
+                      afterTx(ApproveSuccess, { onDisappear: refreshAllowance })(value)
+                    ).subscribe(observer);
+                  }}
+                  size="small"
+                >
+                  {t('Approve')}
+                </Button>
+              </div>
+            ),
+          },
+        ]}
+      >
+        <Balance
+          size="large"
+          placeholder={t('Balance {{balance}}', {
+            balance: isNull(availableBalance) ? t('Searching') : availableBalance,
+          })}
+          className="flex-1"
+          onChange={(val) => setCurAmount(val)}
+        >
+          <MaxBalance
+            network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
+            onClick={() => {
+              const val = selectedToken?.balance || max;
+              const unit = getUnit(+(selectedToken?.decimals ?? '18')) ?? 'ether';
+              const amount = fromWei({ value: val, unit }, prettyNumber);
+
+              form.setFieldsValue({ [FORM_CONTROL.amount]: amount });
+              setCurAmount(amount);
+            }}
+            size="large"
+          />
+        </Balance>
+      </Form.Item>
 
       <Form.Item className="mb-0">
-        <TransferInfo fee={fee} ringBalance={ringBalance} balance={max} asset={asset} amount={curAmount} t={t} />
+        <TransferInfo
+          fee={fee}
+          ringBalance={ringBalance}
+          balance={max}
+          asset={selectedToken?.name ?? ''}
+          amount={curAmount}
+          t={t}
+        />
       </Form.Item>
     </>
   );

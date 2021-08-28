@@ -8,10 +8,13 @@ import { from, Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
-import { BridgeFormProps, D2E, D2EAsset, Token, TransferAsset, Tx } from '../../model';
-import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, toWei } from '../../utils';
-import { backingLock, BackingLockNative } from '../../utils/tx/d2e';
+import { BridgeFormProps, D2E, Erc20Token, Network, Token, Tx } from '../../model';
+import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, getUnit, prettyNumber, toWei } from '../../utils';
+import { backingLockErc20, BackingLockERC20 } from '../../utils/tx/d2e';
 import { AssetGroup, AssetGroupValue, AvailableBalance } from '../controls/AssetGroup';
+import { Balance } from '../controls/Balance';
+import { Erc20Control } from '../controls/Erc20Control';
+import { MaxBalance } from '../controls/MaxBalance';
 import { RecipientItem } from '../controls/RecipientItem';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
@@ -65,6 +68,7 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
 
 // eslint-disable-next-line complexity
 function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
+  // eslint-disable-next-line complexity
   const isRingBalanceEnough = useMemo(() => {
     if (!fee || !ringBalance) {
       return false;
@@ -89,7 +93,10 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
 
   if (!fee || !ringBalance) {
     return (
-      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : animationCount }}>
+      <p
+        className="text-red-400 animate-pulse px-2"
+        style={{ animationIterationCount: !fee ? 'infinite' : animationCount }}
+      >
         {t('Transfer information querying')}
       </p>
     );
@@ -155,11 +162,11 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
 
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
-function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCreator, api: ApiPromise): Observable<Tx> {
+function ethereumBackingLockErc20(value: BackingLockERC20, after: AfterTxCreator): Observable<Tx> {
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });
-  const obs = backingLock(value, api);
+  const obs = backingLockErc20(value);
 
   return createTxWorkflow(beforeTx, obs, after);
 }
@@ -167,12 +174,14 @@ function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCre
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
-export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
+export function DarwiniaDVM2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
   const { t } = useTranslation();
   const { accounts, api, chain } = useApi();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
   const [fee, setFee] = useState<BN | null>(null);
   const [currentAssets, setCurAssets] = useState<AssetGroupValue>([]);
+  const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
+  const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess();
@@ -209,37 +218,15 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
     [api, getChainInfo]
   );
 
-  useEffect(() => {
-    const fn = () => (data: BackingLockNative) => {
-      const { assets, sender } = data;
-      const assetsToSend = assets?.map((item) => {
-        const { asset, amount, checked } = item as Required<TransferAsset<D2EAsset>>;
-        const unit = getChainInfo(asset as Token)?.decimal || 'gwei';
-
-        return { asset, unit, amount: checked ? toWei({ value: amount, unit }) : '0' };
-      });
-
-      ethereumBackingLockDarwinia(
-        { ...data, assets: assetsToSend },
-        afterTx(TransferSuccess, {
-          hashType: 'block',
-          onDisappear: () => {
-            form.setFieldsValue({
-              [FORM_CONTROL.sender]: sender,
-              [FORM_CONTROL.assets]: [
-                { asset: 'ring', amount: '', checked: true },
-                { asset: 'kton', amount: '' },
-              ],
-            });
-            getBalances(sender).then(setAvailableBalances);
-          },
-        })({ ...data, assets: assetsToSend }),
-        api!
+  const updateSubmit = useCallback(() => {
+    const fn = () => (data: BackingLockERC20) => {
+      return ethereumBackingLockErc20(
+        data,
+        afterTx(TransferSuccess, { onDisappear: () => updateErc20(data.erc20.address) })(data)
       ).subscribe(observer);
     };
-
     setSubmit(fn);
-  }, [afterTx, api, form, getBalances, getChainInfo, observer, setSubmit]);
+  }, [afterTx, observer, setSubmit, updateErc20]);
 
   useEffect(() => {
     const sub$$ = from(getBalances(form.getFieldValue(FORM_CONTROL.sender))).subscribe(setAvailableBalances);
@@ -264,7 +251,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
     updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
 
     return () => sub$$.unsubscribe();
-  }, [form, api, accounts, updateDeparture]);
+  }, [form, api, accounts, updateSubmit, updateDeparture]);
 
   return (
     <>
@@ -283,6 +270,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
+        isDvm={true}
       />
 
       <Form.Item
@@ -316,6 +304,75 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
           form={form}
           onChange={(value) => setCurAssets(value)}
         />
+      </Form.Item>
+
+      <Form.Item name={FORM_CONTROL.erc20} label={t('Asset')} rules={[{ required: true }]} className="mb-2">
+        <Erc20Control
+          network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
+          onChange={(erc20) => {
+            setSelectedErc20(erc20);
+          }}
+          updateBalance={setUpdateErc20}
+        />
+      </Form.Item>
+      <Form.Item
+        name={FORM_CONTROL.amount}
+        label={t('Amount')}
+        rules={[
+          { required: true },
+          {
+            // eslint-disable-next-line complexity
+            validator: () => {
+              const ring = availableBalances.find((item) => item.asset === 'ring');
+              // eslint-disable-next-line no-magic-numbers
+              const unit = getUnit(+ring!.chainInfo!.decimal ?? 18) ?? 'ether';
+              const feeFormatted = fromWei({ value: fee, unit: ring?.chainInfo?.decimal ?? 'ether' });
+              const feeBn = new BN(toWei({ value: feeFormatted, unit }));
+              const maxRingBn = new BN(ring?.max ?? '0');
+
+              return maxRingBn.lte(feeBn)
+                ? Promise.resolve()
+                : Promise.reject('The ring balance it not enough to cover the fee');
+            },
+            message: t('The ring balance it not enough to cover the fee'),
+          },
+          {
+            validator: (_, value: string) => {
+              const ring = availableBalances.find((item) => item.asset === 'ring');
+              // eslint-disable-next-line no-magic-numbers
+              const unit = getUnit(+ring!.chainInfo!.decimal ?? 18) ?? 'ether';
+              const val = new BN(toWei({ value, unit }));
+
+              return val.gt(selectedErc20?.balance ?? BN_ZERO)
+                ? Promise.resolve()
+                : Promise.reject('The transfer amount must less or equal than the balance');
+            },
+            message: t('The transfer amount must less or equal than the balance'),
+          },
+        ]}
+      >
+        <Balance
+          size="large"
+          placeholder={t('Balance {{balance}}', {
+            balance: fromWei({
+              value: selectedErc20?.balance.toString(),
+              // eslint-disable-next-line no-magic-numbers
+              unit: getUnit((selectedErc20 && +selectedErc20.decimals) || 18),
+            }),
+          })}
+          className="flex-1"
+        >
+          <MaxBalance
+            network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
+            onClick={() => {
+              const unit = getUnit(+(selectedErc20?.decimals ?? '18'));
+              const amount = fromWei({ value: selectedErc20?.balance, unit }, prettyNumber);
+
+              form.setFieldsValue({ [FORM_CONTROL.amount]: amount });
+            }}
+            size="large"
+          />
+        </Balance>
       </Form.Item>
 
       <TransferInfo fee={fee} ringBalance={new BN(ringBalance?.max || '0')} assets={currentAssets} t={t} />

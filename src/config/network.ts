@@ -1,10 +1,11 @@
-import { NetConfig, Network, NetworkConfig } from '../model';
+import { chain, omit } from 'lodash';
+import { Arrival, Departure, NetConfig, NetworkConfig } from '../model';
 
-export enum NetworkEnum {
-  pangolin = 'pangolin',
+export enum Graph {
   crab = 'crab',
   darwinia = 'darwinia',
   ethereum = 'ethereum',
+  pangolin = 'pangolin',
   ropsten = 'ropsten',
 }
 
@@ -16,7 +17,7 @@ const allowAlias: (full: string, at?: number) => string[] = (fullName, startAt =
   return new Array(len - startAt).fill('').map((_, index) => shortestName + fullName.substr(startAt, index));
 };
 
-export const NETWORK_ALIAS = new Map([[NetworkEnum.ethereum, [...allowAlias(NetworkEnum.ethereum)]]]);
+export const NETWORK_ALIAS = new Map([[Graph.ethereum, [...allowAlias(Graph.ethereum)]]]);
 
 const EVOLUTION_DOMAIN = {
   product: 'https://www.evolution.land',
@@ -34,6 +35,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: 'https://crab.subscan.io',
+    },
+    dvm: {
+      ring: '0x588abe3F7EE935137102C5e2B8042788935f4CB0',
+      kton: '0xbfE9E136270cE46A2A6a8E8D54718BdAEBEbaA3D',
     },
     erc20Token: {
       proofAddress: '',
@@ -59,7 +64,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: 'wss://crab-rpc.darwinia.network',
       etherscan: '',
     },
-    rpc: 'wss://crab-rpc.darwinia.network',
     ss58Prefix: 42,
     tokenContract: {
       native: 'CRING',
@@ -72,6 +76,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: '',
+    },
+    dvm: {
+      ring: '',
+      kton: '',
     },
     erc20Token: {
       bankingAddress: '',
@@ -109,7 +117,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: 'wss://rpc.darwinia.network',
       etherscan: '',
     },
-    rpc: 'wss://rpc.darwinia.network',
     ss58Prefix: 18,
     tokenContract: {
       native: 'RING',
@@ -147,7 +154,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: '',
       etherscan: 'wss://mainnet.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
     },
-    rpc: '',
     ss58Prefix: 18,
     tokenContract: {
       native: 'eth',
@@ -166,6 +172,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
+    },
+    dvm: {
+      ring: '0xbBD91aD844557ADCbb97296216b3B3c977FCC4F2',
+      kton: '0xc8C1680B18D432732D07c044669915726fAF67D0',
     },
     erc20Token: {
       bankingAddress: '',
@@ -198,7 +208,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: 'wss://pangolin-rpc.darwinia.network',
       etherscan: '',
     },
-    rpc: 'wss://pangolin-rpc.darwinia.network',
     ss58Prefix: 18,
     tokenContract: {
       native: 'PRING',
@@ -236,7 +245,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: '',
       etherscan: 'wss://ropsten.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
     },
-    rpc: '',
     ss58Prefix: 18,
     tokenContract: {
       native: 'eth',
@@ -251,26 +259,65 @@ export const NETWORK_CONFIG: NetworkConfig = {
   },
 };
 
-export const NETWORKS: NetConfig[] = Object.values(NETWORK_CONFIG);
-export const AIRPORTS: NetConfig[] = NETWORKS.filter((item) => ['ethereum', 'crab'].includes(item.name));
-
-export interface Vertices {
-  network: Network;
-  status: 'pending' | 'available';
-  tokenBlackList?: string[];
-}
-
-export const NETWORK_GRAPH = new Map<Network, Vertices[]>([
-  [NetworkEnum.crab, [{ network: NetworkEnum.darwinia, status: 'pending' }]],
-  [NetworkEnum.darwinia, [{ network: NetworkEnum.ethereum, status: 'available' }]],
-  [NetworkEnum.ethereum, [{ network: NetworkEnum.darwinia, status: 'available' }]],
-  [NetworkEnum.pangolin, [{ network: NetworkEnum.ropsten, status: 'available' }]],
-  [NetworkEnum.ropsten, [{ network: NetworkEnum.pangolin, status: 'available' }]],
+export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
+  [
+    { network: Graph.crab, mode: 'native' },
+    [
+      { network: Graph.darwinia, status: 'pending', mode: 'native' },
+      { network: Graph.darwinia, status: 'pending', mode: 'dvm' },
+    ],
+  ],
+  [
+    { network: Graph.crab, mode: 'dvm' },
+    [
+      { network: Graph.darwinia, status: 'pending', mode: 'native' },
+      { network: Graph.darwinia, status: 'pending', mode: 'dvm' },
+    ],
+  ],
+  [{ network: Graph.darwinia, mode: 'native' }, [{ network: Graph.ethereum, status: 'available', mode: 'native' }]],
+  [{ network: Graph.darwinia, mode: 'dvm' }, [{ network: Graph.ethereum, status: 'available', mode: 'native' }]],
+  [
+    { network: Graph.ethereum, mode: 'native' },
+    [
+      { network: Graph.darwinia, status: 'available', mode: 'native' },
+      { network: Graph.darwinia, status: 'available', mode: 'native' },
+    ],
+  ],
+  [{ network: Graph.pangolin, mode: 'native' }, [{ network: Graph.ropsten, status: 'available', mode: 'native' }]],
+  [{ network: Graph.pangolin, mode: 'dvm' }, [{ network: Graph.ropsten, status: 'available', mode: 'native' }]],
+  [
+    { network: Graph.ropsten, mode: 'native' },
+    [
+      { network: Graph.pangolin, status: 'available', mode: 'native' },
+      { network: Graph.pangolin, status: 'available', mode: 'dvm' },
+    ],
+  ],
 ]);
 
-export const AIRDROP_GRAPH = new Map<Network, Vertices[]>([
-  [NetworkEnum.ethereum, [{ network: NetworkEnum.crab, status: 'available' }]],
+/**
+ * generate network configs, use dvm field to distinct whether the config is dvm config.
+ */
+export const NETWORKS: NetConfig[] = chain([...NETWORK_GRAPH])
+  .map(([departure, arrivals]) => [departure, ...arrivals])
+  .flatten()
+  .unionWith((cur, pre) => cur.mode === pre.mode && cur.network === pre.network)
+  .map(({ network, mode }) => {
+    const config: NetConfig = NETWORK_CONFIG[network];
+
+    return config.type.includes('polkadot') && mode === 'native'
+      ? (omit(config, 'dvm') as Omit<NetConfig, 'dvm'>)
+      : config;
+  })
+  .sortBy((item) => item.name)
+  .valueOf();
+
+export const AIRDROP_GRAPH = new Map<Departure, Arrival[]>([
+  [{ network: Graph.ethereum, mode: 'native' }, [{ network: Graph.crab, status: 'available', mode: 'native' }]],
 ]);
+
+export const AIRPORTS: NetConfig[] = Object.values(NETWORK_CONFIG).filter((item) =>
+  ['ethereum', 'crab'].includes(item.name)
+);
 
 /* -------------------------------------------------Network Simple-------------------------------------------------------- */
 

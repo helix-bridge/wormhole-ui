@@ -29,7 +29,7 @@ export function FromItemButton({ children, className, ...others }: ButtonProps) 
 // eslint-disable-next-line complexity
 export function SubmitButton({ from, to, children, requireTo, disabled }: PropsWithChildren<SubmitButtonProps>) {
   const { t } = useTranslation();
-  const { networkStatus, network, switchNetwork } = useApi();
+  const { networkStatus, network, switchNetwork, connectNetwork } = useApi();
   const { tx } = useTx();
   const errorConnections: ConnectStatus[] = ['pending', 'disconnected', 'fail'];
 
@@ -57,7 +57,7 @@ export function SubmitButton({ from, to, children, requireTo, disabled }: PropsW
     return (
       <FromItemButton
         onClick={() => {
-          switchNetwork(from.name);
+          connectNetwork(from.name);
         }}
       >
         {t('Connect to {{network}}', { network: from.name })}

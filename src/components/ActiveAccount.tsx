@@ -2,7 +2,7 @@ import { useApi } from '../hooks';
 import { isPolkadotNetwork } from '../utils';
 import { ShortAccount } from './ShortAccount';
 
-export function Connection() {
+export function ActiveAccount() {
   const { network, networkStatus, accounts } = useApi();
 
   if (networkStatus !== 'success' || isPolkadotNetwork(network) || !accounts?.length) {

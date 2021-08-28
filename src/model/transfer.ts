@@ -39,7 +39,6 @@ export interface TransferAsset<T> {
   asset?: T | null;
   checked?: boolean;
   unit?: Unit;
-  assetType?: 'erc20' | 'native' | 'darwinia';
   erc20?: Erc20Token;
 }
 

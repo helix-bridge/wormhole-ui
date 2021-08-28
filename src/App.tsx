@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { BridgeStatus } from './components/BridgeStatus';
-import { Connection } from './components/Connection';
+import { ActiveAccount } from './components/ActiveAccount';
 import { Footer } from './components/Footer';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { THEME } from './config';
@@ -65,7 +65,7 @@ function App() {
           </div>
 
           <div className="flex justify-end items-center md:pl-8">
-            <Connection />
+            <ActiveAccount />
 
             <Dropdown
               overlay={
