@@ -15,7 +15,7 @@ import {
   TransferFormValues,
   TransferNetwork,
 } from '../model';
-import { empty, getConfig, getConfigMode, getInitialSetting } from '../utils';
+import { empty, getNetConfigByVer, getNetworkMode, getInitialSetting, isSameNetConfig } from '../utils';
 import { Airport } from './Airport';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
 import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
@@ -28,8 +28,8 @@ const initTransfer: () => TransferNetwork = () => {
   const go = getInitialSetting('to', '') as Network;
   const fromMode = getInitialSetting('fMode', '') as NetworkMode;
   const toMode = getInitialSetting('tMode', '') as NetworkMode;
-  const from = getConfig({ network: come, mode: fromMode });
-  const to = getConfig({ network: go, mode: toMode });
+  const from = getNetConfigByVer({ network: come, mode: fromMode });
+  const to = getNetConfigByVer({ network: go, mode: toMode });
 
   if (from?.isTest === to?.isTest) {
     return { from, to };
@@ -60,7 +60,7 @@ const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<Br
   }
 
   const source = [...DEPARTURES];
-  const mode = getConfigMode(from);
+  const mode = getNetworkMode(from);
 
   const findBy = (network: Network) => source.find(([departure]) => isEqual(departure, { network, mode }));
 
@@ -85,7 +85,7 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
 
   useEffect(() => {
     const { from } = transfer;
-    const isReady = !!from && from.name === network && networkStatus === 'success';
+    const isReady = !!from && isSameNetConfig(from, network) && networkStatus === 'success';
 
     setIsFromReady(isReady);
   }, [network, networkStatus, transfer]);

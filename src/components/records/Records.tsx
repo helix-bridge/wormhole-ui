@@ -1,5 +1,5 @@
 import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
-import { uniq } from 'lodash';
+import { uniq, flow } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -17,8 +17,11 @@ import {
   RingBurnHistoryRes,
 } from '../../model';
 import {
+  getDisplayName,
   getHistoryRouteParams,
+  getNetConfigByVer,
   getNetworkCategory,
+  getVerticesFromDisplayName,
   isEthereumNetwork,
   isPolkadotNetwork,
   isValidAddress,
@@ -30,7 +33,7 @@ import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
 
 const { TabPane } = Tabs;
-const departures = uniq(NETWORKS.map((item) => item.name));
+const departures = uniq(NETWORKS.map(getDisplayName));
 
 const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list?.length || 0;
 
@@ -48,9 +51,9 @@ export function Records() {
   const [genesisData, setGenesisData] = useState<RingBurnHistoryRes | null>(null);
   const [redeemData, setRedeemData] = useState<RedeemHistoryRes | null>(null);
   const [total, setTotal] = useState(0);
-  const canUpdate = useCallback((addr: string | null, net: Network | null) => {
+  const canUpdate = useCallback((addr: string | null, net: string | null) => {
     if (addr && net) {
-      const category = getNetworkCategory(net);
+      const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(net);
 
       return category && isValidAddress(addr, category);
     }
@@ -109,7 +112,9 @@ export function Records() {
                 inputRef.current?.setValue('');
               }
 
-              setNetwork(value);
+              const [selectedNetwork] = value.split('-');
+
+              setNetwork(selectedNetwork as Network);
               setPaginator({ row: 10, page: 0 });
             }}
           >

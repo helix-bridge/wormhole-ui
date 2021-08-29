@@ -3,7 +3,7 @@ import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi, useTx } from '../hooks';
 import { ConnectStatus, NetConfig } from '../model';
-import { hasBridge, isBridgeAvailable } from '../utils';
+import { getDisplayName, hasBridge, isBridgeAvailable, isSameNetConfig } from '../utils';
 
 interface SubmitButtonProps extends ButtonProps {
   from: NetConfig | null;
@@ -45,10 +45,10 @@ export function SubmitButton({ from, to, children, requireTo, disabled }: PropsW
     return <FromItemButton disabled>{t('Connecting ...')}</FromItemButton>;
   }
 
-  if (networkStatus === 'success' && from && from.name !== network) {
+  if (networkStatus === 'success' && from && !isSameNetConfig(from, network)) {
     return (
-      <FromItemButton onClick={() => switchNetwork(from.name)}>
-        {t('Switch to {{network}}', { network: from.name })}
+      <FromItemButton onClick={() => switchNetwork(from)}>
+        {t('Switch to {{network}}', { network: getDisplayName(from) })}
       </FromItemButton>
     );
   }
@@ -57,10 +57,10 @@ export function SubmitButton({ from, to, children, requireTo, disabled }: PropsW
     return (
       <FromItemButton
         onClick={() => {
-          connectNetwork(from.name);
+          connectNetwork(from);
         }}
       >
-        {t('Connect to {{network}}', { network: from.name })}
+        {t('Connect to {{network}}', { network: getDisplayName(from) })}
       </FromItemButton>
     );
   }

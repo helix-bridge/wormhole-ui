@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useNetworks } from '../../hooks';
 import { Arrival, CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../../model';
 import {
-  getConfigMode,
+  getNetworkMode,
   getVertices,
   HashInfo,
   isReachable,
@@ -62,8 +62,8 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
     const info = {
       from: from?.name ?? '',
       to: to?.name ?? '',
-      fMode: from ? getConfigMode(from) : 'native',
-      tMode: to ? getConfigMode(to) : 'native',
+      fMode: from ? getNetworkMode(from) : 'native',
+      tMode: to ? getNetworkMode(to) : 'native',
     } as HashInfo;
     const ver = getVertices(info.from as Network, info.to as Network);
     const reverseVer = getVertices(info.to as Network, info.from as Network);

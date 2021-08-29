@@ -8,7 +8,7 @@ import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessage
 import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useKnownErc20Tokens, useLocalSearch, useTx } from '../../hooks';
 import { Erc20Token, NetConfig } from '../../model';
-import { isValidAddress } from '../../utils';
+import { isSameNetConfig, isValidAddress } from '../../utils';
 import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/meta';
 import {
   confirmRegister,
@@ -43,7 +43,7 @@ export function Register() {
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { tokens, updateTokens } = useKnownErc20Tokens(network!, RegisterStatus.registering);
+  const { tokens, updateTokens } = useKnownErc20Tokens(network!.name, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(tokens), [tokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
@@ -52,10 +52,10 @@ export function Register() {
   const canStart = useMemo(
     () =>
       networkStatus === 'success' &&
-      network === net.name &&
+      isSameNetConfig(network, net) &&
       !!net.erc20Token.bankingAddress &&
       isValidAddress(inputValue, 'ethereum'),
-    [inputValue, net.erc20Token.bankingAddress, net.name, network, networkStatus]
+    [inputValue, net, network, networkStatus]
   );
 
   useEffect(() => {

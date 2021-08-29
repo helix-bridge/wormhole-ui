@@ -2,14 +2,22 @@ import { ApiPromise } from '@polkadot/api';
 import { createContext, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { EMPTY, Subscription } from 'rxjs';
 import { Units } from 'web3-utils';
-import { NETWORK_CONFIG } from '../config';
-import { Action, Connection, ConnectStatus, IAccountMeta, NetConfig, Network, PolkadotConnection } from '../model';
-import { connect, getInitialSetting, getUnit, isEthereumNetwork, isPolkadotNetwork } from '../utils';
+import {
+  Action,
+  Connection,
+  ConnectStatus,
+  IAccountMeta,
+  NetConfig,
+  Network,
+  NetworkMode,
+  PolkadotConnection,
+} from '../model';
+import { connect, getNetConfigByVer, getInitialSetting, getUnit, isEthereumNetwork, isPolkadotNetwork } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
   accounts: IAccountMeta[] | null;
-  network: Network | null;
+  network: NetConfig | null;
   networkStatus: ConnectStatus;
   isDev: boolean;
   enableTestNetworks: boolean;
@@ -29,8 +37,15 @@ type ActionType = 'switchNetwork' | 'updateNetworkStatus' | 'setAccounts' | 'set
 
 const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
+const initialNetworkConfig = () => {
+  const network = getInitialSetting<Network>('from', null);
+  const mode = getInitialSetting<NetworkMode>('fMode', 'native') ?? 'native';
+
+  return network && getNetConfigByVer({ network, mode });
+};
+
 const initialState: StoreState = {
-  network: getInitialSetting<Network>('from', null),
+  network: initialNetworkConfig(),
   accounts: null,
   networkStatus: 'pending',
   isDev,
@@ -41,7 +56,7 @@ const initialState: StoreState = {
 function accountReducer(state: StoreState, action: Action<ActionType, any>): StoreState {
   switch (action.type) {
     case 'switchNetwork': {
-      return { ...state, network: action.payload as Network };
+      return { ...state, network: action.payload };
     }
 
     case 'setAccounts': {
@@ -63,13 +78,12 @@ function accountReducer(state: StoreState, action: Action<ActionType, any>): Sto
 
 export type ApiCtx = StoreState & {
   api: ApiPromise | null;
-  connectNetwork: (network: Network) => void;
+  connectNetwork: (network: NetConfig) => void;
   disconnect: () => void;
   setNetworkStatus: (status: ConnectStatus) => void;
-  switchNetwork: (type: Network | null) => void;
+  switchNetwork: (network: NetConfig) => void;
   setEnableTestNetworks: (enable: boolean) => void;
   setApi: (api: ApiPromise) => void;
-  networkConfig: NetConfig | null;
   chain: Chain;
 };
 
@@ -79,7 +93,7 @@ let subscription: Subscription = EMPTY.subscribe();
 
 export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [state, dispatch] = useReducer(accountReducer, initialState);
-  const switchNetwork = useCallback((payload: Network | null) => dispatch({ type: 'switchNetwork', payload }), []);
+  const switchNetwork = useCallback((payload: NetConfig) => dispatch({ type: 'switchNetwork', payload }), []);
   const setAccounts = useCallback((payload: IAccountMeta[]) => dispatch({ type: 'setAccounts', payload }), []);
   const setEnableTestNetworks = useCallback((payload: boolean) => {
     dispatch({ type: 'setEnableTestNetworks', payload });
@@ -113,17 +127,17 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     [setAccounts, setNetworkStatus]
   );
   const connectNetwork = useCallback(
-    (network: Network) => {
+    (config: NetConfig) => {
       subscription.unsubscribe();
 
-      subscription = connect(network).subscribe(observer);
+      subscription = connect(config).subscribe(observer);
     },
     [observer]
   );
 
   // eslint-disable-next-line complexity
   const disconnect = useCallback(() => {
-    const isPolkadot = isPolkadotNetwork(state.network);
+    const isPolkadot = isPolkadotNetwork(state.network?.name);
 
     if (isPolkadot && api && api.isConnected) {
       subscription.unsubscribe();
@@ -135,24 +149,24 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       return;
     }
 
-    const isEthereum = isEthereumNetwork(state.network);
+    const isEthereum = isEthereumNetwork(state.network?.name);
 
     if (isEthereum && window.ethereum.isConnected()) {
       setNetworkStatus('pending');
       setAccounts([]);
       return;
     }
-  }, [api, setAccounts, setNetworkStatus, state.network]);
+  }, [api, setAccounts, setNetworkStatus, state.network?.name]);
 
   useEffect(() => {
-    if (state.network === null) {
+    if (!state.network) {
       setNetworkStatus('pending');
     } else {
       subscription = connect(state.network).subscribe(observer);
     }
 
     return () => {
-      console.info('[Api provider] Cancel network subscription of network', state.network);
+      console.info('[Api provider] Cancel network subscription of network', state.network?.name);
       subscription.unsubscribe();
     };
   }, [observer, setNetworkStatus, state.network]);
@@ -195,7 +209,6 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
         setEnableTestNetworks,
         setApi,
         api,
-        networkConfig: state.network ? NETWORK_CONFIG[state.network] : null,
         chain,
       }}
     >

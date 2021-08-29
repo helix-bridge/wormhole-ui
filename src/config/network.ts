@@ -31,7 +31,7 @@ const EVOLUTION_DOMAIN = {
 export const NETWORK_CONFIG: NetworkConfig = {
   crab: {
     api: {
-      subql: 'https://api.subquery.network/sq/wuminzhe/crab',
+      subql: 'https://api.subquery.network/sq/darwinia-network/crab',
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: 'https://crab.subscan.io',
@@ -51,7 +51,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
       nativeCurrency: {
         decimals: 18,
       },
-      rpcUrls: [],
+      rpcUrls: ['https://crab-rpc.darwinia.network/'],
+      blockExplorerUrls: ['https://crab.subscan.io/'],
     },
     facade: {
       logo: '/image/crab-button-mobile.png',
@@ -168,7 +169,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
   },
   pangolin: {
     api: {
-      subql: 'http://t3.hkg.itering.com:3000',
+      subql: 'https://api.subquery.network/sq/darwinia-network/pangolin',
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
@@ -188,7 +189,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
       nativeCurrency: {
         decimals: 18,
       },
-      rpcUrls: [],
+      rpcUrls: ['https://pangolin-rpc.darwinia.network/'],
+      blockExplorerUrls: ['https://pangolin.subscan.io/'],
     },
     facade: {
       logo: '/image/pangolin-button-mobile.png',

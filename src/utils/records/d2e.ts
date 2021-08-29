@@ -88,7 +88,7 @@ export function claimToken({
   const toNetworkConfig = getAvailableNetworks(network)!;
   const header = encodeBlockHeader(blockHeaderStr);
   const storageKey = getD2ELockEventsStorageKey(blockNumber, config.lockEvents);
-  const accountObs = getEthConnection(toNetworkConfig.name).pipe(
+  const accountObs = getEthConnection(toNetworkConfig).pipe(
     filter(({ status }) => status === 'success'),
     map(({ accounts }) => accounts[0].address),
     take(1)

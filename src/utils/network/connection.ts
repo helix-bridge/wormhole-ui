@@ -16,14 +16,14 @@ import {
   switchMap,
   switchMapTo,
 } from 'rxjs';
-import { NETWORK_CONFIG, SHORT_DURATION } from '../../config';
-import { Connection, EthereumConnection, Network, NetworkCategory, PolkadotConnection } from '../../model';
+import { SHORT_DURATION } from '../../config';
+import { Connection, EthereumConnection, NetConfig, NetworkCategory, PolkadotConnection } from '../../model';
 import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent } from './network';
 import { switchMetamaskNetwork } from './switch';
 
-type ConnectionFn<T extends Connection> = (network: Network) => Observable<T>;
+type ConnectionFn<T extends Connection> = (network: NetConfig) => Observable<T>;
 
-type ConnectFn<T extends Connection> = (network: Network, chainId?: string) => Observable<T>;
+type ConnectFn<T extends Connection> = (network: NetConfig, chainId?: string) => Observable<T>;
 
 type ConnectConfig = {
   [key in NetworkCategory]: ConnectFn<Connection>;
@@ -37,7 +37,7 @@ export const getPolkadotConnection: ConnectionFn<PolkadotConnection> = (network)
       let reconnecting = false;
 
       return new Observable((observer: Observer<PolkadotConnection>) => {
-        const url = NETWORK_CONFIG[network].provider.rpc;
+        const url = network.provider.rpc;
         const provider = new WsProvider(url);
         const api = new ApiPromise({
           provider,
@@ -114,7 +114,7 @@ export const getEthConnection: ConnectionFn<EthereumConnection> = (network) => {
           })
         );
         window.ethereum.on('chainChanged', (chainId: string) => {
-          from(isNetworkConsistent(network, chainId))
+          from(isNetworkConsistent(network.name, chainId))
             .pipe(
               switchMap((isMatch) => (isMatch ? request : of<EthereumConnection>({ status: 'error', accounts: [] })))
             )
@@ -135,7 +135,7 @@ export const getEthConnection: ConnectionFn<EthereumConnection> = (network) => {
   );
 };
 
-const connectToPolkadot: ConnectFn<PolkadotConnection> = (network: Network) => {
+const connectToPolkadot: ConnectFn<PolkadotConnection> = (network) => {
   if (!network) {
     return EMPTY;
   }
@@ -143,14 +143,16 @@ const connectToPolkadot: ConnectFn<PolkadotConnection> = (network: Network) => {
   return getPolkadotConnection(network);
 };
 
-const connectToEth: ConnectFn<EthereumConnection> = (network: Network, chainId?: string) => {
+const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {
   if (!isMetamaskInstalled() || network === null) {
     return EMPTY;
   }
 
-  return from(isNetworkConsistent(network, chainId)).pipe(
+  return from(isNetworkConsistent(network.name, chainId)).pipe(
     switchMap((isMatch) =>
-      isMatch ? getEthConnection(network) : switchMetamaskNetwork(network).pipe(switchMapTo(getEthConnection(network)))
+      isMatch
+        ? getEthConnection(network)
+        : switchMetamaskNetwork(network.name).pipe(switchMapTo(getEthConnection(network)))
     )
   );
 };
@@ -159,6 +161,7 @@ const config: ConnectConfig = {
   polkadot: connectToPolkadot,
   ethereum: connectToEth,
   darwinia: connectToPolkadot,
+  dvm: connectToEth,
 };
 
 export const connect: ConnectFn<Connection> = (network, chainId) => {

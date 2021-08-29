@@ -5,7 +5,7 @@ import { ShortAccount } from './ShortAccount';
 export function ActiveAccount() {
   const { network, networkStatus, accounts } = useApi();
 
-  if (networkStatus !== 'success' || isPolkadotNetwork(network) || !accounts?.length) {
+  if (networkStatus !== 'success' || isPolkadotNetwork(network?.name) || !accounts?.length) {
     return null;
   }
 

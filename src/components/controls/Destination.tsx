@@ -2,7 +2,7 @@ import { Dropdown, Menu, Tag } from 'antd';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NetConfig } from '../../model';
-import { getConfigMode } from '../../utils';
+import { getDisplayName } from '../../utils';
 import { DownIcon } from '../icons';
 
 interface DestinationProps {
@@ -13,12 +13,6 @@ interface DestinationProps {
   value?: NetConfig | null;
   defaultLogo?: string;
   animationRandom?: number | null;
-}
-
-function getDisplayName(config: NetConfig): string {
-  const mode = getConfigMode(config);
-
-  return mode === 'dvm' ? `${config.fullName}-DVM` : config.fullName;
 }
 
 export function Destination({

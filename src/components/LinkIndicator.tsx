@@ -3,6 +3,7 @@ import { Button, Popover, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../hooks';
 import { NetConfig } from '../model';
+import { isSameNetConfig } from '../utils';
 
 interface LinkIndicatorProps {
   config: NetConfig | null;
@@ -13,7 +14,7 @@ interface LinkIndicatorProps {
 export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
   const { t } = useTranslation();
   const { networkStatus, network, switchNetwork } = useApi();
-  const existAndConsistent = config && config.name === network;
+  const existAndConsistent = config && isSameNetConfig(config, network);
 
   if (networkStatus === 'connecting') {
     return <SyncOutlined spin style={{ color: '#1890ff' }} />;
@@ -37,7 +38,7 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
                   </span>
                   <Button
                     onClick={() => {
-                      switchNetwork(config.name);
+                      switchNetwork(config);
                     }}
                     className="self-end mt-2"
                   >

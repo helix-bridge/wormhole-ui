@@ -1,4 +1,4 @@
-import { curry, curryRight, isNull } from 'lodash';
+import { curry, curryRight, isEqual, isNull } from 'lodash';
 import Web3 from 'web3';
 import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
 import {
@@ -15,7 +15,7 @@ import {
 function isSpecifyNetworkType(type: NetworkCategory) {
   const findBy = (name: Network) => NETWORK_CONFIG[name] || null;
 
-  return (network: Network | null) => {
+  return (network: Network | null | undefined) => {
     if (!network) {
       return false;
     }
@@ -100,18 +100,28 @@ export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
 }
 
-export function getConfigMode(config: NetConfig): NetworkMode {
+export function getNetworkMode(config: NetConfig): NetworkMode {
   return config.dvm ? 'dvm' : 'native';
 }
 
-export function getConfig(vertices: Vertices) {
+export function getNetConfigByVer(vertices: Vertices) {
   if (!vertices) {
     return null;
   }
 
   const { mode, network } = vertices;
 
-  return NETWORKS.find((item) => item.name === network && mode === getConfigMode(item)) ?? null;
+  return NETWORKS.find((item) => item.name === network && mode === getNetworkMode(item)) ?? null;
+}
+
+export function isSameNetConfig(config1: NetConfig | null, config2: NetConfig | null): boolean {
+  if (!config1 || !config2) {
+    return [config1, config2].every(isNull);
+  }
+
+  return (
+    isEqual(config1, config2) || (config1.name === config2.name && getNetworkMode(config1) === getNetworkMode(config2))
+  );
 }
 
 export function getNetworkByName(name: Network | null | undefined) {
@@ -130,14 +140,6 @@ export function getVertices(from: Network, to: Network): Arrival | null {
   }
 
   return getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[from]).find((item) => item.network === to) ?? null;
-}
-
-function getVerticesList(from: Network): Arrival[] {
-  if (!from) {
-    return [];
-  }
-
-  return getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[from]);
 }
 
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {
@@ -172,11 +174,9 @@ export function isBridgeAvailable(from: Network, to: Network): boolean {
   return !!bridge && bridge.status === 'available';
 }
 
-export function getNetworkCategory(network: Network | NetConfig): NetworkCategory | null {
-  const config = typeof network === 'string' ? NETWORK_CONFIG[network] : network;
-
+export function getNetworkCategory(config: NetConfig): NetworkCategory | null {
   if (config.type.includes('polkadot')) {
-    return 'polkadot';
+    return config.dvm ? 'dvm' : 'polkadot';
   } else if (config.type.includes('ethereum')) {
     return 'ethereum';
   }
@@ -216,11 +216,25 @@ export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> 
 
 export function getAvailableNetworks(net: Network): NetConfig | null {
   // FIXME: by default we use the first vertices here.
-  const [vertices] = getVerticesList(net).filter((item) => item.status === 'available');
+  const [vertices] = (getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[net]) ?? []).filter(
+    (item) => item.status === 'available'
+  );
 
   if (!vertices) {
     return null;
   }
 
   return NETWORK_CONFIG[vertices.network];
+}
+
+export function getDisplayName(config: NetConfig): string {
+  const mode = getNetworkMode(config);
+
+  return mode === 'dvm' ? `${config.fullName}-DVM` : config.fullName;
+}
+
+export function getVerticesFromDisplayName(name: string): Vertices {
+  const [network, mode = 'native'] = name.split('-') as [Network, string];
+
+  return { network, mode: mode.toLocaleLowerCase() as NetworkMode };
 }

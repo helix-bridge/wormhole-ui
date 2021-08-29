@@ -9,7 +9,7 @@ export type EthereumTypeNetwork = 'ethereum' | 'ropsten';
 
 export type Network = PolkadotTypeNetwork | EthereumTypeNetwork;
 
-export type NetworkCategory = 'polkadot' | 'ethereum' | 'darwinia';
+export type NetworkCategory = 'polkadot' | 'ethereum' | 'darwinia' | 'dvm';
 
 export type Token = 'ring' | 'kton' | 'native' | 'erc20';
 
