@@ -9,17 +9,17 @@ import {
   BridgeFormProps,
   Bridges,
   Departure,
-  NetConfig,
   Network,
   NetworkMode,
   TransferFormValues,
   TransferNetwork,
 } from '../model';
-import { empty, getNetConfigByVer, getNetworkMode, getInitialSetting, isSameNetConfig } from '../utils';
+import { empty, getInitialSetting, getNetConfigByVer, getNetworkMode, isSameNetConfig } from '../utils';
 import { Airport } from './Airport';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
 import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
+import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaDvm';
 import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
@@ -42,32 +42,60 @@ const initTransfer: () => TransferNetwork = () => {
 
 const TRANSFER = initTransfer();
 
-const DEPARTURES: Map<Departure, FunctionComponent<BridgeFormProps & Bridges>> = new Map([
-  [{ network: 'ethereum', mode: 'native' }, Ethereum2Darwinia],
-  [{ network: 'ropsten', mode: 'native' }, Ethereum2Darwinia],
-  [{ network: 'darwinia', mode: 'native' }, Darwinia2Ethereum],
-  [{ network: 'pangolin', mode: 'native' }, Darwinia2Ethereum],
-  [{ network: 'darwinia', mode: 'dvm' }, DarwiniaDVM2Ethereum],
-  [{ network: 'pangolin', mode: 'dvm' }, DarwiniaDVM2Ethereum],
+const DEPARTURES: Map<[Departure, Departure?], FunctionComponent<BridgeFormProps & Bridges>> = new Map([
+  [[{ network: 'ethereum', mode: 'native' }], Ethereum2Darwinia],
+  [[{ network: 'ropsten', mode: 'native' }], Ethereum2Darwinia],
+  [[{ network: 'darwinia', mode: 'native' }], Darwinia2Ethereum],
+  [[{ network: 'pangolin', mode: 'native' }], Darwinia2Ethereum],
+  [
+    [
+      { network: 'ethereum', mode: 'native' },
+      { network: 'darwinia', mode: 'dvm' },
+    ],
+    Ethereum2DarwiniaDVM,
+  ],
+  [
+    [
+      { network: 'ropsten', mode: 'native' },
+      { network: 'pangolin', mode: 'dvm' },
+    ],
+    Ethereum2DarwiniaDVM,
+  ],
+  [[{ network: 'darwinia', mode: 'dvm' }], DarwiniaDVM2Ethereum],
+  [[{ network: 'pangolin', mode: 'dvm' }], DarwiniaDVM2Ethereum],
 ]);
 
-/**
- * TODO: add departures to network_graph config
- */
-const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<BridgeFormProps & Bridges> = (from) => {
+// eslint-disable-next-line complexity
+const getDeparture: (transfer: TransferNetwork) => FunctionComponent<BridgeFormProps & Bridges> = ({ from, to }) => {
   if (!from) {
     return () => <></>;
   }
 
   const source = [...DEPARTURES];
-  const mode = getNetworkMode(from);
+  const fMode = getNetworkMode(from);
 
-  const findBy = (network: Network) => source.find(([departure]) => isEqual(departure, { network, mode }));
+  if (!to) {
+    const target = source.find(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
 
-  const target = findBy(from.name);
+    if (target) {
+      return target[1];
+    }
+  } else {
+    const targets = source.filter(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
 
-  if (target) {
-    return target[1];
+    if (targets.length === 1) {
+      return targets[0][1];
+    } else {
+      const tMode = getNetworkMode(to);
+      const target = targets.find(
+        ([parties]) =>
+          isEqual(parties[1], { network: to.name, mode: tMode }) || (parties[1] === undefined && tMode === 'native')
+      );
+
+      if (target) {
+        return target[1];
+      }
+    }
   }
 
   return () => <span>Coming Soon...</span>;
@@ -124,7 +152,7 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         </Form.Item>
 
         {isCross && isFromReady ? (
-          React.createElement(getDeparture(form.getFieldValue(FORM_CONTROL.transfer).from), { form, setSubmit })
+          React.createElement(getDeparture(transfer), { form, setSubmit })
         ) : (
           <Airport form={form} setSubmit={setSubmit} />
         )}

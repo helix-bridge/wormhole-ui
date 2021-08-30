@@ -311,7 +311,7 @@ export function Ethereum2DarwiniaDVM({ form, setSubmit }: BridgeFormProps<E2D>) 
       : fromWei({ value: selectedToken.balance, unit: getUnit(+selectedToken.decimals) }, prettyNumber);
   }, [selectedToken]);
   const amountRules = useMemo(
-    () => getAmountRules({ fee, balance: max, ringBalance, asset: selectedToken!.name, form, t }),
+    () => getAmountRules({ fee, balance: max, ringBalance, asset: selectedToken?.name ?? '', form, t }),
     [fee, form, max, ringBalance, selectedToken, t]
   );
   const refreshAllowance = useCallback(
@@ -474,7 +474,6 @@ export function Ethereum2DarwiniaDVM({ form, setSubmit }: BridgeFormProps<E2D>) 
         rules={[
           ...amountRules,
           {
-            // eslint-disable-next-line complexity
             validator: (_, value: string) => {
               const val =
                 form.getFieldValue(FORM_CONTROL.asset) !== E2DAssetEnum.ring

@@ -1,6 +1,6 @@
-import { QuestionCircleFilled, ReloadOutlined } from '@ant-design/icons';
+import { QuestionCircleFilled } from '@ant-design/icons';
 import { ApiPromise } from '@polkadot/api';
-import { Button, Descriptions, Form, Select, Tooltip } from 'antd';
+import { Descriptions, Form, Select, Tooltip } from 'antd';
 import BN from 'bn.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TFunction, Trans, useTranslation } from 'react-i18next';
@@ -11,7 +11,7 @@ import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import { BridgeFormProps, D2E, Erc20Token, Network, Token, Tx } from '../../model';
 import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, getUnit, prettyNumber, toWei } from '../../utils';
 import { backingLockErc20, BackingLockERC20 } from '../../utils/tx/d2e';
-import { AssetGroup, AssetGroupValue, AvailableBalance } from '../controls/AssetGroup';
+import { AvailableBalance } from '../controls/AssetGroup';
 import { Balance } from '../controls/Balance';
 import { Erc20Control } from '../controls/Erc20Control';
 import { MaxBalance } from '../controls/MaxBalance';
@@ -22,7 +22,6 @@ import { TransferSuccess } from '../modal/TransferSuccess';
 interface AmountCheckInfo {
   fee: BN | null;
   ringBalance?: BN | null;
-  assets: AssetGroupValue;
   t: TFunction;
 }
 
@@ -66,29 +65,15 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
   }
 }
 
-// eslint-disable-next-line complexity
-function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
-  // eslint-disable-next-line complexity
+function TransferInfo({ fee, ringBalance, t }: AmountCheckInfo) {
   const isRingBalanceEnough = useMemo(() => {
     if (!fee || !ringBalance) {
       return false;
     }
 
-    const ring = assets.find((item) => item.asset === 'ring' && item.checked);
-    const ringAmount = new BN(toWei({ value: ring?.amount || '0', unit: 'gwei' }));
+    return ringBalance.gte(fee);
+  }, [fee, ringBalance]);
 
-    return ring ? ringAmount.add(fee).lte(ringBalance) : ringBalance.gte(fee);
-  }, [assets, fee, ringBalance]);
-
-  const hasAssetSet = useMemo(() => {
-    const target = assets.find((item) => item.asset === 'ring');
-    const origin = new BN(toWei({ value: target?.amount ?? '0', unit: 'gwei' }));
-
-    return (
-      origin.gte(fee || BN_ZERO) &&
-      !!assets.filter((item) => !!item.checked && new BN(item?.amount || '0').gt(BN_ZERO)).length
-    );
-  }, [assets, fee]);
   const animationCount = 5;
 
   if (!fee || !ringBalance) {
@@ -110,33 +95,6 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
       className={`${isRingBalanceEnough ? 'text-green-400' : 'text-red-400 animate-pulse'}`}
       style={{ animationIterationCount: animationCount }}
     >
-      {hasAssetSet && (
-        <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
-          <p className="flex flex-col">
-            {assets.map((item) => {
-              if (!item.checked) {
-                return null;
-              } else {
-                const { asset, amount } = item;
-
-                if (asset === 'ring') {
-                  const origin = new BN(toWei({ value: amount, unit: 'gwei' }));
-
-                  return (
-                    <span className="mr-2" key={asset}>{`${fromWei({
-                      value: origin.sub(fee),
-                      unit: 'gwei',
-                    })} ${asset.toUpperCase()}`}</span>
-                  );
-                } else {
-                  return <span className="mr-2" key={asset}>{`${amount ?? 0} ${asset?.toUpperCase()}`}</span>;
-                }
-              }
-            })}
-          </p>
-        </Descriptions.Item>
-      )}
-
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
         <span className="flex items-center">
           {fromWei({ value: fee, unit: 'gwei' })} RING{' '}
@@ -179,7 +137,6 @@ export function DarwiniaDVM2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) 
   const { accounts, api, chain } = useApi();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
   const [fee, setFee] = useState<BN | null>(null);
-  const [currentAssets, setCurAssets] = useState<AssetGroupValue>([]);
   const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
   const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
   const { updateDeparture } = useDeparture();
@@ -255,11 +212,12 @@ export function DarwiniaDVM2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) 
 
   return (
     <>
+      {/* metamask current account */}
       <Form.Item name={FORM_CONTROL.sender} label={t('Payment Account')} rules={[{ required: true }]}>
         <Select size="large">
           {(accounts ?? []).map(({ meta, address }) => (
             <Select.Option value={address} key={address}>
-              {meta?.name} - {address}
+              {meta?.name ? `${meta.name} - ${address}` : address}
             </Select.Option>
           ))}
         </Select>
@@ -272,39 +230,6 @@ export function DarwiniaDVM2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) 
         )}
         isDvm={true}
       />
-
-      <Form.Item
-        name={FORM_CONTROL.assets}
-        label={
-          <span className="flex items-center">
-            <span className="mr-4">{t('Asset')}</span>
-
-            <Tooltip title={t('Refresh balances')} placement="right">
-              <Button
-                type="link"
-                icon={<ReloadOutlined />}
-                onClick={() => {
-                  form.validateFields(['sender']).then(({ sender }) => {
-                    if (sender) {
-                      getBalances(sender).then(setAvailableBalances);
-                    }
-                  });
-                }}
-                className="flex items-center"
-              ></Button>
-            </Tooltip>
-          </span>
-        }
-        rules={[{ required: true }]}
-      >
-        <AssetGroup
-          network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
-          balances={availableBalances}
-          fee={fee}
-          form={form}
-          onChange={(value) => setCurAssets(value)}
-        />
-      </Form.Item>
 
       <Form.Item name={FORM_CONTROL.erc20} label={t('Asset')} rules={[{ required: true }]} className="mb-2">
         <Erc20Control
@@ -375,7 +300,7 @@ export function DarwiniaDVM2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) 
         </Balance>
       </Form.Item>
 
-      <TransferInfo fee={fee} ringBalance={new BN(ringBalance?.max || '0')} assets={currentAssets} t={t} />
+      <TransferInfo fee={fee} ringBalance={new BN(ringBalance?.max || '0')} t={t} />
     </>
   );
 }

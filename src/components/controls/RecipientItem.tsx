@@ -30,7 +30,7 @@ export function RecipientItem({
           { required: true },
           {
             validator(_, value) {
-              return !isSameAddress(form.getFieldValue(FORM_CONTROL.sender), value)
+              return isDvm || !isSameAddress(form.getFieldValue(FORM_CONTROL.sender), value)
                 ? Promise.resolve()
                 : Promise.reject();
             },
