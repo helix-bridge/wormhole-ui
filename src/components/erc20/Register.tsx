@@ -36,7 +36,10 @@ export function Register() {
   const { t } = useTranslation();
   const [form] = useForm();
   const [net, setNet] = useState<NetConfig>(DEFAULT_REGISTER_NETWORK);
-  const { networkStatus, network } = useApi();
+  const {
+    connection: { status },
+    network,
+  } = useApi();
   const [active, setActive] = useState(TabKeys.register);
   const [inputValue, setInputValue] = useState('');
   const [registeredStatus, setRegisteredStatus] = useState(-1);
@@ -51,11 +54,11 @@ export function Register() {
   const networks = useMemo(() => NETWORKS.filter((item) => item.type.includes('ethereum')), []);
   const canStart = useMemo(
     () =>
-      networkStatus === 'success' &&
+      status === 'success' &&
       isSameNetConfig(network, net) &&
       !!net.erc20Token.bankingAddress &&
       isValidAddress(inputValue, 'ethereum'),
-    [inputValue, net, network, networkStatus]
+    [inputValue, net, network, status]
   );
 
   useEffect(() => {
@@ -69,11 +72,11 @@ export function Register() {
       setIsLoading(true);
 
       const searchValue = !inputValue.startsWith('0x') ? '0x' + inputValue : inputValue;
-      const status = await getTokenRegisterStatus(searchValue, net);
+      const tokenStatus = await getTokenRegisterStatus(searchValue, net);
       const result = await getSymbolAndDecimals(searchValue, net);
       const { name, logo } = getNameAndLogo(searchValue);
 
-      setRegisteredStatus(status === null ? -1 : status);
+      setRegisteredStatus(tokenStatus === null ? -1 : tokenStatus);
       setToken({ ...result, name: name ?? '', logo: logo ?? '', address: searchValue });
       setIsLoading(false);
     })();

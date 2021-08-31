@@ -1,9 +1,10 @@
 import { DisconnectOutlined, LinkOutlined, SyncOutlined } from '@ant-design/icons';
 import { Button, Popover, Tooltip } from 'antd';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../hooks';
-import { NetConfig } from '../model';
-import { isSameNetConfig } from '../utils';
+import { EthereumConnection, NetConfig } from '../model';
+import { getConfigByConnection, getDisplayName, isChainIdEqual, isSameNetConfig } from '../utils';
 
 interface LinkIndicatorProps {
   config: NetConfig | null;
@@ -13,46 +14,67 @@ interface LinkIndicatorProps {
 // eslint-disable-next-line complexity
 export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
   const { t } = useTranslation();
-  const { networkStatus, network, switchNetwork } = useApi();
-  const existAndConsistent = config && isSameNetConfig(config, network);
+  const { connection, network, setNetwork } = useApi();
+  const [isConsistent, setIsConsistent] = useState(false);
+  const [connectionConfig, setConnectionConfig] = useState<NetConfig | null>(null);
 
-  if (networkStatus === 'connecting') {
+  useEffect(() => {
+    let is = !!config && isSameNetConfig(config, network);
+
+    if (config?.dvm) {
+      is =
+        connection.type === 'metamask' &&
+        isChainIdEqual((connection as EthereumConnection).chainId, config.ethereumChain.chainId);
+    }
+
+    setIsConsistent(is);
+  }, [config, connection, network]);
+
+  useEffect(() => {
+    (async () => {
+      const conf = await getConfigByConnection(connection);
+
+      setConnectionConfig(conf);
+    })();
+  }, [connection]);
+
+  if (connection.status === 'connecting') {
     return <SyncOutlined spin style={{ color: '#1890ff' }} />;
   }
 
-  if (networkStatus === 'success') {
+  if (connection.status === 'success') {
     return (
       <Popover
         content={
-          existAndConsistent ? (
-            t('Network connected')
-          ) : (
-            <div className="max-w-sm flex flex-col">
-              {config?.name && showSwitch ? (
-                <>
-                  <span>
-                    {t(
-                      'The connected network is not the same as the network selected, do you want switch to the {{network}} network?',
-                      { network: config?.name }
-                    )}
-                  </span>
-                  <Button
-                    onClick={() => {
-                      switchNetwork(config);
-                    }}
-                    className="self-end mt-2"
-                  >
-                    {t('Switch')}
-                  </Button>
-                </>
-              ) : (
-                <span>{t('The current network is connected to {{network}}', { network })}</span>
-              )}
-            </div>
-          )
+          <div className="max-w-sm flex flex-col">
+            {config?.name && showSwitch ? (
+              <>
+                <span>
+                  {t(
+                    'The connected network is not the same as the network selected, do you want switch to the {{network}} network?',
+                    { network: getDisplayName(config) }
+                  )}
+                </span>
+                <Button
+                  onClick={() => {
+                    setNetwork(config);
+                  }}
+                  className="self-end mt-2"
+                >
+                  {t('Switch')}
+                </Button>
+              </>
+            ) : (
+              <span>
+                {t('The current network is connected to {{network}}', {
+                  network: connectionConfig ? getDisplayName(connectionConfig) : '',
+                })}
+              </span>
+            )}
+          </div>
         }
       >
-        <LinkOutlined style={{ color: existAndConsistent ? '#10b981' : '#fbbf24' }} />
+        <LinkOutlined style={{ color: isConsistent ? '#10b981' : '#fbbf24' }} />
       </Popover>
     );
   }

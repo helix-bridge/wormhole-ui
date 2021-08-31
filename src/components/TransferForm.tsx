@@ -105,7 +105,11 @@ const getDeparture: (transfer: TransferNetwork) => FunctionComponent<BridgeFormP
 export function TransferForm({ isCross = true }: { isCross?: boolean }) {
   const { t, i18n } = useTranslation();
   const [form] = useForm<TransferFormValues>();
-  const { network, networkStatus, disconnect } = useApi();
+  const {
+    network,
+    connection: { status },
+    disconnect,
+  } = useApi();
   const [transfer, setTransfer] = useState(TRANSFER);
   const [isFromReady, setIsFromReady] = useState(false);
   const [submitFn, setSubmit] = useState<(value: TransferFormValues) => void>(empty);
@@ -113,10 +117,10 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
 
   useEffect(() => {
     const { from } = transfer;
-    const isReady = !!from && isSameNetConfig(from, network) && networkStatus === 'success';
+    const isReady = !!from && isSameNetConfig(from, network) && status === 'success';
 
     setIsFromReady(isReady);
-  }, [network, networkStatus, transfer]);
+  }, [network, status, transfer]);
 
   return (
     <>
@@ -157,10 +161,10 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
           <Airport form={form} setSubmit={setSubmit} />
         )}
 
-        <div className={networkStatus === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
+        <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
           <SubmitButton {...transfer} requireTo />
 
-          {networkStatus === 'success' && (
+          {status === 'success' && (
             <FromItemButton type="default" onClick={() => disconnect()} disabled={!!tx}>
               {t('Disconnect')}
             </FromItemButton>

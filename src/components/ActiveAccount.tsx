@@ -3,9 +3,12 @@ import { isPolkadotNetwork } from '../utils';
 import { ShortAccount } from './ShortAccount';
 
 export function ActiveAccount() {
-  const { network, networkStatus, accounts } = useApi();
+  const {
+    network,
+    connection: { status, accounts },
+  } = useApi();
 
-  if (networkStatus !== 'success' || isPolkadotNetwork(network?.name) || !accounts?.length) {
+  if (status !== 'success' || isPolkadotNetwork(network?.name) || !accounts?.length) {
     return null;
   }
 

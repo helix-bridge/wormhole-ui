@@ -73,11 +73,17 @@ export type NetworkConfig<T = NetConfig> = Config<PolkadotTypeNetwork, T> & Conf
 /**
  * pending: initial state, indicate that the connection never launched.
  */
-export type ConnectStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected' | 'error';
+export type ConnectionStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected' | 'error';
+export type ConnectionType = 'polkadot' | 'metamask' | 'unknown';
 
 export type Connection<T = Network> = T extends PolkadotTypeNetwork
-  ? { status: ConnectStatus; api: ApiPromise | null; accounts: IAccountMeta[] }
-  : { status: ConnectStatus; accounts: IAccountMeta[] };
+  ? {
+      status: ConnectionStatus;
+      accounts: IAccountMeta[];
+      type: ConnectionType;
+      api: ApiPromise | null;
+    }
+  : { status: ConnectionStatus; accounts: IAccountMeta[]; type: ConnectionType; chainId: string };
 
 export type PolkadotConnection = Connection<PolkadotTypeNetwork>;
 

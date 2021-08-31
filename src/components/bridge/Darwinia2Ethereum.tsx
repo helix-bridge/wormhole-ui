@@ -169,7 +169,11 @@ function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCre
 // eslint-disable-next-line complexity
 export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
   const { t } = useTranslation();
-  const { accounts, api, chain } = useApi();
+  const {
+    connection: { accounts },
+    api,
+    chain,
+  } = useApi();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
   const [fee, setFee] = useState<BN | null>(null);
   const [currentAssets, setCurAssets] = useState<AssetGroupValue>([]);

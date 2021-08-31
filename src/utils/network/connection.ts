@@ -3,11 +3,11 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import {
   catchError,
+  combineLatest,
   concatMap,
   EMPTY,
   from,
   map,
-  mapTo,
   merge,
   Observable,
   Observer,
@@ -21,15 +21,13 @@ import { Connection, EthereumConnection, NetConfig, NetworkCategory, PolkadotCon
 import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent } from './network';
 import { switchMetamaskNetwork } from './switch';
 
-type ConnectionFn<T extends Connection> = (network: NetConfig) => Observable<T>;
-
 type ConnectFn<T extends Connection> = (network: NetConfig, chainId?: string) => Observable<T>;
 
 type ConnectConfig = {
   [key in NetworkCategory]: ConnectFn<Connection>;
 };
 
-export const getPolkadotConnection: ConnectionFn<PolkadotConnection> = (network) =>
+export const getPolkadotConnection: (network: NetConfig) => Observable<PolkadotConnection> = (network) =>
   from(web3Enable('polkadot-js/apps')).pipe(
     concatMap((extensions) => from(web3Accounts()).pipe(map((accounts) => ({ accounts, extensions })))),
     switchMap(({ accounts, extensions }) => {
@@ -47,6 +45,7 @@ export const getPolkadotConnection: ConnectionFn<PolkadotConnection> = (network)
           status: 'success',
           accounts: !extensions.length && !accounts.length ? [] : accounts,
           api,
+          type: 'polkadot',
         };
 
         const reconnect = () => {
@@ -93,45 +92,56 @@ export const getPolkadotConnection: ConnectionFn<PolkadotConnection> = (network)
         });
       });
     }),
-    startWith<PolkadotConnection>({ status: 'connecting', accounts: [], api: null })
+    startWith<PolkadotConnection>({ status: 'connecting', accounts: [], api: null, type: 'polkadot' })
   );
 
-export const getEthConnection: ConnectionFn<EthereumConnection> = (network) => {
+export const getEthConnection: () => Observable<EthereumConnection> = () => {
   return from(window.ethereum.request({ method: 'eth_requestAccounts' })).pipe(
     switchMap((_) => {
       const addressToAccounts = (addresses: string[]) =>
         addresses.map((address) => ({ address, meta: { source: '' } }));
 
-      const request: Observable<EthereumConnection> = from<string[][]>(
-        window.ethereum.request({ method: 'eth_accounts' })
-      ).pipe(map((addresses) => ({ accounts: addressToAccounts(addresses), status: 'success' })));
+      const request: Observable<EthereumConnection> = combineLatest([
+        from<string[][]>(window.ethereum.request({ method: 'eth_accounts' })),
+        from<string>(window.ethereum.request({ method: 'eth_chainId' })),
+      ]).pipe(
+        map(([addresses, chainId]) => ({
+          accounts: addressToAccounts(addresses),
+          status: 'success',
+          chainId,
+          type: 'metamask',
+        }))
+      );
 
       const obs = new Observable((observer: Observer<EthereumConnection>) => {
         window.ethereum.on('accountsChanged', (accounts: string[]) =>
-          observer.next({
-            status: 'success',
-            accounts: addressToAccounts(accounts),
+          from<string>(window.ethereum.request({ method: 'eth_chainId' })).subscribe((chainId) => {
+            observer.next({
+              status: 'success',
+              accounts: addressToAccounts(accounts),
+              type: 'metamask',
+              chainId,
+            });
           })
         );
         window.ethereum.on('chainChanged', (chainId: string) => {
-          from(isNetworkConsistent(network.name, chainId))
-            .pipe(
-              switchMap((isMatch) => (isMatch ? request : of<EthereumConnection>({ status: 'error', accounts: [] })))
-            )
-            .subscribe((state) => observer.next(state));
-        });
-        window.ethereum.on('disconnect', () => {
-          observer.next({ status: 'disconnected', accounts: [] });
-          observer.complete();
+          from<string[][]>(window.ethereum.request({ method: 'eth_accounts' })).subscribe((accounts) => {
+            observer.next({
+              status: 'success',
+              accounts: addressToAccounts(accounts),
+              type: 'metamask',
+              chainId,
+            });
+          });
         });
       });
 
       return merge(request, obs);
     }),
-    catchError((_, caught) => {
-      return caught.pipe(mapTo<EthereumConnection>({ status: 'error', accounts: [] }));
+    catchError((_) => {
+      return of<EthereumConnection>({ status: 'error', accounts: [], type: 'metamask', chainId: '' });
     }),
-    startWith<EthereumConnection>({ status: 'connecting', accounts: [] })
+    startWith<EthereumConnection>({ status: 'connecting', accounts: [], type: 'metamask', chainId: '' })
   );
 };
 
@@ -150,18 +160,16 @@ const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {
 
   return from(isNetworkConsistent(network.name, chainId)).pipe(
     switchMap((isMatch) =>
-      isMatch
-        ? getEthConnection(network)
-        : switchMetamaskNetwork(network.name).pipe(switchMapTo(getEthConnection(network)))
+      isMatch ? getEthConnection() : switchMetamaskNetwork(network.name).pipe(switchMapTo(getEthConnection()))
     )
   );
 };
 
 const config: ConnectConfig = {
-  polkadot: connectToPolkadot,
-  ethereum: connectToEth,
   darwinia: connectToPolkadot,
   dvm: connectToEth,
+  ethereum: connectToEth,
+  polkadot: connectToPolkadot,
 };
 
 export const connect: ConnectFn<Connection> = (network, chainId) => {

@@ -296,7 +296,9 @@ export function Ethereum2DarwiniaDVM({ form, setSubmit }: BridgeFormProps<E2D>) 
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
   const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
-  const { accounts } = useApi();
+  const {
+    connection: { accounts },
+  } = useApi();
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();
   const { afterTx } = useAfterSuccess();

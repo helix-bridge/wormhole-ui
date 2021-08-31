@@ -49,7 +49,9 @@ export function Airport({ setSubmit, form }: BridgeFormProps<AirportValues>) {
   const { t } = useTranslation();
   const [signature] = useState<string>('');
   const [modalForm] = useForm();
-  const { accounts } = useApi();
+  const {
+    connection: { accounts },
+  } = useApi();
   const { address: account } = (accounts || [])[0] ?? '';
   const updateSubmit = useCallback(() => {
     const fn = () => (value: AirportValues) => {

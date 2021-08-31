@@ -1,14 +1,17 @@
-import { curry, curryRight, isEqual, isNull } from 'lodash';
+import { curry, curryRight, isEqual, isNull, omit } from 'lodash';
 import Web3 from 'web3';
 import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
 import {
   Arrival,
+  Connection,
   Departure,
+  EthereumConnection,
   MetamaskNativeNetworkIds,
   NetConfig,
   Network,
   NetworkCategory,
   NetworkMode,
+  PolkadotConnection,
   Vertices,
 } from '../../model';
 
@@ -237,4 +240,36 @@ export function getVerticesFromDisplayName(name: string): Vertices {
   const [network, mode = 'native'] = name.split('-') as [Network, string];
 
   return { network, mode: mode.toLocaleLowerCase() as NetworkMode };
+}
+
+// eslint-disable-next-line complexity
+export async function getConfigByConnection(connection: Connection): Promise<NetConfig | null> {
+  if (connection.type === 'metamask') {
+    const targets = NETWORKS.filter((item) =>
+      isChainIdEqual(item.ethereumChain.chainId, (connection as EthereumConnection).chainId)
+    );
+
+    return (targets.length > 1 ? targets.find((item) => item.dvm) : targets[0]) ?? null;
+  }
+
+  if (connection.type === 'polkadot') {
+    const { api } = connection as PolkadotConnection;
+
+    try {
+      const chain = await api?.rpc.system.chain();
+
+      return chain ? omit(NETWORK_CONFIG[chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;
+    } catch (err) {
+      console.error('%c [ err ]-263', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+    }
+  }
+
+  return null;
+}
+
+export function isChainIdEqual(id1: string | number, id2: string | number): boolean {
+  id1 = Web3.utils.toHex(id1);
+  id2 = Web3.utils.toHex(id2);
+
+  return id1 === id2;
 }

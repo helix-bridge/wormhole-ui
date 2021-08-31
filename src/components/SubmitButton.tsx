@@ -2,7 +2,7 @@ import { Button, ButtonProps, Form } from 'antd';
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi, useTx } from '../hooks';
-import { ConnectStatus, NetConfig } from '../model';
+import { ConnectionStatus, NetConfig } from '../model';
 import { getDisplayName, hasBridge, isBridgeAvailable, isSameNetConfig } from '../utils';
 
 interface SubmitButtonProps extends ButtonProps {
@@ -29,9 +29,14 @@ export function FromItemButton({ children, className, ...others }: ButtonProps) 
 // eslint-disable-next-line complexity
 export function SubmitButton({ from, to, children, requireTo, disabled }: PropsWithChildren<SubmitButtonProps>) {
   const { t } = useTranslation();
-  const { networkStatus, network, switchNetwork, connectNetwork } = useApi();
+  const {
+    connection: { status },
+    network,
+    setNetwork,
+    connectNetwork,
+  } = useApi();
   const { tx } = useTx();
-  const errorConnections: ConnectStatus[] = ['pending', 'disconnected', 'fail'];
+  const errorConnections: ConnectionStatus[] = ['pending', 'disconnected', 'fail', 'error'];
 
   if (tx) {
     return <FromItemButton disabled>{t(tx.status)}</FromItemButton>;
@@ -41,19 +46,19 @@ export function SubmitButton({ from, to, children, requireTo, disabled }: PropsW
     return <FromItemButton disabled>{t('Coming Soon')}</FromItemButton>;
   }
 
-  if (networkStatus === 'connecting') {
+  if (status === 'connecting') {
     return <FromItemButton disabled>{t('Connecting ...')}</FromItemButton>;
   }
 
-  if (networkStatus === 'success' && from && !isSameNetConfig(from, network)) {
+  if (status === 'success' && from && !isSameNetConfig(from, network)) {
     return (
-      <FromItemButton onClick={() => switchNetwork(from)}>
+      <FromItemButton onClick={() => setNetwork(from)}>
         {t('Switch to {{network}}', { network: getDisplayName(from) })}
       </FromItemButton>
     );
   }
 
-  if (errorConnections.includes(networkStatus) && !!from?.name) {
+  if (errorConnections.includes(status) && !!from?.name) {
     return (
       <FromItemButton
         onClick={() => {
@@ -65,7 +70,7 @@ export function SubmitButton({ from, to, children, requireTo, disabled }: PropsW
     );
   }
 
-  if ((networkStatus === 'success' && !from?.name) || networkStatus === 'pending') {
+  if ((status === 'success' && !from?.name) || status === 'pending') {
     return null;
   }
 
