@@ -7,7 +7,6 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { BridgeStatus } from './components/BridgeStatus';
 import { ActiveAccount } from './components/ActiveAccount';
 import { Footer } from './components/Footer';
-import { ThemeSwitch } from './components/ThemeSwitch';
 import { THEME } from './config';
 import { Path, routes } from './config/routes';
 import { useApi } from './hooks';
@@ -28,7 +27,6 @@ function App() {
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
   const history = useHistory();
-  const net = 'pangolin';
 
   return (
     <Layout className="min-h-screen overflow-scroll">
@@ -91,33 +89,22 @@ function App() {
               ></Button>
             </Dropdown>
 
-            <div className="flex flex-col items-center gap-2">
-              {!isDev && (
-                <Tooltip
-                  title={t('{{enable}} the test networks to appear in the network selection panel', {
-                    enable: enableTestNetworks ? t('Disable') : t('Enable'),
-                  })}
-                >
-                  <ASwitch
-                    onChange={() => setEnableTestNetworks(!enableTestNetworks)}
-                    checked={enableTestNetworks}
-                    checkedChildren={<UnlockOutlined />}
-                    unCheckedChildren={<LockOutlined />}
-                    size="small"
-                    className="w-12"
-                    style={{ lineHeight: 0.5 }}
-                  />
-                </Tooltip>
-              )}
-
-              <ThemeSwitch
-                size="small"
-                network={net}
-                defaultTheme={THEME.DARK}
-                onThemeChange={setTheme}
-                className="w-12"
-              />
-            </div>
+            {!isDev && (
+              <Tooltip
+                title={t('{{enable}} the test networks to appear in the network selection panel', {
+                  enable: enableTestNetworks ? t('Disable') : t('Enable'),
+                })}
+              >
+                <ASwitch
+                  onChange={() => setEnableTestNetworks(!enableTestNetworks)}
+                  checked={enableTestNetworks}
+                  checkedChildren={<UnlockOutlined />}
+                  unCheckedChildren={<LockOutlined />}
+                  className="w-12 ml-4"
+                  style={{ lineHeight: 0.5 }}
+                />
+              </Tooltip>
+            )}
           </div>
         </div>
       </Header>
@@ -135,7 +122,7 @@ function App() {
         </TransitionGroup>
       </Content>
 
-      <Footer theme={theme} />
+      <Footer theme={theme} onThemeChange={setTheme} />
     </Layout>
   );
 }
