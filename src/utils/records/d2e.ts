@@ -78,7 +78,7 @@ export function claimToken({
 }: ClaimInfo): Observable<Tx> {
   const network = networkPrefix.toLowerCase() as Network;
   const config = NETWORK_CONFIG[network];
-  const provider = new WsProvider(config.rpc);
+  const provider = new WsProvider(config.provider.rpc);
   const apiObs = from(
     ApiPromise.create({
       provider,
@@ -88,7 +88,8 @@ export function claimToken({
   const toNetworkConfig = getAvailableNetworks(network)!;
   const header = encodeBlockHeader(blockHeaderStr);
   const storageKey = getD2ELockEventsStorageKey(blockNumber, config.lockEvents);
-  const accountObs = getEthConnection(toNetworkConfig.name).pipe(
+  // TODO: check connection
+  const accountObs = getEthConnection().pipe(
     filter(({ status }) => status === 'success'),
     map(({ accounts }) => accounts[0].address),
     take(1)

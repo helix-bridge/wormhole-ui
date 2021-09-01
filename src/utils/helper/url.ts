@@ -1,17 +1,21 @@
 import { mapKeys } from 'lodash';
-import { Network, HistoryRouteParam, StorageInfo, ValueOf, WithNull } from '../../model';
+import { Network, HistoryRouteParam, StorageInfo, ValueOf, WithNull, NetworkMode } from '../../model';
 import { readStorage } from './storage';
 
 export interface HashInfo {
   from?: Network | null;
   to?: Network | null;
   recipient?: string | null; // to account address;
+  fMode?: NetworkMode | null;
+  tMode?: NetworkMode | null;
 }
 
 interface HashShort {
   f?: Network;
   t?: Network;
   r?: string;
+  fm?: NetworkMode;
+  tm?: NetworkMode;
 }
 
 type SettingKey = keyof StorageInfo | keyof HashInfo;
@@ -27,6 +31,8 @@ const toShort: AdapterMap<HashInfo, HashShort> = {
   from: 'f',
   to: 't',
   recipient: 'r',
+  fMode: 'fm',
+  tMode: 'tm',
 };
 
 const toLong: AdapterMap<HashShort, HashInfo> = Object.entries(toShort).reduce(
@@ -48,7 +54,7 @@ function hashToObj(): { [key in keyof HashShort]: string } {
         return { ...acc, [key]: value };
       }, {}) as { [key in keyof HashShort]: string };
   } catch (err) {
-    return { f: '', t: '', r: '' };
+    return { f: '', t: '', r: '', fm: '', tm: '' };
   }
 }
 

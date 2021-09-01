@@ -5,7 +5,7 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
-import { CustomFormControlProps, Network, Token, TransferAsset } from '../../model';
+import { CustomFormControlProps, Darwinia2EthereumTransfer, Network, Token } from '../../model';
 import { TokenChainInfo } from '../../providers';
 import { fromWei, getPrecisionByUnit, toWei } from '../../utils';
 import { Balance } from './Balance';
@@ -17,7 +17,7 @@ export interface AvailableBalance {
   chainInfo?: TokenChainInfo;
 }
 
-export type AssetGroupValue = TransferAsset<Exclude<Token, 'native'>>[];
+export type AssetGroupValue = Darwinia2EthereumTransfer['assets'];
 
 // eslint-disable-next-line complexity
 export function AssetGroup({
@@ -35,11 +35,7 @@ CustomFormControlProps<AssetGroupValue> & {
 }) {
   const { t } = useTranslation();
   const triggerChange = useCallback(
-    (
-      val: TransferAsset<Exclude<Token, 'native'>>,
-      index: number,
-      origin: TransferAsset<Exclude<Token, 'native'>>[] = []
-    ) => {
+    (val: AssetGroupValue[0], index: number, origin: AssetGroupValue = []) => {
       if (onChange) {
         const updated = [...origin];
 

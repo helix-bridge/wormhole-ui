@@ -1,24 +1,5 @@
-import {
-  CheckCircleOutlined,
-  DisconnectOutlined,
-  LinkOutlined,
-  LoadingOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
-import {
-  Button,
-  Descriptions,
-  Empty,
-  Form,
-  Input,
-  List,
-  Popover,
-  Progress,
-  Spin,
-  Tabs,
-  Tooltip,
-  Typography,
-} from 'antd';
+import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Button, Descriptions, Empty, Form, Input, List, Progress, Spin, Tabs, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -27,7 +8,7 @@ import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessage
 import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useKnownErc20Tokens, useLocalSearch, useTx } from '../../hooks';
 import { Erc20Token, NetConfig } from '../../model';
-import { isValidAddress } from '../../utils';
+import { isSameNetConfig, isValidAddress } from '../../utils';
 import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/meta';
 import {
   confirmRegister,
@@ -39,6 +20,7 @@ import {
 } from '../../utils/erc20/token';
 import { updateStorage } from '../../utils/helper/storage';
 import { Destination } from '../controls/Destination';
+import { LinkIndicator } from '../LinkIndicator';
 import { SubmitButton } from '../SubmitButton';
 import { Erc20ListInfo } from './Erc20ListInfo';
 
@@ -54,14 +36,17 @@ export function Register() {
   const { t } = useTranslation();
   const [form] = useForm();
   const [net, setNet] = useState<NetConfig>(DEFAULT_REGISTER_NETWORK);
-  const { networkStatus, network, switchNetwork } = useApi();
+  const {
+    connection: { status },
+    network,
+  } = useApi();
   const [active, setActive] = useState(TabKeys.register);
   const [inputValue, setInputValue] = useState('');
   const [registeredStatus, setRegisteredStatus] = useState(-1);
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { tokens, updateTokens } = useKnownErc20Tokens(network!, RegisterStatus.registering);
+  const { tokens, updateTokens } = useKnownErc20Tokens(network!.name, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(tokens), [tokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
@@ -69,52 +54,12 @@ export function Register() {
   const networks = useMemo(() => NETWORKS.filter((item) => item.type.includes('ethereum')), []);
   const canStart = useMemo(
     () =>
-      networkStatus === 'success' &&
-      network === net.name &&
+      status === 'success' &&
+      isSameNetConfig(network, net) &&
       !!net.erc20Token.bankingAddress &&
       isValidAddress(inputValue, 'ethereum'),
-    [inputValue, net.erc20Token.bankingAddress, net.name, network, networkStatus]
+    [inputValue, net, network, status]
   );
-  const Extra = useMemo(() => {
-    if (networkStatus === 'connecting') {
-      return <SyncOutlined spin style={{ color: '#1890ff' }} />;
-    }
-
-    const existAndConsistent = net.name === network;
-
-    return networkStatus === 'success' ? (
-      <Popover
-        content={
-          existAndConsistent ? (
-            t('Network connected')
-          ) : (
-            <div className="max-w-sm flex flex-col">
-              <span>
-                {t(
-                  'The connected network is not the same as the network selected, do you want switch to the {{network}} network?',
-                  { network: net.name }
-                )}
-              </span>
-              <Button
-                onClick={() => {
-                  switchNetwork(net.name);
-                }}
-                className="self-end mt-2"
-              >
-                {t('Switch')}
-              </Button>
-            </div>
-          )
-        }
-      >
-        <LinkOutlined style={{ color: existAndConsistent ? '#10b981' : '#fbbf24' }} />
-      </Popover>
-    ) : (
-      <Tooltip title={t('Network disconnected')}>
-        <DisconnectOutlined style={{ color: '#ef4444' }} />
-      </Tooltip>
-    );
-  }, [networkStatus, net.name, network, t, switchNetwork]);
 
   useEffect(() => {
     if (!canStart) {
@@ -127,11 +72,11 @@ export function Register() {
       setIsLoading(true);
 
       const searchValue = !inputValue.startsWith('0x') ? '0x' + inputValue : inputValue;
-      const status = await getTokenRegisterStatus(searchValue, net);
+      const tokenStatus = await getTokenRegisterStatus(searchValue, net);
       const result = await getSymbolAndDecimals(searchValue, net);
       const { name, logo } = getNameAndLogo(searchValue);
 
-      setRegisteredStatus(status === null ? -1 : status);
+      setRegisteredStatus(tokenStatus === null ? -1 : tokenStatus);
       setToken({ ...result, name: name ?? '', logo: logo ?? '', address: searchValue });
       setIsLoading(false);
     })();
@@ -164,7 +109,7 @@ export function Register() {
       <Form.Item name="host" label={t('Host network')} rules={[{ required: true }]}>
         <Destination
           networks={networks}
-          extra={Extra}
+          extra={<LinkIndicator config={net} />}
           onChange={(value) => {
             if (value) {
               setNet(value);

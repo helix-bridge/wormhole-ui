@@ -1,9 +1,9 @@
 import { FormInstance } from 'antd';
 import { useEffect, useState } from 'react';
 import { FORM_CONTROL } from '../config';
-import { Bridges, TransferFormValues, TransferNetwork } from '../model';
+import { NoNullTransferNetwork, TransferFormValues, TransferNetwork } from '../model';
 
-export function useLock(form: FormInstance<TransferFormValues<Bridges>>) {
+export function useLock(form: FormInstance<TransferFormValues<{ recipient: string }, NoNullTransferNetwork>>) {
   const [lock, setLock] = useState<boolean>(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

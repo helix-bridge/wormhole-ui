@@ -1,6 +1,6 @@
 import { Typography } from 'antd';
 import { CSSProperties, PropsWithChildren } from 'react';
-import { NetworkEnum } from '../config';
+import { Graph } from '../config';
 import { Network } from '../model';
 import { isPolkadotNetwork } from '../utils';
 
@@ -54,7 +54,7 @@ export function SubscanLink({
   if (txHash) {
     const isSubscan = isPolkadotNetwork(network);
     const mapObj = isSubscan ? { scan: 'subscan', txPath: 'extrinsic' } : { scan: 'etherscan', txPath: 'tx' };
-    const omitNetwork: string[] = [NetworkEnum.ethereum];
+    const omitNetwork: string[] = [Graph.ethereum];
 
     return (
       <Link

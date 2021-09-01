@@ -1,20 +1,24 @@
-import { curry, curryRight, isNull } from 'lodash';
+import { curry, curryRight, isEqual, isNull, omit } from 'lodash';
 import Web3 from 'web3';
+import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
 import {
-  NetworkEnum,
-  NETWORK_ALIAS,
-  NETWORK_CONFIG,
-  NETWORK_GRAPH,
-  NETWORK_SIMPLE,
+  Arrival,
+  Connection,
+  Departure,
+  EthereumConnection,
+  MetamaskNativeNetworkIds,
+  NetConfig,
+  Network,
+  NetworkCategory,
+  NetworkMode,
+  PolkadotConnection,
   Vertices,
-  AIRDROP_GRAPH,
-} from '../../config';
-import { MetamaskNativeNetworkIds, NetConfig, Network, NetworkCategory } from '../../model';
+} from '../../model';
 
 function isSpecifyNetworkType(type: NetworkCategory) {
   const findBy = (name: Network) => NETWORK_CONFIG[name] || null;
 
-  return (network: Network | null) => {
+  return (network: Network | null | undefined) => {
     if (!network) {
       return false;
     }
@@ -66,12 +70,19 @@ const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) => {
   return typeof net1 === typeof net2 && net1?.fullName === net2?.fullName;
 };
 
-const isInNodeList = (source: Map<Network, Vertices[]>) => (net1: NetConfig | null, net2: NetConfig | null) => {
+const getArrivals = (source: Map<Departure, Arrival[]>, departure: NetConfig) => {
+  const mode: NetworkMode = departure.dvm ? 'dvm' : 'native';
+  const target = [...source].find(([item]) => item.network === departure.name && item.mode === mode);
+
+  return target ? target[1] : [];
+};
+
+const isInNodeList = (source: Map<Departure, Arrival[]>) => (net1: NetConfig | null, net2: NetConfig | null) => {
   if (!net1 || !net2) {
     return true;
   }
 
-  const vertices = source.get(NetworkEnum[net1.name]) ?? [];
+  const vertices = getArrivals(source, net1);
   const nets = vertices.map((ver) => ver.network);
 
   return nets.includes(net2.name);
@@ -92,6 +103,30 @@ export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
 }
 
+export function getNetworkMode(config: NetConfig): NetworkMode {
+  return config.dvm ? 'dvm' : 'native';
+}
+
+export function getNetConfigByVer(vertices: Vertices) {
+  if (!vertices) {
+    return null;
+  }
+
+  const { mode, network } = vertices;
+
+  return NETWORKS.find((item) => item.name === network && mode === getNetworkMode(item)) ?? null;
+}
+
+export function isSameNetConfig(config1: NetConfig | null, config2: NetConfig | null): boolean {
+  if (!config1 || !config2) {
+    return [config1, config2].every(isNull);
+  }
+
+  return (
+    isEqual(config1, config2) || (config1.name === config2.name && getNetworkMode(config1) === getNetworkMode(config2))
+  );
+}
+
 export function getNetworkByName(name: Network | null | undefined) {
   if (name) {
     return NETWORK_CONFIG[name];
@@ -102,20 +137,12 @@ export function getNetworkByName(name: Network | null | undefined) {
   return null;
 }
 
-export function getVertices(from: Network, to: Network): Vertices | null {
+export function getVertices(from: Network, to: Network): Arrival | null {
   if (!from || !to) {
     return null;
   }
 
-  return NETWORK_GRAPH.get(from)?.find((item) => item.network === to) ?? null;
-}
-
-function getVerticesList(from: Network): Vertices[] {
-  if (!from) {
-    return [];
-  }
-
-  return NETWORK_GRAPH.get(from) || [];
+  return getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[from]).find((item) => item.network === to) ?? null;
 }
 
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {
@@ -150,11 +177,9 @@ export function isBridgeAvailable(from: Network, to: Network): boolean {
   return !!bridge && bridge.status === 'available';
 }
 
-export function getNetworkCategory(network: Network | NetConfig): NetworkCategory | null {
-  const config = typeof network === 'string' ? NETWORK_CONFIG[network] : network;
-
+export function getNetworkCategory(config: NetConfig): NetworkCategory | null {
   if (config.type.includes('polkadot')) {
-    return 'polkadot';
+    return config.dvm ? 'dvm' : 'polkadot';
   } else if (config.type.includes('ethereum')) {
     return 'ethereum';
   }
@@ -194,11 +219,57 @@ export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> 
 
 export function getAvailableNetworks(net: Network): NetConfig | null {
   // FIXME: by default we use the first vertices here.
-  const [vertices] = getVerticesList(net).filter((item) => item.status === 'available');
+  const [vertices] = (getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[net]) ?? []).filter(
+    (item) => item.status === 'available'
+  );
 
   if (!vertices) {
     return null;
   }
 
   return NETWORK_CONFIG[vertices.network];
+}
+
+export function getDisplayName(config: NetConfig): string {
+  const mode = getNetworkMode(config);
+
+  return mode === 'dvm' ? `${config.fullName}-DVM` : config.fullName;
+}
+
+export function getVerticesFromDisplayName(name: string): Vertices {
+  const [network, mode = 'native'] = name.split('-') as [Network, string];
+
+  return { network, mode: mode.toLocaleLowerCase() as NetworkMode };
+}
+
+// eslint-disable-next-line complexity
+export async function getConfigByConnection(connection: Connection): Promise<NetConfig | null> {
+  if (connection.type === 'metamask') {
+    const targets = NETWORKS.filter((item) =>
+      isChainIdEqual(item.ethereumChain.chainId, (connection as EthereumConnection).chainId)
+    );
+
+    return (targets.length > 1 ? targets.find((item) => item.dvm) : targets[0]) ?? null;
+  }
+
+  if (connection.type === 'polkadot') {
+    const { api } = connection as PolkadotConnection;
+
+    try {
+      const chain = await api?.rpc.system.chain();
+
+      return chain ? omit(NETWORK_CONFIG[chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;
+    } catch (err) {
+      console.error('%c [ err ]-263', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+    }
+  }
+
+  return null;
+}
+
+export function isChainIdEqual(id1: string | number, id2: string | number): boolean {
+  id1 = Web3.utils.toHex(id1);
+  id2 = Web3.utils.toHex(id2);
+
+  return id1 === id2;
 }

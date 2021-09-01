@@ -15,7 +15,7 @@ export interface CustomFormControlProps<T = string> {
   onChange?: (value: T) => void;
 }
 
-export interface BridgeFormProps<T = Bridges> {
+export interface BridgeFormProps<T extends TransferParty> {
   form: FormInstance<TransferFormValues<T>>;
   setSubmit: React.Dispatch<React.SetStateAction<(value: TransferFormValues) => void>>;
 }
@@ -29,37 +29,33 @@ export interface TransferNetwork {
 
 export type NoNullTransferNetwork = DeepRequired<TransferNetwork, ['from' | 'to']>;
 
-interface TransferParty {
-  recipient?: string;
-  sender?: string;
+export interface TransferParty {
+  recipient: string;
+  sender: string;
 }
 
 export interface TransferAsset<T> {
-  amount?: string;
-  asset?: T | null;
-  checked?: boolean;
-  unit?: Unit;
-  assetType?: 'erc20' | 'native' | 'darwinia';
-  erc20?: Erc20Token;
+  amount: string;
+  asset: T | null;
 }
-
-type Transfer<T> = (T extends Array<unknown>
-  ? { assets?: TransferAsset<T[0]>[] } & Omit<TransferAsset<T>, 'asset'>
-  : TransferAsset<T>) &
-  TransferParty;
 
 /* ---------------------------------------------------E2D--------------------------------------------------- */
 
-export type E2DAsset = Exclude<Token, 'native'> | 'deposit';
+export type Ethereum2DarwiniaAsset = 'ring' | 'kton' | 'deposit';
 
-export type E2D = Transfer<E2DAsset> & { deposit?: Deposit };
+export interface Ethereum2DarwiniaTransfer extends TransferParty, TransferAsset<Ethereum2DarwiniaAsset> {
+  deposit?: Deposit;
+}
 
 /* ---------------------------------------------------D2E--------------------------------------------------- */
 
-export type D2EAsset = Exclude<Token, 'native'>;
+export type Darwinia2EthereumAsset = Exclude<Token, 'native'>;
 
-export type D2E<T = D2EAsset[]> = Transfer<T>;
+export interface Darwinia2EthereumTransfer extends TransferParty {
+  assets: (TransferAsset<Darwinia2EthereumAsset> & { checked?: boolean; unit?: Unit })[];
+}
+/* ---------------------------------------------------DVM--------------------------------------------------- */
 
-/* ---------------------------------------------------Bridge--------------------------------------------------- */
+export type DVMAsset = Erc20Token;
 
-export type Bridges = E2D & D2E;
+export interface DVMTransfer extends TransferParty, TransferAsset<DVMAsset> {}

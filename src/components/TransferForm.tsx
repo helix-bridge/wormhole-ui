@@ -1,24 +1,35 @@
 import { Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
+import { isEqual } from 'lodash';
 import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
-import { BridgeFormProps, Bridges, NetConfig, Network, TransferFormValues, TransferNetwork } from '../model';
-import { empty, getInitialSetting, getNetworkByName } from '../utils';
+import {
+  BridgeFormProps,
+  Departure,
+  Network,
+  NetworkMode,
+  TransferFormValues,
+  TransferNetwork,
+  TransferParty,
+} from '../model';
+import { empty, getInitialSetting, getNetConfigByVer, getNetworkMode, isSameNetConfig } from '../utils';
 import { Airport } from './Airport';
-import { Nets } from './controls/Nets';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
+import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
+import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaDvm';
+import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
-
-type Departures = { [key in Network]?: FunctionComponent<BridgeFormProps & Bridges> };
 
 const initTransfer: () => TransferNetwork = () => {
   const come = getInitialSetting('from', '') as Network;
   const go = getInitialSetting('to', '') as Network;
-  const from = getNetworkByName(come);
-  const to = getNetworkByName(go);
+  const fromMode = getInitialSetting('fMode', '') as NetworkMode;
+  const toMode = getInitialSetting('tMode', '') as NetworkMode;
+  const from = getNetConfigByVer({ network: come, mode: fromMode });
+  const to = getNetConfigByVer({ network: go, mode: toMode });
 
   if (from?.isTest === to?.isTest) {
     return { from, to };
@@ -31,29 +42,63 @@ const initTransfer: () => TransferNetwork = () => {
 
 const TRANSFER = initTransfer();
 
-const DEPARTURES: Departures = {
-  ethereum: Ethereum2Darwinia,
-  darwinia: Darwinia2Ethereum,
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DEPARTURES: [[Departure, Departure?], FunctionComponent<BridgeFormProps<any>>][] = [
+  [[{ network: 'ethereum', mode: 'native' }], Ethereum2Darwinia],
+  [[{ network: 'ropsten', mode: 'native' }], Ethereum2Darwinia],
+  [[{ network: 'darwinia', mode: 'native' }], Darwinia2Ethereum],
+  [[{ network: 'pangolin', mode: 'native' }], Darwinia2Ethereum],
+  [
+    [
+      { network: 'ethereum', mode: 'native' },
+      { network: 'darwinia', mode: 'dvm' },
+    ],
+    Ethereum2DarwiniaDVM,
+  ],
+  [
+    [
+      { network: 'ropsten', mode: 'native' },
+      { network: 'pangolin', mode: 'dvm' },
+    ],
+    Ethereum2DarwiniaDVM,
+  ],
+  [[{ network: 'darwinia', mode: 'dvm' }], DarwiniaDVM2Ethereum],
+  [[{ network: 'pangolin', mode: 'dvm' }], DarwiniaDVM2Ethereum],
+];
 
-/**
- * TODO: add departures to network_graph config
- */
-const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<BridgeFormProps & Bridges> = (from) => {
+// eslint-disable-next-line complexity
+const getDeparture: (transfer: TransferNetwork) => FunctionComponent<BridgeFormProps<TransferParty>> = ({
+  from,
+  to,
+}) => {
   if (!from) {
     return () => <></>;
   }
 
-  const Comp = DEPARTURES[from.name];
+  const fMode = getNetworkMode(from);
 
-  if (Comp) {
-    return Comp;
-  }
+  if (!to) {
+    const target = DEPARTURES.find(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
 
-  const typeName = from.type.reverse().find((type) => DEPARTURES[type as Network]) as Network;
+    if (target) {
+      return target[1];
+    }
+  } else {
+    const targets = DEPARTURES.filter(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
 
-  if (typeName) {
-    return DEPARTURES[typeName] as FunctionComponent<BridgeFormProps & Bridges>;
+    if (targets.length === 1) {
+      return targets[0][1];
+    } else {
+      const tMode = getNetworkMode(to);
+      const target = targets.find(
+        ([parties]) =>
+          isEqual(parties[1], { network: to.name, mode: tMode }) || (parties[1] === undefined && tMode === 'native')
+      );
+
+      if (target) {
+        return target[1];
+      }
+    }
   }
 
   return () => <span>Coming Soon...</span>;
@@ -63,7 +108,11 @@ const getDeparture: (from: NetConfig | undefined | null) => FunctionComponent<Br
 export function TransferForm({ isCross = true }: { isCross?: boolean }) {
   const { t, i18n } = useTranslation();
   const [form] = useForm<TransferFormValues>();
-  const { network, networkStatus, disconnect } = useApi();
+  const {
+    network,
+    connection: { status },
+    disconnect,
+  } = useApi();
   const [transfer, setTransfer] = useState(TRANSFER);
   const [isFromReady, setIsFromReady] = useState(false);
   const [submitFn, setSubmit] = useState<(value: TransferFormValues) => void>(empty);
@@ -71,10 +120,10 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
 
   useEffect(() => {
     const { from } = transfer;
-    const isReady = !!from && from.name === network && networkStatus === 'success';
+    const isReady = !!from && isSameNetConfig(from, network) && status === 'success';
 
     setIsFromReady(isReady);
-  }, [network, networkStatus, transfer]);
+  }, [network, status, transfer]);
 
   return (
     <>
@@ -110,15 +159,15 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         </Form.Item>
 
         {isCross && isFromReady ? (
-          React.createElement(getDeparture(form.getFieldValue(FORM_CONTROL.transfer).from), { form, setSubmit })
+          React.createElement(getDeparture(transfer), { form, setSubmit })
         ) : (
           <Airport form={form} setSubmit={setSubmit} />
         )}
 
-        <div className={networkStatus === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
+        <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
           <SubmitButton {...transfer} requireTo />
 
-          {networkStatus === 'success' && (
+          {status === 'success' && (
             <FromItemButton type="default" onClick={() => disconnect()} disabled={!!tx}>
               {t('Disconnect')}
             </FromItemButton>

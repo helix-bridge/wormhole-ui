@@ -1,5 +1,5 @@
 import { QuestionCircleFilled } from '@ant-design/icons';
-import { Button, Descriptions, Form, Input, Radio, Select, Tooltip } from 'antd';
+import { Button, Descriptions, Form, Input, Select, Tooltip } from 'antd';
 import { FormInstance, Rule } from 'antd/lib/form';
 import BN from 'bn.js';
 import { format } from 'date-fns';
@@ -7,20 +7,17 @@ import { TFunction } from 'i18next';
 import { isNull } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
-import { Path } from '../../config/routes';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import {
   BridgeFormProps,
-  E2D,
   Erc20Token,
+  Ethereum2DarwiniaTransfer,
   NetConfig,
   Network,
   NoNullTransferNetwork,
-  RequiredPartial,
   TransferFormValues,
   Tx,
 } from '../../model';
@@ -32,20 +29,16 @@ import {
   empty,
   fromWei,
   getInfoFromHash,
-  getUnit,
   isValidAddress,
   prettyNumber,
   RedeemDeposit,
   redeemDeposit,
-  redeemErc20,
-  RedeemErc20,
   RedeemEth,
   redeemToken,
   toWei,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
 import { DepositItem, getDepositTimeRange } from '../controls/DepositItem';
-import { Erc20Control } from '../controls/Erc20Control';
 import { MaxBalance } from '../controls/MaxBalance';
 import { RecipientItem } from '../controls/RecipientItem';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
@@ -60,23 +53,13 @@ enum E2DAssetEnum {
   deposit = 'deposit',
 }
 
-/**
- * At the ethereum side, the native token is ether,
- */
-enum E2DAssetCategory {
-  erc20 = 'erc20',
-  darwinia = 'darwinia',
-  // native = 'ether',
-}
-
 interface AmountCheckInfo {
   amount?: string;
   fee: BN | null;
   balance: BN | null;
   ringBalance: BN | null;
-  assetType: E2DAssetCategory;
   asset: E2DAssetEnum;
-  form?: FormInstance<E2D>;
+  form?: FormInstance<Ethereum2DarwiniaTransfer>;
   t: TFunction;
 }
 
@@ -140,7 +123,7 @@ async function getFee(config: NetConfig): Promise<BN> {
   return web3js.utils.toBN(fee || 0);
 }
 
-function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }: AmountCheckInfo): Rule[] {
+function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo): Rule[] {
   const required: Rule = { required: true };
   const isExit: (target: BN | null, name: string) => Rule = (target, name) => {
     const message = t('{{name}} query failed, please wait and try again', { name: t(name) });
@@ -161,8 +144,7 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
   const isLessThenMax = {
     validator: (_r: Rule, curVal: string) => {
       const value = new BN(Web3.utils.toWei(curVal));
-      const { erc20 } = form?.getFieldsValue() || {};
-      const maximum = assetType === E2DAssetCategory.erc20 ? erc20?.balance || BN_ZERO : balance;
+      const maximum = balance;
 
       return value.lte(maximum!) ? Promise.resolve() : Promise.reject(amountGtBalanceMsg);
     },
@@ -170,7 +152,7 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
   };
   const commonRules: Rule[] = [required, isFeeExist, isBalance, isRingExist, ringGtThanFee, isLessThenMax];
 
-  if (assetType === E2DAssetCategory.darwinia && asset === E2DAssetEnum.ring) {
+  if (asset === E2DAssetEnum.ring) {
     const gtThanFee: Rule = {
       validator: (_r, curVal: string) => {
         const value = new BN(Web3.utils.toWei(curVal));
@@ -182,7 +164,7 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
     return [...commonRules, gtThanFee];
   }
 
-  if (assetType === E2DAssetCategory.darwinia && asset === E2DAssetEnum.deposit) {
+  if (asset === E2DAssetEnum.deposit) {
     return [required, isFeeExist, isRingExist, ringGtThanFee];
   }
 
@@ -190,21 +172,21 @@ function getAmountRules({ fee, ringBalance, balance, assetType, asset, form, t }
 }
 
 // eslint-disable-next-line complexity
-function TransferInfo({ fee, balance, ringBalance, amount, assetType, asset, t }: AmountCheckInfo) {
+function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountCheckInfo) {
   const value = new BN(toWei({ value: amount || '0' }));
 
   if (!fee || !ringBalance || !balance) {
     return (
       // eslint-disable-next-line no-magic-numbers
-      <p className="text-red-400 animate-pulse px-2" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
+      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
         {t('Transfer information querying')}
       </p>
     );
   }
 
   return (
-    <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400 px-2">
-      {assetType === E2DAssetCategory.darwinia && asset === E2DAssetEnum.ring && value.gte(fee) && (
+    <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
+      {asset === E2DAssetEnum.ring && value.gte(fee) && (
         <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
           {fromWei({ value: value.sub(fee) })} RING
         </Descriptions.Item>
@@ -231,9 +213,9 @@ function TransferInfo({ fee, balance, ringBalance, amount, assetType, asset, t }
 
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
-type ApproveValue = TransferFormValues<RequiredPartial<E2D, 'sender'>, NoNullTransferNetwork>;
+type ApproveValue = TransferFormValues<Ethereum2DarwiniaTransfer, NoNullTransferNetwork>;
 
-function createApproveRingTx(value: ApproveValue, after: AfterTxCreator): Observable<Tx> {
+function createApproveRingTx(value: Pick<ApproveValue, 'transfer' | 'sender'>, after: AfterTxCreator): Observable<Tx> {
   const beforeTx = applyModalObs({
     content: <ApproveConfirm value={value} />,
   });
@@ -277,66 +259,35 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
   return createTxWorkflow(beforeTx, txObs, after);
 }
 
-function createErc20Tx(value: RedeemErc20, after: AfterTxCreator): Observable<Tx> {
-  const beforeTx = applyModalObs({
-    content: (
-      <TransferConfirm value={value}>
-        <Des
-          title={<Trans>Amount</Trans>}
-          content={
-            <span>
-              {value.amount} {value.erc20.symbol}
-            </span>
-          }
-        ></Des>
-      </TransferConfirm>
-    ),
-  });
-  const txObs = redeemErc20(value);
-
-  return createTxWorkflow(beforeTx, txObs, after);
-}
-
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
-export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
+export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2DarwiniaTransfer>) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(BN_ZERO);
   const [max, setMax] = useState<BN | null>(null);
   const [fee, setFee] = useState<BN | null>(null);
   const [ringBalance, setRingBalance] = useState<BN | null>(null);
-  const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
-  const [assetType, setAssetType] = useState<E2DAssetCategory>(() => {
-    const value = form.getFieldValue(FORM_CONTROL.assetType);
-
-    return !value || value === 'native' ? E2DAssetCategory.darwinia : value;
-  });
   const [asset, setAsset] = useState<E2DAssetEnum>(() => form.getFieldValue(FORM_CONTROL.asset) ?? E2DAssetEnum.ring);
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
-  const [updateErc20, setUpdateErc20] = useState<(addr: string) => Promise<void>>(() => Promise.resolve());
-  const { accounts } = useApi();
+  const {
+    connection: { accounts },
+  } = useApi();
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();
-  const { afterTx } = useAfterSuccess();
+  const { afterTx } = useAfterSuccess<ApproveValue>();
   const account = useMemo(() => {
     const acc = (accounts || [])[0];
 
     return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
   }, [accounts]);
   const availableBalance = useMemo(() => {
-    if (assetType === E2DAssetCategory.erc20) {
-      return !selectedErc20
-        ? null
-        : fromWei({ value: selectedErc20.balance, unit: getUnit(+selectedErc20.decimals) }, prettyNumber);
-    } else {
-      return max === null ? null : fromWei({ value: max }, prettyNumber);
-    }
-  }, [assetType, selectedErc20, max]);
+    return max === null ? null : fromWei({ value: max }, prettyNumber);
+  }, [max]);
   const amountRules = useMemo(
-    () => getAmountRules({ fee, balance: max, ringBalance, asset, assetType, form, t }),
-    [asset, assetType, fee, form, max, ringBalance, t]
+    () => getAmountRules({ fee, balance: max, ringBalance, asset, t }),
+    [asset, fee, max, ringBalance, t]
   );
   const refreshAllowance = useCallback(
     (value: RedeemEth | ApproveValue) =>
@@ -349,16 +300,12 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
 
   const refreshBalance = useCallback(
     (value: RedeemEth | ApproveValue) => {
-      if (value.assetType === E2DAssetCategory.erc20) {
-        updateErc20(value.erc20!.address);
-      }
-
-      if (value.asset === E2DAssetEnum.kton && value.assetType !== E2DAssetCategory.erc20) {
+      if (value.asset === E2DAssetEnum.kton) {
         getKtonBalance(account, value.transfer.from).then((balance) => setMax(balance));
       }
 
       getRingBalance(account, value.transfer.from).then((balance) => {
-        if (value.assetType === E2DAssetCategory.darwinia && value.asset === E2DAssetEnum.ring) {
+        if (value.asset === E2DAssetEnum.ring) {
           setMax(balance);
         }
 
@@ -366,7 +313,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
       });
       refreshAllowance(value);
     },
-    [account, refreshAllowance, updateErc20]
+    [account, refreshAllowance]
   );
 
   const refreshDeposit = useCallback(
@@ -378,13 +325,10 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
   );
 
   const updateSubmit = useCallback(
-    (curAsset: E2DAssetEnum | Erc20Token | null, isErc20 = false) => {
+    (curAsset: E2DAssetEnum | Erc20Token | null) => {
       let fn = empty;
 
-      if (isErc20) {
-        fn = () => (value: RedeemErc20) =>
-          createErc20Tx(value, afterTx(TransferSuccess, { onDisappear: refreshBalance })(value)).subscribe(observer);
-      } else if (curAsset === E2DAssetEnum.deposit) {
+      if (curAsset === E2DAssetEnum.deposit) {
         fn = () => (value: RedeemDeposit) =>
           createCrossDepositTx(
             value,
@@ -428,12 +372,10 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
 
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
     const { recipient } = getInfoFromHash();
-    const type = form.getFieldValue(FORM_CONTROL.assetType);
 
     form.setFieldsValue({
       [FORM_CONTROL.recipient]: recipient ?? '',
       [FORM_CONTROL.sender]: account,
-      [FORM_CONTROL.assetType]: !type || type === 'native' ? E2DAssetCategory.darwinia : type,
     });
 
     Promise.all([getRingBalance(account, netConfig), getFee(netConfig), getIssuingAllowance(account, netConfig)]).then(
@@ -448,11 +390,8 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
   }, [account, form, updateDeparture]);
 
   useEffect(() => {
-    const isErc20 = assetType === E2DAssetCategory.erc20;
-    const curAsset = isErc20 ? selectedErc20 : asset;
-
-    updateSubmit(curAsset, isErc20);
-  }, [asset, assetType, selectedErc20, updateSubmit]);
+    updateSubmit(asset);
+  }, [asset, updateSubmit]);
 
   return (
     <>
@@ -470,79 +409,40 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
             </Trans>
           </span>
         }
-        isDvm={assetType === E2DAssetCategory.erc20}
       />
 
-      <Form.Item initialValue={E2DAssetCategory.darwinia} name={FORM_CONTROL.assetType} label={t('Asset Type')}>
-        <Radio.Group
-          onChange={(event) => {
-            setAssetType(event.target.value);
-            form.validateFields([FORM_CONTROL.amount, FORM_CONTROL.recipient]);
+      <Form.Item name={FORM_CONTROL.asset} initialValue={E2DAssetEnum.ring} label={t('Asset')}>
+        <Select
+          size="large"
+          onChange={async (value: E2DAssetEnum) => {
+            form.setFieldsValue({ amount: '' });
+
+            let balance: BN | null = null;
+            const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
+
+            if (value === E2DAssetEnum.ring) {
+              balance = await getRingBalance(account, netConfig);
+
+              setRingBalance(balance);
+            }
+
+            if (value === E2DAssetEnum.kton) {
+              balance = await getKtonBalance(account, netConfig);
+            }
+
+            setAsset(value);
+            setMax(balance);
           }}
         >
-          <Radio value={E2DAssetCategory.darwinia}>Darwinia</Radio>
-          <Radio value={E2DAssetCategory.erc20}>ERC20</Radio>
-        </Radio.Group>
+          <Select.Option value={E2DAssetEnum.ring}>RING</Select.Option>
+          <Select.Option value={E2DAssetEnum.kton}>KTON</Select.Option>
+          <Select.Option value={E2DAssetEnum.deposit} className="uppercase">
+            {t('Deposit')}
+          </Select.Option>
+        </Select>
       </Form.Item>
 
-      {assetType === E2DAssetCategory.erc20 ? (
-        <Form.Item
-          name={FORM_CONTROL.erc20}
-          label={t('Asset')}
-          extra={
-            <span className="inline-block mt-2 px-2">
-              <Trans i18nKey="registrationTip">
-                If you can not find the token you want to send in the list, highly recommended to
-                <Link to={Path.register}> go to the registration page</Link>, where you will find it after completing
-                the registration steps.
-              </Trans>
-            </span>
-          }
-          rules={[{ required: true }]}
-          className="mb-2"
-        >
-          <Erc20Control
-            network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
-            onChange={(erc20) => {
-              setSelectedErc20(erc20);
-            }}
-            updateBalance={setUpdateErc20}
-          />
-        </Form.Item>
-      ) : (
-        <Form.Item name={FORM_CONTROL.asset} initialValue={E2DAssetEnum.ring} label={t('Asset')}>
-          <Select
-            size="large"
-            onChange={async (value: E2DAssetEnum) => {
-              form.setFieldsValue({ amount: '' });
-
-              let balance: BN | null = null;
-              const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
-
-              if (value === E2DAssetEnum.ring) {
-                balance = await getRingBalance(account, netConfig);
-
-                setRingBalance(balance);
-              }
-
-              if (value === E2DAssetEnum.kton) {
-                balance = await getKtonBalance(account, netConfig);
-              }
-
-              setAsset(value);
-              setMax(balance);
-            }}
-          >
-            <Select.Option value={E2DAssetEnum.ring}>RING</Select.Option>
-            <Select.Option value={E2DAssetEnum.kton}>KTON</Select.Option>
-            <Select.Option value={E2DAssetEnum.deposit} className="uppercase">
-              {t('Deposit')}
-            </Select.Option>
-          </Select>
-        </Form.Item>
-      )}
-
-      {assetType === E2DAssetCategory.darwinia && asset === E2DAssetEnum.deposit ? (
+      {asset === E2DAssetEnum.deposit ? (
         <DepositItem
           address={account}
           config={form.getFieldValue(FORM_CONTROL.transfer).from}
@@ -560,7 +460,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
               // eslint-disable-next-line complexity
               validator: (_, value: string) => {
                 const val =
-                  assetType === E2DAssetCategory.erc20 || form.getFieldValue(FORM_CONTROL.asset) !== E2DAssetEnum.ring
+                  form.getFieldValue(FORM_CONTROL.asset) !== E2DAssetEnum.ring
                     ? fee ?? BN_ZERO
                     : new BN(Web3.utils.toWei(value));
 
@@ -581,7 +481,8 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
 
                       createApproveRingTx(
                         value,
-                        afterTx(ApproveSuccess, { onDisappear: refreshAllowance })(value)
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        afterTx(ApproveSuccess, { onDisappear: refreshAllowance })(value as unknown as any)
                       ).subscribe(observer);
                     }}
                     size="small"
@@ -604,10 +505,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
             <MaxBalance
               network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
               onClick={() => {
-                const isErc20Token = assetType === E2DAssetCategory.erc20;
-                const val = isErc20Token ? selectedErc20?.balance : max;
-                const unit = isErc20Token ? getUnit(+(selectedErc20?.decimals ?? '18')) : 'ether';
-                const amount = fromWei({ value: val, unit }, prettyNumber);
+                const amount = fromWei({ value: max, unit: 'ether' }, prettyNumber);
 
                 form.setFieldsValue({ [FORM_CONTROL.amount]: amount });
                 setCurAmount(amount);
@@ -619,15 +517,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
       )}
 
       <Form.Item className="mb-0">
-        <TransferInfo
-          fee={fee}
-          ringBalance={ringBalance}
-          balance={max}
-          asset={asset}
-          assetType={assetType}
-          amount={curAmount}
-          t={t}
-        />
+        <TransferInfo fee={fee} ringBalance={ringBalance} balance={max} asset={asset} amount={curAmount} t={t} />
       </Form.Item>
     </>
   );

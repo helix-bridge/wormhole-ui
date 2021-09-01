@@ -66,7 +66,7 @@ export const getKnownErc20Tokens = async (currentAccount: string, network: Netwo
  * @returns tokens that status maybe registered or registering
  */
 const getFromDvm = async (currentAccount: string, config: NetConfig) => {
-  const web3Darwinia = new Web3(config.rpc);
+  const web3Darwinia = new Web3(config.provider.rpc);
   const mappingContract = new web3Darwinia.eth.Contract(abi.mappingTokenABI, config.erc20Token.mappingAddress);
   const length = await mappingContract.methods.tokenLength().call(); // length: string
   const tokens = await Promise.all(
@@ -170,7 +170,7 @@ export const getSymbolType: (address: string, config: NetConfig) => Promise<{ sy
 
 export const getDarwiniaApiObs = memoize((network: Network) => {
   const targetConfig = getAvailableNetworks(network);
-  const provider = new WsProvider(targetConfig?.rpc);
+  const provider = new WsProvider(targetConfig?.provider.rpc);
   const apiObs = from(
     ApiPromise.create({
       provider,

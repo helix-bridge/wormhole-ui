@@ -1,10 +1,10 @@
 import { LockOutlined } from '@ant-design/icons';
-import { Form, Input } from 'antd';
+import { Form, FormInstance, Input } from 'antd';
 import { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
 import { useLock } from '../../hooks';
-import { BridgeFormProps } from '../../model';
+import { BridgeFormProps, NoNullTransferNetwork, TransferFormValues, TransferParty } from '../../model';
 import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../../utils';
 
 // eslint-disable-next-line complexity
@@ -12,9 +12,9 @@ export function RecipientItem({
   form,
   extraTip,
   isDvm = false,
-}: Omit<BridgeFormProps, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
+}: Omit<BridgeFormProps<TransferParty>, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
   const { t } = useTranslation();
-  const [lock] = useLock(form);
+  const [lock] = useLock(form as FormInstance<TransferFormValues<TransferParty, NoNullTransferNetwork>>);
 
   const { to } = form.getFieldValue(FORM_CONTROL.transfer) || {};
   const isPolkadot = isPolkadotNetwork(to?.name);
@@ -30,7 +30,7 @@ export function RecipientItem({
           { required: true },
           {
             validator(_, value) {
-              return !isSameAddress(form.getFieldValue(FORM_CONTROL.sender), value)
+              return isDvm || !isSameAddress(form.getFieldValue(FORM_CONTROL.sender), value)
                 ? Promise.resolve()
                 : Promise.reject();
             },

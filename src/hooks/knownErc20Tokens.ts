@@ -54,7 +54,9 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
   );
   const addKnownProof = useCallback((proofs: StoredProof) => dispatch({ payload: proofs, type: 'updateProof' }), []);
   const switchToConfirmed = useCallback((token: string) => dispatch({ payload: token, type: 'switchToConfirmed' }), []);
-  const { accounts } = useApi();
+  const {
+    connection: { accounts },
+  } = useApi();
   const { address: currentAccount } = (accounts || [])[0] ?? '';
   const refreshTokenBalance = useCallback(
     async (tokenAddress: string) => {

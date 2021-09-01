@@ -6,7 +6,7 @@ import { NETWORK_CONFIG } from '../../config';
 import { MetamaskError, Network } from '../../model';
 import { isNativeMetamaskChain } from './network';
 
-export async function switchEthereumChain(network: Network): Promise<null> {
+async function switchEthereumChain(network: Network): Promise<null> {
   const params = NETWORK_CONFIG[network].ethereumChain;
   const chainId = Web3.utils.toHex(+params.chainId);
   const res: null = await window.ethereum.request({
@@ -20,12 +20,13 @@ export async function switchEthereumChain(network: Network): Promise<null> {
 /**
  * @description add chain in metamask
  */
-export async function addEthereumChain(network: Network): Promise<null> {
+async function addEthereumChain(network: Network): Promise<null> {
   // TODO check the chaiId field, store in decimal in configuration but may be required hexadecimal in metamask side.
   const params = NETWORK_CONFIG[network].ethereumChain;
+  const chainId = Web3.utils.toHex(+params.chainId);
   const result = await window.ethereum.request({
     method: 'wallet_addEthereumChain',
-    params: [params],
+    params: [{ ...params, chainId }],
   });
 
   return result;
