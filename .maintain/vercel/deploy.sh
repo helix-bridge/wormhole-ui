@@ -4,6 +4,7 @@
 set -xe
 
 echo "VERCEL_ENV: $VERCEL_ENV"
+echo "VERCEL_GIT_COMMIT_REF: $VERCEL_GIT_COMMIT_REF"
 
 yarn install
 
