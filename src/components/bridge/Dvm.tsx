@@ -200,6 +200,7 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
           tokens={tokens}
           onChange={(erc20) => {
             setSelectedErc20(erc20);
+            
             const departure = form.getFieldValue(FORM_CONTROL.transfer).from;
 
             getAllowance(account, departure, erc20).then((allow) => {
