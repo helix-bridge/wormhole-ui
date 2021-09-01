@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Bridges, TransferFormValues } from './transfer';
+import { NoNullTransferNetwork, TransferFormValues } from './transfer';
 
 export type TxStatus =
   | 'future'
@@ -31,8 +31,12 @@ export interface Tx {
 
 export type TxFn<T> = (value: T) => Observable<Tx>;
 
-export type TxConfirmComponentProps = { value: TransferFormValues<Bridges> };
+export type TxConfirmComponentProps<T> = { value: TransferFormValues<T, NoNullTransferNetwork> };
 
 export type TxHashType = 'block' | 'extrinsic' | 'address' | 'txHash'; // consistent with the SubscanLink component props;
 
-export type TxSuccessComponentProps = { tx: Tx; value: TransferFormValues<Bridges>; hashType?: TxHashType };
+export type TxSuccessComponentProps<T> = {
+  tx: Tx;
+  value: TransferFormValues<T, NoNullTransferNetwork>;
+  hashType?: TxHashType;
+};

@@ -15,7 +15,7 @@ import { AirdropSuccess } from './modal/AirdropSuccess';
 
 type AirportValues = TransferFormValues<{
   sender: string;
-  recipient?: string;
+  recipient: string;
   signature: string;
 }>;
 

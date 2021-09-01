@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../hooks';
 import { EthereumConnection, NetConfig } from '../model';
-import { getConfigByConnection, getDisplayName, isChainIdEqual, isSameNetConfig } from '../utils';
+import { getConfigByConnection, getDisplayName, isChainIdEqual, isEthereumNetwork, isSameNetConfig } from '../utils';
 
 interface LinkIndicatorProps {
   config: NetConfig | null;
@@ -18,16 +18,27 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
   const [isConsistent, setIsConsistent] = useState(false);
   const [connectionConfig, setConnectionConfig] = useState<NetConfig | null>(null);
 
+  // eslint-disable-next-line complexity
   useEffect(() => {
     let is = !!config && isSameNetConfig(config, network);
 
-    if (config?.dvm) {
-      is =
-        connection.type === 'metamask' &&
-        isChainIdEqual((connection as EthereumConnection).chainId, config.ethereumChain.chainId);
+    if (!is) {
+      setIsConsistent(false);
+      return;
     }
 
-    setIsConsistent(is);
+    if (config?.dvm || isEthereumNetwork(config?.name)) {
+      is =
+        connection.type === 'metamask' &&
+        isChainIdEqual((connection as EthereumConnection).chainId, config!.ethereumChain.chainId);
+
+      setIsConsistent(is);
+    } else {
+      getConfigByConnection(connection).then((conf) => {
+        is = connection.type === 'polkadot' && isSameNetConfig(config, conf);
+        setIsConsistent(is);
+      });
+    }
   }, [config, connection, network]);
 
   useEffect(() => {

@@ -1,7 +1,14 @@
 import { CheckCircleFilled } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
-import { Network, TransferAsset, TxSuccessComponentProps } from '../../model';
+import {
+  Darwinia2EthereumTransfer,
+  Network,
+  NoNullTransferNetwork,
+  TransferAsset,
+  TransferFormValues,
+  TxSuccessComponentProps,
+} from '../../model';
 import { fromWei } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
@@ -16,7 +23,12 @@ function Detail({ amount, asset }: TransferAsset<string>) {
 }
 
 // eslint-disable-next-line complexity
-export function TransferSuccess({ tx, value, hashType = 'txHash' }: TxSuccessComponentProps) {
+export function TransferSuccess({
+  tx,
+  value,
+  hashType = 'txHash',
+}: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
   const linkProps = { [hashType]: tx.hash };
@@ -44,7 +56,7 @@ export function TransferSuccess({ tx, value, hashType = 'txHash' }: TxSuccessCom
         content={
           (value.asset && value.amount && <Detail {...value} />) ||
           (value.assets &&
-            value.assets.map((item) => (
+            value.assets.map((item: Darwinia2EthereumTransfer['assets'][0]) => (
               <Detail
                 {...item}
                 amount={item.unit ? fromWei({ value: item.amount, unit: item.unit }) : item.amount}

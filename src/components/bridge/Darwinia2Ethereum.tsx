@@ -8,7 +8,14 @@ import { from, Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
-import { BridgeFormProps, D2E, D2EAsset, Token, TransferAsset, Tx } from '../../model';
+import {
+  BridgeFormProps,
+  Darwinia2EthereumTransfer,
+  NoNullTransferNetwork,
+  Token,
+  TransferFormValues,
+  Tx,
+} from '../../model';
 import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, toWei } from '../../utils';
 import { backingLock, BackingLockNative } from '../../utils/tx/d2e';
 import { AssetGroup, AssetGroupValue, AvailableBalance } from '../controls/AssetGroup';
@@ -167,7 +174,7 @@ function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCre
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
-export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
+export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2EthereumTransfer>) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
@@ -179,7 +186,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
   const [currentAssets, setCurAssets] = useState<AssetGroupValue>([]);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
-  const { afterTx } = useAfterSuccess();
+  const { afterTx } = useAfterSuccess<TransferFormValues<Darwinia2EthereumTransfer, NoNullTransferNetwork>>();
   const ringBalance = useMemo(
     () => (availableBalances || []).find((item) => item.asset === 'ring'),
     [availableBalances]
@@ -217,7 +224,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<D2E>) {
     const fn = () => (data: BackingLockNative) => {
       const { assets, sender } = data;
       const assetsToSend = assets?.map((item) => {
-        const { asset, amount, checked } = item as Required<TransferAsset<D2EAsset>>;
+        const { asset, amount, checked } = item as Required<Darwinia2EthereumTransfer['assets'][0]>;
         const unit = getChainInfo(asset as Token)?.decimal || 'gwei';
 
         return { asset, unit, amount: checked ? toWei({ value: amount, unit }) : '0' };

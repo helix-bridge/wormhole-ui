@@ -13,12 +13,11 @@ import { abi, FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import {
   BridgeFormProps,
-  E2D,
   Erc20Token,
+  Ethereum2DarwiniaTransfer,
   NetConfig,
   Network,
   NoNullTransferNetwork,
-  RequiredPartial,
   TransferFormValues,
   Tx,
 } from '../../model';
@@ -60,7 +59,7 @@ interface AmountCheckInfo {
   balance: BN | null;
   ringBalance: BN | null;
   asset: E2DAssetEnum;
-  form?: FormInstance<E2D>;
+  form?: FormInstance<Ethereum2DarwiniaTransfer>;
   t: TFunction;
 }
 
@@ -214,9 +213,9 @@ function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountChe
 
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
-type ApproveValue = TransferFormValues<RequiredPartial<E2D, 'sender'>, NoNullTransferNetwork>;
+type ApproveValue = TransferFormValues<Ethereum2DarwiniaTransfer, NoNullTransferNetwork>;
 
-function createApproveRingTx(value: ApproveValue, after: AfterTxCreator): Observable<Tx> {
+function createApproveRingTx(value: Pick<ApproveValue, 'transfer' | 'sender'>, after: AfterTxCreator): Observable<Tx> {
   const beforeTx = applyModalObs({
     content: <ApproveConfirm value={value} />,
   });
@@ -263,7 +262,7 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
-export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
+export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2DarwiniaTransfer>) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(BN_ZERO);
   const [max, setMax] = useState<BN | null>(null);
@@ -277,7 +276,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
   } = useApi();
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();
-  const { afterTx } = useAfterSuccess();
+  const { afterTx } = useAfterSuccess<ApproveValue>();
   const account = useMemo(() => {
     const acc = (accounts || [])[0];
 
@@ -482,7 +481,8 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<E2D>) {
 
                       createApproveRingTx(
                         value,
-                        afterTx(ApproveSuccess, { onDisappear: refreshAllowance })(value)
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        afterTx(ApproveSuccess, { onDisappear: refreshAllowance })(value as unknown as any)
                       ).subscribe(observer);
                     }}
                     size="small"

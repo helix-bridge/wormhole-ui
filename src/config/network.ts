@@ -179,7 +179,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       kton: '0xc8C1680B18D432732D07c044669915726fAF67D0',
     },
     erc20Token: {
-      bankingAddress: '',
+      bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
       mappingAddress: '0xcB8531Bc0B7C8F41B55CF4E94698C37b130597B9',
       proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
     },
@@ -208,7 +208,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     name: 'pangolin',
     provider: {
       rpc: 'wss://pangolin-rpc.darwinia.network',
-      etherscan: '',
+      etherscan: 'wss://ropsten.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
     },
     ss58Prefix: 18,
     tokenContract: {
@@ -225,7 +225,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     erc20Token: {
       bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
-      mappingAddress: '',
+      mappingAddress: '0xcB8531Bc0B7C8F41B55CF4E94698C37b130597B9',
       proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
     },
     ethereumChain: {

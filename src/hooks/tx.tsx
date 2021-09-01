@@ -3,29 +3,20 @@ import { FunctionComponent, useCallback, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 import { Path } from '../config/routes';
-import {
-  Bridges,
-  DeepRequired,
-  NoNullTransferNetwork,
-  TransferFormValues,
-  Tx,
-  TxHashType,
-  TxSuccessComponentProps,
-} from '../model';
+import { NoNullTransferNetwork, TransferFormValues, Tx, TxHashType, TxSuccessComponentProps } from '../model';
 import { TxContext, TxCtx } from '../providers';
 import { applyModal, genHistoryRouteParams } from '../utils';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
-export function useAfterSuccess<
-  T extends TransferFormValues<DeepRequired<Bridges, ['sender']>, NoNullTransferNetwork>
->() {
+export function useAfterSuccess<T extends TransferFormValues<{ sender: string }, NoNullTransferNetwork>>() {
   const { t } = useTranslation();
   const history = useHistory();
 
   const afterTx = useCallback(
     (
-        Comp: FunctionComponent<TxSuccessComponentProps>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Comp: FunctionComponent<TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>>,
         {
           onDisappear,
           hashType = 'txHash',

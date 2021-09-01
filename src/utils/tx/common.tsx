@@ -5,7 +5,15 @@ import { Trans } from 'react-i18next';
 import { EMPTY, finalize, Observable, Observer, switchMap, tap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../config';
-import { RequiredPartial, Tx } from '../../model';
+import {
+  DVMTransfer,
+  Ethereum2DarwiniaTransfer,
+  NoNullTransferNetwork,
+  RequiredPartial,
+  TransferFormValues,
+  Tx,
+  TxFn,
+} from '../../model';
 import { empty } from '../helper';
 
 /**
@@ -149,3 +157,22 @@ export function getContractTxObs(
     }
   });
 }
+
+export const approveToken: TxFn<
+  RequiredPartial<
+    TransferFormValues<Ethereum2DarwiniaTransfer & DVMTransfer, NoNullTransferNetwork>,
+    'sender' | 'transfer'
+  > & { contractAddress?: string }
+> = ({ sender, transfer, contractAddress }) => {
+  const hardCodeAmount = '100000000000000000000000000';
+
+  if (!contractAddress) {
+    throw new Error(`Can not approve the token with address ${contractAddress}`);
+  }
+
+  return getContractTxObs(contractAddress, (contract) =>
+    contract.methods
+      .approve(transfer.from.tokenContract.issuingDarwinia, Web3.utils.toWei(hardCodeAmount))
+      .send({ from: sender })
+  );
+};

@@ -7,12 +7,12 @@ import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
 import {
   BridgeFormProps,
-  Bridges,
   Departure,
   Network,
   NetworkMode,
   TransferFormValues,
   TransferNetwork,
+  TransferParty,
 } from '../model';
 import { empty, getInitialSetting, getNetConfigByVer, getNetworkMode, isSameNetConfig } from '../utils';
 import { Airport } from './Airport';
@@ -42,7 +42,8 @@ const initTransfer: () => TransferNetwork = () => {
 
 const TRANSFER = initTransfer();
 
-const DEPARTURES: Map<[Departure, Departure?], FunctionComponent<BridgeFormProps & Bridges>> = new Map([
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DEPARTURES: [[Departure, Departure?], FunctionComponent<BridgeFormProps<any>>][] = [
   [[{ network: 'ethereum', mode: 'native' }], Ethereum2Darwinia],
   [[{ network: 'ropsten', mode: 'native' }], Ethereum2Darwinia],
   [[{ network: 'darwinia', mode: 'native' }], Darwinia2Ethereum],
@@ -63,25 +64,27 @@ const DEPARTURES: Map<[Departure, Departure?], FunctionComponent<BridgeFormProps
   ],
   [[{ network: 'darwinia', mode: 'dvm' }], DarwiniaDVM2Ethereum],
   [[{ network: 'pangolin', mode: 'dvm' }], DarwiniaDVM2Ethereum],
-]);
+];
 
 // eslint-disable-next-line complexity
-const getDeparture: (transfer: TransferNetwork) => FunctionComponent<BridgeFormProps & Bridges> = ({ from, to }) => {
+const getDeparture: (transfer: TransferNetwork) => FunctionComponent<BridgeFormProps<TransferParty>> = ({
+  from,
+  to,
+}) => {
   if (!from) {
     return () => <></>;
   }
 
-  const source = [...DEPARTURES];
   const fMode = getNetworkMode(from);
 
   if (!to) {
-    const target = source.find(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
+    const target = DEPARTURES.find(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
 
     if (target) {
       return target[1];
     }
   } else {
-    const targets = source.filter(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
+    const targets = DEPARTURES.filter(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
 
     if (targets.length === 1) {
       return targets[0][1];

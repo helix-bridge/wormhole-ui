@@ -1,14 +1,12 @@
 import { useApi } from '../hooks';
-import { isPolkadotNetwork } from '../utils';
 import { ShortAccount } from './ShortAccount';
 
 export function ActiveAccount() {
   const {
-    network,
-    connection: { status, accounts },
+    connection: { status, accounts, type },
   } = useApi();
 
-  if (status !== 'success' || isPolkadotNetwork(network?.name) || !accounts?.length) {
+  if (status !== 'success' || type !== 'metamask' || !accounts?.length) {
     return null;
   }
 
