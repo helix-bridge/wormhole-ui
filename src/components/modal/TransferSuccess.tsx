@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
 import {
   Darwinia2EthereumTransfer,
+  Erc20Token,
   Network,
   NoNullTransferNetwork,
   TransferAsset,
@@ -13,11 +14,11 @@ import { fromWei } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
-function Detail({ amount, asset }: TransferAsset<string>) {
+function Detail({ amount, asset }: TransferAsset<string | Erc20Token>) {
   return (
     <div>
       <span>{amount}</span>
-      <span className="uppercase ml-4">{asset}</span>
+      <span className="uppercase ml-4">{typeof asset === 'string' ? asset : asset?.symbol}</span>
     </div>
   );
 }
@@ -62,8 +63,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
                 amount={item.unit ? fromWei({ value: item.amount, unit: item.unit }) : item.amount}
                 key={item.asset}
               />
-            ))) ||
-          (value.erc20 && value.amount && <Detail amount={value.amount} asset={value.erc20.symbol} />)
+            )))
         }
         icon={<CheckCircleFilled className="text-2xl" style={{ color }} />}
       ></Des>

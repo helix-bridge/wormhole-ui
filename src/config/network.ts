@@ -123,6 +123,9 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ss58Prefix: 18,
     tokenContract: {
       native: 'RING',
+      issuingDarwinia: '0xea7938985898af7fd945b03b7bc2e405e744e913',
+      issuingEthereum: '0x5f44dd8e59f56aa04fe54e95cc690560ae706b18',
+      bankDarwinia: '0x649fdf6ee483a96e020b889571e93700fbd82d88',
     },
     type: ['polkadot', 'darwinia'],
   },
@@ -215,6 +218,9 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ss58Prefix: 18,
     tokenContract: {
       native: 'PRING',
+      issuingDarwinia: '0x49262B932E439271d05634c32978294C7Ea15d0C', // e2d redeem address
+      issuingEthereum: '0x98fAE9274562FE131e2CF5771ebFB0bB232aFd25', // d2e claim address
+      bankDarwinia: '0x6EF538314829EfA8386Fc43386cB13B4e0A67D1e', // e2d redeem deposit address
     },
     type: ['polkadot', 'darwinia'],
   },

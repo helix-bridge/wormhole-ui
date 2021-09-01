@@ -468,10 +468,8 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
               },
 
               message: (
-                <div className="my-2">
-                  <span className="mr-4">
-                    {t('Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount')}
-                  </span>
+                <Trans i18nKey="approveBalanceInsufficient">
+                  Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount
                   <Button
                     onClick={() => {
                       const value = {
@@ -487,9 +485,9 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
                     }}
                     size="small"
                   >
-                    {t('Approve')}
+                    approve
                   </Button>
-                </div>
+                </Trans>
               ),
             },
           ]}
