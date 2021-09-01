@@ -52,10 +52,14 @@ interface DVMProps {
   isRedeem: boolean;
 }
 
-async function getAllowance(from: string, config: NetConfig): Promise<BN> {
+async function getAllowance(sender: string, config: NetConfig, token: Erc20Token | null): Promise<BN> {
+  if (!token || !config) {
+    return Web3.utils.toBN(0);
+  }
+
   const web3js = new Web3(window.ethereum || window.web3.currentProvider);
-  const erc20Contract = new web3js.eth.Contract(abi.tokenABI, config.tokenContract.ring);
-  const allowanceAmount = await erc20Contract.methods.allowance(from, config.tokenContract.issuingDarwinia).call();
+  const erc20Contract = new web3js.eth.Contract(abi.tokenABI, token.address);
+  const allowanceAmount = await erc20Contract.methods.allowance(sender, config.tokenContract.issuingDarwinia).call();
 
   return Web3.utils.toBN(allowanceAmount || 0);
 }
@@ -122,11 +126,11 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
 
   const refreshAllowance = useCallback(
     (config: NetConfig) =>
-      getAllowance(account, config).then((num) => {
+      getAllowance(account, config, selectedErc20).then((num) => {
         setAllowance(num);
         form.validateFields([FORM_CONTROL.amount]);
       }),
-    [account, form]
+    [account, form, selectedErc20]
   );
   const launchTx = useMemo(() => (isRedeem ? createErc20Tx(redeemErc20) : createErc20Tx(backingLockErc20)), [isRedeem]);
 
@@ -159,10 +163,6 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
 
     const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
 
-    getAllowance(account, netConfig).then((allow) => {
-      setAllowance(allow);
-    });
-
     updateDeparture({ from: netConfig || undefined, sender: form.getFieldValue(FORM_CONTROL.sender) });
   }, [account, form, updateDeparture]);
 
@@ -177,13 +177,14 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
+        isDvm
       />
 
       <Form.Item
         name={FORM_CONTROL.asset}
         label={t('Asset')}
         extra={
-          <span className="inline-block mt-2 px-2">
+          <span className="inline-block mt-2">
             <Trans i18nKey="registrationTip">
               If you can not find the token you want to send in the list, highly recommended to
               <Link to={Path.register}> go to the registration page</Link>, where you will find it after completing the
@@ -199,6 +200,11 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
           tokens={tokens}
           onChange={(erc20) => {
             setSelectedErc20(erc20);
+            const departure = form.getFieldValue(FORM_CONTROL.transfer).from;
+
+            getAllowance(account, departure, erc20).then((allow) => {
+              setAllowance(allow);
+            });
           }}
         />
       </Form.Item>
@@ -216,16 +222,14 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
               return allowance.gte(val) ? Promise.resolve() : Promise.reject();
             },
             message: (
-              <div className="my-2">
-                <span className="mr-4">
-                  {t('Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount')}
-                </span>
+              <Trans i18nKey="approveBalanceInsufficient">
+                Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount
                 <Button
                   onClick={() => {
-                    const value = {
+                    const value: Pick<ApproveValue, 'transfer' | 'sender' | 'asset'> = {
                       sender: account,
                       transfer: form.getFieldValue(FORM_CONTROL.transfer),
-                      assert: selectedErc20,
+                      asset: selectedErc20,
                     };
 
                     createApproveTx(
@@ -233,11 +237,12 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
                       afterTx(ApproveSuccess, { onDisappear: () => refreshAllowance(value.transfer.from) })(value)
                     ).subscribe(observer);
                   }}
+                  type="link"
                   size="small"
                 >
-                  {t('Approve')}
+                  approve
                 </Button>
-              </div>
+              </Trans>
             ),
           },
         ]}
