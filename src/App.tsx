@@ -1,6 +1,6 @@
 import { LockOutlined, UnlockOutlined, UnorderedListOutlined, WarningOutlined } from '@ant-design/icons';
 import { Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip } from 'antd';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
@@ -14,19 +14,23 @@ import { readStorage } from './utils/helper/storage';
 
 const { Header, Content } = Layout;
 
-const navs: { label: string; path: Path | string }[] = [
-  { label: 'Cross-chain', path: Path.root },
-  { label: 'Token Manager', path: Path.register },
-  { label: 'Guide', path: 'xxx' },
-];
+interface Nav {
+  label: string;
+  path: Path | string;
+}
+
+const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
+const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
+const guide: Nav = { label: 'Guide', path: 'xxx' };
 
 // eslint-disable-next-line complexity
 function App() {
   const { t } = useTranslation();
-  const { isDev, enableTestNetworks, setEnableTestNetworks } = useApi();
+  const { enableTestNetworks, setEnableTestNetworks, isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
   const history = useHistory();
+  const navMenus = useMemo(() => (isDev ? [crossChain, erc20Manager, guide] : [crossChain]), [isDev]);
 
   return (
     <Layout className="min-h-screen overflow-scroll">
@@ -47,7 +51,7 @@ function App() {
 
         <div className="flex xl:justify-between lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-24">
           <div className="hidden gap-8 lg:flex light:text-white">
-            {navs.map((nav) => (
+            {navMenus.map((nav) => (
               <span
                 onClick={() => {
                   history.push(nav.path);
@@ -89,22 +93,20 @@ function App() {
               ></Button>
             </Dropdown>
 
-            {!isDev && (
-              <Tooltip
-                title={t('{{enable}} the test networks to appear in the network selection panel', {
-                  enable: enableTestNetworks ? t('Disable') : t('Enable'),
-                })}
-              >
-                <ASwitch
-                  onChange={() => setEnableTestNetworks(!enableTestNetworks)}
-                  checked={enableTestNetworks}
-                  checkedChildren={<UnlockOutlined />}
-                  unCheckedChildren={<LockOutlined />}
-                  className="w-12 ml-4"
-                  style={{ lineHeight: 0.5 }}
-                />
-              </Tooltip>
-            )}
+            <Tooltip
+              title={t('{{enable}} the test networks to appear in the network selection panel', {
+                enable: enableTestNetworks ? t('Disable') : t('Enable'),
+              })}
+            >
+              <ASwitch
+                onChange={() => setEnableTestNetworks(!enableTestNetworks)}
+                checked={enableTestNetworks}
+                checkedChildren={<UnlockOutlined />}
+                unCheckedChildren={<LockOutlined />}
+                className="w-12 ml-4"
+                style={{ lineHeight: 0.5 }}
+              />
+            </Tooltip>
           </div>
         </div>
       </Header>

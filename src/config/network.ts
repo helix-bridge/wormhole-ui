@@ -1,6 +1,8 @@
 import { chain, omit } from 'lodash';
 import { Arrival, Departure, NetConfig, NetworkConfig } from '../model';
 
+const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
+
 export enum Graph {
   crab = 'crab',
   darwinia = 'darwinia',
@@ -276,21 +278,27 @@ export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
       { network: Graph.darwinia, status: 'pending', mode: 'dvm' },
     ],
   ],
-  [{ network: Graph.darwinia, mode: 'native' }, [{ network: Graph.ethereum, status: 'available', mode: 'native' }]],
+  [
+    { network: Graph.darwinia, mode: 'native' },
+    [{ network: Graph.ethereum, status: 'available', mode: 'native', stable: true }],
+  ],
   [{ network: Graph.darwinia, mode: 'dvm' }, [{ network: Graph.ethereum, status: 'available', mode: 'native' }]],
   [
     { network: Graph.ethereum, mode: 'native' },
     [
       { network: Graph.darwinia, status: 'available', mode: 'native' },
-      { network: Graph.darwinia, status: 'available', mode: 'native' },
+      { network: Graph.darwinia, status: 'available', mode: 'dvm' },
     ],
   ],
-  [{ network: Graph.pangolin, mode: 'native' }, [{ network: Graph.ropsten, status: 'available', mode: 'native' }]],
+  [
+    { network: Graph.pangolin, mode: 'native' },
+    [{ network: Graph.ropsten, status: 'available', mode: 'native', stable: true }],
+  ],
   [{ network: Graph.pangolin, mode: 'dvm' }, [{ network: Graph.ropsten, status: 'available', mode: 'native' }]],
   [
     { network: Graph.ropsten, mode: 'native' },
     [
-      { network: Graph.pangolin, status: 'available', mode: 'native' },
+      { network: Graph.pangolin, status: 'available', mode: 'native', stable: true },
       { network: Graph.pangolin, status: 'available', mode: 'dvm' },
     ],
   ],
@@ -300,7 +308,11 @@ export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
  * generate network configs, use dvm field to distinct whether the config is dvm config.
  */
 export const NETWORKS: NetConfig[] = chain([...NETWORK_GRAPH])
-  .map(([departure, arrivals]) => [departure, ...arrivals])
+  .map(
+    ([departure, arrivals]) =>
+      isDev ? [departure, ...arrivals] : [departure, ...arrivals.filter((item) => item.stable)] // only display stable bridge in prod
+  )
+  .filter((item) => item.length > 1)
   .flatten()
   .unionWith((cur, pre) => cur.mode === pre.mode && cur.network === pre.network)
   .map(({ network, mode }) => {

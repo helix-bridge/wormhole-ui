@@ -102,4 +102,5 @@ export type Departure = Vertices;
 
 export interface Arrival extends Vertices {
   status: 'pending' | 'available';
+  stable?: boolean;
 }
