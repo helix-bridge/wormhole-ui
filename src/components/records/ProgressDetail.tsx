@@ -138,7 +138,7 @@ export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDeta
               {t(tx ? 'Claiming' : 'Claim')}
             </Button>
           )}
-          {relayed && (
+          {!claim && relayed && (
             <Tag color="success" icon={<CheckCircleOutlined />} className="flex items-center">
               {t('Claimed')}
             </Tag>

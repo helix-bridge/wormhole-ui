@@ -130,7 +130,7 @@ function App() {
 
       <Footer theme={theme} />
 
-      {theme === THEME.DARK && <Nebula />}
+      {theme === THEME.DARK && !isDev && <Nebula />}
     </Layout>
   );
 }

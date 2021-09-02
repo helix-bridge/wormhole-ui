@@ -1,4 +1,4 @@
-import { ArrowRightOutlined, ClearOutlined, DashOutlined, SwapOutlined } from '@ant-design/icons';
+import { ArrowDownOutlined, ArrowRightOutlined, ClearOutlined, DashOutlined, SwapOutlined } from '@ant-design/icons';
 import { Button, Tooltip } from 'antd';
 import { isBoolean, isNull, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -17,11 +17,17 @@ import {
 } from '../../utils';
 import { updateStorage } from '../../utils/helper/storage';
 import { LinkIndicator } from '../LinkIndicator';
-import { Destination } from './Destination';
+import { Destination, DestinationMode } from './Destination';
 
 export type NetsProps = CustomFormControlProps<TransferNetwork>;
 
-export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?: boolean }) {
+// eslint-disable-next-line complexity
+export function Nets({
+  value,
+  onChange,
+  isCross = true,
+  mode = 'default',
+}: NetsProps & { isCross?: boolean; mode?: DestinationMode }) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(isCross);
   const [vertices, setVertices] = useState<Arrival | null>(null);
@@ -42,6 +48,16 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
     },
     [onChange]
   );
+
+  const swap = useCallback(() => {
+    triggerChange({
+      from: value?.to ?? null,
+      to: value?.from ?? null,
+    });
+    setRandom(Math.random());
+  }, [triggerChange, value?.from, value?.to]);
+
+  const Indicator = useMemo(() => (mode === 'default' ? RoadIndicatorLine : RoadIndicatorArrow), [mode]);
 
   useEffect(() => {
     const { from = null, to = null } = value || {};
@@ -75,7 +91,7 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
   }, [value]);
 
   return (
-    <div className="relative flex justify-between items-center">
+    <div className={`relative flex justify-between items-center ${mode === 'default' ? 'flex-col' : ''}`}>
       <Destination
         networks={fromNetworks}
         title={t('From')}
@@ -91,32 +107,10 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
           triggerChange({ from, to: value?.to ?? null });
         }}
         animationRandom={random}
+        mode={mode}
       />
 
-      {vertices?.status === 'pending' ? (
-        <Tooltip title={t('Coming Soon')}>
-          <DashOutlined className="mt-6 mx-4 text-2xl" />
-        </Tooltip>
-      ) : (
-        <>
-          {canReverse ? (
-            <Tooltip title={t('Swap from and to')}>
-              <SwapOutlined
-                onClick={() => {
-                  triggerChange({
-                    from: value?.to ?? null,
-                    to: value?.from ?? null,
-                  });
-                  setRandom(Math.random());
-                }}
-                className="mt-6 mx-4 text-2xl"
-              />
-            </Tooltip>
-          ) : (
-            <ArrowRightOutlined className="mt-6 mx-4 text-2xl" />
-          )}
-        </>
-      )}
+      <Indicator canReverse={canReverse} onSwap={swap} arrival={vertices} />
 
       <Destination
         title={t('To')}
@@ -126,6 +120,7 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
           triggerChange({ to, from: value?.from ?? null });
         }}
         animationRandom={random}
+        mode={mode}
       />
 
       <Tooltip title={t('Reset Networks')}>
@@ -136,6 +131,67 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
           icon={<ClearOutlined className="text-xl " />}
         ></Button>
       </Tooltip>
+    </div>
+  );
+}
+
+interface RoadIndicatorProps {
+  arrival: Arrival | null;
+  canReverse?: boolean;
+  onSwap: () => void;
+}
+
+function RoadIndicatorArrow({ arrival, canReverse, onSwap }: RoadIndicatorProps) {
+  const { t } = useTranslation();
+  return arrival?.status === 'pending' ? (
+    <Tooltip title={t('Coming Soon')}>
+      <DashOutlined className="mt-6 mx-4 text-2xl" />
+    </Tooltip>
+  ) : (
+    <>
+      {canReverse ? (
+        <Tooltip title={t('Swap from and to')}>
+          <SwapOutlined onClick={onSwap} className="mt-6 mx-4 text-2xl" />
+        </Tooltip>
+      ) : (
+        <ArrowRightOutlined className="mt-6 mx-4 text-2xl" />
+      )}
+    </>
+  );
+}
+
+function RoadIndicatorLine({ canReverse, arrival, onSwap }: RoadIndicatorProps) {
+  const element = useMemo(() => {
+    if (!arrival || arrival?.status === 'pending') {
+      return null;
+    }
+
+    return canReverse ? (
+      <Button
+        size="small"
+        type="ghost"
+        shape="circle"
+        icon={<SwapOutlined className="transform rotate-90" />}
+        onClick={onSwap}
+        className="flex items-center justify-center transform translate-x-1 translate-y-7"
+      ></Button>
+    ) : (
+      <Button
+        size="small"
+        shape="circle"
+        icon={<ArrowDownOutlined />}
+        className="flex items-center justify-center transform translate-x-1 translate-y-7"
+      />
+    );
+  }, [arrival, canReverse, onSwap]);
+
+  return (
+    <div
+      className={`absolute top-12 bottom-12 -right-1 border border-gray-600 border-l-0 w-4 ${
+        arrival?.status === 'pending' ? 'border-dashed' : 'border-solid'
+      }`}
+    >
+      {element}
     </div>
   );
 }

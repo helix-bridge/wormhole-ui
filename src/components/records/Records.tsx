@@ -9,7 +9,6 @@ import { NETWORKS, NETWORK_CONFIG } from '../../config';
 import {
   D2EHistoryRes,
   HistoryRouteParam,
-  Network,
   Paginator,
   RedeemHistory,
   RedeemHistoryRes,
@@ -117,20 +116,20 @@ export function Records() {
             dropdownClassName="dropdown-networks"
             defaultValue={searchParams?.network || departures[0].network}
             className="capitalize"
-            onSelect={(departure: Network) => {
-              const value = departures.find((item) => item.network === departure)!.name;
-
-              if (!canUpdate(address, value)) {
+            onSelect={(name: string) => {
+              if (!canUpdate(address, name.toLowerCase())) {
                 setAddress('');
                 inputRef.current?.setValue('');
               }
+
+              const departure = departures.find((item) => item.name.toLowerCase() === name.toLowerCase())!.network;
 
               setNetwork(departure);
               setPaginator({ row: 10, page: 0 });
             }}
           >
-            {departures.map(({ name, network: net }) => (
-              <Select.Option value={net} key={name} className="capitalize">
+            {departures.map(({ name }) => (
+              <Select.Option value={name} key={name} className="capitalize">
                 {name}
               </Select.Option>
             ))}
