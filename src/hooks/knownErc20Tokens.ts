@@ -47,7 +47,7 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
  * @params {number} status - token register status 1:registered 2:registering
  */
 export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatus = RegisterStatus.unregister) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const updateTokens = useCallback(
     (tokens: MemoedTokenInfo[]) => dispatch({ payload: tokens, type: 'updateTokens' }),
@@ -98,9 +98,9 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
           'font-size:13px; background:pink; color:#bf2c9f;',
           error.message
         );
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     })();
   }, [currentAccount, network, updateTokens, status, connection]);
 

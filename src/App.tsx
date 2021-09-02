@@ -11,6 +11,8 @@ import { THEME } from './config';
 import { Path, routes } from './config/routes';
 import { useApi } from './hooks';
 import { readStorage } from './utils/helper/storage';
+import { Nebula } from './components/Nebula';
+import { ThemeSwitch } from './components/ThemeSwitch';
 
 const { Header, Content } = Layout;
 
@@ -36,7 +38,7 @@ function App() {
     <Layout className="min-h-screen overflow-scroll">
       <Header
         className="fixed left-0 right-0 top-0 z-10 flex items-center justify-between sm:px-8 px-2"
-        style={{ marginTop: -1, background: 'transparent' }}
+        style={{ marginTop: -1, background: theme === THEME.DARK ? 'transparent' : undefined }}
       >
         <div className="flex items-center gap-4">
           <Link to={Path.root}>
@@ -103,10 +105,12 @@ function App() {
                 checked={enableTestNetworks}
                 checkedChildren={<UnlockOutlined />}
                 unCheckedChildren={<LockOutlined />}
-                className="w-12 ml-4"
+                className="w-12 mx-4"
                 style={{ lineHeight: 0.5 }}
               />
             </Tooltip>
+
+            <ThemeSwitch defaultTheme={THEME.DARK} onThemeChange={setTheme} mode="btn" />
           </div>
         </div>
       </Header>
@@ -124,7 +128,9 @@ function App() {
         </TransitionGroup>
       </Content>
 
-      <Footer theme={theme} onThemeChange={setTheme} />
+      <Footer theme={theme} />
+
+      {theme === THEME.DARK && <Nebula />}
     </Layout>
   );
 }

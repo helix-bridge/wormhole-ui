@@ -1,10 +1,9 @@
-import { BgColorsOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Menu, Switch, SwitchProps } from 'antd';
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Button, Switch, SwitchProps } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NETWORK_DARK_THEME, NETWORK_LIGHT_THEME, SKIN_THEME, THEME } from '../config';
 import { Network } from '../model';
 import { readStorage, updateStorage } from '../utils/helper/storage';
+import { MoonIcon, SunIcon } from './icons';
 
 export const toggleTheme = (theme: THEME, network: Network = 'pangolin') => {
   const networkTheme = theme === THEME.DARK ? NETWORK_DARK_THEME : NETWORK_LIGHT_THEME;
@@ -29,7 +28,6 @@ export interface ThemeSwitchProps extends SwitchProps {
   mode?: 'switcher' | 'btn';
 }
 
-// eslint-disable-next-line complexity
 export function ThemeSwitch({
   network,
   mode = 'switcher',
@@ -38,8 +36,17 @@ export function ThemeSwitch({
   className,
   ...others
 }: ThemeSwitchProps) {
-  const { t } = useTranslation();
   const [theme, setTheme] = useState<THEME>(readStorage()?.theme || defaultTheme);
+  const toggle = useCallback(() => {
+    const current = theme === THEME.DARK ? THEME.LIGHT : THEME.DARK;
+
+    setTheme(current);
+
+    if (onThemeChange) {
+      onThemeChange(current);
+    }
+  }, [onThemeChange, theme]);
+  const Icon = useMemo(() => (theme === THEME.DARK ? MoonIcon : SunIcon), [theme]);
 
   useEffect(() => {
     toggleTheme(theme, network);
@@ -53,51 +60,14 @@ export function ThemeSwitch({
 
   return mode === 'switcher' ? (
     <Switch
+      checkedChildren="🌜"
+      unCheckedChildren="️🌞"
       {...others}
       checked={theme === THEME.DARK}
-      checkedChildren="🌙"
-      unCheckedChildren="☀️"
-      onChange={() => {
-        const current = theme === THEME.DARK ? THEME.LIGHT : THEME.DARK;
-
-        setTheme(current);
-
-        if (onThemeChange) {
-          onThemeChange(current);
-        }
-      }}
-      className={className}
+      onChange={toggle}
+      className={className + ' flex items-center'}
     />
   ) : (
-    <Dropdown
-      overlay={
-        <Menu>
-          {[{ theme: THEME.LIGHT }, { theme: THEME.DARK }].map((item) => (
-            <Menu.Item
-              onClick={() => {
-                if (item.theme !== theme) {
-                  const current = item.theme;
-
-                  setTheme(current);
-
-                  if (onThemeChange) {
-                    onThemeChange(current);
-                  }
-                }
-              }}
-              key={item.theme}
-            >
-              {t(item.theme)}
-            </Menu.Item>
-          ))}
-        </Menu>
-      }
-    >
-      <Button
-        type="ghost"
-        icon={<BgColorsOutlined width={22} className="text-xl" />}
-        className={className + ' flex items-center justify-center'}
-      ></Button>
-    </Dropdown>
+    <Button type="link" icon={<Icon />} className={className + ' flex items-center'} onClick={toggle}></Button>
   );
 }

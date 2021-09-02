@@ -1,5 +1,5 @@
 import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
-import { uniq, flow } from 'lodash';
+import { flow, uniqBy } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -33,7 +33,13 @@ import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
 
 const { TabPane } = Tabs;
-const departures = uniq(NETWORKS.map(getDisplayName));
+const departures = uniqBy(
+  NETWORKS.map((item) => ({
+    name: getDisplayName(item),
+    network: item.name,
+  })),
+  'name'
+);
 
 const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list?.length || 0;
 
@@ -65,6 +71,8 @@ export function Records() {
     let subscription: Subscription;
 
     if (isEthereumNetwork(network)) {
+      setLoading(true);
+
       subscription = forkJoin([queryE2DRecords(network, address), queryE2DGenesisRecords(network, address)]).subscribe({
         next: (res) => {
           setRedeemData(res[0]);
@@ -73,6 +81,8 @@ export function Records() {
         complete: () => setLoading(false),
       });
     } else if (isPolkadotNetwork(network)) {
+      setLoading(true);
+
       subscription = queryD2ERecords(network, address, paginator).subscribe({
         next: (res) => {
           setLockData(res);
@@ -83,10 +93,10 @@ export function Records() {
       // do nothing
     }
 
-    setLoading(true);
-
     return () => {
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, [network, address, paginator]);
 
@@ -104,27 +114,26 @@ export function Records() {
         <Input.Group size="large" className="flex items-center w-full mb-8 select-search dark:bg-black">
           <Select
             size="large"
-            defaultValue={searchParams?.network || departures[0]}
+            dropdownClassName="dropdown-networks"
+            defaultValue={searchParams?.network || departures[0].network}
             className="capitalize"
-            onSelect={(value) => {
+            onSelect={(departure: Network) => {
+              const value = departures.find((item) => item.network === departure)!.name;
+
               if (!canUpdate(address, value)) {
                 setAddress('');
                 inputRef.current?.setValue('');
               }
 
-              const [selectedNetwork] = value.split('-');
-
-              setNetwork(selectedNetwork as Network);
+              setNetwork(departure);
               setPaginator({ row: 10, page: 0 });
             }}
           >
-            {departures.map((net) => {
-              return (
-                <Select.Option value={net} key={net} className="capitalize">
-                  {net}
-                </Select.Option>
-              );
-            })}
+            {departures.map(({ name, network: net }) => (
+              <Select.Option value={net} key={name} className="capitalize">
+                {name}
+              </Select.Option>
+            ))}
           </Select>
 
           <Input.Search

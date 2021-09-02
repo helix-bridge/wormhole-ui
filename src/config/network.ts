@@ -245,7 +245,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpcUrls: [],
     },
     facade: {
-      logo: '/image/ropsten-button-mobile.png',
+      logo: '/image/eth-logo.svg',
       logoWithText: '',
     },
     fullName: 'Ropsten',
