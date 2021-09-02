@@ -120,7 +120,7 @@ export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDeta
         icon={txProgressIcon[iconName(fromNetwork)]}
         title={t('{{chain}} Confirmed', { chain: fromNetwork })}
       >
-        <SubscanLink txHash={fromHash} network={fromNetwork} className="">
+        <SubscanLink txHash={fromHash} network={fromNetwork}>
           <Button size="small" className="text-xs">
             {t('Txhash')}
           </Button>
@@ -151,7 +151,6 @@ export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDeta
         title={t('{{chain}} Confirmed', { chain: toNetwork })}
         className={needClaim ? '' : 'text-gray-300'}
       >
-        {/* eslint-disable-next-line no-magic-numbers */}
         {needClaim && toHash && (
           <SubscanLink txHash={toHash} network={toNetwork as Network}>
             <Button size="small" className="text-xs">

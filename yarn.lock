@@ -1785,22 +1785,22 @@
   resolved "https://registry.yarnpkg.com/@darwinia/lints/-/lints-1.0.1.tgz#697160945adc2a42b9a004dcf60830f97d7bc9ea"
   integrity sha512-rZVCTFDkLao3BYg3RLSQleFMbrABeIr2iAh3h3DWZtkJfXip3J9ryFEUPTuJwJKDIh/jzaPCgyZ/RKqNLAj+kg==
 
-"@darwinia/types-known@^1.1.6":
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/@darwinia/types-known/-/types-known-1.1.6.tgz#4ceb16560238c17e38b57e8e0a452f63ecb23859"
-  integrity sha512-8kQqYHtdWcD8zmMtC1JeiT0Aqxc5VoWgqeGh5+avhRvPMaNDqSEJxK8QK14Z/g5el7o0H7g9dYOXlcy7cTPxAg==
+"@darwinia/types-known@^1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@darwinia/types-known/-/types-known-1.1.7.tgz#19e0a7bf047fc4e8a2ee1cc83769dbd6ad06cfd6"
+  integrity sha512-/mohOBOQnrKxzWcI3ubRDW5ogLS9JJgQ4XzXfbtofDnZrO3ArBddcIEcHmYWEomeolmwW9kFvX7LRAJzmy5Vow==
   dependencies:
     "@babel/runtime" "^7.9.6"
     "@polkadot/types" "4.0.4-5"
     "@polkadot/util" "6.0.5"
     bn.js "^5.1.2"
 
-"@darwinia/types@^1.1.6":
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/@darwinia/types/-/types-1.1.6.tgz#c0c8399c21fc9301b7406a44955f67a5c949fa33"
-  integrity sha512-65ifcZ61cEjs2TYD2lYjeKFt/y7foM743OQwgMbU7AicPy4JDoMQXgqxTsbWhVdHNsGERzSvv6lne570EiT8dw==
+"@darwinia/types@^1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@darwinia/types/-/types-1.1.7.tgz#7f545740ddd4b264907a6fc1cd31e456247a28bc"
+  integrity sha512-Dmll4w68n0KTY1I3k3fLURAN4GaBLo4JdGmRjInAeQ8EXyIFCh5TJDyFmXjbXnq5aBf61NOlJy16JDDWdtkE7A==
   dependencies:
-    "@darwinia/types-known" "^1.1.6"
+    "@darwinia/types-known" "^1.1.7"
 
 "@es-joy/jsdoccomment@^0.8.0-alpha.2":
   version "0.8.0-alpha.2"
