@@ -3,12 +3,15 @@ import { abi } from '../../config';
 import { DeepRequired, DVMTransfer, NoNullTransferNetwork, TransferFormValues, Tx, TxFn } from '../../model';
 import { getContractTxObs } from './common';
 
-export type DVMFormValues = TransferFormValues<
+type DVMToken = TransferFormValues<
   DeepRequired<DVMTransfer, ['sender' | 'recipient' | 'amount' | 'asset']>,
   NoNullTransferNetwork
 >;
 
-export const redeemErc20: TxFn<DVMFormValues> = (value) => {
+export type RedeemDVMToken = DVMToken;
+export type IssuingDVMToken = DVMToken;
+
+export const redeemErc20: TxFn<RedeemDVMToken> = (value) => {
   const {
     asset,
     recipient,
@@ -25,7 +28,7 @@ export const redeemErc20: TxFn<DVMFormValues> = (value) => {
   );
 };
 
-export function backingLockErc20(value: DVMFormValues): Observable<Tx> {
+export function backingLockErc20(value: IssuingDVMToken): Observable<Tx> {
   const { asset, recipient, amount, transfer, sender } = value;
   const { address } = asset;
 

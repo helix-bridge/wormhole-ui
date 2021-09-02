@@ -62,7 +62,7 @@ export interface NetConfig {
   tokenContract: TokenContract & {
     registryEth?: string;
     issuingDarwinia?: string;
-    issuingEthereum?: string;
+    bankEthereum?: string;
     bankDarwinia?: string;
   };
   type: NetworkCategory[];

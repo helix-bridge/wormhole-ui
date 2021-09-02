@@ -33,8 +33,8 @@ import {
   prettyNumber,
   RedeemDeposit,
   redeemDeposit,
-  RedeemEth,
-  redeemToken,
+  RedeemDarwiniaToken,
+  redeemDarwiniaToken,
   toWei,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
@@ -224,11 +224,11 @@ function createApproveRingTx(value: Pick<ApproveValue, 'transfer' | 'sender'>, a
   return createTxWorkflow(beforeTx, txObs, after);
 }
 
-function createCrossTokenTx(value: RedeemEth, after: AfterTxCreator): Observable<Tx> {
+function createCrossTokenTx(value: RedeemDarwiniaToken, after: AfterTxCreator): Observable<Tx> {
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });
-  const txObs = redeemToken(value);
+  const txObs = redeemDarwiniaToken(value);
 
   return createTxWorkflow(beforeTx, txObs, after);
 }
@@ -290,7 +290,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
     [asset, fee, max, ringBalance, t]
   );
   const refreshAllowance = useCallback(
-    (value: RedeemEth | ApproveValue) =>
+    (value: RedeemDarwiniaToken | ApproveValue) =>
       getIssuingAllowance(account, value.transfer.from).then((num) => {
         setAllowance(num);
         form.validateFields([FORM_CONTROL.amount]);
@@ -299,7 +299,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
   );
 
   const refreshBalance = useCallback(
-    (value: RedeemEth | ApproveValue) => {
+    (value: RedeemDarwiniaToken | ApproveValue) => {
       if (value.asset === E2DAssetEnum.kton) {
         getKtonBalance(account, value.transfer.from).then((balance) => setMax(balance));
       }
@@ -336,7 +336,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
             afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as any })(value)
           ).subscribe(observer);
       } else {
-        fn = () => (value: RedeemEth) => {
+        fn = () => (value: RedeemDarwiniaToken) => {
           const { amount, asset: iAsset, ...rest } = value;
           const actual = {
             ...rest,

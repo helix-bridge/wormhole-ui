@@ -114,7 +114,7 @@ export function claimToken({
       })).pipe(
         switchMap(({ account, proof }) => {
           const { root, MMRIndex, blockHeader, peaks, siblings, eventsProofStr } = proof;
-          const contractAddress = toNetworkConfig.tokenContract.issuingEthereum || '';
+          const contractAddress = toNetworkConfig.tokenContract.bankEthereum || '';
 
           if (MMRRoot && best && best > blockNumber) {
             return getContractTxObs(
