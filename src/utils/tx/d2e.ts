@@ -3,7 +3,7 @@ import { web3FromAddress } from '@polkadot/extension-dapp';
 import { from, Observable, Observer, switchMapTo, tap } from 'rxjs';
 import { Darwinia2EthereumTransfer, DeepRequired, NoNullTransferNetwork, TransferFormValues, Tx } from '../../model';
 
-export type BackingLockNative = TransferFormValues<
+export type IssuingDarwiniaToken = TransferFormValues<
   DeepRequired<Darwinia2EthereumTransfer, ['sender' | 'assets' | 'recipient']>,
   NoNullTransferNetwork
 >;
@@ -44,7 +44,7 @@ function extrinsicSpy(observer: Observer<Tx>) {
   };
 }
 
-export function backingLock(value: BackingLockNative, api: ApiPromise): Observable<Tx> {
+export function issuingDarwiniaToken(value: IssuingDarwiniaToken, api: ApiPromise): Observable<Tx> {
   const { sender, recipient, assets } = value;
   const { amount: ring } = assets.find((item) => item.asset === 'ring') || { amount: '0' };
   const { amount: kton } = assets.find((item) => item.asset === 'kton') || { amount: '0' };

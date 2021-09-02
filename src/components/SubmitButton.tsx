@@ -18,7 +18,7 @@ export function FromItemButton({ children, className, ...others }: ButtonProps) 
         type="primary"
         size="large"
         {...others}
-        className={`ax-auto w-full rounded-xl text-white flex items-center uppercase ${className} `}
+        className={`ax-auto w-full rounded-xl text-white flex items-center capitalize ${className} `}
       >
         <span className="whitespace-nowrap overflow-hidden overflow-ellipsis w-full">{children}</span>
       </Button>

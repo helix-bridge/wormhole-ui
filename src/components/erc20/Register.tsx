@@ -314,7 +314,7 @@ function UpcomingTokenState({ token, onConfirm, proofs, animate = true }: Upcomi
 
 function Tip({ children }: PropsWithChildren<string | ReactNode>) {
   return (
-    <Form.Item className="px-4 text-xs mb-0 mt-8">
+    <Form.Item className="text-xs mb-0 mt-8">
       <span className="text-gray-600">{children}</span>
     </Form.Item>
   );

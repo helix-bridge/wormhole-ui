@@ -58,6 +58,7 @@ export function TxStatus({ tx, ...others }: TxStatusProps) {
       icon={icon}
       type={type}
       showIcon
+      style={{ zIndex: 999999 }}
       closable={type === 'success' || type === 'error'}
     />
   );

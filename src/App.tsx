@@ -11,6 +11,8 @@ import { THEME } from './config';
 import { Path, routes } from './config/routes';
 import { useApi } from './hooks';
 import { readStorage } from './utils/helper/storage';
+import { Nebula } from './components/Nebula';
+import { ThemeSwitch } from './components/ThemeSwitch';
 
 const { Header, Content } = Layout;
 
@@ -35,8 +37,8 @@ function App() {
   return (
     <Layout className="min-h-screen overflow-scroll">
       <Header
-        className="fixed left-0 right-0 top-0 z-10 flex items-center justify-between sm:px-8 px-2"
-        style={{ marginTop: -1 }}
+        className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-2"
+        style={{ marginTop: -1, background: theme === THEME.DARK ? 'transparent' : undefined }}
       >
         <div className="flex items-center gap-4">
           <Link to={Path.root}>
@@ -103,15 +105,20 @@ function App() {
                 checked={enableTestNetworks}
                 checkedChildren={<UnlockOutlined />}
                 unCheckedChildren={<LockOutlined />}
-                className="w-12 ml-4"
-                style={{ lineHeight: 0.5 }}
+                className="mx-4"
+                style={{
+                  lineHeight: 0.5,
+                  background: theme === THEME.DARK ? undefined : enableTestNetworks ? 'rgba(0,0,0,.5)' : undefined,
+                }}
               />
             </Tooltip>
+
+            <ThemeSwitch defaultTheme={THEME.DARK} onThemeChange={setTheme} mode="btn" />
           </div>
         </div>
       </Header>
 
-      <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-24 sm:my-20">
+      <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-24 sm:my-20 z-10">
         <BridgeStatus className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow max-w-full mb-8" />
         <TransitionGroup>
           <CSSTransition in={true} key={location.key} timeout={300} classNames="fade">
@@ -124,7 +131,9 @@ function App() {
         </TransitionGroup>
       </Content>
 
-      <Footer theme={theme} onThemeChange={setTheme} />
+      <Footer theme={theme} />
+
+      {theme === THEME.DARK && !isDev && <Nebula />}
     </Layout>
   );
 }

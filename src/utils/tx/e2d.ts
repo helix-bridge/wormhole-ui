@@ -13,7 +13,7 @@ import {
 } from '../../model';
 import { approveToken, buf2hex, getContractTxObs } from './common';
 
-export type RedeemEth = TransferFormValues<
+export type RedeemDarwiniaToken = TransferFormValues<
   DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
   NoNullTransferNetwork
 >;
@@ -30,7 +30,7 @@ export const approveRingToIssuing: TxFn<
   >
 > = ({ sender, transfer }) => approveToken({ sender, transfer, contractAddress: transfer.from.tokenContract.ring });
 
-export const redeemToken: TxFn<RedeemEth> = ({ sender, transfer, asset, amount, recipient }) => {
+export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, transfer, asset, amount, recipient }) => {
   const contractAddress = transfer.from.tokenContract[asset as Token] as string;
 
   recipient = buf2hex(decodeAddress(recipient, false, transfer.to.ss58Prefix!).buffer);

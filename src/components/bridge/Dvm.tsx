@@ -27,12 +27,13 @@ import {
   getUnit,
   isValidAddress,
   prettyNumber,
-  DVMFormValues,
   applyModalObs,
   approveToken,
   createTxWorkflow,
   redeemErc20,
   backingLockErc20,
+  RedeemDVMToken,
+  IssuingDVMToken,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
 import { Erc20Control } from '../controls/Erc20Control';
@@ -77,8 +78,8 @@ function createApproveTx(
   return createTxWorkflow(beforeTx, txObs, after);
 }
 
-function createErc20Tx(fn: (value: DVMFormValues) => Observable<Tx>) {
-  return (value: DVMFormValues, after: AfterTxCreator): Observable<Tx> => {
+function createErc20Tx(fn: (value: RedeemDVMToken | IssuingDVMToken) => Observable<Tx>) {
+  return (value: RedeemDVMToken | IssuingDVMToken, after: AfterTxCreator): Observable<Tx> => {
     const beforeTx = applyModalObs({
       content: (
         <TransferConfirm value={value}>
@@ -135,7 +136,7 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
   const launchTx = useMemo(() => (isRedeem ? createErc20Tx(redeemErc20) : createErc20Tx(backingLockErc20)), [isRedeem]);
 
   useEffect(() => {
-    const fn = () => (value: DVMFormValues) =>
+    const fn = () => (value: RedeemDVMToken | IssuingDVMToken) =>
       launchTx(
         value,
         afterTx(TransferSuccess, {
@@ -200,7 +201,7 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
           tokens={tokens}
           onChange={(erc20) => {
             setSelectedErc20(erc20);
-            
+
             const departure = form.getFieldValue(FORM_CONTROL.transfer).from;
 
             getAllowance(account, departure, erc20).then((allow) => {

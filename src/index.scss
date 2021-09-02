@@ -92,7 +92,7 @@
   .step {
     position: relative;
 
-    &::after {
+    &:not(:last-child)::after {
       content: '';
     }
   }
@@ -134,4 +134,8 @@
   opacity: 0;
   display: none;
   transition: all 100ms;
+}
+
+.dropdown-networks {
+  width: auto !important;
 }

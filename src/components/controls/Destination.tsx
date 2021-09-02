@@ -1,9 +1,11 @@
-import { Dropdown, Menu, Tag } from 'antd';
+import { Dropdown, Form, Menu, Select, Tag } from 'antd';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NetConfig } from '../../model';
 import { getDisplayName } from '../../utils';
 import { DownIcon } from '../icons';
+
+export type DestinationMode = 'default' | 'card';
 
 interface DestinationProps {
   extra?: string | JSX.Element;
@@ -13,9 +15,14 @@ interface DestinationProps {
   value?: NetConfig | null;
   defaultLogo?: string;
   animationRandom?: number | null;
+  mode?: DestinationMode;
 }
 
-export function Destination({
+export function Destination({ mode = 'default', ...rest }: DestinationProps) {
+  return mode === 'default' ? <DestinationSelect {...rest} /> : <DestinationCard {...rest} />;
+}
+
+function DestinationCard({
   title,
   extra,
   networks,
@@ -79,10 +86,10 @@ export function Destination({
         <div
           ref={panelRef}
           className={
-            'flex items-center justify-between text-lg p-2 pr-1 rounded-xl bg-gray-300 dark:bg-gray-800 max-w-full text-white'
+            'flex items-center justify-between text-lg p-2 pr-1 rounded-xl bg-gray-300 dark:bg-gray-800 max-w-full text-gray-800 dark:text-white'
           }
         >
-          <div className={`rounded-xl flex flex-col gap-4 py-2 flex-1 mr-1 md:mr-4 bg-${value?.name}`}>
+          <div className={`rounded-xl flex flex-col gap-4 py-2 flex-1 mr-1 md:mr-4`}>
             <img src={value?.facade.logo || defaultLogo} className="h-8 sm:h-12 md:16 ml-2 self-start" alt="" />
             <span className="capitalize mr-0 text-xs dark:text-white px-2 py-0.5 whitespace-nowrap">
               {!value ? t('Select Network') : getDisplayName(value)}
@@ -96,5 +103,52 @@ export function Destination({
         </div>
       </Dropdown>
     </div>
+  );
+}
+
+function DestinationSelect({
+  title,
+  extra,
+  networks,
+  value,
+  onChange,
+  defaultLogo = 'image/network.png',
+}: DestinationProps) {
+  const { t } = useTranslation();
+
+  return (
+    <Form.Item label={title} rules={[{ required: true }]} className="relative w-full pr-4">
+      <Select
+        allowClear
+        size="large"
+        value={value ? getDisplayName(value) : undefined}
+        placeholder={t('Select Network')}
+        dropdownClassName="dropdown-networks"
+        onChange={(key) => {
+          const target = networks.find((net) => getDisplayName(net) === key) ?? null;
+
+          if (onChange) {
+            onChange(target);
+          }
+        }}
+      >
+        {networks.map((item) => {
+          const name = getDisplayName(item);
+
+          return (
+            <Select.Option value={name} key={name}>
+              <span className="flex items-center">
+                <img src={item.facade.logo || defaultLogo} className="h-4 sm:h-6 md:16 mr-2" alt="" />
+                <span className="flex-1 flex justify-between items-center">
+                  <span className="capitalize mr-2">{name}</span>
+                  {item.isTest && <Tag color="cyan">{t('Test')}</Tag>}
+                </span>
+              </span>
+            </Select.Option>
+          );
+        })}
+      </Select>
+      {extra && <Form.Item className="absolute right-4 -top-9">{extra}</Form.Item>}
+    </Form.Item>
   );
 }

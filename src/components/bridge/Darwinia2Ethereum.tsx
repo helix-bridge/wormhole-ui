@@ -17,7 +17,7 @@ import {
   Tx,
 } from '../../model';
 import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, toWei } from '../../utils';
-import { backingLock, BackingLockNative } from '../../utils/tx/d2e';
+import { issuingDarwiniaToken, IssuingDarwiniaToken } from '../../utils/tx/d2e';
 import { AssetGroup, AssetGroupValue, AvailableBalance } from '../controls/AssetGroup';
 import { RecipientItem } from '../controls/RecipientItem';
 import { TransferConfirm } from '../modal/TransferConfirm';
@@ -162,11 +162,15 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
 
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
-function ethereumBackingLockDarwinia(value: BackingLockNative, after: AfterTxCreator, api: ApiPromise): Observable<Tx> {
+function ethereumBackingLockDarwinia(
+  value: IssuingDarwiniaToken,
+  after: AfterTxCreator,
+  api: ApiPromise
+): Observable<Tx> {
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });
-  const obs = backingLock(value, api);
+  const obs = issuingDarwiniaToken(value, api);
 
   return createTxWorkflow(beforeTx, obs, after);
 }
@@ -221,7 +225,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
   );
 
   useEffect(() => {
-    const fn = () => (data: BackingLockNative) => {
+    const fn = () => (data: IssuingDarwiniaToken) => {
       const { assets, sender } = data;
       const assetsToSend = assets?.map((item) => {
         const { asset, amount, checked } = item as Required<Darwinia2EthereumTransfer['assets'][0]>;

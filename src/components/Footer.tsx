@@ -3,21 +3,25 @@ import { Button, Layout } from 'antd';
 import { getYear } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { THEME } from '../config';
+import { NETWORK_LIGHT_THEME, THEME } from '../config';
 import { Path } from '../config/routes';
 import { Language, LanguageProps } from './Language';
-import { ThemeSwitch, ThemeSwitchProps } from './ThemeSwitch';
 
-type FooterProps = LanguageProps & ThemeSwitchProps & { className?: string };
+type FooterProps = LanguageProps & { className?: string };
 
-export function Footer({ theme, onThemeChange, className = '' }: FooterProps) {
+export function Footer({ network, theme, className = '' }: FooterProps) {
   const { t } = useTranslation();
   const color = theme === THEME.LIGHT ? '#ccc' : undefined;
 
   return (
     <Layout.Footer
-      className={`flex items-center justify-between lg:px-40 px-4 text-gray-400 z-10 py-4 ${className}`}
-      style={{ background: '#2d2d2d' }}
+      className={`flex items-center justify-between sm:px-8 px-2 text-gray-400 z-10 py-4 ${className}`}
+      style={{
+        background:
+          theme === THEME.LIGHT
+            ? NETWORK_LIGHT_THEME[network ?? 'pangolin']['@layout-header-background']
+            : 'transparent',
+      }}
     >
       <div className="md:flex md:gap-4 md:flex-wrap text-gray-400">
         <span className="flex items-center justify-center">
@@ -38,14 +42,6 @@ export function Footer({ theme, onThemeChange, className = '' }: FooterProps) {
         </Link>
 
         <Language theme={theme} type="ghost" color={color} />
-
-        <ThemeSwitch
-          size="small"
-          defaultTheme={THEME.DARK}
-          onThemeChange={onThemeChange}
-          mode="btn"
-          className="w-12 ml-4"
-        />
       </div>
     </Layout.Footer>
   );
