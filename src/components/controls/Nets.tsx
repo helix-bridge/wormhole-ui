@@ -169,7 +169,6 @@ function RoadIndicatorLine({ canReverse, arrival, onSwap }: RoadIndicatorProps) 
     return canReverse ? (
       <Button
         size="small"
-        type="ghost"
         shape="circle"
         icon={<SwapOutlined className="transform rotate-90" />}
         onClick={onSwap}

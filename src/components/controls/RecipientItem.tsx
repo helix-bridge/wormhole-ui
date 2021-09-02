@@ -41,7 +41,7 @@ export function RecipientItem({
               return isValidAddress(value, !isDvm ? type : 'ethereum', true) ? Promise.resolve() : Promise.reject();
             },
             message: t('The address is wrong, please fill in a {{type}} address of the {{network}} network.', {
-              type: !isDvm ? (isPolkadot ? 'substrate' : type) : 'DVM',
+              type: !isDvm ? (isPolkadot ? 'substrate' : type) : 'Darwinia Smart',
               network: to?.name,
             }),
           },

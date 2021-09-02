@@ -37,7 +37,7 @@ function App() {
   return (
     <Layout className="min-h-screen overflow-scroll">
       <Header
-        className="fixed left-0 right-0 top-0 z-10 flex items-center justify-between sm:px-8 px-2"
+        className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-2"
         style={{ marginTop: -1, background: theme === THEME.DARK ? 'transparent' : undefined }}
       >
         <div className="flex items-center gap-4">
@@ -105,8 +105,11 @@ function App() {
                 checked={enableTestNetworks}
                 checkedChildren={<UnlockOutlined />}
                 unCheckedChildren={<LockOutlined />}
-                className="w-12 mx-4"
-                style={{ lineHeight: 0.5 }}
+                className="mx-4"
+                style={{
+                  lineHeight: 0.5,
+                  background: theme === THEME.DARK ? undefined : enableTestNetworks ? 'rgba(0,0,0,.5)' : undefined,
+                }}
               />
             </Tooltip>
 

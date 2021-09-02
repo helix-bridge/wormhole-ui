@@ -233,13 +233,13 @@ export function getAvailableNetworks(net: Network): NetConfig | null {
 export function getDisplayName(config: NetConfig): string {
   const mode = getNetworkMode(config);
 
-  return mode === 'dvm' ? `${config.fullName}-DVM` : config.fullName;
+  return mode === 'dvm' ? `${config.fullName}-Smart` : config.fullName;
 }
 
 export function getVerticesFromDisplayName(name: string): Vertices {
-  const [network, mode = 'native'] = name.split('-') as [Network, string];
+  const [network, mode] = name.split('-') as [Network, string];
 
-  return { network, mode: mode.toLocaleLowerCase() as NetworkMode };
+  return { network, mode: ['smart', 'dvm'].includes(mode?.toLowerCase()) ? 'dvm' : 'native' };
 }
 
 // eslint-disable-next-line complexity
