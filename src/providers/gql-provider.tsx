@@ -7,15 +7,15 @@ export const GqlContext = createContext<null>(null);
 const subqlDev = 'http://localhost:3000/';
 
 export const GqlProvider = ({ children }: React.PropsWithChildren<unknown>) => {
-  const { networkConfig, network, isDev } = useApi();
+  const { network } = useApi();
 
   const value = useMemo(() => {
     const client = new GraphQLClient({
-      url: isDev && network === 'pangolin' ? subqlDev : networkConfig?.api.subql || subqlDev,
+      url: network?.api.subql || subqlDev,
     });
 
     return client;
-  }, [isDev, network, networkConfig?.api.subql]);
+  }, [network]);
 
   return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>;
 };

@@ -58,7 +58,6 @@ export function BridgeStatus({ className = '' }: BridgeStatusProps) {
     const sub$$ = ajax<IncidentResponse>({ url, method: 'GET' })
       .pipe(map((res) => res.response || null))
       .subscribe((data) => {
-        console.info('%c [ data ]-57', 'font-size:13px; background:pink; color:#bf2c9f;', data);
         const target = data.incidents.find((item) => !!item.incident_updates.length);
 
         if (target) {

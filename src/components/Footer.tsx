@@ -6,10 +6,11 @@ import { Link } from 'react-router-dom';
 import { THEME } from '../config';
 import { Path } from '../config/routes';
 import { Language, LanguageProps } from './Language';
+import { ThemeSwitch, ThemeSwitchProps } from './ThemeSwitch';
 
-type FooterProps = LanguageProps & { className?: string };
+type FooterProps = LanguageProps & ThemeSwitchProps & { className?: string };
 
-export function Footer({ network, theme, className = '' }: FooterProps) {
+export function Footer({ theme, onThemeChange, className = '' }: FooterProps) {
   const { t } = useTranslation();
   const color = theme === THEME.LIGHT ? '#ccc' : undefined;
 
@@ -36,7 +37,15 @@ export function Footer({ network, theme, className = '' }: FooterProps) {
           </Button>
         </Link>
 
-        <Language network={network} theme={theme} type="ghost" color={color} />
+        <Language theme={theme} type="ghost" color={color} />
+
+        <ThemeSwitch
+          size="small"
+          defaultTheme={THEME.DARK}
+          onThemeChange={onThemeChange}
+          mode="btn"
+          className="w-12 ml-4"
+        />
       </div>
     </Layout.Footer>
   );

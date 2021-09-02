@@ -1,21 +1,12 @@
-import {
-  ArrowRightOutlined,
-  ClearOutlined,
-  DashOutlined,
-  DisconnectOutlined,
-  LinkOutlined,
-  SwapOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
-import { Button, Popover, Tooltip } from 'antd';
+import { ArrowRightOutlined, ClearOutlined, DashOutlined, SwapOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
 import { isBoolean, isNull, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Vertices } from '../../config';
-import { useApi, useNetworks } from '../../hooks';
-import { CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../../model';
+import { useNetworks } from '../../hooks';
+import { Arrival, CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../../model';
 import {
-  getNetworkByName,
+  getNetworkMode,
   getVertices,
   HashInfo,
   isReachable,
@@ -25,6 +16,7 @@ import {
   truth,
 } from '../../utils';
 import { updateStorage } from '../../utils/helper/storage';
+import { LinkIndicator } from '../LinkIndicator';
 import { Destination } from './Destination';
 
 export type NetsProps = CustomFormControlProps<TransferNetwork>;
@@ -32,57 +24,9 @@ export type NetsProps = CustomFormControlProps<TransferNetwork>;
 export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?: boolean }) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(isCross);
-  const { networkStatus, network, switchNetwork } = useApi();
-  const [vertices, setVertices] = useState<Vertices | null>(null);
-  const [reverseVertices, setReverseVertices] = useState<Vertices | null>(null);
+  const [vertices, setVertices] = useState<Arrival | null>(null);
+  const [reverseVertices, setReverseVertices] = useState<Arrival | null>(null);
   const [random, setRandom] = useState(0); // just for trigger animation when from and to reversed.
-  // eslint-disable-next-line complexity
-  const Extra = useMemo(() => {
-    if (networkStatus === 'connecting') {
-      return <SyncOutlined spin style={{ color: '#1890ff' }} />;
-    }
-
-    const existAndConsistent = value && value.from && value.from.name === network;
-
-    return networkStatus === 'success' ? (
-      <Popover
-        content={
-          existAndConsistent ? (
-            t('Network connected')
-          ) : (
-            <div className="max-w-sm flex flex-col">
-              {value?.from?.name && vertices?.status === 'available' ? (
-                <>
-                  <span>
-                    {t(
-                      'The connected network is not the same as the network selected, do you want switch to the {{network}} network?',
-                      { network: value?.from?.name }
-                    )}
-                  </span>
-                  <Button
-                    onClick={() => {
-                      switchNetwork(value!.from!.name);
-                    }}
-                    className="self-end mt-2"
-                  >
-                    {t('Switch')}
-                  </Button>
-                </>
-              ) : (
-                <span>{t('The current network is connected to {{network}}', { network })}</span>
-              )}
-            </div>
-          )
-        }
-      >
-        <LinkOutlined style={{ color: existAndConsistent ? '#10b981' : '#fbbf24' }} />
-      </Popover>
-    ) : (
-      <Tooltip title={t('Network disconnected')}>
-        <DisconnectOutlined style={{ color: '#ef4444' }} />
-      </Tooltip>
-    );
-  }, [networkStatus, value, network, t, vertices?.status, switchNetwork]);
 
   const canReverse = useMemo(() => {
     const vers = [vertices, reverseVertices];
@@ -112,9 +56,15 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
     setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to, isCross)]);
   }, [value, setFromFilters, setToFilters, isCross]);
 
+  // eslint-disable-next-line complexity
   useEffect(() => {
     const { from, to } = value || {};
-    const info = { from: from?.name ?? '', to: to?.name ?? '' } as HashInfo;
+    const info = {
+      from: from?.name ?? '',
+      to: to?.name ?? '',
+      fMode: from ? getNetworkMode(from) : 'native',
+      tMode: to ? getNetworkMode(to) : 'native',
+    } as HashInfo;
     const ver = getVertices(info.from as Network, info.to as Network);
     const reverseVer = getVertices(info.to as Network, info.from as Network);
 
@@ -130,7 +80,13 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
         networks={fromNetworks}
         title={t('From')}
         value={value?.from}
-        extra={vertices?.status !== 'pending' ? Extra : <></>}
+        extra={
+          vertices?.status !== 'pending' ? (
+            <LinkIndicator config={value?.from ?? null} showSwitch={vertices?.status === 'available'} />
+          ) : (
+            <></>
+          )
+        }
         onChange={(from) => {
           triggerChange({ from, to: value?.to ?? null });
         }}
@@ -148,8 +104,8 @@ export function Nets({ value, onChange, isCross = true }: NetsProps & { isCross?
               <SwapOutlined
                 onClick={() => {
                   triggerChange({
-                    from: getNetworkByName(value?.to?.name),
-                    to: getNetworkByName(value?.from?.name),
+                    from: value?.to ?? null,
+                    to: value?.from ?? null,
                   });
                   setRandom(Math.random());
                 }}

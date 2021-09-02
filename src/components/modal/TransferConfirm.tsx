@@ -1,12 +1,42 @@
 import { RightOutlined } from '@ant-design/icons';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TxConfirmComponentProps } from '../../model';
+import { Darwinia2EthereumTransfer, TxConfirmComponentProps } from '../../model';
 import { fromWei } from '../../utils';
 import { Des } from './Des';
 
-export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirmComponentProps>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirmComponentProps<any>>) {
   const { t } = useTranslation();
+  const amountDes = useMemo(() => {
+    if (children) {
+      return children;
+    } else if (value.assets) {
+      return (
+        <Des
+          title={t('Amount')}
+          content={value.assets.map((bill: Darwinia2EthereumTransfer['assets'][0]) => (
+            <span key={bill.asset} className="mr-6">
+              {fromWei({ value: bill.amount, unit: bill.unit ?? 'ether' })}
+              <span className="uppercase ml-2">{bill.asset}</span>
+            </span>
+          ))}
+        ></Des>
+      );
+    } else {
+      return (
+        <Des
+          title={t('Amount')}
+          content={
+            <span>
+              {value.amount}
+              <span className="uppercase ml-2">{value.asset}</span>
+            </span>
+          }
+        />
+      );
+    }
+  }, [children, t, value.amount, value.asset, value.assets]);
 
   return (
     <>
@@ -25,31 +55,7 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
 
       <Des title={t('To')} content={value.recipient}></Des>
 
-      {value.amount && value.asset && (
-        <Des
-          title={t('Amount')}
-          content={
-            <span>
-              {value.amount}
-              <span className="uppercase ml-2">{value.asset}</span>
-            </span>
-          }
-        />
-      )}
-
-      {value.assets && (
-        <Des
-          title={t('Amount')}
-          content={value.assets.map((bill) => (
-            <span key={bill.asset} className="mr-6">
-              {fromWei({ value: bill.amount, unit: bill.unit ?? 'ether' })}
-              <span className="uppercase ml-2">{bill.asset}</span>
-            </span>
-          ))}
-        ></Des>
-      )}
-
-      {children}
+      {amountDes}
     </>
   );
 }

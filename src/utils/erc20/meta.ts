@@ -81,7 +81,7 @@ async function getSymbolFromContract(tokenAddress: string, config: NetConfig) {
     const result = await token.methods.symbol().call();
     return result;
   } catch (error) {
-    console.warn(`symbol() call for token at address ${tokenAddress} resulted in error:`, error);
+    console.warn(`symbol() call for token at address ${tokenAddress} resulted in error:`, error.message);
     return undefined;
   }
 }
@@ -120,7 +120,7 @@ async function getDecimalsFromContract(tokenAddress: string, config: NetConfig) 
 
     return decimalsBN?.toString();
   } catch (error) {
-    console.warn(`decimals() call for token at address ${tokenAddress} resulted in error:`, error);
+    console.warn(`decimals() call for token at address ${tokenAddress} resulted in error:`, error.message);
     return undefined;
   }
 }

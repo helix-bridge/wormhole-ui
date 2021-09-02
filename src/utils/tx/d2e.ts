@@ -1,17 +1,10 @@
 import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import { from, Observable, Observer, switchMapTo, tap } from 'rxjs';
-import { abi } from '../../config';
-import { D2E, D2EAsset, DeepRequired, NoNullTransferNetwork, TransferFormValues, Tx } from '../../model';
-import { getContractTxObs } from './common';
+import { Darwinia2EthereumTransfer, DeepRequired, NoNullTransferNetwork, TransferFormValues, Tx } from '../../model';
 
 export type BackingLockNative = TransferFormValues<
-  DeepRequired<D2E, ['sender' | 'assets' | 'recipient']>,
-  NoNullTransferNetwork
->;
-
-export type BackingLockERC20 = TransferFormValues<
-  DeepRequired<D2E<D2EAsset>, ['sender' | 'recipient' | 'amount' | 'erc20']>,
+  DeepRequired<Darwinia2EthereumTransfer, ['sender' | 'assets' | 'recipient']>,
   NoNullTransferNetwork
 >;
 
@@ -56,22 +49,16 @@ export function backingLock(value: BackingLockNative, api: ApiPromise): Observab
   const { amount: ring } = assets.find((item) => item.asset === 'ring') || { amount: '0' };
   const { amount: kton } = assets.find((item) => item.asset === 'kton') || { amount: '0' };
   const obs = new Observable((observer: Observer<Tx>) => {
-    api.tx.ethereumBacking.lock(ring, kton, recipient).signAndSend(sender, extrinsicSpy(observer));
+    api.tx.ethereumBacking
+      .lock(ring, kton, recipient)
+      .signAndSend(sender, extrinsicSpy(observer))
+      .catch((error) => {
+        observer.error({ status: 'error', error });
+      });
   });
 
   return from(web3FromAddress(sender)).pipe(
     tap((injector) => api.setSigner(injector.signer)),
     switchMapTo(obs)
-  );
-}
-
-export function backingLockErc20(value: BackingLockERC20): Observable<Tx> {
-  const { erc20, recipient, amount, transfer, sender } = value;
-  const { address } = erc20;
-
-  return getContractTxObs(
-    transfer.from.erc20Token.mappingAddress,
-    (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
-    abi.mappingTokenABI
   );
 }

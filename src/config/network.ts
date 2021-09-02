@@ -1,10 +1,13 @@
-import { NetConfig, Network, NetworkConfig } from '../model';
+import { chain, omit } from 'lodash';
+import { Arrival, Departure, NetConfig, NetworkConfig } from '../model';
 
-export enum NetworkEnum {
-  pangolin = 'pangolin',
+const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
+
+export enum Graph {
   crab = 'crab',
   darwinia = 'darwinia',
   ethereum = 'ethereum',
+  pangolin = 'pangolin',
   ropsten = 'ropsten',
 }
 
@@ -16,7 +19,7 @@ const allowAlias: (full: string, at?: number) => string[] = (fullName, startAt =
   return new Array(len - startAt).fill('').map((_, index) => shortestName + fullName.substr(startAt, index));
 };
 
-export const NETWORK_ALIAS = new Map([[NetworkEnum.ethereum, [...allowAlias(NetworkEnum.ethereum)]]]);
+export const NETWORK_ALIAS = new Map([[Graph.ethereum, [...allowAlias(Graph.ethereum)]]]);
 
 const EVOLUTION_DOMAIN = {
   product: 'https://www.evolution.land',
@@ -30,10 +33,14 @@ const EVOLUTION_DOMAIN = {
 export const NETWORK_CONFIG: NetworkConfig = {
   crab: {
     api: {
-      subql: 'https://api.subquery.network/sq/wuminzhe/crab',
+      subql: 'https://api.subquery.network/sq/darwinia-network/crab',
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: 'https://crab.subscan.io',
+    },
+    dvm: {
+      ring: '0x588abe3F7EE935137102C5e2B8042788935f4CB0',
+      kton: '0xbfE9E136270cE46A2A6a8E8D54718BdAEBEbaA3D',
     },
     erc20Token: {
       proofAddress: '',
@@ -46,7 +53,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
       nativeCurrency: {
         decimals: 18,
       },
-      rpcUrls: [],
+      rpcUrls: ['https://crab-rpc.darwinia.network/'],
+      blockExplorerUrls: ['https://crab.subscan.io/'],
     },
     facade: {
       logo: '/image/crab-button-mobile.png',
@@ -59,7 +67,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: 'wss://crab-rpc.darwinia.network',
       etherscan: '',
     },
-    rpc: 'wss://crab-rpc.darwinia.network',
     ss58Prefix: 42,
     tokenContract: {
       native: 'CRING',
@@ -72,6 +79,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: '',
+    },
+    dvm: {
+      ring: '',
+      kton: '',
     },
     erc20Token: {
       bankingAddress: '',
@@ -109,10 +120,12 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: 'wss://rpc.darwinia.network',
       etherscan: '',
     },
-    rpc: 'wss://rpc.darwinia.network',
     ss58Prefix: 18,
     tokenContract: {
       native: 'RING',
+      issuingDarwinia: '0xea7938985898af7fd945b03b7bc2e405e744e913',
+      issuingEthereum: '0x5f44dd8e59f56aa04fe54e95cc690560ae706b18',
+      bankDarwinia: '0x649fdf6ee483a96e020b889571e93700fbd82d88',
     },
     type: ['polkadot', 'darwinia'],
   },
@@ -147,7 +160,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: '',
       etherscan: 'wss://mainnet.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
     },
-    rpc: '',
     ss58Prefix: 18,
     tokenContract: {
       native: 'eth',
@@ -162,13 +174,17 @@ export const NETWORK_CONFIG: NetworkConfig = {
   },
   pangolin: {
     api: {
-      subql: 'http://t3.hkg.itering.com:3000',
+      subql: 'https://api.subquery.network/sq/darwinia-network/pangolin',
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
     },
+    dvm: {
+      ring: '0xbBD91aD844557ADCbb97296216b3B3c977FCC4F2',
+      kton: '0xc8C1680B18D432732D07c044669915726fAF67D0',
+    },
     erc20Token: {
-      bankingAddress: '',
+      bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
       mappingAddress: '0xcB8531Bc0B7C8F41B55CF4E94698C37b130597B9',
       proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
     },
@@ -178,7 +194,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
       nativeCurrency: {
         decimals: 18,
       },
-      rpcUrls: [],
+      rpcUrls: ['https://pangolin-rpc.darwinia.network/'],
+      blockExplorerUrls: ['https://pangolin.subscan.io/'],
     },
     facade: {
       logo: '/image/pangolin-button-mobile.png',
@@ -196,12 +213,14 @@ export const NETWORK_CONFIG: NetworkConfig = {
     name: 'pangolin',
     provider: {
       rpc: 'wss://pangolin-rpc.darwinia.network',
-      etherscan: '',
+      etherscan: 'wss://ropsten.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
     },
-    rpc: 'wss://pangolin-rpc.darwinia.network',
     ss58Prefix: 18,
     tokenContract: {
       native: 'PRING',
+      issuingDarwinia: '0x49262B932E439271d05634c32978294C7Ea15d0C', // e2d redeem address
+      issuingEthereum: '0x98fAE9274562FE131e2CF5771ebFB0bB232aFd25', // d2e claim address
+      bankDarwinia: '0x6EF538314829EfA8386Fc43386cB13B4e0A67D1e', // e2d redeem deposit address
     },
     type: ['polkadot', 'darwinia'],
   },
@@ -214,7 +233,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     erc20Token: {
       bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
-      mappingAddress: '',
+      mappingAddress: '0xcB8531Bc0B7C8F41B55CF4E94698C37b130597B9',
       proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
     },
     ethereumChain: {
@@ -236,7 +255,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: '',
       etherscan: 'wss://ropsten.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
     },
-    rpc: '',
     ss58Prefix: 18,
     tokenContract: {
       native: 'eth',
@@ -251,26 +269,75 @@ export const NETWORK_CONFIG: NetworkConfig = {
   },
 };
 
-export const NETWORKS: NetConfig[] = Object.values(NETWORK_CONFIG);
-export const AIRPORTS: NetConfig[] = NETWORKS.filter((item) => ['ethereum', 'crab'].includes(item.name));
-
-export interface Vertices {
-  network: Network;
-  status: 'pending' | 'available';
-  tokenBlackList?: string[];
-}
-
-export const NETWORK_GRAPH = new Map<Network, Vertices[]>([
-  [NetworkEnum.crab, [{ network: NetworkEnum.darwinia, status: 'pending' }]],
-  [NetworkEnum.darwinia, [{ network: NetworkEnum.ethereum, status: 'available' }]],
-  [NetworkEnum.ethereum, [{ network: NetworkEnum.darwinia, status: 'available' }]],
-  [NetworkEnum.pangolin, [{ network: NetworkEnum.ropsten, status: 'available' }]],
-  [NetworkEnum.ropsten, [{ network: NetworkEnum.pangolin, status: 'available' }]],
+export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
+  [
+    { network: Graph.crab, mode: 'native' },
+    [
+      { network: Graph.darwinia, status: 'pending', mode: 'native' },
+      { network: Graph.darwinia, status: 'pending', mode: 'dvm' },
+    ],
+  ],
+  [
+    { network: Graph.crab, mode: 'dvm' },
+    [
+      { network: Graph.darwinia, status: 'pending', mode: 'native' },
+      { network: Graph.darwinia, status: 'pending', mode: 'dvm' },
+    ],
+  ],
+  [
+    { network: Graph.darwinia, mode: 'native' },
+    [{ network: Graph.ethereum, status: 'available', mode: 'native', stable: true }],
+  ],
+  [{ network: Graph.darwinia, mode: 'dvm' }, [{ network: Graph.ethereum, status: 'available', mode: 'native' }]],
+  [
+    { network: Graph.ethereum, mode: 'native' },
+    [
+      { network: Graph.darwinia, status: 'available', mode: 'native' },
+      { network: Graph.darwinia, status: 'available', mode: 'dvm' },
+    ],
+  ],
+  [
+    { network: Graph.pangolin, mode: 'native' },
+    [{ network: Graph.ropsten, status: 'available', mode: 'native', stable: true }],
+  ],
+  [{ network: Graph.pangolin, mode: 'dvm' }, [{ network: Graph.ropsten, status: 'available', mode: 'native' }]],
+  [
+    { network: Graph.ropsten, mode: 'native' },
+    [
+      { network: Graph.pangolin, status: 'available', mode: 'native', stable: true },
+      { network: Graph.pangolin, status: 'available', mode: 'dvm' },
+    ],
+  ],
 ]);
 
-export const AIRDROP_GRAPH = new Map<Network, Vertices[]>([
-  [NetworkEnum.ethereum, [{ network: NetworkEnum.crab, status: 'available' }]],
+/**
+ * generate network configs, use dvm field to distinct whether the config is dvm config.
+ */
+export const NETWORKS: NetConfig[] = chain([...NETWORK_GRAPH])
+  .map(
+    ([departure, arrivals]) =>
+      isDev ? [departure, ...arrivals] : [departure, ...arrivals.filter((item) => item.stable)] // only display stable bridge in prod
+  )
+  .filter((item) => item.length > 1)
+  .flatten()
+  .unionWith((cur, pre) => cur.mode === pre.mode && cur.network === pre.network)
+  .map(({ network, mode }) => {
+    const config: NetConfig = NETWORK_CONFIG[network];
+
+    return config.type.includes('polkadot') && mode === 'native'
+      ? (omit(config, 'dvm') as Omit<NetConfig, 'dvm'>)
+      : config;
+  })
+  .sortBy((item) => item.name)
+  .valueOf();
+
+export const AIRDROP_GRAPH = new Map<Departure, Arrival[]>([
+  [{ network: Graph.ethereum, mode: 'native' }, [{ network: Graph.crab, status: 'available', mode: 'native' }]],
 ]);
+
+export const AIRPORTS: NetConfig[] = Object.values(NETWORK_CONFIG).filter((item) =>
+  ['ethereum', 'crab'].includes(item.name)
+);
 
 /* -------------------------------------------------Network Simple-------------------------------------------------------- */
 

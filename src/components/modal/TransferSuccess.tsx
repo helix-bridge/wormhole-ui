@@ -1,22 +1,35 @@
 import { CheckCircleFilled } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
-import { Network, TransferAsset, TxSuccessComponentProps } from '../../model';
+import {
+  Darwinia2EthereumTransfer,
+  Erc20Token,
+  Network,
+  NoNullTransferNetwork,
+  TransferAsset,
+  TransferFormValues,
+  TxSuccessComponentProps,
+} from '../../model';
 import { fromWei } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
-function Detail({ amount, asset }: TransferAsset<string>) {
+function Detail({ amount, asset }: TransferAsset<string | Erc20Token>) {
   return (
     <div>
       <span>{amount}</span>
-      <span className="uppercase ml-4">{asset}</span>
+      <span className="uppercase ml-4">{typeof asset === 'string' ? asset : asset?.symbol}</span>
     </div>
   );
 }
 
 // eslint-disable-next-line complexity
-export function TransferSuccess({ tx, value, hashType = 'txHash' }: TxSuccessComponentProps) {
+export function TransferSuccess({
+  tx,
+  value,
+  hashType = 'txHash',
+}: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
   const linkProps = { [hashType]: tx.hash };
@@ -44,14 +57,13 @@ export function TransferSuccess({ tx, value, hashType = 'txHash' }: TxSuccessCom
         content={
           (value.asset && value.amount && <Detail {...value} />) ||
           (value.assets &&
-            value.assets.map((item) => (
+            value.assets.map((item: Darwinia2EthereumTransfer['assets'][0]) => (
               <Detail
                 {...item}
                 amount={item.unit ? fromWei({ value: item.amount, unit: item.unit }) : item.amount}
                 key={item.asset}
               />
-            ))) ||
-          (value.erc20 && value.amount && <Detail amount={value.amount} asset={value.erc20.symbol} />)
+            )))
         }
         icon={<CheckCircleFilled className="text-2xl" style={{ color }} />}
       ></Des>

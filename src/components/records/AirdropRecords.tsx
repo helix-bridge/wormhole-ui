@@ -22,7 +22,9 @@ const SNAPSHOT_TIMESTAMP = 1584683400;
 // eslint-disable-next-line complexity
 export function AirdropRecords({ from, to }: AirdropProps) {
   const { t } = useTranslation();
-  const { accounts } = useApi();
+  const {
+    connection: { accounts },
+  } = useApi();
   const { address: sender } = (accounts || [])[0] ?? '';
   const [claimAmount, setClaimAmount] = useState(new BN(0));
   const [target, setTarget] = useState('');

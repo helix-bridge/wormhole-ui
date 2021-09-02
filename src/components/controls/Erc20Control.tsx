@@ -1,24 +1,23 @@
 import { Loading3QuartersOutlined } from '@ant-design/icons';
 import { Progress, Select, Typography } from 'antd';
 import { groupBy } from 'lodash';
-import { PropsWithRef, useCallback, useEffect } from 'react';
+import { PropsWithRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RegisterStatus } from '../../config';
-import { useKnownErc20Tokens } from '../../hooks';
-import { CustomFormControlProps, Erc20Token, Network } from '../../model';
+import { MemoedTokenInfo } from '../../hooks';
+import { CustomFormControlProps, Erc20Token } from '../../model';
 import { fromWei, getUnit, prettyNumber } from '../../utils';
 import { getTokenName } from '../../utils/erc20/meta';
 import { Erc20ListInfo } from '../erc20/Erc20ListInfo';
 
 interface Erc20ControlProps extends CustomFormControlProps<Erc20Token | null> {
-  network: Network;
-  updateBalance?: React.Dispatch<React.SetStateAction<(addr: string) => Promise<void>>>;
+  loading: boolean;
+  tokens: MemoedTokenInfo[];
 }
 
-export function Erc20Control({ network, value, onChange, updateBalance }: PropsWithRef<Erc20ControlProps>) {
+export function Erc20Control({ value, onChange, loading, tokens }: PropsWithRef<Erc20ControlProps>) {
   const { t } = useTranslation();
-  const { loading, tokens, refreshTokenBalance } = useKnownErc20Tokens(network);
-  const data = groupBy(tokens, (token) => RegisterStatus[token.status ?? 0]);
+  const data = useMemo(() => groupBy(tokens, (token) => RegisterStatus[token.status ?? 0]), [tokens]);
   const triggerChange = useCallback(
     (val: string) => {
       if (onChange) {
@@ -49,12 +48,6 @@ export function Erc20Control({ network, value, onChange, updateBalance }: PropsW
     ),
     []
   );
-
-  useEffect(() => {
-    if (updateBalance) {
-      updateBalance(() => refreshTokenBalance);
-    }
-  }, [refreshTokenBalance, updateBalance]);
 
   if (loading) {
     return <Progress percent={99} status="active" strokeColor={{ from: '#5745de', to: '#ec3783' }} />;

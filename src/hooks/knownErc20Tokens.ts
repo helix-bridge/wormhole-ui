@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { RegisterStatus } from '../config';
-import { Action, Erc20RegisterStatus, Erc20Token, Network, RequiredPartial } from '../model';
+import { Action, Erc20RegisterStatus, Erc20Token, EthereumConnection, Network, RequiredPartial } from '../model';
+import { isNetworkConsistent } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
 import { getKnownErc20Tokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
@@ -54,8 +55,8 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
   );
   const addKnownProof = useCallback((proofs: StoredProof) => dispatch({ payload: proofs, type: 'updateProof' }), []);
   const switchToConfirmed = useCallback((token: string) => dispatch({ payload: token, type: 'switchToConfirmed' }), []);
-  const { accounts } = useApi();
-  const { address: currentAccount } = (accounts || [])[0] ?? '';
+  const { connection } = useApi();
+  const { address: currentAccount } = useMemo(() => (connection.accounts || [])[0] ?? '', [connection.accounts]);
   const refreshTokenBalance = useCallback(
     async (tokenAddress: string) => {
       const balance = await getTokenBalance(tokenAddress, currentAccount, true);
@@ -72,9 +73,21 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
+      if (connection.type !== 'metamask') {
+        updateTokens([]);
+        return;
+      }
+
+      const isMatch = await isNetworkConsistent(network, (connection as EthereumConnection).chainId);
+
+      if (!isMatch) {
+        updateTokens([]);
+        return;
+      }
 
       try {
+        setLoading(true);
+
         const all = (await getKnownErc20Tokens(currentAccount, network)) as Erc20Token[];
         const tokens = status > 0 ? all.filter((item) => item.status && +item.status === status) : all;
 
@@ -89,7 +102,7 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
 
       setLoading(false);
     })();
-  }, [currentAccount, network, updateTokens, status]);
+  }, [currentAccount, network, updateTokens, status, connection]);
 
   return {
     ...state,

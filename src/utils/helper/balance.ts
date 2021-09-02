@@ -24,6 +24,10 @@ export function getUnit(num: number): Unit {
   }
 }
 
+export function getPrecisionByUnit(unit: Unit): number {
+  return ETH_UNITS[unit].length - 1;
+}
+
 export function accuracyFormat(num: BigNumber.Value, accuracy: number | string) {
   if (accuracy) {
     return bn2str(bnShift(num, -accuracy));

@@ -2,6 +2,7 @@ import { Dropdown, Menu, Tag } from 'antd';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NetConfig } from '../../model';
+import { getDisplayName } from '../../utils';
 import { DownIcon } from '../icons';
 
 interface DestinationProps {
@@ -52,7 +53,7 @@ export function Destination({
         overlay={
           <Menu
             onClick={({ key }) => {
-              const target = networks.find((net) => net.fullName === key) ?? null;
+              const target = networks.find((net) => getDisplayName(net) === key) ?? null;
 
               if (onChange) {
                 onChange(target);
@@ -60,14 +61,18 @@ export function Destination({
             }}
           >
             <Menu.Item key="default">{t('Clear Selected')}</Menu.Item>
-            {networks.map((item) => (
-              <Menu.Item key={item.fullName}>
-                <span className="flex justify-between items-center">
-                  <span className="capitalize mr-2">{item.fullName}</span>
-                  {item.isTest && <Tag color="cyan">{t('Test')}</Tag>}
-                </span>
-              </Menu.Item>
-            ))}
+            {networks.map((item) => {
+              const name = getDisplayName(item);
+
+              return (
+                <Menu.Item key={name}>
+                  <span className="flex justify-between items-center">
+                    <span className="capitalize mr-2">{name}</span>
+                    {item.isTest && <Tag color="cyan">{t('Test')}</Tag>}
+                  </span>
+                </Menu.Item>
+              );
+            })}
           </Menu>
         }
       >
@@ -80,7 +85,7 @@ export function Destination({
           <div className={`rounded-xl flex flex-col gap-4 py-2 flex-1 mr-1 md:mr-4 bg-${value?.name}`}>
             <img src={value?.facade.logo || defaultLogo} className="h-8 sm:h-12 md:16 ml-2 self-start" alt="" />
             <span className="capitalize mr-0 text-xs dark:text-white px-2 py-0.5 whitespace-nowrap">
-              {!value ? t('Select Network') : value.fullName}
+              {!value ? t('Select Network') : getDisplayName(value)}
             </span>
           </div>
 
