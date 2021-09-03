@@ -42,7 +42,7 @@ function App() {
       >
         <div className="flex items-center gap-4">
           <Link to={Path.root}>
-            <img src="/image/logo.png" alt="" className="h-4 hidden md:h-6 md:inline-block" />
+            <img src="/image/logo.svg" alt="" className="h-4 hidden md:h-6 md:inline-block" />
             <img src="/image/logo-mini.svg" alt="" className="h-16 md:hidden md:h-6 inline-block" />
           </Link>
 
