@@ -1,20 +1,24 @@
-import { Space, Typography } from 'antd';
+import { Input, Space, Typography } from 'antd';
+import Link from 'antd/lib/typography/Link';
 import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans } from 'react-i18next';
 
-type AirdropProps = { signature: string };
+const INDENTATION = 4;
 
-export function AirdropSuccess({ signature = '{}' }: AirdropProps) {
-  const { t } = useTranslation();
-  // eslint-disable-next-line no-magic-numbers
-  const value = useMemo(() => JSON.stringify(JSON.parse(signature), undefined, 4), [signature]);
+export function AirdropSuccess({ data }: { data: Record<string, unknown> }) {
+  const value = useMemo(() => JSON.stringify(data, undefined, INDENTATION), [data]);
 
   return (
-    <Space direction="vertical">
+    <Space direction="vertical" className="w-full">
       <Typography.Title level={5}>
-        {t('Success! Please copy the signature below, and [claim] in Darwinia Wallet')}
+        <Trans i18nKey="claimInDarwiniaWallet">
+          Success! Please copy the signature below, then claim in
+          <Link href="https://apps.darwinia.network/#/claims" target="_blank">
+            Darwinia Wallet
+          </Link>
+        </Trans>
       </Typography.Title>
-      <Typography.Text copyable>{value}</Typography.Text>
+      <Input.TextArea value={value} rows={10}></Input.TextArea>
     </Space>
   );
 }
