@@ -14,7 +14,7 @@ import {
   TransferNetwork,
   TransferParty,
 } from '../model';
-import { empty, getInitialSetting, getNetConfigByVer, getNetworkMode, isSameNetConfig } from '../utils';
+import { empty, getInitialSetting, getNetConfigByVer, getNetworkMode, isReachable, isSameNetConfig } from '../utils';
 import { Airport } from './Airport';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
 import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
@@ -23,7 +23,7 @@ import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaDvm';
 import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
-const initTransfer: () => TransferNetwork = () => {
+const getTransferFromSettings: () => TransferNetwork = () => {
   const come = getInitialSetting('from', '') as Network;
   const go = getInitialSetting('to', '') as Network;
   const fromMode = getInitialSetting('fMode', '') as NetworkMode;
@@ -40,7 +40,13 @@ const initTransfer: () => TransferNetwork = () => {
   }
 };
 
-const TRANSFER = initTransfer();
+const validateTransfer: (transfer: TransferNetwork, isCross: boolean) => TransferNetwork = (transfer, isCross) => {
+  const { from, to } = transfer;
+  const isSameEnv = from?.isTest === to?.isTest;
+  const reachable = isReachable(from, isCross)(to); // from -> to is available;
+
+  return isSameEnv && reachable ? transfer : { from: null, to: null };
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DEPARTURES: [[Departure, Departure?], FunctionComponent<BridgeFormProps<any>>][] = [
@@ -113,7 +119,7 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
     connection: { status },
     disconnect,
   } = useApi();
-  const [transfer, setTransfer] = useState(TRANSFER);
+  const [transfer, setTransfer] = useState(() => validateTransfer(getTransferFromSettings(), isCross));
   const [isFromReady, setIsFromReady] = useState(false);
   const [submitFn, setSubmit] = useState<(value: TransferFormValues) => void>(empty);
   const { tx } = useTx();
@@ -131,7 +137,7 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         name={FORM_CONTROL.transfer}
         layout="vertical"
         form={form}
-        initialValues={{ transfer: TRANSFER }}
+        initialValues={{ transfer }}
         onFinish={(value) => {
           submitFn(value);
         }}

@@ -1,6 +1,7 @@
+import { chain } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
-import { AIRPORTS, NETWORKS } from '../config';
-import { NetConfig, NetworkFilter } from '../model';
+import { AIRDROP_GRAPH, AIRPORTS, NETWORKS } from '../config';
+import { Arrival, Departure, NetConfig, NetworkFilter } from '../model';
 import { useApi } from './api';
 
 export enum Direction {
@@ -11,6 +12,24 @@ export enum Direction {
 const omitTestChain: NetworkFilter = (net) => !net.isTest;
 
 const getGlobalFilters = (isTestDisplay: boolean) => (isTestDisplay ? [] : [omitTestChain]);
+
+const departureFilterCreator: (source: Map<Departure, Arrival[]>) => NetworkFilter = (source) => {
+  const departures = [...source.keys()].map((item) => item.network);
+  return (config) => departures.includes(config.name);
+};
+
+const arrivalFilterCreator: (source: Map<Departure, Arrival[]>) => NetworkFilter = (source) => {
+  const arrivals = chain([...source.values()])
+    .flatten()
+    .map((item) => item.network)
+    .uniq()
+    .value();
+
+  return (config) => arrivals.includes(config.name);
+};
+
+export const airportsDepartureFilter = departureFilterCreator(AIRDROP_GRAPH);
+export const airportsArrivalFilter = arrivalFilterCreator(AIRDROP_GRAPH);
 
 export function useNetworks(isCross: boolean) {
   const { enableTestNetworks } = useApi();

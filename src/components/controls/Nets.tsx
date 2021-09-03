@@ -3,7 +3,7 @@ import { Button, Tooltip } from 'antd';
 import { isBoolean, isNull, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNetworks } from '../../hooks';
+import { airportsArrivalFilter, airportsDepartureFilter, useNetworks } from '../../hooks';
 import { Arrival, CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../../model';
 import {
   getNetworkMode,
@@ -59,6 +59,7 @@ export function Nets({
 
   const Indicator = useMemo(() => (mode === 'default' ? RoadIndicatorLine : RoadIndicatorArrow), [mode]);
 
+  // eslint-disable-next-line complexity
   useEffect(() => {
     const { from = null, to = null } = value || {};
     const isSameEnv =
@@ -67,9 +68,11 @@ export function Nets({
           ? (net: NetConfig) => net.isTest === from?.isTest
           : truth
         : (net: NetConfig) => (isBoolean(from?.isTest) && isBoolean(to?.isTest) ? net.isTest === from?.isTest : true);
+    const departureFilter = isCross ? [] : [airportsDepartureFilter];
+    const arrivalFilter = isCross ? [] : [airportsArrivalFilter];
 
-    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from, isCross)]);
-    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to, isCross)]);
+    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from, isCross), ...arrivalFilter]);
+    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to, isCross), ...departureFilter]);
   }, [value, setFromFilters, setToFilters, isCross]);
 
   // eslint-disable-next-line complexity
