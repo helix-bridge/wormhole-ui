@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../hooks';
 import { EthereumConnection, NetConfig } from '../model';
-import { getConfigByConnection, getDisplayName, isChainIdEqual, isEthereumNetwork, isSameNetConfig } from '../utils';
+import {
+  getConfigByConnection,
+  getDisplayName,
+  isChainIdEqual,
+  isEthereumNetwork,
+  isPolkadotNetwork,
+  isSameNetConfig,
+} from '../utils';
 
 interface LinkIndicatorProps {
   config: NetConfig | null;
@@ -33,11 +40,13 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
         isChainIdEqual((connection as EthereumConnection).chainId, config!.ethereumChain.chainId);
 
       setIsConsistent(is);
-    } else {
+    } else if (isPolkadotNetwork(config?.name)) {
       getConfigByConnection(connection).then((conf) => {
         is = connection.type === 'polkadot' && isSameNetConfig(config, conf);
         setIsConsistent(is);
       });
+    } else {
+      setIsConsistent(is);
     }
   }, [config, connection, network]);
 

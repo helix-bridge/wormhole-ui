@@ -182,6 +182,8 @@ export function getNetworkCategory(config: NetConfig): NetworkCategory | null {
     return config.dvm ? 'dvm' : 'polkadot';
   } else if (config.type.includes('ethereum')) {
     return 'ethereum';
+  } else if (config.type.includes('tron')) {
+    return 'tron';
   }
 
   return null;
@@ -262,6 +264,10 @@ export async function getConfigByConnection(connection: Connection): Promise<Net
     } catch (err) {
       console.error('%c [ err ]-263', 'font-size:13px; background:pink; color:#bf2c9f;', err);
     }
+  }
+
+  if (connection.type === 'tron') {
+    return NETWORK_CONFIG.tron;
   }
 
   return null;

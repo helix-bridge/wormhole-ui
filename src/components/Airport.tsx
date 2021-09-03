@@ -3,7 +3,7 @@ import { Form, Input, Modal, Typography } from 'antd';
 import { format, fromUnixTime } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { from, map, Observable } from 'rxjs';
+import { from, map, Observable, of } from 'rxjs';
 import Web3 from 'web3';
 import { DATE_TIME_FORMATE, FORM_CONTROL } from '../config';
 import { useApi } from '../hooks';
@@ -30,19 +30,27 @@ const { info } = Modal;
 
 const SNAPSHOT_TIMESTAMP = 1584683400;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function signEth({ recipient, sender }: any): Observable<SignRes> {
+function signWith(data: AirportValues): Observable<SignRes> {
+  const { transfer, recipient, sender } = data;
+  const { from: come } = transfer;
   const ss58Prefix = 42;
   const address = buf2hex(decodeAddress(recipient, false, ss58Prefix).buffer);
   // eslint-disable-next-line no-magic-numbers
   const raw = 'Pay RINGs to the Crab account:' + address.slice(2);
   const web3 = new Web3(window.ethereum);
-  // FIXME password ?
-  const signObs = from(web3.eth.personal.sign(raw, sender, ''));
+  let signObs = of('');
+
+  if (come?.name === 'ethereum') {
+    signObs = from(web3.eth.personal.sign(raw, sender, ''));
+  }
+
+  if (come?.name === 'tron') {
+    signObs = from(window.tronWeb.trx.sign(Web3.utils.stringToHex(raw))) as Observable<string>;
+  }
 
   return signObs.pipe(
     map((sign: string) => ({
-      address: sender,
+      address: come?.name === 'tron' ? window.tronWeb.address.toHex(sender) : sender,
       msg: raw,
       sign,
       signer: 'DarwiniaNetworkClaims',
@@ -69,7 +77,7 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
 
   useEffect(() => {
     const fn = () => (value: AirportValues) => {
-      signEth(value).subscribe((data) => {
+      signWith(value).subscribe((data) => {
         info({
           icon: null,
           content: <AirdropSuccess data={{ data }} />,
