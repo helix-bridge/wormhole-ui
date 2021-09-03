@@ -103,6 +103,10 @@ export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
 }
 
+export function isTronLinkInstalled(): boolean {
+  return typeof window.tronWeb !== 'undefined';
+}
+
 export function getNetworkMode(config: NetConfig): NetworkMode {
   return config.dvm ? 'dvm' : 'native';
 }
@@ -113,6 +117,10 @@ export function getNetConfigByVer(vertices: Vertices) {
   }
 
   const { mode, network } = vertices;
+
+  if (network === 'tron') {
+    return NETWORK_CONFIG.tron;
+  }
 
   return NETWORKS.find((item) => item.name === network && mode === getNetworkMode(item)) ?? null;
 }

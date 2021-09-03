@@ -49,6 +49,8 @@
   "Incorrect network": "网络错误",
   "Insufficient balance": "余额不足",
   "Invalid token contract address": "无效的 token 合约地址",
+  "Missing Wallet Plugin": "插件未安装",
+  "MissingPlugin": "此操作需要 {{plugin}} 插件，立即 <3>安装</3>",
   "Native": "原生",
   "Network connected": "网络已连接",
   "Network disconnected": "网络已断开",
