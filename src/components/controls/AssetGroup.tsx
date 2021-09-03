@@ -138,13 +138,8 @@ CustomFormControlProps<AssetGroupValue> & {
                       validator(_, val) {
                         const max = new BN(Web3.utils.fromWei(balance?.max + '' || '0', unit));
                         const cur = new BN(val);
-                        let pass = true;
 
-                        if (balance?.asset !== 'ring') {
-                          pass = cur.lte(max);
-                        }
-
-                        return pass ? Promise.resolve() : Promise.reject();
+                        return cur.lte(max) ? Promise.resolve() : Promise.reject();
                       },
                       message: t('Transfer amount must not be greater than the max balance'),
                     },
