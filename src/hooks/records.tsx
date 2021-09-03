@@ -49,7 +49,8 @@ export function useGet<T = unknown>(req: RecordsQueryRequest): RecordsHook<T> {
   };
 }
 
-export function useEthereumRecords(
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+function useEthereumRecords(
   net: Network | null,
   addr: string | null
 ): RecordsHook<(RingBurnHistory | RedeemHistory)[]> {
@@ -99,7 +100,8 @@ export function useEthereumRecords(
   return { loading, data, refetch: request };
 }
 
-export function useDarwiniaRecords(
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+function useDarwiniaRecords(
   net: Network | null,
   addr: string | null /* ss58 address should be transfer to public key */,
   pagination: Paginator = { row: 100, page: 0 }
@@ -134,8 +136,7 @@ export function useDarwiniaRecords(
     return () => {
       sub$$.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [net, addr, pagination]);
+  }, [net, addr, pagination, request]);
 
   return { loading, data, refetch: request };
 }

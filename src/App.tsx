@@ -38,7 +38,7 @@ function App() {
     <Layout className="min-h-screen overflow-scroll">
       <Header
         className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-2"
-        style={{ marginTop: -1, background: theme === THEME.DARK ? 'transparent' : undefined }}
+        style={{ marginTop: -1 }}
       >
         <div className="flex items-center gap-4">
           <Link to={Path.root}>

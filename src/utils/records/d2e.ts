@@ -3,7 +3,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { decodeAddress } from '@polkadot/util-crypto';
 import { catchError, EMPTY, filter, from, map, Observable, switchMap, take, zip } from 'rxjs';
 import { abi, DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
-import { D2EHistoryRes, D2EMeta, LockEventsStorage, Network, Paginator, Tx } from '../../model';
+import { HistoryReq, D2EHistoryRes, D2EMeta, LockEventsStorage, Network, Tx } from '../../model';
 import {
   apiUrl,
   ClaimNetworkPrefix,
@@ -16,11 +16,12 @@ import { getAvailableNetworks, getEthConnection } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
 
-export function queryD2ERecords(
-  network: Network | null,
-  address: string | null,
-  paginator?: Paginator
-): Observable<D2EHistoryRes | null> {
+export function queryD2ERecords({
+  address,
+  confirmed,
+  network,
+  paginator,
+}: HistoryReq): Observable<D2EHistoryRes | null> {
   if (network === null || address === null || address === '') {
     return EMPTY;
   }
@@ -29,6 +30,7 @@ export function queryD2ERecords(
   const api = config.api.dapp;
   const params = {
     address: buf2hex(decodeAddress(address).buffer),
+    confirmed: confirmed.toString(),
     ...(paginator ?? { row: 100, page: 0 }),
   };
 

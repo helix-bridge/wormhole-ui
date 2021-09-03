@@ -18,9 +18,7 @@ export function Footer({ network, theme, className = '' }: FooterProps) {
       className={`flex items-center justify-between sm:px-8 px-2 text-gray-400 z-10 py-4 ${className}`}
       style={{
         background:
-          theme === THEME.LIGHT
-            ? NETWORK_LIGHT_THEME[network ?? 'pangolin']['@layout-header-background']
-            : 'transparent',
+          theme === THEME.LIGHT ? NETWORK_LIGHT_THEME[network ?? 'pangolin']['@layout-header-background'] : '#2d2d2d',
       }}
     >
       <div className="md:flex md:gap-4 md:flex-wrap text-gray-400">

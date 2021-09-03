@@ -6,6 +6,13 @@ export interface Paginator {
   page: number;
 }
 
+export interface HistoryReq {
+  address: string;
+  network: Network;
+  paginator: Paginator;
+  confirmed: boolean;
+}
+
 /* ------------------------------------E2D section-------------------------------------------- */
 export interface RingBurnHistory extends E2DHistory {
   id: number;
