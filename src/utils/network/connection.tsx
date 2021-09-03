@@ -1,6 +1,9 @@
 import { typesBundle } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
+import { Modal } from 'antd';
+import Link from 'antd/lib/typography/Link';
+import { Trans } from 'react-i18next';
 import {
   catchError,
   combineLatest,
@@ -25,7 +28,7 @@ import {
   PolkadotConnection,
   TronConnection,
 } from '../../model';
-import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent } from './network';
+import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkInstalled } from './network';
 import { switchMetamaskNetwork } from './switch';
 
 type ConnectFn<T extends Connection> = (network: NetConfig, chainId?: string) => Observable<T>;
@@ -174,6 +177,21 @@ export const getTronConnection: () => Observable<TronConnection> = () => {
   return obs.pipe(startWith<TronConnection>(mapData(wallet)));
 };
 
+const showWarning = (plugin: string, downloadUrl: string) =>
+  Modal.warn({
+    title: <Trans>Missing Wallet Plugin</Trans>,
+    content: (
+      <Trans i18nKey="MissingPlugin">
+        We need {{ plugin }} plugin to continue.
+        <Link href={downloadUrl} target="_blank">
+          Install
+        </Link>
+        it now
+      </Trans>
+    ),
+    okText: <Trans>OK</Trans>,
+  });
+
 const connectToPolkadot: ConnectFn<PolkadotConnection> = (network) => {
   if (!network) {
     return EMPTY;
@@ -183,7 +201,11 @@ const connectToPolkadot: ConnectFn<PolkadotConnection> = (network) => {
 };
 
 const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {
-  if (!isMetamaskInstalled() || network === null) {
+  if (!isMetamaskInstalled()) {
+    showWarning(
+      'metamask',
+      'https://chrome.google.com/webstore/detail/empty-title/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=zh-CN'
+    );
     return EMPTY;
   }
 
@@ -195,7 +217,11 @@ const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {
 };
 
 const connectToTron = () => {
-  if (!window.tronWeb) {
+  if (!isTronLinkInstalled()) {
+    showWarning(
+      'tronLink',
+      'https://chrome.google.com/webstore/detail/tronlink%EF%BC%88%E6%B3%A2%E5%AE%9D%E9%92%B1%E5%8C%85%EF%BC%89/ibnejdfjmmkpcnlpebklmnkoeoihofec'
+    );
     return EMPTY;
   }
 

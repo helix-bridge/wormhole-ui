@@ -49,6 +49,8 @@
   "Incorrect network": "Incorrect network",
   "Insufficient balance": "Insufficient balance",
   "Invalid token contract address": "Invalid token contract address",
+  "Missing Wallet Plugin": "Missing Wallet Plugin",
+  "MissingPlugin": "We need {{plugin}} plugin to continue. <3>Install</3> it now",
   "Native": "Native",
   "Network connected": "Network connected",
   "Network disconnected": "Network disconnected",
