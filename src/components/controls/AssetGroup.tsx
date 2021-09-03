@@ -169,8 +169,7 @@ CustomFormControlProps<AssetGroupValue> & {
                       size="large"
                       onClick={() => {
                         // FIXME: trigger amount validation
-                        const max =
-                          balance?.asset === 'ring' ? new BN(balance?.max || '0').sub(fee || new BN(0)) : balance?.max;
+                        const max = balance?.max || '0';
                         const val = {
                           ...target,
                           amount: fromWei({ value: max, unit }),

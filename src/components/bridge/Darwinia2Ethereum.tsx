@@ -72,6 +72,7 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
 
 // eslint-disable-next-line complexity
 function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
+  // eslint-disable-next-line complexity
   const isRingBalanceEnough = useMemo(() => {
     if (!fee || !ringBalance) {
       return false;
@@ -80,7 +81,7 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
     const ring = assets.find((item) => item.asset === 'ring' && item.checked);
     const ringAmount = new BN(toWei({ value: ring?.amount || '0', unit: 'gwei' }));
 
-    return ring ? ringAmount.add(fee).lte(ringBalance) : ringBalance.gte(fee);
+    return ring ? ringAmount.gte(fee) && ringAmount.lte(ringBalance) : ringBalance.gte(fee);
   }, [assets, fee, ringBalance]);
 
   const hasAssetSet = useMemo(() => {
