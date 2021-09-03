@@ -1,15 +1,11 @@
 import { catchError, EMPTY, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
-import { Network, Paginator, RedeemHistoryRes, RingBurnHistoryRes } from '../../model';
+import { HistoryReq, RedeemHistoryRes, RingBurnHistoryRes } from '../../model';
 import { apiUrl } from '../helper';
 import { rxGet } from './api';
 
-export function queryE2DRecords(
-  network: Network | null,
-  address: string | null,
-  paginator?: Paginator
-): Observable<RedeemHistoryRes> {
+export function queryE2DRecords({ address, confirmed, network, paginator }: HistoryReq): Observable<RedeemHistoryRes> {
   if (network === null || address === null || address === '') {
     return EMPTY;
   }
@@ -17,6 +13,7 @@ export function queryE2DRecords(
   const api = NETWORK_CONFIG[network].api.dapp;
   const params = {
     address,
+    confirmed: confirmed.toString(),
     ...(paginator ?? { row: 50, page: 0 }),
   };
 
@@ -39,11 +36,12 @@ export function queryE2DRecords(
   );
 }
 
-export function queryE2DGenesisRecords(
-  network: Network | null,
-  address: string | null,
-  paginator?: Paginator
-): Observable<RingBurnHistoryRes> {
+export function queryE2DGenesisRecords({
+  address,
+  confirmed,
+  network,
+  paginator,
+}: HistoryReq): Observable<RingBurnHistoryRes> {
   if (network === null || address === null || address === '') {
     return EMPTY;
   }
@@ -51,6 +49,7 @@ export function queryE2DGenesisRecords(
   const api = NETWORK_CONFIG[network].api.dapp;
   const params = {
     address,
+    confirmed: confirmed.toString(),
     ...(paginator ?? { row: 50, page: 0 }),
   };
 
