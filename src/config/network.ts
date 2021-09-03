@@ -9,6 +9,7 @@ export enum Graph {
   ethereum = 'ethereum',
   pangolin = 'pangolin',
   ropsten = 'ropsten',
+  tron = 'tron',
 }
 
 // eslint-disable-next-line no-magic-numbers
@@ -267,6 +268,49 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     type: ['ethereum'],
   },
+  tron: {
+    api: {
+      subql: '',
+      evolution: '',
+      dapp: '',
+      subscan: '',
+    },
+    erc20Token: {
+      bankingAddress: '',
+      mappingAddress: '',
+      proofAddress: '',
+    },
+    ethereumChain: {
+      chainId: '',
+      chainName: '',
+      nativeCurrency: {
+        decimals: NaN,
+      },
+      rpcUrls: [],
+    },
+    facade: {
+      logo: '',
+      logoWithText: '',
+    },
+    fullName: 'Tron',
+    isTest: false,
+    name: 'tron',
+    provider: {
+      rpc: '',
+      etherscan: '',
+    },
+    ss58Prefix: 18,
+    tokenContract: {
+      native: '',
+      ring: '', // e2d ring balance address
+      kton: '', // e2d kton balance address
+      registryEth: '', // e2d cross chain fee querying address
+      issuingDarwinia: '', // e2d issuing address
+      bankEthereum: '', // d2e redeem address
+      bankDarwinia: '', // e2d redeem deposit address
+    },
+    type: ['tron'],
+  },
 };
 
 export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
@@ -333,11 +377,12 @@ export const NETWORKS: NetConfig[] = chain([...NETWORK_GRAPH])
 
 export const AIRDROP_GRAPH = new Map<Departure, Arrival[]>([
   [{ network: Graph.ethereum, mode: 'native' }, [{ network: Graph.crab, status: 'available', mode: 'native' }]],
+  [{ network: Graph.tron, mode: 'native' }, [{ network: Graph.crab, status: 'available', mode: 'native' }]],
 ]);
 
-export const AIRPORTS: NetConfig[] = Object.values(NETWORK_CONFIG).filter((item) =>
-  ['ethereum', 'crab'].includes(item.name)
-);
+export const AIRPORTS: NetConfig[] = Object.values(NETWORK_CONFIG)
+  .filter((item) => ['ethereum', 'crab', 'tron'].includes(item.name))
+  .map((item) => omit(item, 'dvm'));
 
 /* -------------------------------------------------Network Simple-------------------------------------------------------- */
 

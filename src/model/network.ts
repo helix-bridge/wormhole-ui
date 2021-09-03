@@ -7,9 +7,11 @@ export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia';
 
 export type EthereumTypeNetwork = 'ethereum' | 'ropsten';
 
-export type Network = PolkadotTypeNetwork | EthereumTypeNetwork;
+export type TronTypeNetwork = 'tron';
 
-export type NetworkCategory = 'polkadot' | 'ethereum' | 'darwinia' | 'dvm';
+export type Network = PolkadotTypeNetwork | EthereumTypeNetwork | TronTypeNetwork;
+
+export type NetworkCategory = 'polkadot' | 'ethereum' | 'darwinia' | 'dvm' | 'tron';
 
 export type Token = 'ring' | 'kton' | 'native';
 
@@ -68,7 +70,9 @@ export interface NetConfig {
   type: NetworkCategory[];
 }
 
-export type NetworkConfig<T = NetConfig> = Config<PolkadotTypeNetwork, T> & Config<EthereumTypeNetwork, Omit<T, 'dvm'>>;
+export type NetworkConfig<T = NetConfig> = Config<PolkadotTypeNetwork, T> &
+  Config<EthereumTypeNetwork, Omit<T, 'dvm'>> &
+  Config<TronTypeNetwork, T>;
 
 /**
  * pending: initial state, indicate that the connection never launched.

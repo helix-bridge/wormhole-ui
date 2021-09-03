@@ -170,6 +170,7 @@ const config: ConnectConfig = {
   dvm: connectToEth,
   ethereum: connectToEth,
   polkadot: connectToPolkadot,
+  tron: connectToEth,
 };
 
 export const connect: ConnectFn<Connection> = (network, chainId) => {
