@@ -78,20 +78,24 @@ export type NetworkConfig<T = NetConfig> = Config<PolkadotTypeNetwork, T> &
  * pending: initial state, indicate that the connection never launched.
  */
 export type ConnectionStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected' | 'error';
-export type ConnectionType = 'polkadot' | 'metamask' | 'unknown';
+export type ConnectionType = 'polkadot' | 'metamask' | 'tron' | 'unknown';
 
-export type Connection<T = Network> = T extends PolkadotTypeNetwork
-  ? {
-      status: ConnectionStatus;
-      accounts: IAccountMeta[];
-      type: ConnectionType;
-      api: ApiPromise | null;
-    }
-  : { status: ConnectionStatus; accounts: IAccountMeta[]; type: ConnectionType; chainId: string };
+export interface Connection {
+  status: ConnectionStatus;
+  accounts: IAccountMeta[];
+  type: ConnectionType;
+  [key: string]: unknown;
+}
 
-export type PolkadotConnection = Connection<PolkadotTypeNetwork>;
+export interface PolkadotConnection extends Connection {
+  api: ApiPromise | null;
+}
 
-export type EthereumConnection = Connection<EthereumTypeNetwork>;
+export interface EthereumConnection extends Connection {
+  chainId: string;
+}
+
+export type TronConnection = Connection;
 
 export type NetworkFilter = (network: NetConfig) => boolean;
 

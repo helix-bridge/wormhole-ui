@@ -8,6 +8,7 @@ export declare global {
     less: any;
     web3: Web3;
     ethereum: any;
+    tronWeb: any;
     /* eslint-enable */
   }
 }

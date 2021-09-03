@@ -137,7 +137,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
 
     const isEthereum = isEthereumNetwork(state.network?.name) || isDvm;
 
-    if (isEthereum && window.ethereum.isConnected()) {
+    if ((isEthereum && window.ethereum.isConnected()) || state.network?.name === 'tron') {
       setConnection(initialConnection);
       setNetwork(null);
       return;

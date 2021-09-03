@@ -17,7 +17,14 @@ import {
   switchMapTo,
 } from 'rxjs';
 import { SHORT_DURATION } from '../../config';
-import { Connection, EthereumConnection, NetConfig, NetworkCategory, PolkadotConnection } from '../../model';
+import {
+  Connection,
+  EthereumConnection,
+  NetConfig,
+  NetworkCategory,
+  PolkadotConnection,
+  TronConnection,
+} from '../../model';
 import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent } from './network';
 import { switchMetamaskNetwork } from './switch';
 
@@ -26,6 +33,12 @@ type ConnectFn<T extends Connection> = (network: NetConfig, chainId?: string) =>
 type ConnectConfig = {
   [key in NetworkCategory]: ConnectFn<Connection>;
 };
+
+interface TronAddress {
+  base58: string;
+  hex: string;
+  name?: string;
+}
 
 export const getPolkadotConnection: (network: NetConfig) => Observable<PolkadotConnection> = (network) =>
   from(web3Enable('polkadot-js/apps')).pipe(
@@ -145,6 +158,22 @@ export const getEthConnection: () => Observable<EthereumConnection> = () => {
   );
 };
 
+export const getTronConnection: () => Observable<TronConnection> = () => {
+  const wallet = window.tronWeb.defaultAddress;
+  const mapData: (data: TronAddress) => TronConnection = (data) => ({
+    status: 'success',
+    accounts: [{ address: data.base58, meta: { name: data?.name ?? '', source: '', genesisHash: '' } }],
+    type: 'tron',
+  });
+  const obs: Observable<TronConnection> = new Observable((observer) => {
+    window.tronWeb.on('addressChanged', (data: TronAddress) => {
+      observer.next(mapData(data));
+    });
+  });
+
+  return obs.pipe(startWith<TronConnection>(mapData(wallet)));
+};
+
 const connectToPolkadot: ConnectFn<PolkadotConnection> = (network) => {
   if (!network) {
     return EMPTY;
@@ -165,12 +194,20 @@ const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {
   );
 };
 
+const connectToTron = () => {
+  if (!window.tronWeb) {
+    return EMPTY;
+  }
+
+  return getTronConnection();
+};
+
 const config: ConnectConfig = {
   darwinia: connectToPolkadot,
   dvm: connectToEth,
   ethereum: connectToEth,
   polkadot: connectToPolkadot,
-  tron: connectToEth,
+  tron: connectToTron,
 };
 
 export const connect: ConnectFn<Connection> = (network, chainId) => {
