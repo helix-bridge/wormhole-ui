@@ -164,11 +164,8 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
           />
         </Form.Item>
 
-        {isCross && isFromReady ? (
-          React.createElement(getDeparture(transfer), { form, setSubmit })
-        ) : (
-          <Airport form={form} setSubmit={setSubmit} />
-        )}
+        {isCross && isFromReady && React.createElement(getDeparture(transfer), { form, setSubmit })}
+        {!isCross && isFromReady && <Airport form={form} transfer={transfer} setSubmit={setSubmit} />}
 
         <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
           <SubmitButton {...transfer} requireTo />

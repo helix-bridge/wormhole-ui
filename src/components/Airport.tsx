@@ -1,101 +1,91 @@
 import { decodeAddress } from '@polkadot/util-crypto';
-import { Form, Input, message, Modal, Typography } from 'antd';
-import { useForm } from 'antd/lib/form/Form';
-import { isBoolean } from 'lodash';
-import { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { filter, from, map, Observable, switchMap } from 'rxjs';
+import { Form, Input, Modal, Typography } from 'antd';
+import { format, fromUnixTime } from 'date-fns';
+import { useEffect, useMemo, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
+import { from, map, Observable } from 'rxjs';
 import Web3 from 'web3';
-import { FORM_CONTROL } from '../config';
+import { DATE_TIME_FORMATE, FORM_CONTROL } from '../config';
 import { useApi } from '../hooks';
-import { BridgeFormProps, TransferFormValues } from '../model';
-import { applyModalObs, buf2hex } from '../utils';
-import { Airdrop } from './modal/Airdrop';
+import { BridgeFormProps, TransferFormValues, TransferNetwork } from '../model';
+import { buf2hex, copyTextToClipboard, getAirdropData, isValidAddress } from '../utils';
 import { AirdropSuccess } from './modal/AirdropSuccess';
 
 type AirportValues = TransferFormValues<{
   sender: string;
   recipient: string;
   signature: string;
+  amount: string;
 }>;
 
 interface SignRes {
-  sign: string;
   address: string;
-  raw: string;
+  msg: string;
+  sign: string;
+  signer: 'DarwiniaNetworkClaims';
+  version: string;
 }
 
 const { info } = Modal;
 
+const SNAPSHOT_TIMESTAMP = 1584683400;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function signEth({ recipient, sender }: any): Observable<SignRes> {
   const ss58Prefix = 42;
-  const address = buf2hex(decodeAddress(recipient, false, ss58Prefix));
-  const raw = ss58Prefix + address;
+  const address = buf2hex(decodeAddress(recipient, false, ss58Prefix).buffer);
+  // eslint-disable-next-line no-magic-numbers
+  const raw = 'Pay RINGs to the Crab account:' + address.slice(2);
   const web3 = new Web3(window.ethereum);
+  // FIXME password ?
   const signObs = from(web3.eth.personal.sign(raw, sender, ''));
 
-  // FIXME password ?
   return signObs.pipe(
     map((sign: string) => ({
-      sign,
       address: sender,
-      raw,
+      msg: raw,
+      sign,
+      signer: 'DarwiniaNetworkClaims',
+      version: '3',
     }))
   );
 }
 
-export function Airport({ setSubmit, form }: BridgeFormProps<AirportValues>) {
+export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportValues> & { transfer: TransferNetwork }) {
   const { t } = useTranslation();
   const [signature] = useState<string>('');
-  const [modalForm] = useForm();
   const {
     connection: { accounts },
   } = useApi();
-  const { address: account } = (accounts || [])[0] ?? '';
-  const updateSubmit = useCallback(() => {
-    const fn = () => (value: AirportValues) => {
-      applyModalObs<AirportValues>({
-        content: <Airdrop {...value} form={modalForm} />,
-        okText: t('Claim'),
-        okButtonProps: {
-          htmlType: 'submit',
-          size: 'large',
-        },
-        handleOk: (observer, close) => {
-          modalForm
-            .validateFields()
-            .then(() => {
-              const values = modalForm.getFieldsValue();
-
-              observer.next({ ...value, ...values } as AirportValues);
-              close();
-            })
-            .catch((err) => {
-              const msg = err?.errorFields[0]?.errors[0];
-
-              message.error(msg);
-            });
-        },
-      })
-        .pipe(
-          filter((result) => !isBoolean(result)),
-          switchMap((data) => signEth(data))
-        )
-        .subscribe(({ sign }) => {
-          info({
-            content: <AirdropSuccess signature={sign} />,
-            icon: null,
-            okText: t('OK'),
-          });
-        });
-    };
-    setSubmit(fn);
-  }, [modalForm, setSubmit, t]);
+  const [amount, setAmount] = useState('0');
+  const { address: account } = useMemo(() => (accounts || [])[0] ?? { address: '' }, [accounts]);
 
   useEffect(() => {
-    updateSubmit();
-  }, [updateSubmit]);
+    const num = getAirdropData(account, transfer.from!.name);
+
+    setAmount(num.toString());
+    form.setFieldsValue({ amount: num.toString() });
+  }, [account, form, transfer.from]);
+
+  useEffect(() => {
+    const fn = () => (value: AirportValues) => {
+      signEth(value).subscribe((data) => {
+        info({
+          icon: null,
+          content: <AirdropSuccess data={{ data }} />,
+          okText: <Trans>Copy</Trans>,
+          closable: true,
+          onOk: () => {
+            const INDENTATION = 4;
+
+            copyTextToClipboard(JSON.stringify(data, undefined, INDENTATION));
+            return Promise.reject();
+          },
+        });
+      });
+    };
+    setSubmit(fn);
+  }, [setSubmit]);
 
   useEffect(() => {
     form.setFieldsValue({ [FORM_CONTROL.sender]: account });
@@ -103,8 +93,60 @@ export function Airport({ setSubmit, form }: BridgeFormProps<AirportValues>) {
 
   return (
     <>
-      <Form.Item name={FORM_CONTROL.sender} className="hidden" rules={[{ required: true }]}>
-        <Input disabled value={account} />
+      <Form.Item
+        label={
+          <span className="capitalize">
+            {t('Connected to {{network}}', { network: form.getFieldValue(FORM_CONTROL.transfer)?.from?.name ?? '' })}
+          </span>
+        }
+        name={FORM_CONTROL.sender}
+        rules={[{ required: true }]}
+      >
+        <Input size="large" disabled value={account} />
+      </Form.Item>
+
+      <Form.Item label={<span className="capitalize">{t('Snapshot data')}</span>}>
+        <div className="flex flex-col px-4 py-2 rounded-lg bg-gray-900">
+          <span>{amount} RING</span>
+          <span>{format(fromUnixTime(SNAPSHOT_TIMESTAMP), DATE_TIME_FORMATE + ' zz')}</span>
+        </div>
+      </Form.Item>
+
+      <Form.Item
+        name={FORM_CONTROL.recipient}
+        label={t('Recipient')}
+        validateFirst
+        rules={[
+          { required: true },
+          {
+            validator(_, value) {
+              return isValidAddress(value, 'crab', true) ? Promise.resolve() : Promise.reject();
+            },
+            message: t('The address is wrong, please fill in a {{type}} address of the {{network}} network.', {
+              type: 'Crab',
+              network: 'Darwinia Crab',
+            }),
+          },
+        ]}
+      >
+        <Input size="large" placeholder={t('Darwinia Crab Network account')} />
+      </Form.Item>
+
+      <Form.Item
+        name={FORM_CONTROL.amount}
+        className="hidden"
+        rules={[
+          { required: true },
+          // {
+          //   validator(_, val: string) {
+          //     return new BN(val).gt(new BN(0))
+          //       ? Promise.resolve()
+          //       : Promise.reject(t('Non available token to claimed!'));
+          //   },
+          // },
+        ]}
+      >
+        <Input />
       </Form.Item>
 
       {signature && (
