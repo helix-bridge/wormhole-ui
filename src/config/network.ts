@@ -272,7 +272,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       subql: '',
       evolution: '',
-      dapp: '',
+      dapp: 'https://api.darwinia.network',
       subscan: '',
     },
     erc20Token: {
