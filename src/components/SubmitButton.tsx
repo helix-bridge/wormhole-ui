@@ -9,6 +9,7 @@ interface SubmitButtonProps extends ButtonProps {
   from: NetConfig | null;
   to: NetConfig | null;
   requireTo?: boolean;
+  hideSubmit?: boolean;
 }
 
 export function FromItemButton({ children, className, ...others }: ButtonProps) {
@@ -27,7 +28,14 @@ export function FromItemButton({ children, className, ...others }: ButtonProps) 
 }
 
 // eslint-disable-next-line complexity
-export function SubmitButton({ from, to, children, requireTo, disabled }: PropsWithChildren<SubmitButtonProps>) {
+export function SubmitButton({
+  from,
+  to,
+  children,
+  requireTo,
+  disabled,
+  hideSubmit = false,
+}: PropsWithChildren<SubmitButtonProps>) {
   const { t } = useTranslation();
   const {
     connection: { status },
@@ -74,9 +82,9 @@ export function SubmitButton({ from, to, children, requireTo, disabled }: PropsW
     return null;
   }
 
-  return (
+  return !hideSubmit ? (
     <FromItemButton disabled={(!!requireTo && !to) || disabled} htmlType="submit">
       {children || t('Submit')}
     </FromItemButton>
-  );
+  ) : null;
 }

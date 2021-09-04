@@ -111,6 +111,7 @@ export function Nets({
         }}
         animationRandom={random}
         mode={mode}
+        className="pr-4"
       />
 
       <Indicator canReverse={canReverse} onSwap={swap} arrival={vertices} />
@@ -124,6 +125,7 @@ export function Nets({
         }}
         animationRandom={random}
         mode={mode}
+        className="pr-4"
       />
 
       <Tooltip title={t('Reset Networks')}>

@@ -8,14 +8,15 @@ import { DownIcon } from '../icons';
 export type DestinationMode = 'default' | 'card';
 
 interface DestinationProps {
-  extra?: string | JSX.Element;
-  networks: NetConfig[];
-  title?: string;
-  onChange?: (net: NetConfig | null) => void;
-  value?: NetConfig | null;
-  defaultLogo?: string;
   animationRandom?: number | null;
+  className?: string;
+  defaultLogo?: string;
+  extra?: string | JSX.Element;
   mode?: DestinationMode;
+  networks: NetConfig[];
+  onChange?: (net: NetConfig | null) => void;
+  title?: string;
+  value?: NetConfig | null;
 }
 
 export function Destination({ mode = 'default', ...rest }: DestinationProps) {
@@ -112,12 +113,13 @@ function DestinationSelect({
   networks,
   value,
   onChange,
+  className,
   defaultLogo = 'image/network.png',
 }: DestinationProps) {
   const { t } = useTranslation();
 
   return (
-    <Form.Item label={title} rules={[{ required: true }]} className="relative w-full pr-4">
+    <Form.Item label={title} rules={[{ required: true }]} className={'relative w-full ' + className}>
       <Select
         allowClear
         size="large"
