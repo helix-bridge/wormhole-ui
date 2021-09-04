@@ -13,17 +13,47 @@ import { useApi } from './hooks';
 import { readStorage } from './utils/helper/storage';
 import { Nebula } from './components/Nebula';
 import { ThemeSwitch } from './components/ThemeSwitch';
+import { DownIcon } from './components/icons';
 
 const { Header, Content } = Layout;
 
 interface Nav {
   label: string;
   path: Path | string;
+  pathGroup?: string[];
 }
 
 const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
 const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
+const transferRecords: Nav = { label: 'Transfer Records', path: Path.history };
+const airdropRecords: Nav = { label: 'Airdrop Records', path: Path.airdropHistory };
+const records = [
+  { label: 'History Records', path: '', pathGroup: [Path.history, Path.airdropHistory] },
+  transferRecords,
+  airdropRecords,
+];
 const guide: Nav = { label: 'Guide', path: 'xxx' };
+
+function NavLink({ nav }: { nav: Nav }) {
+  const { t } = useTranslation();
+  const history = useHistory();
+
+  return (
+    <div
+      onClick={() => {
+        if (nav.path) {
+          history.push(nav.path);
+        }
+      }}
+      className={`${
+        nav.path === location.pathname || nav?.pathGroup?.includes(location.pathname) ? 'shadow-mock-bottom-border' : ''
+      } transition-all duration-300 ease-in-out text-gray-300 hover:text-gray-100 cursor-pointer`}
+      key={nav.label}
+    >
+      {t(nav.label)}
+    </div>
+  );
+}
 
 // eslint-disable-next-line complexity
 function App() {
@@ -31,8 +61,11 @@ function App() {
   const { enableTestNetworks, setEnableTestNetworks, isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
-  const history = useHistory();
-  const navMenus = useMemo(() => (isDev ? [crossChain, erc20Manager, guide] : [crossChain]), [isDev]);
+  const navMenus = useMemo(() => (isDev ? [crossChain, records, erc20Manager, guide] : [crossChain, records]), [isDev]);
+  const navMenusForMobile = useMemo(
+    () => (isDev ? [crossChain, ...records.slice(1), erc20Manager, guide] : [crossChain, ...records.slice(1)]),
+    [isDev]
+  );
 
   return (
     <Layout className="min-h-screen overflow-scroll">
@@ -53,19 +86,29 @@ function App() {
 
         <div className="flex xl:justify-between lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-24">
           <div className="hidden gap-8 lg:flex light:text-white">
-            {navMenus.map((nav) => (
-              <span
-                onClick={() => {
-                  history.push(nav.path);
-                }}
-                className={`${
-                  nav.path === location.pathname ? 'shadow-mock-bottom-border' : ''
-                } transition-all duration-300 ease-in-out text-gray-300 hover:text-gray-100 cursor-pointer`}
-                key={nav.label}
-              >
-                {t(nav.label)}
-              </span>
-            ))}
+            {navMenus.map((nav, index) =>
+              Array.isArray(nav) ? (
+                <Dropdown
+                  key={index}
+                  overlay={
+                    <Menu>
+                      {nav.slice(1).map((item) => (
+                        <Menu.Item key={item.path}>
+                          <Link to={item.path}>{t(item.label)}</Link>
+                        </Menu.Item>
+                      ))}
+                    </Menu>
+                  }
+                >
+                  <div className="flex items-center">
+                    <NavLink nav={nav[0]} />
+                    <DownIcon className="ml-2" />
+                  </div>
+                </Dropdown>
+              ) : (
+                <NavLink nav={nav} key={index} />
+              )
+            )}
           </div>
 
           <div className="flex justify-end items-center md:pl-8">
@@ -74,15 +117,11 @@ function App() {
             <Dropdown
               overlay={
                 <Menu>
-                  <Menu.Item key="cross-chain">
-                    <Link to={Path.root}>{t('Cross-chain')}</Link>
-                  </Menu.Item>
-                  <Menu.Item key="submit">
-                    <Link to={Path.register}>{t('Token Manager')}</Link>
-                  </Menu.Item>
-                  <Menu.Item key="guide">
-                    <Link to="xxx">{t('Guide')}</Link>
-                  </Menu.Item>
+                  {navMenusForMobile.map((item) => (
+                    <Menu.Item key={item.path}>
+                      <Link to={item.path}>{t(item.label)}</Link>
+                    </Menu.Item>
+                  ))}
                 </Menu>
               }
               className="lg:hidden"
