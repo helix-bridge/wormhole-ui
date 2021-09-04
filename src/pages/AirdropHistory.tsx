@@ -8,7 +8,7 @@ export function AirdropHistory() {
       className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow  dark:border-transparent"
       title={<Trans>Airdrop History</Trans>}
     >
-      <AirdropRecords from="darwinia" to="crab" />
+      <AirdropRecords />
     </Card>
   );
 }

@@ -1,95 +1,126 @@
 import { CheckCircleFilled, CloseCircleOutlined } from '@ant-design/icons';
+import { Form } from 'antd';
 import BN from 'bn.js';
 import { format, fromUnixTime } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { map } from 'rxjs';
-import { ajax } from 'rxjs/ajax';
 import Web3 from 'web3';
-import { DATE_TIME_FORMATE, NETWORK_CONFIG, NETWORK_LIGHT_THEME, SubscanApiPath } from '../../config';
-import { useApi } from '../../hooks';
-import { ClaimsRes, Network, SResponse } from '../../model';
-import { apiUrl, fromWei, getAirdropData } from '../../utils';
-import { Des } from '../modal/Des';
-
-export interface AirdropProps {
-  from: Network;
-  to: Network;
-}
+import { DATE_TIME_FORMATE, FORM_CONTROL, NETWORK_CONFIG, NETWORK_LIGHT_THEME, SubscanApiPath } from '../../config';
+import { airportsDepartureFilter, useApi, useNetworks } from '../../hooks';
+import { ClaimsRes, NetConfig, Network, SubscanResponse } from '../../model';
+import { apiUrl, fromWei, getAirdropData, getInitialSetting, isSameNetConfig, rxGet } from '../../utils';
+import { Destination } from '../controls/Destination';
+import { LinkIndicator } from '../LinkIndicator';
+import { SubmitButton } from '../SubmitButton';
 
 const SNAPSHOT_TIMESTAMP = 1584683400;
 
 // eslint-disable-next-line complexity
-export function AirdropRecords({ from, to }: AirdropProps) {
+export function AirdropRecords() {
   const { t } = useTranslation();
   const {
-    connection: { accounts },
+    connection: { accounts, status },
+    network,
   } = useApi();
-  const { address: sender } = (accounts || [])[0] ?? '';
   const [claimAmount, setClaimAmount] = useState(new BN(0));
   const [target, setTarget] = useState('');
-  const fromNetwork = NETWORK_CONFIG[from];
-  const toNetwork = NETWORK_CONFIG[to];
-  const color = NETWORK_LIGHT_THEME[fromNetwork.name as Network]['@project-main-bg'];
-  const amount = useMemo(() => getAirdropData(sender, fromNetwork.name), [sender, fromNetwork]);
+  const { fromNetworks, setFromFilters } = useNetworks(false);
+  const [fromNetwork, setFromNetwork] = useState<NetConfig | null>(() => {
+    const from = getInitialSetting('from', null);
+    return fromNetworks.find((item) => item.name === from) ?? null;
+  });
+  const isConnectionReady = useMemo(() => {
+    return status === 'success' && isSameNetConfig(network, fromNetwork);
+  }, [fromNetwork, network, status]);
+  const color = NETWORK_LIGHT_THEME[fromNetwork?.name ?? ('pangolin' as Network)]['@project-main-bg'];
+  const { address: sender } = useMemo(() => (accounts || [])[0] ?? '', [accounts]);
+  const amount = useMemo(
+    () => (fromNetwork?.name ? getAirdropData(sender, fromNetwork.name) : 0),
+    [sender, fromNetwork]
+  );
 
   useEffect(() => {
-    const sub$$ = ajax<SResponse<ClaimsRes>>({
-      url: apiUrl(toNetwork!.api.subscan, SubscanApiPath.claims),
-      method: 'POST',
-      body: { address: sender },
-    })
-      .pipe(map((res) => res.response.data?.info))
-      .subscribe((info = []) => {
-        const data = info[0] as { amount: number; target: string };
+    setFromFilters([airportsDepartureFilter]);
+  }, [setFromFilters]);
 
-        if (data) {
-          setClaimAmount(Web3.utils.toBN(data.amount));
-          setTarget(data.target);
-        }
+  useEffect(() => {
+    const toNetwork = NETWORK_CONFIG.crab;
+    // FIXME: api error because of cors
+    const sub$$ = rxGet<SubscanResponse<ClaimsRes>>({
+      url: apiUrl(toNetwork.api.subscan, SubscanApiPath.claims),
+      params: { address: sender },
+    })
+      .pipe(map((res) => res?.data?.info))
+      .subscribe({
+        next: (info = []) => {
+          const data = info[0] as { amount: number; target: string };
+
+          if (data) {
+            setClaimAmount(Web3.utils.toBN(data.amount));
+            setTarget(data.target);
+          }
+        },
+        error: (_) => {
+          console.error('%c subscan api error:', 'font-size:13px; background:pink; color:#bf2c9f;');
+        },
       });
 
     return () => {
       sub$$.unsubscribe();
     };
-  }, [sender, toNetwork]);
+  }, [sender]);
 
   return (
-    <>
-      <Des
-        title={<span className="capitalize">{t('Connected to {{network}}', { network: fromNetwork?.name })}</span>}
-        content={sender}
-        icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}
-      ></Des>
+    <Form layout="vertical" initialValues={{ host: fromNetwork }}>
+      <Form.Item name="host" label={t('Host network')} rules={[{ required: true }]} className="mb-0">
+        <Destination
+          networks={fromNetworks}
+          extra={<LinkIndicator config={fromNetwork} />}
+          onChange={(value) => {
+            if (value) {
+              setFromNetwork(value);
+            }
+          }}
+        />
+      </Form.Item>
 
-      <Des
-        title={<span className="capitalize">{t('Snapshot data')}</span>}
-        content={
-          <span>
-            {claimAmount.eq(new BN(0)) ? fromWei({ value: new BN(amount || 0) }) : fromWei({ value: claimAmount })} RING
-            <p>{format(fromUnixTime(SNAPSHOT_TIMESTAMP), DATE_TIME_FORMATE + ' zz')}</p>
-          </span>
-        }
-        icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}
-      ></Des>
+      {isConnectionReady && (
+        <>
+          <Form.Item
+            label={
+              <span className="capitalize">{t('Connected to {{network}}', { network: fromNetwork?.name ?? '' })}</span>
+            }
+            name={FORM_CONTROL.sender}
+          >
+            <div className="flex flex-col px-4 py-2 rounded-lg bg-gray-900">{sender}</div>
+          </Form.Item>
 
-      <Des
-        title={t('Destination')}
-        content={target || '--'}
-        icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}
-      ></Des>
+          <Form.Item name={FORM_CONTROL.recipient} hidden={!isConnectionReady} label={t('Destination')}>
+            <div className="flex flex-col px-4 py-2 rounded-lg bg-gray-900">{target || '-'}</div>
+          </Form.Item>
 
-      <Des
-        title={t('Claim Result')}
-        content={t(target ? 'Claims' : 'Not Claimed')}
-        icon={
-          target ? (
-            <CheckCircleFilled style={{ color }} className="text-2xl" />
-          ) : (
-            <CloseCircleOutlined style={{ color: 'red' }} className="text-2xl" />
-          )
-        }
-      ></Des>
-    </>
+          <Form.Item label={<span className="capitalize">{t('Snapshot data')}</span>}>
+            <div className="flex flex-col px-4 py-2 rounded-lg bg-gray-900">
+              {claimAmount.eq(new BN(0)) ? fromWei({ value: new BN(amount || 0) }) : fromWei({ value: claimAmount })}{' '}
+              RING
+              <span>{format(fromUnixTime(SNAPSHOT_TIMESTAMP), DATE_TIME_FORMATE + ' zz')}</span>
+            </div>
+          </Form.Item>
+
+          <Form.Item label={t('Claim Result')}>
+            <div className="flex items-center px-4 py-2 rounded-lg bg-gray-900">
+              {target ? (
+                <CheckCircleFilled style={{ color }} className="text-2xl" />
+              ) : (
+                <CloseCircleOutlined style={{ color: 'red' }} className="text-2xl" />
+              )}
+              <span className="ml-4">{t(target ? 'Claims' : 'Not Claimed')}</span>
+            </div>
+          </Form.Item>
+        </>
+      )}
+      <SubmitButton from={fromNetwork} to={NETWORK_CONFIG.crab} hideSubmit></SubmitButton>
+    </Form>
   );
 }
