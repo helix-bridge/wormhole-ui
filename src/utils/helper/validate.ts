@@ -23,6 +23,10 @@ export const isValidAddress = (address: string, network: Network | NetworkCatego
     return strict ? isSS58Address(address, NETWORK_CONFIG[network as Network].ss58Prefix) : isSS58Address(address);
   }
 
+  if (network === 'tron') {
+    return window.tronWeb && window.tronWeb.isAddress(address);
+  }
+
   return false;
 };
 

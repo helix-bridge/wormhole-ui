@@ -46,7 +46,10 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
  * @params {string} networkType
  * @params {number} status - token register status 1:registered 2:registering
  */
-export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatus = RegisterStatus.unregister) => {
+export const useKnownErc20Tokens = (
+  network: Network | null,
+  status: Erc20RegisterStatus = RegisterStatus.unregister
+) => {
   const [loading, setLoading] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const updateTokens = useCallback(
@@ -72,8 +75,9 @@ export const useKnownErc20Tokens = (network: Network, status: Erc20RegisterStatu
   );
 
   useEffect(() => {
+    // eslint-disable-next-line complexity
     (async () => {
-      if (connection.type !== 'metamask') {
+      if (connection.type !== 'metamask' || network === null) {
         updateTokens([]);
         return;
       }

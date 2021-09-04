@@ -98,6 +98,7 @@ export const isTraceable = (net: NetConfig | null, isCross = true) =>
 export const isSameNetworkCurry = curry(isSameNetwork);
 export const isPolkadotNetwork = isSpecifyNetworkType('polkadot');
 export const isEthereumNetwork = isSpecifyNetworkType('ethereum');
+export const isTronNetwork = isSpecifyNetworkType('tron');
 
 export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';

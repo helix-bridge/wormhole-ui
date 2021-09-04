@@ -73,7 +73,7 @@ export function AirdropRecords() {
 
   return (
     <Form layout="vertical" initialValues={{ host: fromNetwork }}>
-      <Form.Item name="host" label={t('Host network')} rules={[{ required: true }]} className="mb-0">
+      <Form.Item name="host" label={t('Host Network')} rules={[{ required: true }]} className="mb-0">
         <Destination
           networks={fromNetworks}
           extra={<LinkIndicator config={fromNetwork} />}

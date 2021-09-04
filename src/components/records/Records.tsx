@@ -1,10 +1,9 @@
 import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
 import { flow, uniqBy } from 'lodash';
-import { ReactElement, useCallback, useMemo, useReducer, useRef, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Subscription } from 'rxjs';
-import useDeepCompareEffect from 'use-deep-compare-effect';
 import { NETWORKS, NETWORK_CONFIG } from '../../config';
 import {
   Action,
@@ -12,6 +11,7 @@ import {
   D2EHistoryRes,
   HistoryReq,
   HistoryRouteParam,
+  Network,
   Paginator,
   RedeemHistory,
   RingBurnHistory,
@@ -24,6 +24,7 @@ import {
   getVerticesFromDisplayName,
   isEthereumNetwork,
   isPolkadotNetwork,
+  isTronNetwork,
   isValidAddress,
   queryD2ERecords,
   queryE2DGenesisRecords,
@@ -35,13 +36,14 @@ import { E2DRecord } from './E2DRecord';
 type HistoryData<T> = { [key in HistoryRouteParam['state']]: T | null };
 
 const { TabPane } = Tabs;
+const TRON_DEPARTURE: { name: string; network: Network } = { name: NETWORK_CONFIG.tron.fullName, network: 'tron' };
 const DEPARTURES = uniqBy(
   NETWORKS.map((item) => ({
     name: getDisplayName(item),
     network: item.name,
   })),
   'name'
-);
+).concat([TRON_DEPARTURE]);
 
 const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list?.length || 0;
 const totalInitialState = {
@@ -60,12 +62,10 @@ function totalReducer(state: HistoryData<number>, action: Action<HistoryRoutePar
 // eslint-disable-next-line complexity
 export function Records() {
   const { t } = useTranslation();
-  const inputRef = useRef<Input>(null);
   const { search } = useLocation<HistoryRouteParam>();
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
   const [network, setNetwork] = useState(searchParams.network || DEPARTURES[0].network);
-  const [address, setAddress] = useState(searchParams.sender ?? '');
   const [paginator, setPaginator] = useState<Paginator>({ row: 10, page: 0 });
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,24 +87,14 @@ export function Records() {
     (key: HistoryRouteParam['state']) => {
       let nodes: ReactElement[] | undefined = [];
 
-      if (isEthereumNetwork(network)) {
-        if (isGenesis) {
-          nodes = ((sourceData[key]?.list || []) as RedeemHistory[]).map((item, index) => (
-            <E2DRecord
-              record={item}
-              network={NETWORK_CONFIG[network || 'ethereum']}
-              key={item.block_timestamp || index}
-            />
-          ));
-        } else {
-          nodes = ((sourceData[key]?.list || []) as RingBurnHistory[]).map((item, index) => (
-            <E2DRecord
-              record={item}
-              network={NETWORK_CONFIG[network || 'ethereum']}
-              key={item.block_timestamp || index}
-            />
-          ));
-        }
+      if (isEthereumNetwork(network) || isTronNetwork(network)) {
+        nodes = ((sourceData[key]?.list || []) as (RingBurnHistory | RedeemHistory)[]).map((item, index) => (
+          <E2DRecord
+            record={item}
+            network={NETWORK_CONFIG[network || 'ethereum']}
+            key={item.block_timestamp || index}
+          />
+        ));
       } else if (isPolkadotNetwork(network)) {
         nodes = ((sourceData[key]?.list || []) as D2EHistory[]).map((item) => (
           <D2ERecord
@@ -130,46 +120,55 @@ export function Records() {
         </>
       );
     },
-    [activeKey, isGenesis, loading, network, sourceData, t, total]
+    [activeKey, loading, network, sourceData, t, total]
   );
 
-  useDeepCompareEffect(() => {
-    const params: HistoryReq = {
-      network,
-      address,
-      paginator,
-      confirmed: activeKey === 'completed',
-    };
-    const observer = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      next: (res: any) => {
-        setSourceData({ ...sourceData, [activeKey]: res });
-        setTotal({ type: activeKey, payload: count(res) });
-      },
-      complete: () => setLoading(false),
-    };
-    let subscription: Subscription;
+  const queryRecords = useCallback(
+    // eslint-disable-next-line complexity
+    (addr: string) => {
+      const params: HistoryReq = {
+        network,
+        address: addr,
+        paginator,
+        confirmed: activeKey === 'completed',
+      };
+      const observer = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        next: (res: any) => {
+          setSourceData({ ...sourceData, [activeKey]: res });
+          setTotal({ type: activeKey, payload: count(res) });
+        },
+        complete: () => setLoading(false),
+      };
+      let subscription: Subscription;
 
-    setLoading(true);
+      setLoading(true);
 
-    if (isEthereumNetwork(network)) {
-      if (isGenesis) {
-        subscription = queryE2DGenesisRecords(params).subscribe(observer);
+      if (isEthereumNetwork(network)) {
+        if (isGenesis) {
+          subscription = queryE2DGenesisRecords(params).subscribe(observer);
+        } else {
+          subscription = queryE2DRecords(params).subscribe(observer);
+        }
+      } else if (isPolkadotNetwork(network)) {
+        subscription = queryD2ERecords(params).subscribe(observer);
+      } else if (isTronNetwork(network)) {
+        subscription = queryE2DGenesisRecords({
+          ...params,
+          address: window.tronWeb ? window.tronWeb.address.toHex(addr) : '',
+        }).subscribe(observer);
       } else {
-        subscription = queryE2DRecords(params).subscribe(observer);
+        setLoading(false);
       }
-    } else if (isPolkadotNetwork(network)) {
-      subscription = queryD2ERecords(params).subscribe(observer);
-    } else {
-      setLoading(false);
-    }
 
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    };
-  }, [network, address, paginator, activeKey, isGenesis]);
+      return () => {
+        if (subscription) {
+          subscription.unsubscribe();
+        }
+      };
+    },
+    [network, paginator, activeKey, sourceData, isGenesis]
+  );
 
   return (
     <>
@@ -181,11 +180,6 @@ export function Records() {
             defaultValue={searchParams?.network || DEPARTURES[0].network}
             className="capitalize"
             onSelect={(name: string) => {
-              if (!canUpdate(address, name.toLowerCase())) {
-                setAddress('');
-                inputRef.current?.setValue('');
-              }
-
               const departure = DEPARTURES.find((item) => item.name.toLowerCase() === name.toLowerCase())!.network;
 
               setNetwork(departure);
@@ -224,10 +218,11 @@ export function Records() {
           <Input.Search
             defaultValue={searchParams?.sender || ''}
             loading={loading}
-            ref={inputRef}
+            // ref={inputRef}
             onSearch={(value) => {
               if (canUpdate(value, network)) {
-                setAddress(value);
+                // setAddress(value);
+                queryRecords(value);
               } else {
                 message.error(t(`Invalid ${network} format address`));
               }

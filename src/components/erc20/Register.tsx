@@ -46,7 +46,7 @@ export function Register() {
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { tokens, updateTokens } = useKnownErc20Tokens(network!.name, RegisterStatus.registering);
+  const { tokens, updateTokens } = useKnownErc20Tokens(network?.name ?? null, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(tokens), [tokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
@@ -106,7 +106,7 @@ export function Register() {
       }}
       validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
     >
-      <Form.Item name="host" label={t('Host network')} rules={[{ required: true }]}>
+      <Form.Item name="host" label={t('Host Network')} rules={[{ required: true }]}>
         <Destination
           networks={networks}
           extra={<LinkIndicator config={net} />}
