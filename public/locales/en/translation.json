@@ -85,7 +85,6 @@
   "Symbol": "Symbol",
   "Terms of Use": "Terms of Use",
   "Test": "Test",
-  "The address is wrong, please fill in a substrate address of the {{network}} network.": "The address is wrong, please fill in a substrate address of the {{network}} network.",
   "The address is wrong, please fill in a {{type}} address of the {{network}} network.": "The address is wrong, please fill in a {{type}} address of the {{network}} network.",
   "The connected network is not the same as the network selected, do you want switch to the {{network}} network?": "The connected network is not the same as the network selected, do you want switch to the {{network}} network?",
   "The current network is connected to {{network}}": "The current network is connected to {{network}}",
