@@ -85,7 +85,6 @@
   "Symbol": "代币符号",
   "Terms of Use": "使用条款",
   "Test": "测试",
-  "The address is wrong, please fill in a substrate address of the {{network}} network.": "发送账号错误，请填写 substrate 格式的 {{network}} 网络账号",
   "The address is wrong, please fill in a {{type}} address of the {{network}} network.": "地址错误，请填写一个 {{type}} 格式的 {{network}} 网络地址",
   "The connected network is not the same as the network selected, do you want switch to the {{network}} network?": "已连接的网络和当前选择的网络不一致，需要切换到 {{network}} 网络吗？",
   "The current network is connected to {{network}}": "当前已连接至 {{network}} 网络",
