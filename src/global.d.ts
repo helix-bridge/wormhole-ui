@@ -9,6 +9,7 @@ export declare global {
     web3: Web3;
     ethereum: any;
     tronWeb: any;
+    tronLink: any;
     /* eslint-enable */
   }
 }

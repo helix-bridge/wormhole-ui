@@ -28,7 +28,7 @@ import {
   PolkadotConnection,
   TronConnection,
 } from '../../model';
-import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkInstalled } from './network';
+import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkReady } from './network';
 import { switchMetamaskNetwork } from './switch';
 
 type ConnectFn<T extends Connection> = (network: NetConfig, chainId?: string) => Observable<T>;
@@ -182,11 +182,12 @@ const showWarning = (plugin: string, downloadUrl: string) =>
     title: <Trans>Missing Wallet Plugin</Trans>,
     content: (
       <Trans i18nKey="MissingPlugin">
-        We need {{ plugin }} plugin to continue.
+        We need {{ plugin }} plugin to continue. Please
         <Link href={downloadUrl} target="_blank">
-          Install
+          {' '}
+          Install{' '}
         </Link>
-        it now
+        or unlock it first.
       </Trans>
     ),
     okText: <Trans>OK</Trans>,
@@ -217,15 +218,19 @@ const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {
 };
 
 const connectToTron = () => {
-  if (!isTronLinkInstalled()) {
-    showWarning(
-      'tronLink',
-      'https://chrome.google.com/webstore/detail/tronlink%EF%BC%88%E6%B3%A2%E5%AE%9D%E9%92%B1%E5%8C%85%EF%BC%89/ibnejdfjmmkpcnlpebklmnkoeoihofec'
-    );
-    return EMPTY;
-  }
-
-  return getTronConnection();
+  return from(isTronLinkReady()).pipe(
+    switchMap((isReady) => {
+      if (!isReady) {
+        showWarning(
+          'tronLink',
+          'https://chrome.google.com/webstore/detail/tronlink%EF%BC%88%E6%B3%A2%E5%AE%9D%E9%92%B1%E5%8C%85%EF%BC%89/ibnejdfjmmkpcnlpebklmnkoeoihofec'
+        );
+        return EMPTY;
+      } else {
+        return getTronConnection();
+      }
+    })
+  );
 };
 
 const config: ConnectConfig = {

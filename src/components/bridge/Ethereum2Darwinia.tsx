@@ -79,7 +79,8 @@ async function getRingBalance(account: string, config: NetConfig): Promise<BN | 
     console.error(
       '%c [ get ring balance in ethereum error ]',
       'font-size:13px; background:pink; color:#bf2c9f;',
-      error.message
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).message
     );
 
     return null;
@@ -98,7 +99,8 @@ async function getKtonBalance(account: string, config: NetConfig): Promise<BN | 
     console.error(
       '%c [ get kton balance in ethereum error ]',
       'font-size:13px; background:pink; color:#bf2c9f;',
-      error.message
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).message
     );
   }
 
