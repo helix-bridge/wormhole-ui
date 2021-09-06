@@ -104,8 +104,22 @@ export function isMetamaskInstalled(): boolean {
   return typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
 }
 
-export function isTronLinkInstalled(): boolean {
-  return typeof window.tronWeb !== 'undefined';
+/**
+ * Unlike metamask, it does not lead the user to unlock the wallet.
+ * Tron link may not be initialized, so if it is not detected successfully, delay 2 seconds and detect again.
+ * FIXME: If the wallet status changes from unlocked to locked, the account of the last user use will still be available
+ */
+export async function isTronLinkReady(): Promise<boolean> {
+  if (window.tronWeb && window.tronWeb.defaultAddress.base58) {
+    return true;
+  }
+
+  return await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(window.tronWeb && window.tronWeb.defaultAddress.base58);
+      // eslint-disable-next-line no-magic-numbers
+    }, 2000);
+  });
 }
 
 export function getNetworkMode(config: NetConfig): NetworkMode {

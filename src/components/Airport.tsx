@@ -1,15 +1,15 @@
 import { decodeAddress } from '@polkadot/util-crypto';
-import { Form, Input, Modal, Typography } from 'antd';
+import { Form, Input, message, Typography } from 'antd';
+import BN from 'bn.js';
 import { format, fromUnixTime } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
-import { from, map, Observable, of } from 'rxjs';
+import { useTranslation } from 'react-i18next';
+import { catchError, EMPTY, from, map, Observable, of } from 'rxjs';
 import Web3 from 'web3';
 import { DATE_TIME_FORMATE, FORM_CONTROL } from '../config';
 import { useApi } from '../hooks';
 import { BridgeFormProps, TransferFormValues, TransferNetwork } from '../model';
-import { buf2hex, copyTextToClipboard, getAirdropData, isValidAddress } from '../utils';
-import { AirdropSuccess } from './modal/AirdropSuccess';
+import { buf2hex, getAirdropData, isValidAddress } from '../utils';
 
 type AirportValues = TransferFormValues<{
   sender: string;
@@ -25,8 +25,6 @@ interface SignRes {
   signer: 'DarwiniaNetworkClaims';
   version: string;
 }
-
-const { info } = Modal;
 
 const SNAPSHOT_TIMESTAMP = 1584683400;
 
@@ -49,13 +47,20 @@ function signWith(data: AirportValues): Observable<SignRes> {
   }
 
   return signObs.pipe(
-    map((sign: string) => ({
-      address: come?.name === 'tron' ? window.tronWeb.address.toHex(sender) : sender,
-      msg: raw,
-      sign,
-      signer: 'DarwiniaNetworkClaims',
-      version: '3',
-    }))
+    map(
+      (sign: string) =>
+        ({
+          address: come?.name === 'tron' ? window.tronWeb.address.toHex(sender) : sender,
+          msg: raw,
+          sign,
+          signer: 'DarwiniaNetworkClaims',
+          version: '3',
+        } as SignRes)
+    ),
+    catchError((err: string) => {
+      message.error(err);
+      return EMPTY;
+    })
   );
 }
 
@@ -77,23 +82,13 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
 
   useEffect(() => {
     const fn = () => (value: AirportValues) => {
-      signWith(value).subscribe((data) => {
-        info({
-          icon: null,
-          content: <AirdropSuccess data={{ data }} />,
-          okText: <Trans>Copy</Trans>,
-          closable: true,
-          onOk: () => {
-            const INDENTATION = 4;
-
-            copyTextToClipboard(JSON.stringify(data, undefined, INDENTATION));
-            return Promise.reject();
-          },
-        });
+      signWith(value).subscribe(() => {
+        message.success(t('Claim success!'));
       });
     };
+
     setSubmit(fn);
-  }, [setSubmit]);
+  }, [setSubmit, t]);
 
   useEffect(() => {
     form.setFieldsValue({ [FORM_CONTROL.sender]: account });
@@ -113,7 +108,19 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
         <Input size="large" disabled value={account} />
       </Form.Item>
 
-      <Form.Item label={<span className="capitalize">{t('Snapshot data')}</span>}>
+      <Form.Item
+        name={FORM_CONTROL.amount}
+        label={<span className="capitalize">{t('Snapshot data')}</span>}
+        rules={[
+          { required: true },
+          {
+            validator(_, val: string) {
+              return new BN(val).lt(new BN(0)) ? Promise.resolve() : Promise.reject();
+            },
+            message: t('No available RING for claiming'),
+          },
+        ]}
+      >
         <div className="flex flex-col px-4 py-2 rounded-lg bg-gray-900">
           <span>{amount} RING</span>
           <span>{format(fromUnixTime(SNAPSHOT_TIMESTAMP), DATE_TIME_FORMATE + ' zz')}</span>
@@ -140,22 +147,9 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
         <Input size="large" placeholder={t('Darwinia Crab Network account')} />
       </Form.Item>
 
-      <Form.Item
-        name={FORM_CONTROL.amount}
-        className="hidden"
-        rules={[
-          { required: true },
-          // {
-          //   validator(_, val: string) {
-          //     return new BN(val).gt(new BN(0))
-          //       ? Promise.resolve()
-          //       : Promise.reject(t('Non available token to claimed!'));
-          //   },
-          // },
-        ]}
-      >
+      {/* <Form.Item name={FORM_CONTROL.amount} className="hidden" rules={[{ required: true }]}>
         <Input />
-      </Form.Item>
+      </Form.Item> */}
 
       {signature && (
         <Form.Item label={t('Signature')}>
