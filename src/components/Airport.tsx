@@ -117,7 +117,7 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
             validator(_, val: string) {
               return new BN(val).lt(new BN(0)) ? Promise.resolve() : Promise.reject();
             },
-            message: t('No available RING for claiming'),
+            message: t('No available CRING for claiming'),
           },
         ]}
       >

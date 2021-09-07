@@ -60,7 +60,7 @@
   "Network switch failed, please switch it in the metamask plugin": "网络切换失败，请在 metamask 插件中操作",
   "No Data": "暂无数据",
   "No Deposits": "没有存单",
-  "No available RING for claiming": "没有可供领取的 RING",
+  "No available CRING for claiming": "没有可供领取的 CRING",
   "OK": "好的",
   "Payment Account": "支付地址",
   "Please be sure to fill in the real Darwinia mainnet account, and keep the account recovery files such as mnemonic properly.": "请务必填写真实的 Darwinia 主网地址，并妥善保管助记词等账号恢复文件。",
