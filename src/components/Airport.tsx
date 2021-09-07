@@ -137,10 +137,7 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
             validator(_, value) {
               return isValidAddress(value, 'crab', true) ? Promise.resolve() : Promise.reject();
             },
-            message: t('The address is wrong, please fill in a {{type}} address of the {{network}} network.', {
-              type: 'substrate',
-              network: 'Darwinia Crab',
-            }),
+            message: t('Please enter a valid {{network}} address', { network: 'Darwinia Crab' }),
           },
         ]}
       >
