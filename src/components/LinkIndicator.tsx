@@ -21,7 +21,7 @@ interface LinkIndicatorProps {
 // eslint-disable-next-line complexity
 export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
   const { t } = useTranslation();
-  const { connection, network, setNetwork } = useApi();
+  const { connection, network, connectNetwork } = useApi();
   const [isConsistent, setIsConsistent] = useState(false);
   const [connectionConfig, setConnectionConfig] = useState<NetConfig | null>(null);
 
@@ -67,7 +67,7 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
       <Popover
         content={
           <div className="max-w-sm flex flex-col">
-            {config?.name && showSwitch ? (
+            {config?.name && showSwitch && !isConsistent ? (
               <>
                 <span>
                   {t(
@@ -77,7 +77,8 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
                 </span>
                 <Button
                   onClick={() => {
-                    setNetwork(config);
+                    // FIXME: 如果是因为 chainId 变化导致的不一致，用户点了后，需要再点一次 chainId校验 通知中的按钮才能触发 metamask 网络切换
+                    connectNetwork(config);
                   }}
                   className="self-end mt-2"
                 >
