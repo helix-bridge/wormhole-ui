@@ -135,6 +135,7 @@ export function Records() {
       const observer = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         next: (res: any) => {
+          res = Array.isArray(res) ? { count: res.length, list: res } : res;
           setSourceData({ ...sourceData, [activeKey]: res });
           setTotal({ type: activeKey, payload: count(res) });
         },
