@@ -100,7 +100,8 @@ export const useKnownErc20Tokens = (
         console.warn(
           '%c [ error in useAllToken hook ]-56',
           'font-size:13px; background:pink; color:#bf2c9f;',
-          error.message
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as unknown as any).message
         );
       } finally {
         setLoading(false);
