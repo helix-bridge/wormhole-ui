@@ -177,6 +177,7 @@ function RoadIndicatorLine({ canReverse, arrival, onSwap }: RoadIndicatorProps) 
         shape="circle"
         icon={<SwapOutlined className="transform rotate-90" />}
         onClick={onSwap}
+        type="primary"
         className="flex items-center justify-center transform translate-x-1 translate-y-7"
       ></Button>
     ) : (
@@ -184,6 +185,7 @@ function RoadIndicatorLine({ canReverse, arrival, onSwap }: RoadIndicatorProps) 
         size="small"
         shape="circle"
         icon={<ArrowDownOutlined />}
+        type="primary"
         className="flex items-center justify-center transform translate-x-1 translate-y-7"
       />
     );
@@ -191,7 +193,7 @@ function RoadIndicatorLine({ canReverse, arrival, onSwap }: RoadIndicatorProps) 
 
   return (
     <div
-      className={`absolute top-12 bottom-12 -right-1 border border-gray-600 border-l-0 w-4 ${
+      className={`absolute top-12 bottom-12 -right-1 border border-gray-300 dark:border-gray-600 border-l-0 w-4 rounded-r-md ${
         arrival?.status === 'pending' ? 'border-dashed' : 'border-solid'
       }`}
     >
