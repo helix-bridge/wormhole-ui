@@ -26,12 +26,6 @@ interface Nav {
 const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
 const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
 const transferRecords: Nav = { label: 'Transfer Records', path: Path.history };
-const airdropRecords: Nav = { label: 'Airdrop Records', path: Path.airdropHistory };
-const records = [
-  { label: 'History Records', path: '', pathGroup: [Path.history, Path.airdropHistory] },
-  transferRecords,
-  airdropRecords,
-];
 const guide: Nav = { label: 'Guide', path: 'xxx' };
 
 function NavLink({ nav }: { nav: Nav }) {
@@ -61,9 +55,8 @@ function App() {
   const { enableTestNetworks, setEnableTestNetworks, isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
-  const navMenus = useMemo(() => (isDev ? [crossChain, records, erc20Manager, guide] : [crossChain, records]), [isDev]);
-  const navMenusForMobile = useMemo(
-    () => (isDev ? [crossChain, ...records.slice(1), erc20Manager, guide] : [crossChain, ...records.slice(1)]),
+  const navMenus = useMemo(
+    () => (isDev ? [crossChain, transferRecords, erc20Manager, guide] : [crossChain, transferRecords]),
     [isDev]
   );
 
@@ -117,7 +110,7 @@ function App() {
             <Dropdown
               overlay={
                 <Menu>
-                  {navMenusForMobile.map((item) => (
+                  {navMenus.map((item) => (
                     <Menu.Item key={item.path}>
                       <Link to={item.path}>{t(item.label)}</Link>
                     </Menu.Item>
