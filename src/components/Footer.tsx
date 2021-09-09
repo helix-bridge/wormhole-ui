@@ -11,24 +11,24 @@ type FooterProps = LanguageProps & { className?: string };
 
 export function Footer({ network, theme, className = '' }: FooterProps) {
   const { t } = useTranslation();
-  const color = theme === THEME.LIGHT ? '#ccc' : undefined;
+  const color = theme === THEME.LIGHT ? '#0d101d' : undefined;
 
   return (
     <Layout.Footer
       className={`flex items-center justify-between sm:px-8 px-2 text-gray-400 z-10 py-4 ${className}`}
       style={{
         background:
-          theme === THEME.LIGHT ? NETWORK_LIGHT_THEME[network ?? 'pangolin']['@layout-header-background'] : '#2d2d2d',
+          theme === THEME.LIGHT ? NETWORK_LIGHT_THEME[network ?? 'pangolin']['@layout-header-background'] : '#0d101d',
       }}
     >
-      <div className="md:flex md:gap-4 md:flex-wrap text-gray-400">
+      <div className="md:flex md:gap-4 md:flex-wrap dark:text-gray-400">
         <span className="flex items-center justify-center">
           <CopyrightOutlined />
           <span className="ml-1">{t('{{year}} Darwinia', { year: getYear(new Date()) })}</span>
         </span>
 
         <Link to="yyy">
-          <span className="text-gray-400 hover:text-white">{t('Terms of Use')}</span>
+          <span className=" text-black dark:text-gray-400 dark:hover:text-white">{t('Terms of Use')}</span>
         </Link>
       </div>
 

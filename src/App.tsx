@@ -1,19 +1,19 @@
-import { LockOutlined, UnlockOutlined, UnorderedListOutlined, WarningOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip } from 'antd';
+import { LockOutlined, UnlockOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { Badge, Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import { BridgeStatus } from './components/BridgeStatus';
 import { ActiveAccount } from './components/ActiveAccount';
+import { BridgeStatus } from './components/BridgeStatus';
 import { Footer } from './components/Footer';
+import { DownIcon } from './components/icons';
+import { Nebula } from './components/Nebula';
+import { ThemeSwitch } from './components/ThemeSwitch';
 import { THEME } from './config';
 import { Path, routes } from './config/routes';
 import { useApi } from './hooks';
 import { readStorage } from './utils/helper/storage';
-import { Nebula } from './components/Nebula';
-import { ThemeSwitch } from './components/ThemeSwitch';
-import { DownIcon } from './components/icons';
 
 const { Header, Content } = Layout;
 
@@ -41,8 +41,9 @@ function NavLink({ nav }: { nav: Nav }) {
       }}
       className={`${
         nav.path === location.pathname || nav?.pathGroup?.includes(location.pathname) ? 'shadow-mock-bottom-border' : ''
-      } transition-all duration-300 ease-in-out text-gray-300 hover:text-gray-100 cursor-pointer`}
+      } transition-all duration-300 ease-in-out opacity-100 hover:opacity-80 cursor-pointer`}
       key={nav.label}
+      style={{ color: '#5745de' }}
     >
       {t(nav.label)}
     </div>
@@ -66,19 +67,19 @@ function App() {
         className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-2"
         style={{ marginTop: -1 }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex">
           <Link to={Path.root}>
             <img src="/image/logo.svg" alt="" className="h-4 hidden md:h-8 md:inline-block" />
             <img src="/image/logo-mini.svg" alt="" className="h-16 md:hidden md:h-6 inline-block" />
           </Link>
 
           <Tooltip title={t('Wormhole is in beta. Please trade at your own risk level')}>
-            <WarningOutlined className="md:ml-4 cursor-pointer text-xl" style={{ color: 'yellow' }} />
+            <Badge size="small" count={'beta'} className="mt-2"></Badge>
           </Tooltip>
         </div>
 
         <div className="flex xl:justify-between lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-24">
-          <div className="hidden gap-8 lg:flex light:text-white">
+          <div className="hidden gap-8 lg:flex">
             {navMenus.map((nav, index) =>
               Array.isArray(nav) ? (
                 <Dropdown
@@ -121,7 +122,7 @@ function App() {
             >
               <Button
                 type="link"
-                icon={<UnorderedListOutlined style={{ color: theme === THEME.LIGHT ? 'white' : 'inherit' }} />}
+                icon={<UnorderedListOutlined />}
                 size="large"
                 className="flex items-center justify-center sm:mx-4"
               ></Button>
