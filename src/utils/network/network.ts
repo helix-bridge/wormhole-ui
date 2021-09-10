@@ -83,9 +83,8 @@ const isInNodeList = (source: Map<Departure, Arrival[]>) => (net1: NetConfig | n
   }
 
   const vertices = getArrivals(source, net1);
-  const nets = vertices.map((ver) => ver.network);
 
-  return nets.includes(net2.name);
+  return !!vertices.find((item) => item.network === net2.name && item.mode === getNetworkMode(net2));
 };
 
 const isInCrossList = isInNodeList(NETWORK_GRAPH);
