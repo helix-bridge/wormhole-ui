@@ -68,7 +68,11 @@ export async function getTokenBalance(address: string, account: string, isEth = 
 
     return Web3.utils.toBN(balance);
   } catch (err) {
-    console.info('%c [ get token balance error ]-52', 'font-size:13px; background:pink; color:#bf2c9f;', err.message);
+    console.info(
+      '%c [ get token balance error ]-52',
+      'font-size:13px; background:pink; color:#bf2c9f;',
+      (err as Record<string, string>).message
+    );
   }
 
   return Web3.utils.toBN(0);
@@ -81,7 +85,10 @@ async function getSymbolFromContract(tokenAddress: string, config: NetConfig) {
     const result = await token.methods.symbol().call();
     return result;
   } catch (error) {
-    console.warn(`symbol() call for token at address ${tokenAddress} resulted in error:`, error.message);
+    console.warn(
+      `symbol() call for token at address ${tokenAddress} resulted in error:`,
+      (error as Record<string, string>).message
+    );
     return undefined;
   }
 }
@@ -120,7 +127,10 @@ async function getDecimalsFromContract(tokenAddress: string, config: NetConfig) 
 
     return decimalsBN?.toString();
   } catch (error) {
-    console.warn(`decimals() call for token at address ${tokenAddress} resulted in error:`, error.message);
+    console.warn(
+      `decimals() call for token at address ${tokenAddress} resulted in error:`,
+      (error as Record<string, string>).message
+    );
     return undefined;
   }
 }

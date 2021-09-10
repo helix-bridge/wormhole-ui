@@ -4,10 +4,10 @@ import { isBoolean, isNull, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { airportsArrivalFilter, airportsDepartureFilter, useNetworks } from '../../hooks';
-import { Arrival, CustomFormControlProps, NetConfig, Network, TransferNetwork } from '../../model';
+import { Arrival, CustomFormControlProps, NetConfig, TransferNetwork } from '../../model';
 import {
   getNetworkMode,
-  getVertices,
+  getArrival,
   HashInfo,
   isReachable,
   isSameNetworkCurry,
@@ -84,8 +84,8 @@ export function Nets({
       fMode: from ? getNetworkMode(from) : 'native',
       tMode: to ? getNetworkMode(to) : 'native',
     } as HashInfo;
-    const ver = getVertices(info.from as Network, info.to as Network);
-    const reverseVer = getVertices(info.to as Network, info.from as Network);
+    const ver = getArrival(from, to);
+    const reverseVer = getArrival(to, from);
 
     setVertices(ver);
     setReverseVertices(reverseVer);

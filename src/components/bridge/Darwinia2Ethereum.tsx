@@ -180,6 +180,9 @@ function ethereumBackingLockDarwinia(
 
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
+/**
+ * @description test chain: pangolin -> ropsten
+ */
 // eslint-disable-next-line complexity
 export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2EthereumTransfer>) {
   const { t } = useTranslation();

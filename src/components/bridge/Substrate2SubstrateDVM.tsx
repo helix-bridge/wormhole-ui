@@ -1,4 +1,3 @@
-import React from 'react';
 import { BridgeFormProps, DVMTransfer } from '../../model';
 import { DVM } from './Dvm';
 
@@ -9,8 +8,8 @@ import { DVM } from './Dvm';
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
 /**
- * @description test chain: ropsten -> pangolin dvm
+ * @description test chain: pangoro -> pangolin dvm
  */
-export function Ethereum2DarwiniaDVM({ form, setSubmit }: BridgeFormProps<DVMTransfer>) {
-  return <DVM form={form} setSubmit={setSubmit} isRedeem={true} />;
+export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMTransfer>) {
+  return <DVM form={form} setSubmit={setSubmit} isRedeem={false} />;
 }

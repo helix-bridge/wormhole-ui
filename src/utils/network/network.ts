@@ -71,7 +71,7 @@ const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) => {
 };
 
 const getArrivals = (source: Map<Departure, Arrival[]>, departure: NetConfig) => {
-  const mode: NetworkMode = departure.dvm ? 'dvm' : 'native';
+  const mode: NetworkMode = getNetworkMode(departure);
   const target = [...source].find(([item]) => item.network === departure.name && item.mode === mode);
 
   return target ? target[1] : [];
@@ -160,12 +160,24 @@ export function getNetworkByName(name: Network | null | undefined) {
   return null;
 }
 
-export function getVertices(from: Network, to: Network): Arrival | null {
+// eslint-disable-next-line complexity
+export function getArrival(from: NetConfig | null | undefined, to: NetConfig | null | undefined): Arrival | null {
   if (!from || !to) {
     return null;
   }
 
-  return getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[from]).find((item) => item.network === to) ?? null;
+  const mode = getNetworkMode(from);
+  let departure = NETWORK_CONFIG[from.name];
+
+  if (mode === 'native') {
+    departure = omit(departure, 'dvm');
+  }
+
+  if (mode === 'dvm' && !Object.prototype.hasOwnProperty.call(departure, 'dvm')) {
+    console.warn('Try to get arrival config in dvm mode, but the config does not include dvm info');
+  }
+
+  return getArrivals(NETWORK_GRAPH, departure).find((item) => item.network === to.name) ?? null;
 }
 
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {
@@ -190,12 +202,12 @@ export function isNativeMetamaskChain(network: Network): boolean {
   return ids.includes(+params.chainId);
 }
 
-export function hasBridge(from: Network, to: Network): boolean {
-  return !!getVertices(from, to);
+export function hasBridge(from: NetConfig, to: NetConfig): boolean {
+  return !!getArrival(from, to);
 }
 
-export function isBridgeAvailable(from: Network, to: Network): boolean {
-  const bridge = getVertices(from, to);
+export function isBridgeAvailable(from: NetConfig, to: NetConfig): boolean {
+  const bridge = getArrival(from, to);
 
   return !!bridge && bridge.status === 'available';
 }

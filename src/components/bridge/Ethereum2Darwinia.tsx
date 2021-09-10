@@ -263,6 +263,9 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
 
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
+/**
+ * @description test chain: ropsten -> pangolin
+ */
 // eslint-disable-next-line complexity
 export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2DarwiniaTransfer>) {
   const { t } = useTranslation();

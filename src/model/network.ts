@@ -3,7 +3,7 @@ import { IAccountMeta } from './account';
 import { Config } from './common';
 import { AddEthereumChainParameter } from './metamask';
 
-export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia';
+export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia' | 'pangoro';
 
 export type EthereumTypeNetwork = 'ethereum' | 'ropsten';
 

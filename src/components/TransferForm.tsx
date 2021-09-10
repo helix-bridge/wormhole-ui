@@ -20,6 +20,7 @@ import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
 import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
 import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaDvm';
+import { Substrate2SubstrateDVM } from './bridge/Substrate2SubstrateDVM';
 import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
@@ -70,6 +71,7 @@ const DEPARTURES: [[Departure, Departure?], FunctionComponent<BridgeFormProps<an
   ],
   [[{ network: 'darwinia', mode: 'dvm' }], DarwiniaDVM2Ethereum],
   [[{ network: 'pangolin', mode: 'dvm' }], DarwiniaDVM2Ethereum],
+  [[{ network: 'pangoro', mode: 'native' }], Substrate2SubstrateDVM],
 ];
 
 // eslint-disable-next-line complexity

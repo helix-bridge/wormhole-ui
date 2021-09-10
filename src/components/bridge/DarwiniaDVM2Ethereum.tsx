@@ -12,6 +12,9 @@ import { DVM } from './Dvm';
 
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
+/**
+ * @description test chain: pangolin dvm -> ropsten
+ */
 export function DarwiniaDVM2Ethereum({ form, setSubmit }: BridgeFormProps<DVMTransfer>) {
   return <DVM form={form} setSubmit={setSubmit} isRedeem={false} />;
 }

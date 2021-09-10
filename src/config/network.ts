@@ -8,6 +8,7 @@ export enum Graph {
   darwinia = 'darwinia',
   ethereum = 'ethereum',
   pangolin = 'pangolin',
+  pangoro = 'pangoro',
   ropsten = 'ropsten',
   tron = 'tron',
 }
@@ -225,6 +226,58 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     type: ['polkadot', 'darwinia'],
   },
+  pangoro: {
+    api: {
+      subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
+      evolution: EVOLUTION_DOMAIN.dev,
+      dapp: 'https://api.darwinia.network.l2me.com',
+      subscan: '',
+    },
+    dvm: {
+      ring: '',
+      kton: '',
+    },
+    erc20Token: {
+      bankingAddress: '',
+      mappingAddress: '',
+      proofAddress: '',
+    },
+    ethereumChain: {
+      chainId: '',
+      chainName: '',
+      nativeCurrency: {
+        decimals: 18,
+      },
+      rpcUrls: ['https://pangoro-rpc.darwinia.network/'],
+      blockExplorerUrls: ['https://pangoro.subscan.io/'],
+    },
+    facade: {
+      logo: '/image/pangoro-button-mobile.png',
+      logoWithText: '',
+    },
+    fullName: 'Pangoro',
+    isTest: true,
+    lockEvents: [
+      {
+        min: 0,
+        max: null,
+        key: '',
+      },
+    ],
+    name: 'pangoro',
+    provider: {
+      rpc: 'wss://pangoro-rpc.darwinia.network',
+      etherscan: '',
+    },
+    ss58Prefix: 18,
+    tokenContract: {
+      native: 'PRING',
+      issuingDarwinia: '', // e2d redeem address
+      bankEthereum: '', // d2e claim address
+      bankDarwinia: '', // e2d redeem deposit address
+    },
+    type: ['polkadot', 'darwinia'],
+  },
   ropsten: {
     api: {
       subql: '',
@@ -344,7 +397,14 @@ export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
     { network: Graph.pangolin, mode: 'native' },
     [{ network: Graph.ropsten, status: 'available', mode: 'native', stable: true }],
   ],
-  [{ network: Graph.pangolin, mode: 'dvm' }, [{ network: Graph.ropsten, status: 'available', mode: 'native' }]],
+  [
+    { network: Graph.pangolin, mode: 'dvm' },
+    [
+      { network: Graph.ropsten, status: 'available', mode: 'native' },
+      { network: Graph.pangoro, status: 'available', mode: 'native' },
+    ],
+  ],
+  [{ network: Graph.pangoro, mode: 'native' }, [{ network: Graph.pangolin, status: 'available', mode: 'dvm' }]],
   [
     { network: Graph.ropsten, mode: 'native' },
     [
