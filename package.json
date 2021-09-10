@@ -7,7 +7,7 @@
     "start:dev": "PORT=3007 REACT_APP_HOST_TYPE=dev craco start",
     "build": "CI=false craco build --max_old_space_size=2048",
     "build:dev": "CI=false REACT_APP_HOST_TYPE=dev craco build --max_old_space_size=2048",
-    "test:unit": "cypress open-ct",
+    "test:unit": "REACT_APP_HOST_TYPE=cy cypress open-ct",
     "test:ci:unit": "REACT_APP_HOST_TYPE=cy cypress run-ct",
     "test:e2e": "REACT_APP_HOST_TYPE=cy CYPRESS_REMOTE_DEBUGGING_PORT=9222 cypress open",
     "test:ci:e2e": "REACT_APP_HOST_TYPE=cy CYPRESS_REMOTE_DEBUGGING_PORT=9222 cypress run",
