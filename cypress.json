@@ -14,5 +14,7 @@
   "ignoreTestFiles": "*/examples/**",
   "downloadsFolder": "./public/image",
   "nodeVersion": "system",
-  "chromeWebSecurity": true
+  "chromeWebSecurity": true,
+  "videoCompression": 15,
+  "video": true
 }

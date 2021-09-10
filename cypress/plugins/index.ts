@@ -27,7 +27,6 @@ module.exports = (on, config) => {
   cracoPlugin(on, config, cracoConf);
   on('before:browser:launch', (browser = {}, launchOptions) => {
     launchOptions.args.push('--auto-open-devtools-for-tabs');
-
     return launchOptions;
   });
 
