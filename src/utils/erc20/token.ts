@@ -47,16 +47,28 @@ const getTokenInfo = async (tokenAddress: string, config: NetConfig) => {
  * @params {string} networkType - eth or darwinia
  * for eth: both address and source fields in result are all represent the token's ethereum address, actually equal
  * for dvm: the address field represent the token's dvm address, the source field represent the token's ethereum address.
+ *
+ * Refactor
+ * TODO: Depending on the config parameter, we may know whether eth mapped assets or s2s mapped assets are required on the view
+ * If the config is a ethereum type, need to query eth mapped assets.
+ * If the config is a substrate type, need to query s2s mapped assets.
+ * If the config is a dvm type, hmmm..... current parameters is not enough to decide which type of asset should be querying.
  */
-export const getKnownErc20Tokens = async (currentAccount: string, network: Network): Promise<Erc20Token[]> => {
+export const getKnownMappedTokens = async (
+  currentAccount: string,
+  departure: NetConfig,
+  arrival?: NetConfig | null
+): Promise<Erc20Token[]> => {
   if (!currentAccount) {
     return [];
   }
-  const config = NETWORK_CONFIG[network];
 
-  return config.type.includes('ethereum')
-    ? await getFromEthereum(currentAccount, config)
-    : await getFromDvm(currentAccount, config);
+  // TODO
+  console.info('%c [ arrival ]-62', 'font-size:13px; background:pink; color:#bf2c9f;', arrival);
+
+  return departure.type.includes('ethereum')
+    ? await getFromEthereum(currentAccount, departure)
+    : await getFromDvm(currentAccount, departure);
 };
 
 /**

@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
 import { Path } from '../../config/routes';
-import { useAfterSuccess, useApi, useDeparture, useKnownErc20Tokens, useTx } from '../../hooks';
+import { useAfterSuccess, useApi, useDeparture, useMappedTokens, useTx } from '../../hooks';
 import {
   BridgeFormProps,
   DVMTransfer,
@@ -102,9 +102,7 @@ function createErc20Tx(fn: (value: RedeemDVMToken | IssuingDVMToken) => Observab
 
 export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> & DVMProps) {
   const { t } = useTranslation();
-  const { loading, tokens, refreshTokenBalance } = useKnownErc20Tokens(
-    form.getFieldValue(FORM_CONTROL.transfer).from.name
-  );
+  const { loading, tokens, refreshTokenBalance } = useMappedTokens(form.getFieldValue(FORM_CONTROL.transfer).from);
   const [allowance, setAllowance] = useState(BN_ZERO);
   const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
   const {

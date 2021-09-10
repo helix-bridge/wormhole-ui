@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { RegisterStatus } from '../config';
-import { Action, Erc20RegisterStatus, Erc20Token, EthereumConnection, Network, RequiredPartial } from '../model';
+import {
+  Action,
+  Erc20RegisterStatus,
+  Erc20Token,
+  EthereumConnection,
+  RequiredPartial,
+  TransferNetwork,
+} from '../model';
 import { isNetworkConsistent } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
-import { getKnownErc20Tokens, StoredProof } from '../utils/erc20/token';
+import { getKnownMappedTokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
 
 export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'>;
@@ -46,8 +53,8 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
  * @params {string} networkType
  * @params {number} status - token register status 1:registered 2:registering
  */
-export const useKnownErc20Tokens = (
-  network: Network | null,
+export const useMappedTokens = (
+  { from, to }: TransferNetwork,
   status: Erc20RegisterStatus = RegisterStatus.unregister
 ) => {
   const [loading, setLoading] = useState(false);
@@ -77,12 +84,12 @@ export const useKnownErc20Tokens = (
   useEffect(() => {
     // eslint-disable-next-line complexity
     (async () => {
-      if (connection.type !== 'metamask' || network === null) {
+      if (connection.type !== 'metamask' || from === null) {
         updateTokens([]);
         return;
       }
 
-      const isMatch = await isNetworkConsistent(network, (connection as EthereumConnection).chainId);
+      const isMatch = await isNetworkConsistent(from!.name, (connection as EthereumConnection).chainId);
 
       if (!isMatch) {
         updateTokens([]);
@@ -92,7 +99,7 @@ export const useKnownErc20Tokens = (
       try {
         setLoading(true);
 
-        const all = (await getKnownErc20Tokens(currentAccount, network)) as Erc20Token[];
+        const all = (await getKnownMappedTokens(currentAccount, from, to)) as Erc20Token[];
         const tokens = status > 0 ? all.filter((item) => item.status && +item.status === status) : all;
 
         updateTokens(tokens);
@@ -107,7 +114,7 @@ export const useKnownErc20Tokens = (
         setLoading(false);
       }
     })();
-  }, [currentAccount, network, updateTokens, status, connection]);
+  }, [currentAccount, from, updateTokens, status, connection, to]);
 
   return {
     ...state,

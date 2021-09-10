@@ -6,7 +6,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { from, mergeMap } from 'rxjs';
 import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
-import { MemoedTokenInfo, useApi, useKnownErc20Tokens, useLocalSearch, useTx } from '../../hooks';
+import { MemoedTokenInfo, useApi, useMappedTokens, useLocalSearch, useTx } from '../../hooks';
 import { Erc20Token, NetConfig } from '../../model';
 import { isSameNetConfig, isValidAddress } from '../../utils';
 import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/meta';
@@ -46,7 +46,7 @@ export function Register() {
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { tokens, updateTokens } = useKnownErc20Tokens(network?.name ?? null, RegisterStatus.registering);
+  const { tokens, updateTokens } = useMappedTokens({ from: network, to: null }, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(tokens), [tokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
@@ -178,7 +178,7 @@ export function Register() {
         </Tabs.TabPane>
 
         <Tabs.TabPane tab={t('Upcoming')} key={TabKeys.upcoming}>
-          <Upcoming netConfig={net} />
+          <Upcoming departure={net} />
         </Tabs.TabPane>
       </Tabs>
     </Form>
@@ -186,10 +186,10 @@ export function Register() {
 }
 
 interface UpcomingProps {
-  netConfig: NetConfig;
+  departure: NetConfig;
 }
 
-function Upcoming({ netConfig }: UpcomingProps) {
+function Upcoming({ departure }: UpcomingProps) {
   const { t } = useTranslation();
   const {
     loading,
@@ -198,7 +198,7 @@ function Upcoming({ netConfig }: UpcomingProps) {
     updateTokens,
     addKnownProof,
     switchToConfirmed,
-  } = useKnownErc20Tokens(netConfig.name, RegisterStatus.registering);
+  } = useMappedTokens({ from: departure, to: null }, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
   const { data, setSearch } = useLocalSearch<MemoedTokenInfo>(searchFn as (arg: string) => MemoedTokenInfo[]);
@@ -216,13 +216,13 @@ function Upcoming({ netConfig }: UpcomingProps) {
     }
 
     from(tokens)
-      .pipe(mergeMap(({ address }) => getRegisterProof(address, netConfig)))
+      .pipe(mergeMap(({ address }) => getRegisterProof(address, departure)))
       .subscribe((proof) => {
         addKnownProof(proof);
       });
 
     setInQueryingQueue(tokens.map((item) => item.address));
-  }, [tokens, netConfig, updateTokens, addKnownProof]);
+  }, [tokens, departure, updateTokens, addKnownProof]);
 
   return (
     <>
@@ -250,7 +250,7 @@ function Upcoming({ netConfig }: UpcomingProps) {
                 onConfirm={() => {
                   const proof: StoredProof = knownProofs.find((item) => item.registerProof.source === token.address)!;
 
-                  confirmRegister(proof, netConfig).subscribe({
+                  confirmRegister(proof, departure).subscribe({
                     ...observer,
                     next: (state) => {
                       observer.next(state);
@@ -267,7 +267,7 @@ function Upcoming({ netConfig }: UpcomingProps) {
       )}
       <Tip>
         <Trans i18nKey="erc20CompletionTip">
-          After {{ type: netConfig.name }} network returns the result, click [Confirm] to complete the token
+          After {{ type: departure.name }} network returns the result, click [Confirm] to complete the token
           registration.
         </Trans>
       </Tip>
