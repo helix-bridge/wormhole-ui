@@ -11,7 +11,6 @@ import {
   D2EHistoryRes,
   HistoryReq,
   HistoryRouteParam,
-  Network,
   Paginator,
   RedeemHistory,
   RingBurnHistory,
@@ -36,14 +35,14 @@ import { E2DRecord } from './E2DRecord';
 type HistoryData<T> = { [key in HistoryRouteParam['state']]: T | null };
 
 const { TabPane } = Tabs;
-const TRON_DEPARTURE: { name: string; network: Network } = { name: NETWORK_CONFIG.tron.fullName, network: 'tron' };
+// const TRON_DEPARTURE: { name: string; network: Network } = { name: NETWORK_CONFIG.tron.fullName, network: 'tron' };
 const DEPARTURES = uniqBy(
   NETWORKS.map((item) => ({
     name: getDisplayName(item),
     network: item.name,
   })),
   'name'
-).concat([TRON_DEPARTURE]);
+);
 
 const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list?.length || 0;
 const totalInitialState = {
