@@ -1,5 +1,5 @@
 import { LockOutlined, UnlockOutlined, UnorderedListOutlined } from '@ant-design/icons';
-import { Badge, Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip } from 'antd';
+import { Badge, Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
@@ -20,13 +20,13 @@ const { Header, Content } = Layout;
 interface Nav {
   label: string;
   path: Path | string;
+  extra?: boolean;
   pathGroup?: string[];
 }
 
 const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
 const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
 const transferRecords: Nav = { label: 'Transfer Records', path: Path.history };
-const guide: Nav = { label: 'Guide', path: 'xxx' };
 
 function NavLink({ nav }: { nav: Nav }) {
   const { t } = useTranslation();
@@ -35,8 +35,12 @@ function NavLink({ nav }: { nav: Nav }) {
   return (
     <div
       onClick={() => {
-        if (nav.path) {
+        if (nav.extra) {
+          window.open(nav.path, '_blank');
+        } else if (nav.path) {
           history.push(nav.path);
+        } else {
+          // nothing
         }
       }}
       className={`${
@@ -50,15 +54,35 @@ function NavLink({ nav }: { nav: Nav }) {
   );
 }
 
+function RouteLink({ path, label }: Nav) {
+  const { t } = useTranslation();
+
+  return path.includes('http') ? (
+    <Typography.Link href={path} target="_blank">
+      {t(label)}
+    </Typography.Link>
+  ) : (
+    <Link to={path}>{t(label)}</Link>
+  );
+}
+
 // eslint-disable-next-line complexity
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { enableTestNetworks, setEnableTestNetworks, isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
+  const guide = useMemo(
+    () => ({
+      label: 'Guide',
+      path: `https://docs.darwinia.network/docs/${i18n.language === 'zh' ? 'zh-CN' : i18n.language}/wiki-tut-wormhole`,
+      extra: true,
+    }),
+    [i18n.language]
+  );
   const navMenus = useMemo(
-    () => (isDev ? [crossChain, transferRecords, erc20Manager, guide] : [crossChain, transferRecords]),
-    [isDev]
+    () => (isDev ? [crossChain, transferRecords, erc20Manager, guide] : [crossChain, transferRecords, guide]),
+    [isDev, guide]
   );
 
   return (
@@ -86,9 +110,9 @@ function App() {
                   key={index}
                   overlay={
                     <Menu>
-                      {nav.slice(1).map((item) => (
-                        <Menu.Item key={item.path}>
-                          <Link to={item.path}>{t(item.label)}</Link>
+                      {nav.slice(1).map((item, idx) => (
+                        <Menu.Item key={item.path + '_' + idx}>
+                          <RouteLink {...item} />
                         </Menu.Item>
                       ))}
                     </Menu>
@@ -111,9 +135,9 @@ function App() {
             <Dropdown
               overlay={
                 <Menu>
-                  {navMenus.map((item) => (
-                    <Menu.Item key={item.path}>
-                      <Link to={item.path}>{t(item.label)}</Link>
+                  {navMenus.map((item, index) => (
+                    <Menu.Item key={item.path + '_' + index}>
+                      <RouteLink {...item} />
                     </Menu.Item>
                   ))}
                 </Menu>
