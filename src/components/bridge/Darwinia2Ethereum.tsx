@@ -12,11 +12,12 @@ import {
   BridgeFormProps,
   Darwinia2EthereumTransfer,
   NoNullTransferNetwork,
+  SS58Prefix,
   Token,
   TransferFormValues,
   Tx,
 } from '../../model';
-import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, toWei } from '../../utils';
+import { AfterTxCreator, applyModalObs, convertToSS58, createTxWorkflow, fromWei, toWei } from '../../utils';
 import { issuingDarwiniaToken, IssuingDarwiniaToken } from '../../utils/tx/d2e';
 import { AssetGroup, AssetGroupValue, AvailableBalance } from '../controls/AssetGroup';
 import { RecipientItem } from '../controls/RecipientItem';
@@ -288,7 +289,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
         <Select size="large">
           {(accounts ?? []).map(({ meta, address }) => (
             <Select.Option value={address} key={address}>
-              {meta?.name} - {address}
+              {meta?.name} - {convertToSS58(address, chain.ss58Format as unknown as SS58Prefix)}
             </Select.Option>
           ))}
         </Select>
