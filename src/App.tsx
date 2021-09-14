@@ -97,7 +97,7 @@ function App() {
             <img src="/image/logo-mini.svg" alt="" className="h-16 md:hidden md:h-6 inline-block" />
           </Link>
 
-          <Tooltip title={t('Wormhole is in beta. Please trade at your own risk level')}>
+          <Tooltip title={t('Wormhole is in beta. Please use at your own risk level')}>
             <Badge size="small" count={'beta'} className="mt-2"></Badge>
           </Tooltip>
         </div>
