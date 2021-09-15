@@ -27,9 +27,9 @@ export function Footer({ network, theme, className = '' }: FooterProps) {
           <span className="ml-1">{t('{{year}} Darwinia', { year: getYear(new Date()) })}</span>
         </span>
 
-        <Link to="yyy">
+        {/* <Link to="yyy">
           <span className=" text-black dark:text-gray-400 dark:hover:text-white">{t('Terms of Use')}</span>
-        </Link>
+        </Link> */}
       </div>
 
       <div className="flex items-center">
