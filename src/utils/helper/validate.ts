@@ -61,7 +61,7 @@ export const isSameAddress = (from: string, to: string): boolean => {
       console.warn(
         '%c [ file: src/utils/helper/validate.ts  ]- function: isSameAddress',
         'font-size:13px; background:pink; color:#bf2c9f;',
-        err.message
+        (err as unknown as Record<string, string>).message
       );
     }
   }

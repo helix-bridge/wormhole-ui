@@ -4,4 +4,5 @@ export interface HistoryRouteParam {
   network: Network;
   sender: string;
   state: 'inprogress' | 'completed';
+  mode: 'native' | 'dvm';
 }

@@ -1,8 +1,9 @@
+import { upperFirst } from 'lodash';
 import { useState } from 'react';
 import { RecordComponentProps } from '../../config';
 import { useTx } from '../../hooks';
 import { D2EHistory as D2ERecordType, D2EMeta } from '../../model';
-import { ClaimNetworkPrefix, claimToken, toUpperCaseFirst } from '../../utils';
+import { ClaimNetworkPrefix, claimToken } from '../../utils';
 import { CrosseState, ProgressDetail } from './ProgressDetail';
 import { Record, RecordProps } from './Record';
 
@@ -61,7 +62,7 @@ export function D2ERecord({ network, record }: RecordComponentProps<D2ERecordTyp
             ? () => {
                 setTx({ status: 'queued' });
                 claimToken({
-                  networkPrefix: toUpperCaseFirst(data.from.network) as ClaimNetworkPrefix,
+                  networkPrefix: upperFirst(data.from.network) as ClaimNetworkPrefix,
                   mmrIndex: mmr_index,
                   mmrRoot: mmr_root,
                   mmrSignatures: signatures,
