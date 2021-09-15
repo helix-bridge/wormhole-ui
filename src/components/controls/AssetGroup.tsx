@@ -123,20 +123,6 @@ CustomFormControlProps<AssetGroupValue> & {
                     {
                       validator(_, val) {
                         const max = new BN(Web3.utils.fromWei(balance?.max + '' || '0', unit));
-                        const cur = new BN(toWei({ value: val, unit }));
-                        let pass = true;
-
-                        if (balance?.asset === 'ring') {
-                          pass = cur.lte(max.sub(new BN(fromWei({ value: fee || '50000000000' }))));
-                        }
-
-                        return pass ? Promise.resolve() : Promise.reject();
-                      },
-                      message: t(`The ring balance can't cover the fee and the transfer amount`),
-                    },
-                    {
-                      validator(_, val) {
-                        const max = new BN(Web3.utils.fromWei(balance?.max + '' || '0', unit));
                         const cur = new BN(val);
 
                         return cur.lte(max) ? Promise.resolve() : Promise.reject();
