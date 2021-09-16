@@ -28,9 +28,16 @@ const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
 const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
 const transferRecords: Nav = { label: 'Transfer Records', path: Path.history };
 
-function NavLink({ nav }: { nav: Nav }) {
+function NavLink({ nav, theme }: { nav: Nav; theme: THEME }) {
   const { t } = useTranslation();
   const history = useHistory();
+  const textCls = useMemo(() => (theme === 'dark' ? '' : 'text-pangolin-main'), [theme]);
+  const active =
+    nav.path === location.pathname || nav?.pathGroup?.includes(location.pathname)
+      ? theme === 'dark'
+        ? 'shadow-mock-bottom-border-light'
+        : 'shadow-mock-bottom-border'
+      : '';
 
   return (
     <div
@@ -43,11 +50,8 @@ function NavLink({ nav }: { nav: Nav }) {
           // nothing
         }
       }}
-      className={`${
-        nav.path === location.pathname || nav?.pathGroup?.includes(location.pathname) ? 'shadow-mock-bottom-border' : ''
-      } transition-all duration-300 ease-in-out opacity-100 hover:opacity-80 cursor-pointer`}
+      className={`${active} ${textCls} transition-all duration-300 ease-in-out opacity-100 hover:opacity-80 cursor-pointer`}
       key={nav.label}
-      style={{ color: '#5745de' }}
     >
       {t(nav.label)}
     </div>
@@ -119,12 +123,12 @@ function App() {
                   }
                 >
                   <div className="flex items-center">
-                    <NavLink nav={nav[0]} />
+                    <NavLink nav={nav[0]} theme={theme} />
                     <DownIcon className="ml-2" />
                   </div>
                 </Dropdown>
               ) : (
-                <NavLink nav={nav} key={index} />
+                <NavLink nav={nav} key={index} theme={theme} />
               )
             )}
           </div>
