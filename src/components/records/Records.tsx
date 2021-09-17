@@ -11,6 +11,7 @@ import {
   D2EHistoryRes,
   HistoryReq,
   HistoryRouteParam,
+  Network,
   NetworkMode,
   Paginator,
   RedeemHistory,
@@ -34,7 +35,7 @@ import {
 import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
 
-type HistoryData<T> = { [key in HistoryRouteParam['state']]: T | null };
+type HistoryData<T> = { [key in HistoryRouteParam['state']]?: T | null };
 
 const { TabPane } = Tabs;
 // const TRON_DEPARTURE: { name: string; network: Network } = { name: NETWORK_CONFIG.tron.fullName, network: 'tron' };
@@ -146,13 +147,13 @@ export function Records() {
 
   const queryRecords = useCallback(
     // eslint-disable-next-line complexity
-    (params: HistoryReq) => {
+    (params: HistoryReq, net: Network, type: HistoryRouteParam['state']) => {
       const observer = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         next: (res: any) => {
           res = Array.isArray(res) ? { count: res.length, list: res } : res;
-          setSourceData({ ...sourceData, [activeKey]: res });
-          setTotal({ type: activeKey, payload: count(res) });
+          setSourceData({ [type]: res });
+          setTotal({ type, payload: count(res) });
         },
         complete: () => setLoading(false),
       };
@@ -160,15 +161,15 @@ export function Records() {
 
       setLoading(true);
 
-      if (isEthereumNetwork(network)) {
+      if (isEthereumNetwork(net)) {
         if (isGenesis) {
           subscription = queryE2DGenesisRecords(params).subscribe(observer);
         } else {
           subscription = queryE2DRecords(params).subscribe(observer);
         }
-      } else if (isPolkadotNetwork(network)) {
+      } else if (isPolkadotNetwork(net)) {
         subscription = queryD2ERecords(params).subscribe(observer);
-      } else if (isTronNetwork(network)) {
+      } else if (isTronNetwork(net)) {
         subscription = queryE2DGenesisRecords({
           ...params,
           address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '',
@@ -183,11 +184,12 @@ export function Records() {
         }
       };
     },
-    [network, activeKey, sourceData, isGenesis]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   useEffect(() => {
-    if (!address) {
+    if (!address || !canUpdate(address, network, networkMode)) {
       return;
     }
     const params: HistoryReq = {
@@ -196,8 +198,8 @@ export function Records() {
       paginator,
       confirmed: activeKey === 'completed',
     };
-    queryRecords(params);
-  }, [activeKey, address, network, paginator, queryRecords]);
+    queryRecords(params, network, activeKey);
+  }, [activeKey, address, canUpdate, network, networkMode, paginator, queryRecords]);
 
   return (
     <>
