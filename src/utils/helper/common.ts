@@ -9,13 +9,6 @@ export function oppositeFactory<T, U>(value1: T, value2: U): (value: T | U) => T
 }
 
 /**
- * first char uppercase
- */
-export function toUpperCaseFirst(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-/**
  * @returns UTC time string
  */
 export function asUTCString(timestamp: string): string {

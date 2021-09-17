@@ -1,5 +1,5 @@
 import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
-import { flow, uniqBy } from 'lodash';
+import { flow, uniqBy, upperFirst } from 'lodash';
 import { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -11,6 +11,7 @@ import {
   D2EHistoryRes,
   HistoryReq,
   HistoryRouteParam,
+  NetworkMode,
   Paginator,
   RedeemHistory,
   RingBurnHistory,
@@ -20,6 +21,7 @@ import {
   getHistoryRouteParams,
   getNetConfigByVer,
   getNetworkCategory,
+  getNetworkMode,
   getVerticesFromDisplayName,
   isEthereumNetwork,
   isPolkadotNetwork,
@@ -40,6 +42,7 @@ const DEPARTURES = uniqBy(
   NETWORKS.map((item) => ({
     name: getDisplayName(item),
     network: item.name,
+    mode: getNetworkMode(item),
   })),
   'name'
 );
@@ -65,21 +68,39 @@ export function Records() {
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
   const [network, setNetwork] = useState(searchParams.network || DEPARTURES[0].network);
+  const [networkMode, setNetworkMode] = useState(searchParams.mode || DEPARTURES[0].mode);
   const [paginator, setPaginator] = useState<Paginator>({ row: 10, page: 0 });
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [sourceData, setSourceData] = useState<HistoryData<any>>({ completed: null, inprogress: null });
   const [total, setTotal] = useReducer(totalReducer, totalInitialState);
   const [activeKey, setActiveKey] = useState<HistoryRouteParam['state']>(searchParams.state ?? 'inprogress');
-  const canUpdate = useCallback((addr: string | null, net: string | null) => {
+  const canUpdate = useCallback((addr: string | null, net: string | null, mode: NetworkMode) => {
     if (addr && net) {
-      const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(net);
+      if (mode === 'dvm') {
+        return isValidAddress(addr, 'ethereum');
+      } else {
+        const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(net);
 
-      return category && isValidAddress(addr, category);
+        return category && isValidAddress(addr, category);
+      }
     }
 
     return false;
   }, []);
+  const searchPlaceholder = useMemo(() => {
+    if (isPolkadotNetwork(network)) {
+      return networkMode === 'dvm'
+        ? t('Please fill in a {{network}} smart address which start with 0x', { network: upperFirst(network) })
+        : t('Please fill in a substrate address of the {{network}} network.', { network: upperFirst(network) });
+    }
+
+    if (isEthereumNetwork(network)) {
+      return t('Please enter a valid {{network}} address', { network: 'Ethereum' });
+    }
+
+    return t('Please enter a valid {{network}} address', { network: upperFirst(network) });
+  }, [network, networkMode, t]);
 
   const ele = useCallback(
     // eslint-disable-next-line complexity
@@ -180,9 +201,10 @@ export function Records() {
             defaultValue={searchParams?.network || DEPARTURES[0].network}
             className="capitalize"
             onSelect={(name: string) => {
-              const departure = DEPARTURES.find((item) => item.name.toLowerCase() === name.toLowerCase())!.network;
+              const departure = DEPARTURES.find((item) => item.name.toLowerCase() === name.toLowerCase());
 
-              setNetwork(departure);
+              setNetwork(departure!.network);
+              setNetworkMode(departure!.mode);
               setPaginator({ row: 10, page: 0 });
               setTotal({ type: 'reset', payload: 0 });
               setSourceData({ inprogress: null, completed: null });
@@ -218,13 +240,12 @@ export function Records() {
           <Input.Search
             defaultValue={searchParams?.sender || ''}
             loading={loading}
-            // ref={inputRef}
+            placeholder={searchPlaceholder}
             onSearch={(value) => {
-              if (canUpdate(value, network)) {
-                // setAddress(value);
+              if (canUpdate(value, network, networkMode)) {
                 queryRecords(value);
               } else {
-                message.error(t(`Invalid ${network} format address`));
+                message.error(t(searchPlaceholder));
               }
             }}
             enterButton={t('Search')}
