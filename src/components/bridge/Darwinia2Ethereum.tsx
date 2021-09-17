@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TFunction, Trans, useTranslation } from 'react-i18next';
 import { from, Observable } from 'rxjs';
 import Web3 from 'web3';
+import { Unit } from 'web3-utils';
 import { FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import {
@@ -189,6 +190,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
   } = useApi();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
   const [fee, setFee] = useState<BN | null>(null);
+  const [payAccount, setPayAccount] = useState<string | null>(() => form.getFieldValue(FORM_CONTROL.sender) ?? null);
   const [currentAssets, setCurAssets] = useState<AssetGroupValue>([]);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
@@ -226,6 +228,21 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
     [api, getChainInfo]
   );
 
+  const BalanceInfo = useMemo(() => {
+    return (
+      <span>
+        {t('Balance ')}
+        <span>
+          {availableBalances.map(({ asset, max, chainInfo }) => (
+            <span key={asset} className="mr-2">
+              {fromWei({ value: max, unit: (chainInfo?.decimal as Unit) || 'gwei' })} {asset.toUpperCase()}
+            </span>
+          ))}
+        </span>
+      </span>
+    );
+  }, [availableBalances, t]);
+
   useEffect(() => {
     const fn = () => (data: IssuingDarwiniaToken) => {
       const { assets, sender } = data;
@@ -259,10 +276,10 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
   }, [afterTx, api, form, getBalances, getChainInfo, observer, setSubmit]);
 
   useEffect(() => {
-    const sub$$ = from(getBalances(form.getFieldValue(FORM_CONTROL.sender))).subscribe(setAvailableBalances);
+    const sub$$ = from(getBalances(payAccount ?? '')).subscribe(setAvailableBalances);
 
     return () => sub$$.unsubscribe();
-  }, [form, getBalances]);
+  }, [payAccount, getBalances]);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -285,8 +302,18 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
 
   return (
     <>
-      <Form.Item name={FORM_CONTROL.sender} label={t('Payment Account')} rules={[{ required: true }]}>
-        <Select size="large">
+      <Form.Item
+        name={FORM_CONTROL.sender}
+        label={t('Payment Account')}
+        rules={[{ required: true }]}
+        extra={BalanceInfo}
+      >
+        <Select
+          size="large"
+          onChange={(addr: string) => {
+            setPayAccount(addr);
+          }}
+        >
           {(accounts ?? []).map(({ meta, address }) => (
             <Select.Option value={address} key={address}>
               {meta?.name} - {convertToSS58(address, chain.ss58Format as unknown as SS58Prefix)}
