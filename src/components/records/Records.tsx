@@ -1,6 +1,6 @@
 import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
 import { flow, uniqBy, upperFirst } from 'lodash';
-import { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Subscription } from 'rxjs';
@@ -75,6 +75,7 @@ export function Records() {
   const [sourceData, setSourceData] = useState<HistoryData<any>>({ completed: null, inprogress: null });
   const [total, setTotal] = useReducer(totalReducer, totalInitialState);
   const [activeKey, setActiveKey] = useState<HistoryRouteParam['state']>(searchParams.state ?? 'inprogress');
+  const [address, setAddress] = useState<string | null>(null);
   const canUpdate = useCallback((addr: string | null, net: string | null, mode: NetworkMode) => {
     if (addr && net) {
       if (mode === 'dvm') {
@@ -145,13 +146,7 @@ export function Records() {
 
   const queryRecords = useCallback(
     // eslint-disable-next-line complexity
-    (addr: string) => {
-      const params: HistoryReq = {
-        network,
-        address: addr,
-        paginator,
-        confirmed: activeKey === 'completed',
-      };
+    (params: HistoryReq) => {
       const observer = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         next: (res: any) => {
@@ -176,7 +171,7 @@ export function Records() {
       } else if (isTronNetwork(network)) {
         subscription = queryE2DGenesisRecords({
           ...params,
-          address: window.tronWeb ? window.tronWeb.address.toHex(addr) : '',
+          address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '',
         }).subscribe(observer);
       } else {
         setLoading(false);
@@ -188,8 +183,21 @@ export function Records() {
         }
       };
     },
-    [network, paginator, activeKey, sourceData, isGenesis]
+    [network, activeKey, sourceData, isGenesis]
   );
+
+  useEffect(() => {
+    if (!address) {
+      return;
+    }
+    const params: HistoryReq = {
+      network,
+      address,
+      paginator,
+      confirmed: activeKey === 'completed',
+    };
+    queryRecords(params);
+  }, [activeKey, address, network, paginator, queryRecords]);
 
   return (
     <>
@@ -243,7 +251,7 @@ export function Records() {
             placeholder={searchPlaceholder}
             onSearch={(value) => {
               if (canUpdate(value, network, networkMode)) {
-                queryRecords(value);
+                setAddress(value);
               } else {
                 message.error(t(searchPlaceholder));
               }
@@ -255,7 +263,12 @@ export function Records() {
       </Affix>
 
       <Spin spinning={loading} size="large">
-        <Tabs defaultActiveKey={activeKey} onChange={(key) => setActiveKey(key as HistoryRouteParam['state'])}>
+        <Tabs
+          defaultActiveKey={activeKey}
+          onChange={(key) => {
+            setActiveKey(key as HistoryRouteParam['state']);
+          }}
+        >
           <TabPane
             tab={
               <Space>
