@@ -3,7 +3,7 @@ import { map } from 'rxjs/operators';
 import { DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
 import { HistoryReq, RedeemHistoryRes, RingBurnHistoryRes } from '../../model';
 import { apiUrl } from '../helper';
-import { rxGet } from './api';
+import { getHistoryQueryParams, rxGet } from './api';
 
 export function queryE2DRecords({ address, confirmed, network, paginator }: HistoryReq): Observable<RedeemHistoryRes> {
   if (network === null || address === null || address === '') {
@@ -11,13 +11,11 @@ export function queryE2DRecords({ address, confirmed, network, paginator }: Hist
   }
 
   const api = NETWORK_CONFIG[network].api.dapp;
-  const params = {
-    address,
-    confirmed: confirmed.toString(),
-    ...(paginator ?? { row: 50, page: 0 }),
-  };
 
-  return rxGet<RedeemHistoryRes>({ url: apiUrl(api, DarwiniaApiPath.redeem), params }).pipe(
+  return rxGet<RedeemHistoryRes>({
+    url: apiUrl(api, DarwiniaApiPath.redeem),
+    params: getHistoryQueryParams({ address, confirmed, paginator }),
+  }).pipe(
     map(
       (res) =>
         res || {
@@ -47,15 +45,10 @@ export function queryE2DGenesisRecords({
   }
 
   const api = NETWORK_CONFIG[network].api.dapp;
-  const params = {
-    address,
-    confirmed: confirmed.toString(),
-    ...(paginator ?? { row: 50, page: 0 }),
-  };
 
   return rxGet<RingBurnHistoryRes & { isGenesis: boolean }>({
     url: apiUrl(api, DarwiniaApiPath.ringBurn),
-    params,
+    params: getHistoryQueryParams({ address, confirmed, paginator }),
   }).pipe(
     map((res) => {
       const { count, list } = res!;

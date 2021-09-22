@@ -1,17 +1,15 @@
-import { Affix, Empty, Input, message, Pagination, Select, Space, Spin, Tabs } from 'antd';
+import { Affix, Empty, Input, message, Pagination, Radio, Select, Spin } from 'antd';
 import { flow, uniqBy, upperFirst } from 'lodash';
-import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Subscription } from 'rxjs';
 import { NETWORKS, NETWORK_CONFIG } from '../../config';
 import {
-  Action,
   D2EHistory,
   D2EHistoryRes,
   HistoryReq,
   HistoryRouteParam,
-  Network,
   NetworkMode,
   Paginator,
   RedeemHistory,
@@ -35,10 +33,6 @@ import {
 import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
 
-type HistoryData<T> = { [key in HistoryRouteParam['state']]?: T | null };
-
-const { TabPane } = Tabs;
-// const TRON_DEPARTURE: { name: string; network: Network } = { name: NETWORK_CONFIG.tron.fullName, network: 'tron' };
 const DEPARTURES = uniqBy(
   NETWORKS.map((item) => ({
     name: getDisplayName(item),
@@ -47,20 +41,6 @@ const DEPARTURES = uniqBy(
   })),
   'name'
 );
-
-const count = (source: { count: number; list: unknown[] } | null) => source?.count || source?.list?.length || 0;
-const totalInitialState = {
-  inprogress: null,
-  completed: null,
-};
-
-function totalReducer(state: HistoryData<number>, action: Action<HistoryRouteParam['state'] | 'reset', number | null>) {
-  if (action.type === 'reset') {
-    return totalInitialState;
-  }
-
-  return { ...state, [action.type]: action.payload };
-}
 
 // eslint-disable-next-line complexity
 export function Records() {
@@ -73,9 +53,8 @@ export function Records() {
   const [paginator, setPaginator] = useState<Paginator>({ row: 10, page: 0 });
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [sourceData, setSourceData] = useState<HistoryData<any>>({ completed: null, inprogress: null });
-  const [total, setTotal] = useReducer(totalReducer, totalInitialState);
-  const [activeKey, setActiveKey] = useState<HistoryRouteParam['state']>(searchParams.state ?? 'inprogress');
+  const [sourceData, setSourceData] = useState<{ count: number; list: any[] }>({ count: 0, list: [] });
+  const [confirmed, setConfirmed] = useState<boolean | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const canUpdate = useCallback((addr: string | null, net: string | null, mode: NetworkMode) => {
     if (addr && net) {
@@ -104,13 +83,13 @@ export function Records() {
     return t('Please enter a valid {{network}} address', { network: upperFirst(network) });
   }, [network, networkMode, t]);
 
-  const ele = useCallback(
+  const ele = useMemo(
     // eslint-disable-next-line complexity
-    (key: HistoryRouteParam['state']) => {
+    () => {
       let nodes: ReactElement[] | undefined = [];
 
       if (isEthereumNetwork(network) || isTronNetwork(network)) {
-        nodes = ((sourceData[key]?.list || []) as (RingBurnHistory | RedeemHistory)[]).map((item, index) => (
+        nodes = ((sourceData.list || []) as (RingBurnHistory | RedeemHistory)[]).map((item, index) => (
           <E2DRecord
             record={item}
             network={NETWORK_CONFIG[network || 'ethereum']}
@@ -118,13 +97,13 @@ export function Records() {
           />
         ));
       } else if (isPolkadotNetwork(network)) {
-        nodes = ((sourceData[key]?.list || []) as D2EHistory[]).map((item) => (
+        nodes = ((sourceData.list || []) as D2EHistory[]).map((item) => (
           <D2ERecord
             record={{
               ...item,
               meta: {
-                MMRRoot: (sourceData[key] as D2EHistoryRes).MMRRoot,
-                best: (sourceData[key] as D2EHistoryRes).best,
+                MMRRoot: (sourceData as D2EHistoryRes).MMRRoot,
+                best: (sourceData as D2EHistoryRes).best,
               },
             }}
             network={NETWORK_CONFIG[network || 'darwinia']}
@@ -138,68 +117,62 @@ export function Records() {
       return (
         <>
           {nodes}
-          {!total[activeKey] && !loading && <Empty description={t('No Data')} />}
+          {!sourceData.count && !loading && <Empty description={t('No Data')} />}
         </>
       );
     },
-    [activeKey, loading, network, sourceData, t, total]
+    [loading, network, sourceData, t]
   );
 
-  const queryRecords = useCallback(
-    // eslint-disable-next-line complexity
-    (params: HistoryReq, net: Network, type: HistoryRouteParam['state']) => {
-      const observer = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        next: (res: any) => {
-          res = Array.isArray(res) ? { count: res.length, list: res } : res;
-          setSourceData({ [type]: res });
-          setTotal({ type, payload: count(res) });
-        },
-        complete: () => setLoading(false),
-      };
-      let subscription: Subscription;
-
-      setLoading(true);
-
-      if (isEthereumNetwork(net)) {
-        if (isGenesis) {
-          subscription = queryE2DGenesisRecords(params).subscribe(observer);
-        } else {
-          subscription = queryE2DRecords(params).subscribe(observer);
-        }
-      } else if (isPolkadotNetwork(net)) {
-        subscription = queryD2ERecords(params).subscribe(observer);
-      } else if (isTronNetwork(net)) {
-        subscription = queryE2DGenesisRecords({
-          ...params,
-          address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '',
-        }).subscribe(observer);
-      } else {
-        setLoading(false);
-      }
-
-      return () => {
-        if (subscription) {
-          subscription.unsubscribe();
-        }
-      };
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
+  // eslint-disable-next-line complexity
   useEffect(() => {
     if (!address || !canUpdate(address, network, networkMode)) {
       return;
     }
-    const params: HistoryReq = {
-      network,
-      address,
-      paginator,
-      confirmed: activeKey === 'completed',
+
+    const params: HistoryReq =
+      confirmed === null
+        ? {
+            network,
+            address,
+            paginator,
+          }
+        : { network, address, paginator, confirmed };
+    const observer = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      next: (res: any) => {
+        res = Array.isArray(res) ? { count: res.length, list: res } : res;
+        setSourceData(res);
+      },
+      complete: () => setLoading(false),
     };
-    queryRecords(params, network, activeKey);
-  }, [activeKey, address, canUpdate, network, networkMode, paginator, queryRecords]);
+    let subscription: Subscription;
+
+    setLoading(true);
+
+    if (isEthereumNetwork(network)) {
+      if (isGenesis) {
+        subscription = queryE2DGenesisRecords(params).subscribe(observer);
+      } else {
+        subscription = queryE2DRecords(params).subscribe(observer);
+      }
+    } else if (isPolkadotNetwork(network)) {
+      subscription = queryD2ERecords(params).subscribe(observer);
+    } else if (isTronNetwork(network)) {
+      subscription = queryE2DGenesisRecords({
+        ...params,
+        address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '',
+      }).subscribe(observer);
+    } else {
+      setLoading(false);
+    }
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, [confirmed, address, canUpdate, network, networkMode, paginator, isGenesis]);
 
   return (
     <>
@@ -216,8 +189,7 @@ export function Records() {
               setNetwork(departure!.network);
               setNetworkMode(departure!.mode);
               setPaginator({ row: 10, page: 0 });
-              setTotal({ type: 'reset', payload: 0 });
-              setSourceData({ inprogress: null, completed: null });
+              setSourceData({ list: [], count: 0 });
             }}
           >
             {DEPARTURES.map(({ name }) => (
@@ -233,8 +205,7 @@ export function Records() {
               size="large"
               onChange={(key) => {
                 setIGenesis(!!key);
-                setTotal({ type: 'reset', payload: 0 });
-                setSourceData({ inprogress: null, completed: null });
+                setSourceData({ list: [], count: 0 });
               }}
               className="type-select capitalize"
             >
@@ -264,47 +235,32 @@ export function Records() {
         </Input.Group>
       </Affix>
 
-      <Spin spinning={loading} size="large">
-        <Tabs
-          defaultActiveKey={activeKey}
-          onChange={(key) => {
-            setActiveKey(key as HistoryRouteParam['state']);
-          }}
-        >
-          <TabPane
-            tab={
-              <Space>
-                <span>{t('In Progress')}</span>
-                <span>{total['inprogress']}</span>
-              </Space>
-            }
-            key="inprogress"
-          >
-            {ele('inprogress')}
-          </TabPane>
+      <Radio.Group
+        onChange={(event) => {
+          setConfirmed(event.target.value < 0 ? null : !!event.target.value);
+        }}
+        defaultValue={-1}
+        size="large"
+        className="my-4"
+      >
+        <Radio.Button value={-1}>{t('All')}</Radio.Button>
+        <Radio.Button value={0}>{t('In Progress')}</Radio.Button>
+        <Radio.Button value={1}>{t('Confirmed Extrinsic')}</Radio.Button>
+      </Radio.Group>
 
-          <TabPane
-            tab={
-              <Space>
-                <span>{t('Confirmed Extrinsic')}</span>
-                <span>{total['completed']}</span>
-              </Space>
-            }
-            key="completed"
-          >
-            {ele('completed')}
-          </TabPane>
-        </Tabs>
+      <Spin spinning={loading} size="large">
+        {ele}
 
         <div className="w-full max-w-6xl flex justify-center items-center mx-auto mt-4">
-          {!!total && (
+          {!!sourceData.count && (
             <Pagination
               onChange={(page: number) => {
                 setPaginator({ ...paginator, page: page - 1 });
               }}
               current={paginator.page + 1}
               pageSize={paginator.row}
-              total={total[activeKey] ?? 0}
+              total={sourceData.count ?? 0}
+              showTotal={() => t('Total {{total}}', { total: sourceData.count })}
             />
           )}
         </div>
