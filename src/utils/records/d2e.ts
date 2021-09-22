@@ -121,11 +121,10 @@ export function claimToken({
           if (MMRRoot && best && best > blockNumber) {
             return getContractTxObs(
               contractAddress,
-              (contract) => {
+              (contract) =>
                 contract.methods
                   .verifyProof(root, MMRIndex, blockHeader, peaks, siblings, eventsProofStr)
-                  .send({ from: account });
-              },
+                  .send({ from: account }),
               abi.tokenIssuingABI
             );
           } else {
