@@ -1,4 +1,5 @@
 import { CheckCircleFilled } from '@ant-design/icons';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
 import {
@@ -10,7 +11,7 @@ import {
   TransferFormValues,
   TxSuccessComponentProps,
 } from '../../model';
-import { fromWei, isEthereumNetwork } from '../../utils';
+import { convertToSS58, fromWei, isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
@@ -33,6 +34,13 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
   const linkProps = { [hashType]: tx.hash };
+  const sender = useMemo(
+    () =>
+      isPolkadotNetwork(value.transfer.from.name)
+        ? convertToSS58(value.sender, value.transfer.from.ss58Prefix)
+        : value.sender,
+    [value]
+  );
 
   return (
     <>
@@ -40,7 +48,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
         title={
           <span className="capitalize">{t('{{network}} Network Address', { network: value.transfer.from?.name })}</span>
         }
-        content={value.sender}
+        content={sender}
         icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}
       ></Des>
 

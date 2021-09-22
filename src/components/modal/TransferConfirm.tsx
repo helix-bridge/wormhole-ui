@@ -2,7 +2,7 @@ import { RightOutlined } from '@ant-design/icons';
 import { PropsWithChildren, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Darwinia2EthereumTransfer, TxConfirmComponentProps } from '../../model';
-import { fromWei } from '../../utils';
+import { convertToSS58, fromWei, isPolkadotNetwork } from '../../utils';
 import { Des } from './Des';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,6 +37,13 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
       );
     }
   }, [children, t, value.amount, value.asset, value.assets]);
+  const sender = useMemo(
+    () =>
+      isPolkadotNetwork(value.transfer.from.name)
+        ? convertToSS58(value.sender, value.transfer.from.ss58Prefix)
+        : value.sender,
+    [value]
+  );
 
   return (
     <>
@@ -44,14 +51,14 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
         title={t('Cross-chain direction')}
         content={
           <>
-            <span className="uppercase">{value.transfer.from!.name}</span>
+            <span className="capitalize">{value.transfer.from!.name}</span>
             <RightOutlined className="mx-4" />
-            <span className="uppercase">{value.transfer.to!.name}</span>
+            <span className="capitalize">{value.transfer.to!.name}</span>
           </>
         }
       />
 
-      <Des title={t('From')} content={value.sender} />
+      <Des title={t('From')} content={sender} />
 
       <Des title={t('To')} content={value.recipient}></Des>
 
