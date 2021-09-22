@@ -10,7 +10,7 @@ export interface HistoryReq {
   address: string;
   network: Network;
   paginator: Paginator;
-  confirmed: boolean;
+  confirmed?: boolean;
 }
 
 /* ------------------------------------E2D section-------------------------------------------- */
