@@ -11,7 +11,7 @@ import {
   TransferFormValues,
   TxSuccessComponentProps,
 } from '../../model';
-import { convertToSS58, fromWei, isPolkadotNetwork } from '../../utils';
+import { convertToSS58, fromWei, isEthereumNetwork, isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
