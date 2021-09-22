@@ -113,7 +113,7 @@
   "Txhash": "Txhash",
   "Upcoming": "Upcoming",
   "User Guide": "User Guide",
-  "View in subscan browser": "View in Subscan browser",
+  "View in {{scan}} browser": "View in {{scan}} browser",
   "Wormhole is in beta. Please use at your own risk level": "Wormhole is in beta. Please use at your own risk level",
   "You maybe forgot to select receive or sending network": "You maybe forgot to select receive or sending network",
   "You must select at least one of these assets": "You must select at least one of these assets",

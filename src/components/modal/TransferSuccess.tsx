@@ -11,7 +11,7 @@ import {
   TransferFormValues,
   TxSuccessComponentProps,
 } from '../../model';
-import { convertToSS58, fromWei, isPolkadotNetwork } from '../../utils';
+import { convertToSS58, fromWei, isEthereumNetwork, isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
@@ -81,7 +81,9 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
       </p>
 
       <SubscanLink {...linkProps} network={value.transfer.from?.name as Network}>
-        {t('View in subscan browser')}
+        {t('View in {{scan}} browser', {
+          scan: isEthereumNetwork(value.transfer.from?.name) ? 'Etherscan' : 'Subscan',
+        })}
       </SubscanLink>
     </>
   );
