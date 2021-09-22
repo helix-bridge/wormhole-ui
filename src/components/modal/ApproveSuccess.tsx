@@ -24,7 +24,7 @@ export function ApproveSuccess({ value, tx }: TxSuccessComponentProps<TransferPa
       </p>
 
       <SubscanLink txHash={tx.hash} network={value.transfer.from?.name as Network}>
-        {t('View in subscan browser')}
+        {t('View in {{scan}} browser', { scan: 'Etherscan' })}
       </SubscanLink>
     </>
   );
