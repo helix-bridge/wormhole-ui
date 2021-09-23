@@ -1,3 +1,11 @@
+## [2.0.2](https://github.com/darwinia-network/wormhole-pro/compare/v2.0.1...v2.0.2) (2021-09-23)
+
+### Bug Fixes
+
+- **#104:** records view changed ([#115](https://github.com/darwinia-network/wormhole-pro/issues/115)) ([98e8d6a](https://github.com/darwinia-network/wormhole-pro/commit/98e8d6a620022ce4a7182b907ae567d25fd70a97)), closes [#104](https://github.com/darwinia-network/wormhole-pro/issues/104)
+- **#106:** subscan link text ([#112](https://github.com/darwinia-network/wormhole-pro/issues/112)) ([62dc0c8](https://github.com/darwinia-network/wormhole-pro/commit/62dc0c80d8846d7051d569222872bac1cf933aea)), closes [#106](https://github.com/darwinia-network/wormhole-pro/issues/106)
+- **#108:** prefixed polkadot address ([#111](https://github.com/darwinia-network/wormhole-pro/issues/111)) ([4253c24](https://github.com/darwinia-network/wormhole-pro/commit/4253c24a6b4795b05282cb6d49a34af7fbaf4be2))
+
 ## 2.0.1 (2021-09-17)
 
 ### Bug Fixes
