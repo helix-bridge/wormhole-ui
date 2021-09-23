@@ -7,14 +7,11 @@ on:
     branches: [staging, master]
 
 jobs:
-  install-dependencies:
-    name: Install dependencies
+  test-cypress:
+    name: Test cypress
     runs-on: ubuntu-latest
-    container: cypress/browsers:node14.16.0-chrome90-ff88
     steps:
       - uses: actions/checkout@v2
-      # Install NPM dependencies, cache them correctly
-      # and run all Cypress tests
       - name: Install dependencies
         uses: cypress-io/github-action@v2
         with:
