@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  push:
+    branches: [staging, master]
+  pull_request:
+    branches: [staging, master]
+
+jobs:
+  test-unit:
+    name: Run unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Run unit test
+        run: yarn test:unit:ci
+
+  test-cypress:
+    name: Run cypress test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Run unit test
+        run: yarn test:e2e:ci
