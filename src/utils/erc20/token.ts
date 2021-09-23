@@ -1,7 +1,7 @@
 import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import BN from 'bn.js';
-import { memoize } from 'lodash';
+import { memoize, upperFirst } from 'lodash';
 import { EMPTY, forkJoin, from, NEVER, Observable, of, zip } from 'rxjs';
 import { catchError, delay, map, retryWhen, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
@@ -15,7 +15,6 @@ import {
   getMMRProof,
   getMPTProof,
   MMRProof,
-  toUpperCaseFirst,
 } from '../helper';
 import { getAvailableNetworks, getMetamaskActiveAccount, isNetworkMatch } from '../network';
 import { rxGet } from '../records';
@@ -314,7 +313,7 @@ export function confirmRegister(proof: StoredProof, config: NetConfig): Observab
   const toConfig = getAvailableNetworks(config.name)!;
   const mmrRootMessage = encodeMMRRootMessage({
     root: mmr_root,
-    prefix: toUpperCaseFirst(toConfig.name) as ClaimNetworkPrefix,
+    prefix: upperFirst(toConfig.name) as ClaimNetworkPrefix,
     methodID: '0x479fbdf9',
     index: +mmr_index,
   });

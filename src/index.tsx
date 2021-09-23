@@ -1,16 +1,22 @@
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
+import ReactLoading from 'react-loading';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { TxProvider } from './providers';
 import App from './App';
 import './index.scss';
-import { ApiProvider, GqlProvider } from './providers';
+import { ApiProvider, GqlProvider, TxProvider } from './providers';
 import { AccountProvider } from './providers/account-provider';
 import reportWebVitals from './reportWebVitals';
 import './theme/antd/index.less';
 
 ReactDOM.render(
-  <Suspense fallback="loading">
+  <Suspense
+    fallback={
+      <div className="flex justify-center items-center w-screen h-screen bg-gray-800">
+        <ReactLoading type="bars" color="#fff" />
+      </div>
+    }
+  >
     <Router>
       <ApiProvider>
         <AccountProvider>

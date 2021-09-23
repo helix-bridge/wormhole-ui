@@ -2,8 +2,9 @@ import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { decodeAddress } from '@polkadot/util-crypto';
 import { catchError, EMPTY, filter, from, map, Observable, switchMap, take, zip } from 'rxjs';
+import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
-import { HistoryReq, D2EHistoryRes, D2EMeta, LockEventsStorage, Network, Tx } from '../../model';
+import { D2EHistoryRes, D2EMeta, HistoryReq, LockEventsStorage, Network, Tx } from '../../model';
 import {
   apiUrl,
   ClaimNetworkPrefix,
@@ -14,7 +15,7 @@ import {
 } from '../helper';
 import { getAvailableNetworks, getEthConnection } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
-import { rxGet } from './api';
+import { getHistoryQueryParams, rxGet } from './api';
 
 export function queryD2ERecords({
   address,
@@ -28,13 +29,11 @@ export function queryD2ERecords({
 
   const config = NETWORK_CONFIG[network];
   const api = config.api.dapp;
-  const params = {
-    address: buf2hex(decodeAddress(address).buffer),
-    confirmed: confirmed.toString(),
-    ...(paginator ?? { row: 100, page: 0 }),
-  };
 
-  return rxGet<D2EHistoryRes>({ url: apiUrl(api, DarwiniaApiPath.locks), params }).pipe(
+  return rxGet<D2EHistoryRes>({
+    url: apiUrl(api, DarwiniaApiPath.locks),
+    params: getHistoryQueryParams({ address: buf2hex(decodeAddress(address).buffer), confirmed, paginator }),
+  }).pipe(
     catchError((err) => {
       console.error('%c [ d2e records request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
       return [];
@@ -99,64 +98,51 @@ export function claimToken({
 
   return apiObs.pipe(
     switchMap((api) => {
-      const mmrProofObs = from(getMMRProof(api, blockNumber, mmrIndex, blockHash));
-      const eventsProofObs = from(getMPTProof(api, blockHash, storageKey));
+      const eventsProofObs = from(getMPTProof(api, blockHash, storageKey)).pipe(map((str) => str.toHex()));
 
-      return zip([mmrProofObs, eventsProofObs, accountObs], (mmrProof, eventsProof, account) => ({
-        account,
-        proof: {
-          root: '0x' + MMRRoot,
-          MMRIndex: best,
-          blockNumber,
-          blockHeader: header.toHex(),
-          peaks: mmrProof.peaks,
-          siblings: mmrProof.siblings,
-          eventsProofStr: eventsProof.toHex(),
-        },
-      })).pipe(
-        switchMap(({ account, proof }) => {
-          const { root, MMRIndex, blockHeader, peaks, siblings, eventsProofStr } = proof;
-          const contractAddress = toNetworkConfig.tokenContract.bankEthereum || '';
+      return MMRRoot && best && best > blockNumber
+        ? zip([from(getMMRProof(api, blockNumber, best, blockHash)), eventsProofObs, accountObs]).pipe(
+            map(
+              ([mmrProof, eventsProofStr, account]) =>
+                (contract: Contract) =>
+                  contract.methods
+                    .verifyProof(
+                      '0x' + MMRRoot,
+                      best,
+                      header.toHex(),
+                      mmrProof.peaks,
+                      mmrProof.siblings,
+                      eventsProofStr
+                    )
+                    .send({ from: account })
+            )
+          )
+        : zip([from(getMMRProof(api, blockNumber, mmrIndex, blockHash)), eventsProofObs, accountObs]).pipe(
+            map(([mmrProof, eventsProofStr, account]) => {
+              const mmrRootMessage = encodeMMRRootMessage({
+                prefix: networkPrefix,
+                methodID: '0x479fbdf9',
+                index: mmrIndex,
+                root: mmrRoot,
+              });
 
-          if (MMRRoot && best && best > blockNumber) {
-            return getContractTxObs(
-              contractAddress,
-              (contract) => {
-                contract.methods
-                  .verifyProof(root, MMRIndex, blockHeader, peaks, siblings, eventsProofStr)
-                  .send({ from: account });
-              },
-              abi.tokenIssuingABI
-            );
-          } else {
-            const mmrRootMessage = encodeMMRRootMessage({
-              prefix: networkPrefix,
-              methodID: '0x479fbdf9',
-              index: mmrIndex,
-              root: mmrRoot,
-            });
-
-            return getContractTxObs(
-              contractAddress,
-              (contract) =>
+              return (contract: Contract) =>
                 contract.methods
                   .appendRootAndVerifyProof(
                     mmrRootMessage.toHex(),
                     mmrSignatures.split(','),
                     mmrRoot,
                     mmrIndex,
-                    blockHeader,
-                    peaks,
-                    siblings,
+                    header.toHex(),
+                    mmrProof.peaks,
+                    mmrProof.siblings,
                     eventsProofStr
                   )
-                  .send({ from: account }),
-              abi.tokenIssuingABI
-            );
-          }
-        })
-      );
-    })
+                  .send({ from: account });
+            })
+          );
+    }),
+    switchMap((txFn) => getContractTxObs(toNetworkConfig.tokenContract.bankEthereum || '', txFn, abi.tokenIssuingABI))
   );
 }
 

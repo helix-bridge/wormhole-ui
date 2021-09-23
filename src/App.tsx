@@ -1,53 +1,56 @@
-import { LockOutlined, UnlockOutlined, UnorderedListOutlined, WarningOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip } from 'antd';
+import { LockOutlined, UnlockOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { Badge, Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import { BridgeStatus } from './components/BridgeStatus';
 import { ActiveAccount } from './components/ActiveAccount';
+import { BridgeStatus } from './components/BridgeStatus';
 import { Footer } from './components/Footer';
+import { DownIcon } from './components/icons';
+import { Nebula } from './components/Nebula';
+import { ThemeSwitch } from './components/ThemeSwitch';
 import { THEME } from './config';
 import { Path, routes } from './config/routes';
 import { useApi } from './hooks';
 import { readStorage } from './utils/helper/storage';
-import { Nebula } from './components/Nebula';
-import { ThemeSwitch } from './components/ThemeSwitch';
-import { DownIcon } from './components/icons';
 
 const { Header, Content } = Layout;
 
 interface Nav {
   label: string;
   path: Path | string;
+  extra?: boolean;
   pathGroup?: string[];
 }
 
 const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
 const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
 const transferRecords: Nav = { label: 'Transfer Records', path: Path.history };
-const airdropRecords: Nav = { label: 'Airdrop Records', path: Path.airdropHistory };
-const records = [
-  { label: 'History Records', path: '', pathGroup: [Path.history, Path.airdropHistory] },
-  transferRecords,
-  airdropRecords,
-];
-const guide: Nav = { label: 'Guide', path: 'xxx' };
 
-function NavLink({ nav }: { nav: Nav }) {
+function NavLink({ nav, theme }: { nav: Nav; theme: THEME }) {
   const { t } = useTranslation();
   const history = useHistory();
+  const textCls = useMemo(() => (theme === 'dark' ? '' : 'text-pangolin-main'), [theme]);
+  const active =
+    nav.path === location.pathname || nav?.pathGroup?.includes(location.pathname)
+      ? theme === 'dark'
+        ? 'shadow-mock-bottom-border-light'
+        : 'shadow-mock-bottom-border'
+      : '';
 
   return (
     <div
       onClick={() => {
-        if (nav.path) {
+        if (nav.extra) {
+          window.open(nav.path, '_blank');
+        } else if (nav.path) {
           history.push(nav.path);
+        } else {
+          // nothing
         }
       }}
-      className={`${
-        nav.path === location.pathname || nav?.pathGroup?.includes(location.pathname) ? 'shadow-mock-bottom-border' : ''
-      } transition-all duration-300 ease-in-out text-gray-300 hover:text-gray-100 cursor-pointer`}
+      className={`${active} ${textCls} transition-all duration-300 ease-in-out opacity-100 hover:opacity-80 cursor-pointer`}
       key={nav.label}
     >
       {t(nav.label)}
@@ -55,16 +58,35 @@ function NavLink({ nav }: { nav: Nav }) {
   );
 }
 
+function RouteLink({ path, label }: Nav) {
+  const { t } = useTranslation();
+
+  return path.includes('http') ? (
+    <Typography.Link href={path} target="_blank">
+      {t(label)}
+    </Typography.Link>
+  ) : (
+    <Link to={path}>{t(label)}</Link>
+  );
+}
+
 // eslint-disable-next-line complexity
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { enableTestNetworks, setEnableTestNetworks, isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
-  const navMenus = useMemo(() => (isDev ? [crossChain, records, erc20Manager, guide] : [crossChain, records]), [isDev]);
-  const navMenusForMobile = useMemo(
-    () => (isDev ? [crossChain, ...records.slice(1), erc20Manager, guide] : [crossChain, ...records.slice(1)]),
-    [isDev]
+  const guide = useMemo(
+    () => ({
+      label: 'Guide',
+      path: `https://docs.darwinia.network/${i18n.language === 'zh' ? 'zh-CN' : i18n.language}/wiki-tut-wormhole`,
+      extra: true,
+    }),
+    [i18n.language]
+  );
+  const navMenus = useMemo(
+    () => (isDev ? [crossChain, transferRecords, erc20Manager, guide] : [crossChain, transferRecords, guide]),
+    [isDev, guide]
   );
 
   return (
@@ -73,40 +95,40 @@ function App() {
         className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-2"
         style={{ marginTop: -1 }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex">
           <Link to={Path.root}>
-            <img src="/image/logo.svg" alt="" className="h-4 hidden md:h-6 md:inline-block" />
+            <img src="/image/logo.svg" alt="" className="h-4 hidden md:h-8 md:inline-block" />
             <img src="/image/logo-mini.svg" alt="" className="h-16 md:hidden md:h-6 inline-block" />
           </Link>
 
-          <Tooltip title={t('Wormhole is in beta. Please trade at your own risk level')}>
-            <WarningOutlined className="md:ml-4 cursor-pointer text-xl" style={{ color: 'yellow' }} />
+          <Tooltip title={t('Wormhole is in beta. Please use at your own risk level')}>
+            <Badge size="small" count={'beta'} className="mt-2"></Badge>
           </Tooltip>
         </div>
 
         <div className="flex xl:justify-between lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-24">
-          <div className="hidden gap-8 lg:flex light:text-white">
+          <div className="hidden gap-8 lg:flex">
             {navMenus.map((nav, index) =>
               Array.isArray(nav) ? (
                 <Dropdown
                   key={index}
                   overlay={
                     <Menu>
-                      {nav.slice(1).map((item) => (
-                        <Menu.Item key={item.path}>
-                          <Link to={item.path}>{t(item.label)}</Link>
+                      {nav.slice(1).map((item, idx) => (
+                        <Menu.Item key={item.path + '_' + idx}>
+                          <RouteLink {...item} />
                         </Menu.Item>
                       ))}
                     </Menu>
                   }
                 >
                   <div className="flex items-center">
-                    <NavLink nav={nav[0]} />
+                    <NavLink nav={nav[0]} theme={theme} />
                     <DownIcon className="ml-2" />
                   </div>
                 </Dropdown>
               ) : (
-                <NavLink nav={nav} key={index} />
+                <NavLink nav={nav} key={index} theme={theme} />
               )
             )}
           </div>
@@ -117,9 +139,9 @@ function App() {
             <Dropdown
               overlay={
                 <Menu>
-                  {navMenusForMobile.map((item) => (
-                    <Menu.Item key={item.path}>
-                      <Link to={item.path}>{t(item.label)}</Link>
+                  {navMenus.map((item, index) => (
+                    <Menu.Item key={item.path + '_' + index}>
+                      <RouteLink {...item} />
                     </Menu.Item>
                   ))}
                 </Menu>
@@ -128,7 +150,7 @@ function App() {
             >
               <Button
                 type="link"
-                icon={<UnorderedListOutlined style={{ color: theme === THEME.LIGHT ? 'white' : 'inherit' }} />}
+                icon={<UnorderedListOutlined />}
                 size="large"
                 className="flex items-center justify-center sm:mx-4"
               ></Button>

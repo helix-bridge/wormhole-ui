@@ -289,7 +289,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpcUrls: [],
     },
     facade: {
-      logo: '',
+      logo: '/image/tron-button-mobile.png',
       logoWithText: '',
     },
     fullName: 'Tron',
