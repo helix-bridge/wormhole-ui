@@ -7,26 +7,52 @@ on:
     branches: [staging, master]
 
 jobs:
-  test-unit:
-    name: Run unit test
+  install-dependencies:
+    name: Install dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: '16'
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules
+      - name: Run unit test
+        run: yarn install
 
+  test-unit:
+    name: Run unit test
+    runs-on: ubuntu-latest
+    needs: [install-dependencies]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules
       - name: Run unit test
         run: yarn test:unit:ci
 
   test-cypress:
     name: Run cypress test
     runs-on: ubuntu-latest
+    needs: [install-dependencies]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: '16'
-
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules
       - name: Run unit test
         run: yarn test:e2e:ci
