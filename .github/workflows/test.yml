@@ -10,55 +10,52 @@ jobs:
   install-dependencies:
     name: Install dependencies
     runs-on: ubuntu-latest
+    container: cypress/browsers:node14.16.0-chrome90-ff88
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14.16'
-      - name: Cache node_modules
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node_modules
+      # Install NPM dependencies, cache them correctly
+      # and run all Cypress tests
       - name: Install dependencies
-        env:
-          CYPRESS_CACHE_FOLDER: ./node_modules/cypress/
-        run: yarn install
-
-  test-unit:
-    name: Run unit test
-    runs-on: ubuntu-latest
-    needs: [install-dependencies]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+        uses: cypress-io/github-action@v2
         with:
-          node-version: '14.16'
-      - name: Cache node_modules
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node_modules
-      - name: Run unit test
-        env:
-          CYPRESS_CACHE_FOLDER: ./node_modules/cypress/
-        run: yarn test:unit:ci
-
-  test-cypress:
-    name: Run cypress test
-    runs-on: ubuntu-latest
-    needs: [install-dependencies]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14.16'
-      - name: Cache node_modules
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node_modules
-      - name: Run unit test
-        env:
-          CYPRESS_CACHE_FOLDER: ./node_modules/cypress/
-        run: yarn test:e2e:ci
+          build: yarn install
+          start: yarn start
+#  test-unit:
+#    name: Run unit test
+#    runs-on: ubuntu-latest
+#    needs: [install-dependencies]
+#    container: cypress/browsers:node14.16.0-chrome90-ff88
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/setup-node@v2
+#        with:
+#          node-version: '14.16'
+#      - name: Cache node_modules
+#        uses: actions/cache@v2
+#        with:
+#          path: node_modules
+#          key: ${{ runner.os }}-node_modules
+#      - name: Run unit test
+#        env:
+#          CYPRESS_CACHE_FOLDER: ./node_modules/cypress/
+#        run: yarn test:unit:ci
+#
+#  test-cypress:
+#    name: Run cypress test
+#    runs-on: ubuntu-latest
+#    needs: [install-dependencies]
+#    container: cypress/browsers:node14.16.0-chrome90-ff88
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/setup-node@v2
+#        with:
+#          node-version: '14.16'
+#      - name: Cache node_modules
+#        uses: actions/cache@v2
+#        with:
+#          path: node_modules
+#          key: ${{ runner.os }}-node_modules
+#      - name: Run unit test
+#        env:
+#          CYPRESS_CACHE_FOLDER: ./node_modules/cypress/
+#        run: yarn test:e2e:ci
