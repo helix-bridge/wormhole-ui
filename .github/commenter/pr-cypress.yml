@@ -1,16 +1,17 @@
 comment:
   on-update: recreate
   header: |
-    Thank you for contributing to this repository :tada:.
+    Test failed :rage3:.
 
   footer: |
     ---
-    Automated comment created by [PR Commenter](https://github.com/exercism/pr-commenter-action) :robot:.
+    Automated comment created by :robot:.
 
   snippets:
     - id: any-markdown-file-changed
       files:
         - '*'
       body: |
-        It looks like you're changing a Markdown file.
-        Make sure your changes follow our [language guidelines](some-link) when writing documentation.
+        - today: {{ today }}
+        - pr_author: {{ pr_author }}
+        - github_ref: {{ github_ref }}

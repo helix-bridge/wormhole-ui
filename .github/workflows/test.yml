@@ -12,20 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Start server
+      - name: Custom tests 🧪
         uses: cypress-io/github-action@v2
         with:
           build: yarn install
           start: yarn start
+          command: yarn test:e2e:ci
           record: true
           parallel: true
           group: 'Actions example'
         env:
-          # pass the Dashboard record key as an environment variable
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          # Recommended: pass the GitHub token lets this action correctly
-          # determine the unique run id necessary to re-run the checks
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@v1
         if: failure()
@@ -43,44 +40,11 @@ jobs:
         uses: exercism/pr-commenter-action@v1.3.0
         if: failure()
         with:
+          template-variables: |
+            {
+              "today": "${{ steps.vars.outputs.today }}",
+              "pr_author": "${{ github.event.pull_request.user.login }}",
+              "github_ref": "${GITHUB_REF}"
+            }
           github-token: ${{ secrets.GITHUB_TOKEN }}
           config-file: .github/commenter/pr-cypress.yml
-#  test-unit:
-#    name: Run unit test
-#    runs-on: ubuntu-latest
-#    needs: [install-dependencies]
-#    container: cypress/browsers:node14.16.0-chrome90-ff88
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: actions/setup-node@v2
-#        with:
-#          node-version: '14.16'
-#      - name: Cache node_modules
-#        uses: actions/cache@v2
-#        with:
-#          path: node_modules
-#          key: ${{ runner.os }}-node_modules
-#      - name: Run unit test
-#        env:
-#          CYPRESS_CACHE_FOLDER: ./node_modules/cypress/
-#        run: yarn test:unit:ci
-#
-#  test-cypress:
-#    name: Run cypress test
-#    runs-on: ubuntu-latest
-#    needs: [install-dependencies]
-#    container: cypress/browsers:node14.16.0-chrome90-ff88
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: actions/setup-node@v2
-#        with:
-#          node-version: '14.16'
-#      - name: Cache node_modules
-#        uses: actions/cache@v2
-#        with:
-#          path: node_modules
-#          key: ${{ runner.os }}-node_modules
-#      - name: Run unit test
-#        env:
-#          CYPRESS_CACHE_FOLDER: ./node_modules/cypress/
-#        run: yarn test:e2e:ci
