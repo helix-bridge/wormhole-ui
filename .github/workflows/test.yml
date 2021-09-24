@@ -8,15 +8,20 @@ on:
 
 jobs:
   test-cypress:
-    name: Test cypress
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install dependencies
+      - name: Start server
         uses: cypress-io/github-action@v2
         with:
           build: yarn install
           start: yarn start
+
+      - name: Custom tests 🧪
+        uses: cypress-io/github-action@v1
+        with:
+          command: yarn test:e2e:ci
 #  test-unit:
 #    name: Run unit test
 #    runs-on: ubuntu-latest
