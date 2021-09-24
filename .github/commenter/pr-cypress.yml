@@ -10,8 +10,7 @@ comment:
   snippets:
     - id: any-markdown-file-changed
       files:
-        - '*.md'
-        - '**/*.md'
+        - '*'
       body: |
         It looks like you're changing a Markdown file.
         Make sure your changes follow our [language guidelines](some-link) when writing documentation.
