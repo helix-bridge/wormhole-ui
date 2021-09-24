@@ -16,5 +16,6 @@
   "nodeVersion": "system",
   "chromeWebSecurity": true,
   "videoCompression": 15,
-  "video": true
+  "video": true,
+  "projectId": "37wetq"
 }
