@@ -1,8 +1,6 @@
 name: Test
 
 on:
-  push:
-    branches: [staging, master]
   pull_request:
     branches: [staging, master]
 
@@ -36,15 +34,31 @@ jobs:
           name: cypress-videos
           path: cypress/videos
 
-      - name: Comment
-        uses: exercism/pr-commenter-action@v1.3.0
-        if: failure()
+      - name: Render comment
+        uses: chuhlomin/render-template@v1.2
         with:
-          template-variables: |
-            {
-              "today": "${{ steps.vars.outputs.today }}",
-              "pr_author": "${{ github.event.pull_request.user.login }}",
-              "github_ref": "${GITHUB_REF}"
-            }
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          config-file: .github/commenter/pr-cypress.yml
+          template: .github/comment/pr-cypress.md
+          vars: |
+            today: ${{ steps.vars.outputs.today }}
+            job: ${{ github.job }}
+            run_id: ${{ github.run_id }}
+            run_number: ${{ github.run_number }}
+
+      - name: Publish comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Build output
+            ${{ steps.build.outputs.build-log }}
+          edit-mode: replace
+
+      - name: add artifact links to pull request and related issues step
+        uses: tonyhallett/artifacts-url-comments@v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          prefix: Here are the artifacts
+          suffix: Have a nice day.
+          format: name
+          addTo: pullandissues
