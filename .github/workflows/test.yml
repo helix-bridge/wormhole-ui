@@ -27,10 +27,12 @@ jobs:
           # determine the unique run id necessary to re-run the checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Custom tests 🧪
-        uses: cypress-io/github-action@v1
+      - name: Comment
+        uses: exercism/pr-commenter-action@v1.3.0
+        if: failure()
         with:
-          command: yarn test:e2e:ci
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .github/commenter/pr-cypress.yml
 #  test-unit:
 #    name: Run unit test
 #    runs-on: ubuntu-latest
