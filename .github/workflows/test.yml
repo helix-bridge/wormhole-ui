@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Custom tests 🧪
+      - name: Run E2E tests 🧪
         uses: cypress-io/github-action@v2
         with:
-          build: yarn install
           start: yarn start
           command: yarn test:e2e:ci
           record: true
           parallel: true
           group: 'Actions example'
         env:
+          DEBUG: 'cypress:*'
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
       - uses: actions/upload-artifact@v1
