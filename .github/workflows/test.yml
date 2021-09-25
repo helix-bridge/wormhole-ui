@@ -16,7 +16,6 @@ jobs:
           start: yarn start
           command: yarn test:e2e:ci
           record: true
-          parallel: true
           group: 'Actions example'
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
