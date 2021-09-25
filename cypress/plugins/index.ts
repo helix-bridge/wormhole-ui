@@ -25,10 +25,8 @@ module.exports = (on, config) => {
   // `config` is the resolved Cypress config
   // require('@carlos0202/cypress-metamask/plugins')(on);
   cracoPlugin(on, config, cracoConf);
-  require('cypress-metamask/plugins')(on);
   on('before:browser:launch', (browser = {}, launchOptions) => {
     launchOptions.args.push('--auto-open-devtools-for-tabs');
-    launchOptions.extensions.push('./cypress/extensions/MetaMask');
     return launchOptions;
   });
 
