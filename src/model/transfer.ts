@@ -1,4 +1,5 @@
 import { FormInstance } from 'antd';
+import { Subscription } from 'rxjs';
 import { Unit } from 'web3-utils';
 import { Erc20Token } from './erc20';
 import { Deposit } from './evolution';
@@ -15,9 +16,11 @@ export interface CustomFormControlProps<T = string> {
   onChange?: (value: T) => void;
 }
 
+export type SubmitFn = (value: TransferFormValues) => Subscription;
+
 export interface BridgeFormProps<T extends TransferParty> {
   form: FormInstance<TransferFormValues<T>>;
-  setSubmit: React.Dispatch<React.SetStateAction<(value: TransferFormValues) => void>>;
+  setSubmit: React.Dispatch<React.SetStateAction<SubmitFn>>;
 }
 
 /* ---------------------------------------------------Bridge elements--------------------------------------------------- */

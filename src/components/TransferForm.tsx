@@ -1,7 +1,7 @@
 import { Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { isEqual } from 'lodash';
-import React, { FunctionComponent, useEffect, useState } from 'react';
+import React, { FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
@@ -10,11 +10,19 @@ import {
   Departure,
   Network,
   NetworkMode,
+  SubmitFn,
   TransferFormValues,
   TransferNetwork,
   TransferParty,
 } from '../model';
-import { empty, getInitialSetting, getNetConfigByVer, getNetworkMode, isReachable, isSameNetConfig } from '../utils';
+import {
+  emptyObsFactory,
+  getInitialSetting,
+  getNetConfigByVer,
+  getNetworkMode,
+  isReachable,
+  isSameNetConfig,
+} from '../utils';
 import { Airport } from './Airport';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
 import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
@@ -123,8 +131,11 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
   } = useApi();
   const [transfer, setTransfer] = useState(() => validateTransfer(getTransferFromSettings(), isCross));
   const [isFromReady, setIsFromReady] = useState(false);
-  const [submitFn, setSubmit] = useState<(value: TransferFormValues) => void>(empty);
+  const [submitFn, setSubmit] = useState<SubmitFn>(emptyObsFactory);
   const { tx } = useTx();
+  const launch = useCallback(() => {
+    form.validateFields().then((values) => submitFn(values));
+  }, [form, submitFn]);
 
   useEffect(() => {
     const { from } = transfer;
@@ -140,9 +151,6 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         layout="vertical"
         form={form}
         initialValues={{ transfer }}
-        onFinish={(value) => {
-          submitFn(value);
-        }}
         validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
         className={tx ? 'filter blur-sm drop-shadow' : ''}
       >
@@ -170,7 +178,7 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         {!isCross && isFromReady && <Airport form={form} transfer={transfer} setSubmit={setSubmit} />}
 
         <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
-          <SubmitButton {...transfer} requireTo />
+          <SubmitButton {...transfer} requireTo launch={launch} />
 
           {status === 'success' && (
             <FromItemButton type="default" onClick={() => disconnect()} disabled={!!tx}>

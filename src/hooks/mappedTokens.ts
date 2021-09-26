@@ -84,7 +84,7 @@ export const useMappedTokens = (
   useEffect(() => {
     // eslint-disable-next-line complexity
     (async () => {
-      if (connection.type !== 'metamask' || from === null) {
+      if (connection.type !== 'metamask' || !from) {
         updateTokens([]);
         return;
       }

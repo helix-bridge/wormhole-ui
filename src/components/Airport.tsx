@@ -81,11 +81,10 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
   }, [account, form, transfer.from]);
 
   useEffect(() => {
-    const fn = () => (value: AirportValues) => {
+    const fn = () => (value: AirportValues) =>
       signWith(value).subscribe(() => {
         message.success(t('Claim success!'));
       });
-    };
 
     setSubmit(fn);
   }, [setSubmit, t]);

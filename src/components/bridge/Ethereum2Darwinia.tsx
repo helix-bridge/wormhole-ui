@@ -26,15 +26,14 @@ import {
   applyModalObs,
   approveRingToIssuing,
   createTxWorkflow,
-  empty,
   fromWei,
   getInfoFromHash,
   isValidAddress,
   prettyNumber,
-  RedeemDeposit,
-  redeemDeposit,
   RedeemDarwiniaToken,
   redeemDarwiniaToken,
+  RedeemDeposit,
+  redeemDeposit,
   toWei,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
@@ -331,17 +330,17 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
 
   const updateSubmit = useCallback(
     (curAsset: E2DAssetEnum | Erc20Token | null) => {
-      let fn = empty;
-
       if (curAsset === E2DAssetEnum.deposit) {
-        fn = () => (value: RedeemDeposit) =>
+        const fn = () => (value: RedeemDeposit) =>
           createCrossDepositTx(
             value,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as any })(value)
           ).subscribe(observer);
+
+        setSubmit(fn);
       } else {
-        fn = () => (value: RedeemDarwiniaToken) => {
+        const fn = () => (value: RedeemDarwiniaToken) => {
           const { amount, asset: iAsset, ...rest } = value;
           const actual = {
             ...rest,
@@ -362,9 +361,9 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
             afterTx(TransferSuccess, { onDisappear: refreshBalance })(actual)
           ).subscribe(observer);
         };
-      }
 
-      setSubmit(fn);
+        setSubmit(fn);
+      }
     },
     [afterTx, fee, observer, refreshBalance, refreshDeposit, setSubmit]
   );

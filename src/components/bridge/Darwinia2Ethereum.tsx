@@ -256,7 +256,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
         return { asset, unit, amount: checked ? toWei({ value: amount, unit }) : '0' };
       });
 
-      ethereumBackingLockDarwinia(
+      return ethereumBackingLockDarwinia(
         { ...data, assets: assetsToSend },
         afterTx(TransferSuccess, {
           hashType: 'block',
