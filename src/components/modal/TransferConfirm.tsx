@@ -2,7 +2,7 @@ import { RightOutlined } from '@ant-design/icons';
 import { PropsWithChildren, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Darwinia2EthereumTransfer, TxConfirmComponentProps } from '../../model';
-import { convertToSS58, fromWei, isPolkadotNetwork } from '../../utils';
+import { convertToSS58, fromWei, getDisplayName, isPolkadotNetwork } from '../../utils';
 import { Des } from './Des';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,9 +51,9 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
         title={t('Cross-chain direction')}
         content={
           <>
-            <span className="capitalize">{value.transfer.from!.name}</span>
+            <span className="capitalize">{getDisplayName(value.transfer.from)}</span>
             <RightOutlined className="mx-4" />
-            <span className="capitalize">{value.transfer.to!.name}</span>
+            <span className="capitalize">{getDisplayName(value.transfer.to)}</span>
           </>
         }
       />

@@ -135,5 +135,6 @@
   "{{enable}} the test networks to appear in the network selection panel": "{{enable}}测试网出现在网络选择菜单中",
   "{{name}} query failed, please wait and try again": "{{name}} 查询失败，请稍候再试",
   "{{network}} Network Address": "{{network}} 网络地址",
+  "{{network}} native token": "{{network}} 原生 Token",
   "{{year}} Darwinia": "{{year}} Darwinia"
 }

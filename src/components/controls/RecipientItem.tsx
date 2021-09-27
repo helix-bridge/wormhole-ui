@@ -40,7 +40,9 @@ export function RecipientItem({
             validator(_, value) {
               return isValidAddress(value, !isDvm ? type : 'ethereum', true) ? Promise.resolve() : Promise.reject();
             },
-            message: t('Please enter a valid {{network}} address', { network: to?.fullName }),
+            message: !isDvm
+              ? t('Please enter a valid {{network}} address', { network: to?.fullName })
+              : t('Please fill in a {{network}} smart address which start with 0x', { network: to?.fullName }),
           },
         ]}
         extra={to ? extraTip : ''}

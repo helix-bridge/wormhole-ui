@@ -1,10 +1,22 @@
 import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import { from, Observable, Observer, switchMapTo, tap } from 'rxjs';
-import { Darwinia2EthereumTransfer, DeepRequired, NoNullTransferNetwork, TransferFormValues, Tx } from '../../model';
+import {
+  Darwinia2EthereumTransfer,
+  DeepRequired,
+  Ethereum2DarwiniaTransfer,
+  NoNullTransferNetwork,
+  TransferFormValues,
+  Tx,
+} from '../../model';
 
 export type IssuingDarwiniaToken = TransferFormValues<
   DeepRequired<Darwinia2EthereumTransfer, ['sender' | 'assets' | 'recipient']>,
+  NoNullTransferNetwork
+>;
+
+export type IssuingSubstrateToken = TransferFormValues<
+  DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
   NoNullTransferNetwork
 >;
 
@@ -44,7 +56,7 @@ function extrinsicSpy(observer: Observer<Tx>) {
   };
 }
 
-export function issuingDarwiniaToken(value: IssuingDarwiniaToken, api: ApiPromise): Observable<Tx> {
+export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromise): Observable<Tx> {
   const { sender, recipient, assets } = value;
   const { amount: ring } = assets.find((item) => item.asset === 'ring') || { amount: '0' };
   const { amount: kton } = assets.find((item) => item.asset === 'kton') || { amount: '0' };
@@ -55,6 +67,29 @@ export function issuingDarwiniaToken(value: IssuingDarwiniaToken, api: ApiPromis
       .catch((error) => {
         observer.error({ status: 'error', error });
       });
+  });
+
+  return from(web3FromAddress(sender)).pipe(
+    tap((injector) => api.setSigner(injector.signer)),
+    switchMapTo(obs)
+  );
+}
+
+export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiPromise): Observable<Tx> {
+  const { sender, recipient, amount } = value;
+  const obs = new Observable((observer: Observer<Tx>) => {
+    try {
+      console.info(api.tx.substrate2SubstrateBacking.lockAndRemoteIssue.meta.toHuman());
+      api.tx.substrate2SubstrateBacking
+        // params: specVersion: u32, weight:u64, value:Compact<RingBalance>, fee:Compact<RingBalance>, recipient: EthereumAddress
+        .lockAndRemoteIssue(amount, recipient)
+        .signAndSend(sender, extrinsicSpy(observer))
+        .catch((error) => {
+          observer.error({ status: 'error', error });
+        });
+    } catch (err) {
+      observer.error({ status: 'error', error: (err as Record<string, string>).message });
+    }
   });
 
   return from(web3FromAddress(sender)).pipe(

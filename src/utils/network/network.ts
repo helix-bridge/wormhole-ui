@@ -292,11 +292,17 @@ export async function getConfigByConnection(connection: Connection): Promise<Net
     const { api } = connection as PolkadotConnection;
 
     try {
+      await api?.isReady;
+
       const chain = await api?.rpc.system.chain();
 
       return chain ? omit(NETWORK_CONFIG[chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;
     } catch (err) {
-      console.error('%c [ err ]-263', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+      console.error(
+        '%c [ err ]-263',
+        'font-size:13px; background:pink; color:#bf2c9f;',
+        (err as unknown as Record<string, string>).message
+      );
     }
   }
 

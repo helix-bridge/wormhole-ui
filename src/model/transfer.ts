@@ -57,8 +57,15 @@ export type Darwinia2EthereumAsset = Exclude<Token, 'native'>;
 export interface Darwinia2EthereumTransfer extends TransferParty {
   assets: (TransferAsset<Darwinia2EthereumAsset> & { checked?: boolean; unit?: Unit })[];
 }
+
 /* ---------------------------------------------------DVM--------------------------------------------------- */
 
 export type DVMAsset = Erc20Token;
 
 export interface DVMTransfer extends TransferParty, TransferAsset<DVMAsset> {}
+
+/* ---------------------------------------------------s2s--------------------------------------------------- */
+
+export type SubstrateAsset = string;
+
+export interface Substrate2SubstrateDVMTransfer extends TransferParty, TransferAsset<SubstrateAsset> {}

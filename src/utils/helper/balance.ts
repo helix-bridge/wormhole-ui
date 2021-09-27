@@ -53,7 +53,7 @@ const toStr = (value: WeiValue): string => {
   if (BN.isBN(value)) {
     return value.toString();
   } else if (isString(value)) {
-    return value.replace(',', '');
+    return value.replace(/,/g, '');
   } else if (isNumber(value)) {
     return String(value);
   } else if (isUndefined(value) || isNull(value) || isNaN(value)) {

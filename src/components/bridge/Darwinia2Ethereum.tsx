@@ -19,7 +19,7 @@ import {
   Tx,
 } from '../../model';
 import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, toWei } from '../../utils';
-import { issuingDarwiniaToken, IssuingDarwiniaToken } from '../../utils/tx/d2e';
+import { issuingDarwiniaTokens, IssuingDarwiniaToken } from '../../utils/tx/d2e';
 import { AssetGroup, AssetGroupValue } from '../controls/AssetGroup';
 import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
 import { RecipientItem } from '../controls/RecipientItem';
@@ -37,21 +37,6 @@ const BN_ZERO = new BN(0);
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
-async function getTokenBalanceDarwinia(api: ApiPromise, account = ''): Promise<[string, string]> {
-  try {
-    await api?.isReady;
-    // type = 0 query ring balance.  type = 1 query kton balance.
-    /* eslint-disable */
-    const ringUsableBalance = await (api?.rpc as any).balances.usableBalance(0, account);
-    const ktonUsableBalance = await (api?.rpc as any).balances.usableBalance(1, account);
-    /* eslint-enable */
-
-    return [ringUsableBalance.usableBalance.toString(), ktonUsableBalance.usableBalance.toString()];
-  } catch (error) {
-    return ['0', '0'];
-  }
-}
-
 async function getFee(api: ApiPromise | null): Promise<BN> {
   const fixed = Web3.utils.toBN('50000000000');
 
@@ -68,7 +53,7 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
   }
 }
 
-const getChainInfo = (tokens: TokenChainInfo[], target: Token) =>
+export const getChainInfo = (tokens: TokenChainInfo[], target: Token) =>
   target && tokens.find((token) => token.symbol.toLowerCase().includes(target));
 
 // eslint-disable-next-line complexity
@@ -181,7 +166,7 @@ function ethereumBackingLockDarwinia(
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });
-  const obs = issuingDarwiniaToken(value, api);
+  const obs = issuingDarwiniaTokens(value, api);
 
   return createTxWorkflow(beforeTx, obs, after);
 }
@@ -215,7 +200,11 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
         return [];
       }
 
-      const [ring, kton] = await getTokenBalanceDarwinia(api, account);
+      const {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        data: { free: ring = '0', freeKton: kton = '0' },
+      } = await api.query.system.account(account);
 
       return [
         {
