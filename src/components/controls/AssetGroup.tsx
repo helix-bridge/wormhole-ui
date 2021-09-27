@@ -5,17 +5,10 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
-import { CustomFormControlProps, Darwinia2EthereumTransfer, Network, Token } from '../../model';
-import { TokenChainInfo } from '../../providers';
+import { AvailableBalance, CustomFormControlProps, Darwinia2EthereumTransfer, Network } from '../../model';
 import { fromWei, getPrecisionByUnit, toWei } from '../../utils';
 import { Balance } from './Balance';
 import { MaxBalance } from './MaxBalance';
-
-export interface AvailableBalance {
-  max: string | number | BN;
-  asset: Token;
-  chainInfo?: TokenChainInfo;
-}
 
 export type AssetGroupValue = Darwinia2EthereumTransfer['assets'];
 
@@ -26,8 +19,7 @@ export function AssetGroup({
   network,
   balances,
   fee,
-}: // form,
-CustomFormControlProps<AssetGroupValue> & {
+}: CustomFormControlProps<AssetGroupValue> & {
   network: Network;
   fee: BN | null;
   balances: AvailableBalance[];

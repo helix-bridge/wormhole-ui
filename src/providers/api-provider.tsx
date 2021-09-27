@@ -1,8 +1,7 @@
 import { ApiPromise } from '@polkadot/api';
 import { createContext, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { EMPTY, Subscription } from 'rxjs';
-import { Units } from 'web3-utils';
-import { Action, Connection, NetConfig, Network, NetworkMode, PolkadotConnection } from '../model';
+import { Action, Chain, Connection, NetConfig, Network, NetworkMode, PolkadotConnection } from '../model';
 import { connect, getInitialSetting, getNetConfigByVer, getUnit, isEthereumNetwork, isPolkadotNetwork } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 
@@ -11,16 +10,6 @@ interface StoreState {
   network: NetConfig | null;
   isDev: boolean;
   enableTestNetworks: boolean;
-}
-
-export interface TokenChainInfo {
-  symbol: string;
-  decimal: keyof Units;
-}
-
-export interface Chain {
-  tokens: TokenChainInfo[];
-  ss58Format: string;
 }
 
 type ActionType = 'setNetwork' | 'setConnection' | 'setEnableTestNetworks';

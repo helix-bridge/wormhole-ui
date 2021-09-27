@@ -28,7 +28,6 @@ import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
 import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
 import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaDvm';
-import { Substrate2SubstrateDVM } from './bridge/Substrate2SubstrateDVM';
 import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
@@ -79,7 +78,7 @@ const DEPARTURES: [[Departure, Departure?], FunctionComponent<BridgeFormProps<an
   ],
   [[{ network: 'darwinia', mode: 'dvm' }], DarwiniaDVM2Ethereum],
   [[{ network: 'pangolin', mode: 'dvm' }], DarwiniaDVM2Ethereum],
-  [[{ network: 'pangoro', mode: 'native' }], Substrate2SubstrateDVM],
+  [[{ network: 'pangoro', mode: 'native' }], Darwinia2Ethereum],
 ];
 
 // eslint-disable-next-line complexity
@@ -145,48 +144,46 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
   }, [network, status, transfer]);
 
   return (
-    <>
-      <Form
+    <Form
+      name={FORM_CONTROL.transfer}
+      layout="vertical"
+      form={form}
+      initialValues={{ transfer }}
+      validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
+      className={tx ? 'filter blur-sm drop-shadow' : ''}
+    >
+      <Form.Item
         name={FORM_CONTROL.transfer}
-        layout="vertical"
-        form={form}
-        initialValues={{ transfer }}
-        validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
-        className={tx ? 'filter blur-sm drop-shadow' : ''}
-      >
-        <Form.Item
-          name={FORM_CONTROL.transfer}
-          rules={[
-            { required: true, message: t('Both send and receive network are all required') },
-            {
-              validator: (_, value: TransferNetwork) => {
-                return (value.from && value.to) || (!value.from && !value.to) ? Promise.resolve() : Promise.reject();
-              },
-              message: t('You maybe forgot to select receive or sending network'),
+        rules={[
+          { required: true, message: t('Both send and receive network are all required') },
+          {
+            validator: (_, value: TransferNetwork) => {
+              return (value.from && value.to) || (!value.from && !value.to) ? Promise.resolve() : Promise.reject();
             },
-          ]}
-        >
-          <Nets
-            onChange={(value) => {
-              setTransfer(value);
-            }}
-            isCross={isCross}
-          />
-        </Form.Item>
+            message: t('You maybe forgot to select receive or sending network'),
+          },
+        ]}
+      >
+        <Nets
+          onChange={(value) => {
+            setTransfer(value);
+          }}
+          isCross={isCross}
+        />
+      </Form.Item>
 
-        {isCross && isFromReady && React.createElement(getDeparture(transfer), { form, setSubmit })}
-        {!isCross && isFromReady && <Airport form={form} transfer={transfer} setSubmit={setSubmit} />}
+      {isCross && isFromReady && React.createElement(getDeparture(transfer), { form, setSubmit })}
+      {!isCross && isFromReady && <Airport form={form} transfer={transfer} setSubmit={setSubmit} />}
 
-        <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
-          <SubmitButton {...transfer} requireTo launch={launch} />
+      <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
+        <SubmitButton {...transfer} requireTo launch={launch} />
 
-          {status === 'success' && (
-            <FromItemButton type="default" onClick={() => disconnect()} disabled={!!tx}>
-              {t('Disconnect')}
-            </FromItemButton>
-          )}
-        </div>
-      </Form>
-    </>
+        {status === 'success' && (
+          <FromItemButton type="default" onClick={() => disconnect()} disabled={!!tx}>
+            {t('Disconnect')}
+          </FromItemButton>
+        )}
+      </div>
+    </Form>
   );
 }
