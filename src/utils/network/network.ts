@@ -292,10 +292,7 @@ export async function getConfigByConnection(connection: Connection): Promise<Net
     const { api } = connection as PolkadotConnection;
 
     try {
-      if (!api?.isConnected) {
-        await api?.connect();
-      }
-
+      // TODO: WebSocket is not connected error;
       const chain = await api?.rpc.system.chain();
 
       return chain ? omit(NETWORK_CONFIG[chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;

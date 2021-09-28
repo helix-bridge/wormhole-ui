@@ -1,7 +1,7 @@
 import { AccountData } from '@darwinia/types';
 import { Descriptions, Form, Select } from 'antd';
 import BN from 'bn.js';
-import { capitalize, isNull } from 'lodash';
+import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
@@ -17,14 +17,17 @@ import {
   TransferFormValues,
 } from '../../model';
 import {
+  amountLessThanFeeRule,
   applyModalObs,
   createTxWorkflow,
   fromWei,
+  insufficientBalanceRule,
   issuingSubstrateToken,
   IssuingSubstrateToken,
   ISSUING_SUBSTRATE_FEE,
   prettyNumber,
   toWei,
+  zeroAmountRule,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
 import { MaxBalance } from '../controls/MaxBalance';
@@ -96,7 +99,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
     chain,
   } = useApi();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
-  const availableBalance = useMemo(() => availableBalances[0]?.max ?? null, [availableBalances]);
+  const availableBalance = useMemo(() => availableBalances[0] ?? null, [availableBalances]);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
   const [fee] = useState<BN>(new BN(ISSUING_SUBSTRATE_FEE));
   const { updateDeparture } = useDeparture();
@@ -220,42 +223,26 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
         label={t('Amount')}
         rules={[
           { required: true },
-          {
-            validator(_, val: string) {
-              return new BN(val).isZero() ? Promise.reject() : Promise.resolve();
-            },
-            message: t('The transfer amount must great than 0'),
-          },
-          {
-            validator(_, val) {
-              const cur = new BN(toWei({ value: val, unit: availableBalances[0].chainInfo?.decimal }));
-              let pass = true;
-
-              if (/ring/i.test(String(form.getFieldValue(FORM_CONTROL.asset)))) {
-                pass = cur.gte(fee || new BN(0));
-              }
-
-              return pass ? Promise.resolve() : Promise.reject();
-            },
-            message: 'The transfer amount is not enough to cover the fee',
-          },
-          {
-            validator(_, val: string) {
-              const max = new BN(availableBalance);
-              const value = new BN(toWei({ value: val, unit: availableBalances[0].chainInfo?.decimal }));
-
-              return value.gt(max) ? Promise.reject() : Promise.resolve();
-            },
-            message: t('Insufficient balance'),
-          },
+          zeroAmountRule({ t }),
+          amountLessThanFeeRule({
+            t,
+            compared: fee.toString(),
+            token: availableBalance?.chainInfo,
+            asset: String(form.getFieldValue(FORM_CONTROL.asset)),
+          }),
+          insufficientBalanceRule({
+            t,
+            compared: availableBalance?.max,
+            token: availableBalance?.chainInfo,
+          }),
         ]}
       >
         <Balance
           size="large"
           placeholder={t('Balance {{balance}}', {
-            balance: isNull(availableBalance)
+            balance: !availableBalance
               ? t('Searching')
-              : fromWei({ value: availableBalance, unit: chain.tokens[0].decimal }, prettyNumber),
+              : fromWei({ value: availableBalance?.max, unit: availableBalance?.chainInfo?.decimal }, prettyNumber),
           })}
           className="flex-1"
           onChange={(val) => setCurAmount(val)}
@@ -263,7 +250,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
           <MaxBalance
             network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
             onClick={() => {
-              const { chainInfo, max } = availableBalances[0];
+              const { chainInfo, max } = availableBalance;
               const amount = fromWei({ value: max, unit: chainInfo?.decimal });
 
               form.setFieldsValue({ [FORM_CONTROL.amount]: amount });

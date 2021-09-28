@@ -23,6 +23,11 @@ export function PolkadotAccountsItem({ getBalances, onChange }: PolkadotAccounts
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
+
+    if (!sender) {
+      return;
+    }
+
     const sub$$ = from(getBalances(sender)).subscribe(setAvailableBalances);
 
     return () => sub$$.unsubscribe();

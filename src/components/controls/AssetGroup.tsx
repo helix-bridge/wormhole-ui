@@ -3,10 +3,9 @@ import FormList from 'antd/lib/form/FormList';
 import BN from 'bn.js';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { AvailableBalance, CustomFormControlProps, Darwinia2EthereumTransfer, Network } from '../../model';
-import { fromWei, getPrecisionByUnit, toWei } from '../../utils';
+import { amountLessThanFeeRule, fromWei, getPrecisionByUnit, insufficientBalanceRule } from '../../utils';
 import { Balance } from './Balance';
 import { MaxBalance } from './MaxBalance';
 
@@ -19,6 +18,7 @@ export function AssetGroup({
   network,
   balances,
   fee,
+  form,
 }: CustomFormControlProps<AssetGroupValue> & {
   network: Network;
   fee: BN | null;
@@ -99,28 +99,19 @@ export function AssetGroup({
                   className="flex-1 ml-4"
                   rules={[
                     { required: !!target.checked, message: t('Transfer amount is required') },
-                    {
-                      validator(_, val) {
-                        const cur = new BN(toWei({ value: val, unit }));
-                        let pass = true;
-
-                        if (/ring/i.test(String(balance?.asset))) {
-                          pass = cur.gte(fee || new BN(0));
-                        }
-
-                        return pass || !target.checked ? Promise.resolve() : Promise.reject();
-                      },
-                      message: 'The transfer amount is not enough to cover the fee',
-                    },
-                    {
-                      validator(_, val) {
-                        const max = new BN(Web3.utils.fromWei(balance?.max + '' || '0', unit));
-                        const cur = new BN(val);
-
-                        return cur.lte(max) ? Promise.resolve() : Promise.reject();
-                      },
-                      message: t('Insufficient balance'),
-                    },
+                    !target.checked
+                      ? {}
+                      : amountLessThanFeeRule({
+                          t,
+                          token: balance?.chainInfo,
+                          compared: fee ?? 0,
+                          asset: String(balance?.asset),
+                        }),
+                    insufficientBalanceRule({
+                      t,
+                      token: balance?.chainInfo,
+                      compared: balance?.max ?? '0',
+                    }),
                   ]}
                 >
                   <Balance
@@ -141,7 +132,6 @@ export function AssetGroup({
                       network={network}
                       size="large"
                       onClick={() => {
-                        // FIXME: trigger amount validation
                         const max = balance?.max || '0';
                         const val = {
                           ...target,
@@ -149,6 +139,7 @@ export function AssetGroup({
                         };
 
                         triggerChange(val, index, value);
+                        form.setFields([{ errors: [], name: [FORM_CONTROL.assets, field.name, 'amount'] }]);
                       }}
                     />
                   </Balance>
