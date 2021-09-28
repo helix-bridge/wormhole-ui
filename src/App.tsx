@@ -79,7 +79,7 @@ function App() {
   const guide = useMemo(
     () => ({
       label: 'Guide',
-      path: `https://docs.darwinia.network/${i18n.language === 'zh' ? 'zh-CN' : i18n.language}/wiki-tut-wormhole`,
+      path: `https://docs.darwinia.network/${i18n.language.startsWith('zh') ? 'zh-CN' : 'en'}/wiki-tut-wormhole`,
       extra: true,
     }),
     [i18n.language]

@@ -137,7 +137,7 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
   const isBalance = isExit(balance, 'Balance');
   const isRingExist = isExit(ringBalance, 'RING');
   const ringEnoughMsg = t('The ring balance it not enough to cover the fee');
-  const amountGtBalanceMsg = t('The transfer amount must less or equal than the balance');
+  const amountGtBalanceMsg = t('Insufficient balance');
   const ringGtThanFee: Rule = {
     validator: (_r, _v) => (ringBalance?.gte(fee!) ? Promise.resolve() : Promise.reject(ringEnoughMsg)),
     message: ringEnoughMsg,

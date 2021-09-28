@@ -104,7 +104,7 @@ export function AssetGroup({
                         const cur = new BN(toWei({ value: val, unit }));
                         let pass = true;
 
-                        if (balance?.asset === 'ring') {
+                        if (/ring/i.test(String(balance?.asset))) {
                           pass = cur.gte(fee || new BN(0));
                         }
 
@@ -119,7 +119,7 @@ export function AssetGroup({
 
                         return cur.lte(max) ? Promise.resolve() : Promise.reject();
                       },
-                      message: t('Transfer amount must not be greater than the max balance'),
+                      message: t('Insufficient balance'),
                     },
                   ]}
                 >

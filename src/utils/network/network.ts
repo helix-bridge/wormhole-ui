@@ -292,7 +292,9 @@ export async function getConfigByConnection(connection: Connection): Promise<Net
     const { api } = connection as PolkadotConnection;
 
     try {
-      await api?.isReady;
+      if (!api?.isConnected) {
+        await api?.connect();
+      }
 
       const chain = await api?.rpc.system.chain();
 

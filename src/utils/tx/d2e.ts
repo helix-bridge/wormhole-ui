@@ -75,14 +75,21 @@ export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromi
   );
 }
 
-export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiPromise): Observable<Tx> {
+export const ISSUING_SUBSTRATE_FEE = '50000000000';
+
+export function issuingSubstrateToken(
+  value: IssuingSubstrateToken,
+  api: ApiPromise,
+  fee = ISSUING_SUBSTRATE_FEE
+): Observable<Tx> {
   const { sender, recipient, amount } = value;
+  const WEIGHT = '40544000';
   const obs = new Observable((observer: Observer<Tx>) => {
     try {
-      console.info(api.tx.substrate2SubstrateBacking.lockAndRemoteIssue.meta.toHuman());
+      const specVersion = api.runtimeVersion.specVersion.toString();
+      console.info(api.tx.substrate2SubstrateBacking.lockAndRemoteIssue.meta.toHuman(), specVersion);
       api.tx.substrate2SubstrateBacking
-        // params: specVersion: u32, weight:u64, value:Compact<RingBalance>, fee:Compact<RingBalance>, recipient: EthereumAddress
-        .lockAndRemoteIssue(amount, recipient)
+        .lockAndRemoteIssue(specVersion, WEIGHT, amount, fee, recipient)
         .signAndSend(sender, extrinsicSpy(observer))
         .catch((error) => {
           observer.error({ status: 'error', error });

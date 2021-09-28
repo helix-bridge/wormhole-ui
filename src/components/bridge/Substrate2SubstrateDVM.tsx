@@ -22,6 +22,7 @@ import {
   fromWei,
   issuingSubstrateToken,
   IssuingSubstrateToken,
+  ISSUING_SUBSTRATE_FEE,
   prettyNumber,
   toWei,
 } from '../../utils';
@@ -55,9 +56,10 @@ interface TransferInfoProps {
 
 // eslint-disable-next-line complexity
 function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
-  const value = new BN(toWei({ value: amount || '0' }));
+  const unit = tokenInfo.decimal;
+  const value = new BN(toWei({ value: amount || '0', unit }));
 
-  if (!fee || !balance) {
+  if (!fee || fee.isZero() || !balance) {
     return (
       // eslint-disable-next-line no-magic-numbers
       <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
@@ -70,12 +72,12 @@ function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
     <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
       {value.gte(fee) && !value.isZero() && (
         <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
-          {fromWei({ value: value.sub(fee) })} {tokenInfo.symbol}
+          {fromWei({ value: value.sub(fee), unit })} {tokenInfo.symbol}
         </Descriptions.Item>
       )}
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
         <span className="flex items-center">
-          {fromWei({ value: fee })} {tokenInfo.symbol}
+          {fromWei({ value: fee, unit })} {tokenInfo.symbol}
         </span>
       </Descriptions.Item>
     </Descriptions>
@@ -96,7 +98,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
   const availableBalance = useMemo(() => availableBalances[0]?.max ?? null, [availableBalances]);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
-  const [fee] = useState<BN>(new BN(0));
+  const [fee] = useState<BN>(new BN(ISSUING_SUBSTRATE_FEE));
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<TransferFormValues<Substrate2SubstrateDVMTransfer, NoNullTransferNetwork>>();
@@ -225,13 +227,26 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
             message: t('The transfer amount must great than 0'),
           },
           {
+            validator(_, val) {
+              const cur = new BN(toWei({ value: val, unit: availableBalances[0].chainInfo?.decimal }));
+              let pass = true;
+
+              if (/ring/i.test(String(form.getFieldValue(FORM_CONTROL.asset)))) {
+                pass = cur.gte(fee || new BN(0));
+              }
+
+              return pass ? Promise.resolve() : Promise.reject();
+            },
+            message: 'The transfer amount is not enough to cover the fee',
+          },
+          {
             validator(_, val: string) {
               const max = new BN(availableBalance);
               const value = new BN(toWei({ value: val, unit: availableBalances[0].chainInfo?.decimal }));
 
               return value.gt(max) ? Promise.reject() : Promise.resolve();
             },
-            message: t('The transfer amount must less or equal than the balance'),
+            message: t('Insufficient balance'),
           },
         ]}
       >
