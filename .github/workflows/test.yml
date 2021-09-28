@@ -15,6 +15,7 @@ jobs:
         with:
           start: yarn start
           wait-on: 'http://localhost:3007'
+          wait-on-timeout: 300
           command: yarn test:e2e:ci
           record: true
           group: 'Actions example'
