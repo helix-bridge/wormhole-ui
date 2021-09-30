@@ -15,6 +15,7 @@ interface Erc20ControlProps extends CustomFormControlProps<Erc20Token | null> {
   tokens: MemoedTokenInfo[];
 }
 
+// eslint-disable-next-line complexity
 export function Erc20Control({ value, onChange, loading, tokens }: PropsWithRef<Erc20ControlProps>) {
   const { t } = useTranslation();
   const data = useMemo(() => groupBy(tokens, (token) => RegisterStatus[token.status ?? 0]), [tokens]);
@@ -53,6 +54,9 @@ export function Erc20Control({ value, onChange, loading, tokens }: PropsWithRef<
     return <Progress percent={99} status="active" strokeColor={{ from: '#5745de', to: '#ec3783' }} />;
   }
 
+  const inprogress = data[RegisterStatus[RegisterStatus.registering]] ?? [];
+  const confirmed = data[RegisterStatus[RegisterStatus.registered]] ?? [];
+
   return (
     <Select<string>
       size="large"
@@ -66,11 +70,23 @@ export function Erc20Control({ value, onChange, loading, tokens }: PropsWithRef<
       optionLabelProp="label"
     >
       <Select.OptGroup label={<Typography.Title level={5}>{t('In progress')}</Typography.Title>}>
-        {data[RegisterStatus[RegisterStatus.registering]]?.map((token) => option(token as Erc20Token, true))}
+        {!inprogress.length ? (
+          <Select.Option key="inprogressEmpty" value="inprogress" disabled className="text-center">
+            {t('No Data')}
+          </Select.Option>
+        ) : (
+          inprogress.map((token) => option(token as Erc20Token, true))
+        )}
       </Select.OptGroup>
 
       <Select.OptGroup label={<Typography.Title level={5}>{t('Available')}</Typography.Title>}>
-        {data[RegisterStatus[RegisterStatus.registered]]?.map((token) => option(token as Erc20Token))}
+        {!confirmed.length ? (
+          <Select.Option key="confimedEmpty" value="confirmed" disabled className="text-center">
+            {t('No Data')}
+          </Select.Option>
+        ) : (
+          confirmed.map((token) => option(token as Erc20Token))
+        )}
       </Select.OptGroup>
     </Select>
   );

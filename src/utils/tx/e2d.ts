@@ -3,15 +3,13 @@ import Web3 from 'web3';
 import { abi } from '../../config';
 import {
   DeepRequired,
-  DVMTransfer,
   Ethereum2DarwiniaTransfer,
   NoNullTransferNetwork,
-  RequiredPartial,
   Token,
   TransferFormValues,
   TxFn,
 } from '../../model';
-import { approveToken, buf2hex, getContractTxObs } from './common';
+import { buf2hex, getContractTxObs } from './common';
 
 export type RedeemDarwiniaToken = TransferFormValues<
   DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
@@ -22,13 +20,6 @@ export type RedeemDeposit = TransferFormValues<
   DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'deposit' | 'recipient']>,
   NoNullTransferNetwork
 >;
-
-export const approveRingToIssuing: TxFn<
-  RequiredPartial<
-    TransferFormValues<Ethereum2DarwiniaTransfer & DVMTransfer, NoNullTransferNetwork>,
-    'sender' | 'transfer'
-  >
-> = ({ sender, transfer }) => approveToken({ sender, transfer, contractAddress: transfer.from.tokenContract.ring });
 
 export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, transfer, asset, amount, recipient }) => {
   const contractAddress = transfer.from.tokenContract[asset as Token] as string;

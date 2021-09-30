@@ -6,7 +6,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
-import { abi, FORM_CONTROL } from '../../config';
+import { FORM_CONTROL } from '../../config';
 import { Path } from '../../config/routes';
 import { useAfterSuccess, useApi, useDeparture, useMappedTokens, useTx } from '../../hooks';
 import {
@@ -22,19 +22,20 @@ import {
 } from '../../model';
 import {
   AfterTxCreator,
-  fromWei,
-  getInfoFromHash,
-  getUnit,
-  isValidAddress,
-  prettyNumber,
   applyModalObs,
   approveToken,
-  createTxWorkflow,
-  redeemErc20,
   backingLockErc20,
-  RedeemDVMToken,
-  IssuingDVMToken,
+  createTxWorkflow,
+  fromWei,
+  getAllowance,
+  getInfoFromHash,
+  getUnit,
   insufficientBalanceRule,
+  IssuingDVMToken,
+  isValidAddress,
+  prettyNumber,
+  RedeemDVMToken,
+  redeemErc20,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
 import { Erc20Control } from '../controls/Erc20Control';
@@ -54,18 +55,6 @@ interface DVMProps {
   isRedeem: boolean;
 }
 
-async function getAllowance(sender: string, config: NetConfig, token: Erc20Token | null): Promise<BN> {
-  if (!token || !config) {
-    return Web3.utils.toBN(0);
-  }
-
-  const web3js = new Web3(window.ethereum || window.web3.currentProvider);
-  const erc20Contract = new web3js.eth.Contract(abi.tokenABI, token.address);
-  const allowanceAmount = await erc20Contract.methods.allowance(sender, config.tokenContract.issuingDarwinia).call();
-
-  return Web3.utils.toBN(allowanceAmount || 0);
-}
-
 function createApproveTx(
   value: Pick<ApproveValue, 'sender' | 'transfer' | 'asset'>,
   after: AfterTxCreator
@@ -74,7 +63,12 @@ function createApproveTx(
     content: <ApproveConfirm value={value} />,
   });
   const { sender, transfer, asset } = value;
-  const txObs = approveToken({ sender, transfer, contractAddress: asset?.address });
+  const txObs = approveToken({
+    sender,
+    transfer,
+    tokenAddress: asset?.address,
+    spender: transfer.from.tokenContract.issuingDarwinia,
+  });
 
   return createTxWorkflow(beforeTx, txObs, after);
 }
@@ -126,7 +120,7 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
 
   const refreshAllowance = useCallback(
     (config: NetConfig) =>
-      getAllowance(account, config, selectedErc20).then((num) => {
+      getAllowance(account, config.tokenContract.issuingDarwinia ?? '', selectedErc20).then((num) => {
         setAllowance(num);
         form.validateFields([FORM_CONTROL.amount]);
       }),
@@ -201,9 +195,9 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
           onChange={(erc20) => {
             setSelectedErc20(erc20);
 
-            const departure = form.getFieldValue(FORM_CONTROL.transfer).from;
+            const departure = form.getFieldValue(FORM_CONTROL.transfer).from as NetConfig;
 
-            getAllowance(account, departure, erc20).then((allow) => {
+            getAllowance(account, departure.tokenContract.issuingDarwinia!, erc20).then((allow) => {
               setAllowance(allow);
             });
           }}

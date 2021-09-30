@@ -24,7 +24,7 @@ import {
 import {
   AfterTxCreator,
   applyModalObs,
-  approveRingToIssuing,
+  approveToken,
   createTxWorkflow,
   fromWei,
   getInfoFromHash,
@@ -220,7 +220,15 @@ function createApproveRingTx(value: Pick<ApproveValue, 'transfer' | 'sender'>, a
   const beforeTx = applyModalObs({
     content: <ApproveConfirm value={value} />,
   });
-  const txObs = approveRingToIssuing(value);
+  const {
+    sender,
+    transfer: { from },
+  } = value;
+  const txObs = approveToken({
+    sender,
+    spender: from.tokenContract.issuingDarwinia,
+    tokenAddress: from.tokenContract.ring,
+  });
 
   return createTxWorkflow(beforeTx, txObs, after);
 }
