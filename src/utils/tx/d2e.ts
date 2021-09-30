@@ -87,7 +87,7 @@ export function issuingSubstrateToken(
   const obs = new Observable((observer: Observer<Tx>) => {
     try {
       const specVersion = api.runtimeVersion.specVersion.toString();
-      console.info(api.tx.substrate2SubstrateBacking.lockAndRemoteIssue.meta.toHuman(), specVersion);
+
       api.tx.substrate2SubstrateBacking
         .lockAndRemoteIssue(specVersion, WEIGHT, amount, fee, recipient)
         .signAndSend(sender, extrinsicSpy(observer))

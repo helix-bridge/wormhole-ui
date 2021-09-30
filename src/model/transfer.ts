@@ -66,6 +66,6 @@ export interface DVMTransfer extends TransferParty, TransferAsset<DVMAsset> {}
 
 /* ---------------------------------------------------s2s--------------------------------------------------- */
 
-export type SubstrateAsset = string;
+export type SubstrateAsset = string | Erc20Token;
 
 export interface Substrate2SubstrateDVMTransfer extends TransferParty, TransferAsset<SubstrateAsset> {}

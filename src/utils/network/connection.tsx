@@ -1,8 +1,9 @@
-import { typesBundle } from '@darwinia/types/mix';
+import { typesBundle, typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import { Modal } from 'antd';
 import Link from 'antd/lib/typography/Link';
+import { memoize } from 'lodash';
 import { Trans } from 'react-i18next';
 import {
   catchError,
@@ -42,6 +43,21 @@ interface TronAddress {
   hex: string;
   name?: string;
 }
+
+/**
+ * TODO: may be break down if api disconnected
+ */
+export const polkadotApi = memoize(async (rpc: string) => {
+  const provider = new WsProvider(rpc);
+  const api = await ApiPromise.create({
+    provider,
+    typesBundle: typesBundleForPolkadotApps,
+  });
+
+  await api.isReady;
+
+  return api;
+});
 
 export const getPolkadotConnection: (network: NetConfig) => Observable<PolkadotConnection> = (network) =>
   from(web3Enable('polkadot-js/apps')).pipe(

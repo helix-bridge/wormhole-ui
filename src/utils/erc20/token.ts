@@ -16,7 +16,13 @@ import {
   getMPTProof,
   MMRProof,
 } from '../helper';
-import { getAvailableNetworks, getMetamaskActiveAccount, isNetworkMatch } from '../network';
+import {
+  getAvailableNetworks,
+  getMetamaskActiveAccount,
+  getNetworkMode,
+  isNetworkMatch,
+  isPolkadotNetwork,
+} from '../network';
 import { rxGet } from '../records';
 import { getContractTxObs } from '../tx';
 import { getNameAndLogo, getSymbolAndDecimals, getTokenBalance, getUnitFromAddress, tokenInfoGetter } from './meta';
@@ -57,18 +63,37 @@ const getTokenInfo = async (tokenAddress: string, config: NetConfig) => {
 export const getKnownMappedTokens = async (
   currentAccount: string,
   departure: NetConfig,
-  arrival?: NetConfig | null
+  arrival: NetConfig
 ): Promise<Erc20Token[]> => {
   if (!currentAccount) {
     return [];
   }
 
-  // TODO
-  console.info('%c [ arrival ]-62', 'font-size:13px; background:pink; color:#bf2c9f;', arrival);
+  const isPolkadot = isPolkadotNetwork(arrival.name);
+  const isNative = getNetworkMode(arrival) === 'native';
+  let s2sMappingAddress: string | undefined = undefined;
+
+  if (isPolkadot && isNative) {
+    s2sMappingAddress = await getS2SMappingAddress(departure);
+
+    return await getFromDvm(currentAccount, departure, s2sMappingAddress);
+  }
 
   return departure.type.includes('ethereum')
     ? await getFromEthereum(currentAccount, departure)
     : await getFromDvm(currentAccount, departure);
+};
+
+export const getS2SMappingAddress = async (config: NetConfig) => {
+  const provider = new WsProvider(config.provider.rpc);
+  const api = await ApiPromise.create({
+    provider,
+    typesBundle: typesBundleForPolkadotApps,
+  });
+
+  await api.isReady;
+
+  return (await api.query.substrate2SubstrateIssuing.mappingFactoryAddress()).toString();
 };
 
 /**
@@ -76,16 +101,20 @@ export const getKnownMappedTokens = async (
  * @params {string} currentAccount
  * @returns tokens that status maybe registered or registering
  */
-const getFromDvm = async (currentAccount: string, config: NetConfig) => {
+const getFromDvm = async (currentAccount: string, config: NetConfig, s2sMappingAddress?: string) => {
   const web3Darwinia = new Web3(config.provider.rpc);
-  const mappingContract = new web3Darwinia.eth.Contract(abi.mappingTokenABI, config.erc20Token.mappingAddress);
+  const mappingContract = new web3Darwinia.eth.Contract(
+    abi.mappingTokenABI,
+    s2sMappingAddress ?? config.erc20Token.mappingAddress
+  );
+  const isS2S = !!s2sMappingAddress;
   const length = await mappingContract.methods.tokenLength().call(); // length: string
   const tokens = await Promise.all(
     new Array(+length).fill(0).map(async (_, index) => {
       const address = await mappingContract.methods.allTokens(index).call(); // dvm address
       const info = await mappingContract.methods.tokenToInfo(address).call(); // { source, backing }
-      const token = await getTokenInfo(info.source, config);
-      const status = await getTokenRegisterStatus(info.source, config, false);
+      const token = await getTokenInfo(address, config);
+      const status = isS2S ? 1 : await getTokenRegisterStatus(info.source, config, false);
       let balance = Web3.utils.toBN(0);
 
       if (currentAccount) {

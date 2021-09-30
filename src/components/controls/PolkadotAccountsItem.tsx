@@ -42,8 +42,8 @@ export function PolkadotAccountsItem({ getBalances, onChange }: PolkadotAccounts
         <span>
           {t('Balance ')}
           <span>
-            {availableBalances.map(({ asset, max, chainInfo }) => (
-              <span key={asset} className="mr-2">
+            {availableBalances.map(({ asset, max, chainInfo }, index) => (
+              <span key={asset || index} className="mr-2">
                 {fromWei({ value: max, unit: (chainInfo?.decimal as Unit) || 'gwei' })} {chainInfo?.symbol}
               </span>
             ))}

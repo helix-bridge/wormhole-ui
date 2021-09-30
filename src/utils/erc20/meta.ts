@@ -41,13 +41,12 @@ const contractList = Object.entries(contractMap as Record<string, TokenCache>)
   .map(([address, tokenData]) => ({ ...tokenData, address }))
   .filter((tokenData) => Boolean(tokenData.erc20));
 
-const getProvider = memoize(
-  (config: NetConfig) => new Web3(config.provider.etherscan),
-  (config) => config.provider.etherscan
-);
+const getProvider = memoize(() => {
+  return new Web3(window.ethereum);
+});
 
-const getContractAtAddress = memoize((tokenAddress: string, config: NetConfig) => {
-  const web3 = getProvider(config);
+const getContractAtAddress = memoize((tokenAddress: string) => {
+  const web3 = getProvider();
 
   return new web3.eth.Contract(abi.Erc20ABI, tokenAddress);
 });
@@ -78,8 +77,8 @@ export async function getTokenBalance(address: string, account: string, isEth = 
   return Web3.utils.toBN(0);
 }
 
-async function getSymbolFromContract(tokenAddress: string, config: NetConfig) {
-  const token = getContractAtAddress(tokenAddress, config);
+async function getSymbolFromContract(tokenAddress: string) {
+  const token = getContractAtAddress(tokenAddress);
 
   try {
     const result = await token.methods.symbol().call();
@@ -104,8 +103,8 @@ function getContractMetadata(tokenAddress: string) {
   return tokenAddress && casedContractMap[tokenAddress.toLowerCase()];
 }
 
-async function getSymbol(tokenAddress: string, config: NetConfig) {
-  let symbol = await getSymbolFromContract(tokenAddress, config);
+async function getSymbol(tokenAddress: string) {
+  let symbol = await getSymbolFromContract(tokenAddress);
 
   if (!symbol) {
     const contractMetadataInfo = getContractMetadata(tokenAddress);
@@ -118,8 +117,8 @@ async function getSymbol(tokenAddress: string, config: NetConfig) {
   return symbol;
 }
 
-async function getDecimalsFromContract(tokenAddress: string, config: NetConfig) {
-  const token = getContractAtAddress(tokenAddress, config);
+async function getDecimalsFromContract(tokenAddress: string) {
+  const token = getContractAtAddress(tokenAddress);
 
   try {
     const result = await token.methods.decimals().call();
@@ -135,8 +134,8 @@ async function getDecimalsFromContract(tokenAddress: string, config: NetConfig) 
   }
 }
 
-async function getDecimals(tokenAddress: string, config: NetConfig) {
-  let decimals = await getDecimalsFromContract(tokenAddress, config);
+async function getDecimals(tokenAddress: string) {
+  let decimals = await getDecimalsFromContract(tokenAddress);
 
   if (!decimals || decimals === '0') {
     const contractMetadataInfo = getContractMetadata(tokenAddress);
@@ -167,8 +166,8 @@ export async function getSymbolAndDecimals(tokenAddress: string, config: NetConf
   let decimals;
 
   try {
-    symbol = await getSymbol(tokenAddress, config);
-    decimals = await getDecimals(tokenAddress, config);
+    symbol = await getSymbol(tokenAddress);
+    decimals = await getDecimals(tokenAddress);
   } catch (error) {
     console.warn(`symbol() and decimal() calls for token at address ${tokenAddress} resulted in error:`, error);
   }

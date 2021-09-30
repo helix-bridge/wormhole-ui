@@ -40,16 +40,8 @@ import { TransferSuccess } from '../modal/TransferSuccess';
 
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
-// function backingLockSubstrate(value: IssuingSubstrateToken, after: AfterTxCreator, api: ApiPromise): Observable<Tx> {
-//   const beforeTx = applyModalObs({
-//     content: <TransferConfirm value={value} />,
-//   });
-//   const obs = issuingSubstrateToken(value, api);
-
-//   return createTxWorkflow(beforeTx, obs, after);
-// }
-
 /* ----------------------------------------------Main Section-------------------------------------------------- */
+
 interface TransferInfoProps {
   fee: BN;
   balance: BN | string | number;
@@ -156,15 +148,9 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
 
-    form.setFieldsValue({
-      [FORM_CONTROL.sender]: sender,
-    });
-
-    // const sub$$ = from(getFee(api)).subscribe((crossFee) => setFee(crossFee));
+    form.setFieldsValue({ [FORM_CONTROL.sender]: sender });
 
     updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
-
-    // return () => sub$$.unsubscribe();
   }, [form, api, accounts, updateDeparture]);
 
   useEffect(() => {
@@ -189,18 +175,14 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
       />
 
       {chain.tokens.length && (
-        <Form.Item
-          name={FORM_CONTROL.asset}
-          initialValue={chain.tokens[0].symbol}
-          label={t('Asset')}
-          rules={[{ required: true }]}
-        >
+        <Form.Item name={FORM_CONTROL.asset} label={t('Asset')} rules={[{ required: true }]}>
           <Select
             size="large"
             onChange={async () => {
               // TODO: check getBalances
               getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
             }}
+            placeholder={t('Please select token to be transfer')}
           >
             {chain.tokens.map(({ symbol }, index) => (
               <Select.Option value={symbol} key={symbol + '_' + index} disabled={/kton/i.test(symbol)}>

@@ -84,7 +84,7 @@ export const useMappedTokens = (
   useEffect(() => {
     // eslint-disable-next-line complexity
     (async () => {
-      if (connection.type !== 'metamask' || !from) {
+      if (connection.type !== 'metamask' || !from || !to) {
         updateTokens([]);
         return;
       }
@@ -105,7 +105,7 @@ export const useMappedTokens = (
         updateTokens(tokens);
       } catch (error) {
         console.warn(
-          '%c [ error in useAllToken hook ]-56',
+          '%c [ error in useMappedTokens hook ]',
           'font-size:13px; background:pink; color:#bf2c9f;',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (error as unknown as any).message

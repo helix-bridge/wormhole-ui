@@ -1,4 +1,6 @@
 import { Observable } from 'rxjs';
+import Web3 from 'web3';
+import { convertToDvm } from '..';
 import { abi } from '../../config';
 import { DeepRequired, DVMTransfer, NoNullTransferNetwork, TransferFormValues, Tx, TxFn } from '../../model';
 import { getContractTxObs } from './common';
@@ -35,6 +37,24 @@ export function backingLockErc20(value: IssuingDVMToken): Observable<Tx> {
   return getContractTxObs(
     transfer.from.erc20Token.mappingAddress,
     (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
+    abi.mappingTokenABI
+  );
+}
+
+export function backingLockS2S(value: RedeemDVMToken, mappingAddress: string, specVersion: string): Observable<Tx> {
+  const { asset, amount, sender, recipient } = value;
+  const receiver = Web3.utils.hexToBytes(convertToDvm(recipient));
+  const weight = '690133000';
+
+  return getContractTxObs(
+    mappingAddress,
+    (contract) => {
+      const val = Web3.utils.toHex('50000000000000000000');
+
+      return contract.methods
+        .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
+        .send({ from: sender, gas: '21000000', gasPrice: '50000000000', value: val });
+    },
     abi.mappingTokenABI
   );
 }

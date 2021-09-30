@@ -29,6 +29,7 @@ import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
 import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaDvm';
 import { Substrate2SubstrateDVM } from './bridge/Substrate2SubstrateDVM';
+import { SubstrateDVM2Substrate } from './bridge/SubstrateDVM2Substrate';
 import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
@@ -80,6 +81,13 @@ const DEPARTURES: [[Departure, Departure?], FunctionComponent<BridgeFormProps<an
   [[{ network: 'darwinia', mode: 'dvm' }], DarwiniaDVM2Ethereum],
   [[{ network: 'pangolin', mode: 'dvm' }], DarwiniaDVM2Ethereum],
   [[{ network: 'pangoro', mode: 'native' }], Substrate2SubstrateDVM],
+  [
+    [
+      { network: 'pangolin', mode: 'dvm' },
+      { network: 'pangoro', mode: 'native' },
+    ],
+    SubstrateDVM2Substrate,
+  ],
 ];
 
 // eslint-disable-next-line complexity
@@ -106,10 +114,9 @@ const getDeparture: (transfer: TransferNetwork) => FunctionComponent<BridgeFormP
       return targets[0][1];
     } else {
       const tMode = getNetworkMode(to);
-      const target = targets.find(
-        ([parties]) =>
-          isEqual(parties[1], { network: to.name, mode: tMode }) || (parties[1] === undefined && tMode === 'native')
-      );
+      const target =
+        targets.find(([parties]) => isEqual(parties[1], { network: to.name, mode: tMode })) ||
+        targets.find(([parties]) => parties[1] === undefined && tMode === 'native');
 
       if (target) {
         return target[1];
