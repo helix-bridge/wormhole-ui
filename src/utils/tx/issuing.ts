@@ -1,24 +1,9 @@
 import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import { from, Observable, Observer, switchMapTo, tap } from 'rxjs';
-import {
-  Darwinia2EthereumTransfer,
-  DeepRequired,
-  Ethereum2DarwiniaTransfer,
-  NoNullTransferNetwork,
-  TransferFormValues,
-  Tx,
-} from '../../model';
-
-export type IssuingDarwiniaToken = TransferFormValues<
-  DeepRequired<Darwinia2EthereumTransfer, ['sender' | 'assets' | 'recipient']>,
-  NoNullTransferNetwork
->;
-
-export type IssuingSubstrateToken = TransferFormValues<
-  DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
-  NoNullTransferNetwork
->;
+import { abi } from '../../config';
+import { IssuingDarwiniaToken, IssuingDVMToken, IssuingSubstrateToken, Tx } from '../../model';
+import { getContractTxObs } from './common';
 
 function extrinsicSpy(observer: Observer<Tx>) {
   observer.next({ status: 'signing' });
@@ -56,6 +41,9 @@ function extrinsicSpy(observer: Observer<Tx>) {
   };
 }
 
+/**
+ * @description darwinia -> ethereum
+ */
 export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromise): Observable<Tx> {
   const { sender, recipient, assets } = value;
   const { amount: ring } = assets.find((item) => item.asset === 'ring') || { amount: '0' };
@@ -77,6 +65,9 @@ export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromi
 
 export const ISSUING_SUBSTRATE_FEE = '50000000000';
 
+/**
+ * @description substrate -> substrate dvm
+ */
 export function issuingSubstrateToken(
   value: IssuingSubstrateToken,
   api: ApiPromise,
@@ -102,5 +93,19 @@ export function issuingSubstrateToken(
   return from(web3FromAddress(sender)).pipe(
     tap((injector) => api.setSigner(injector.signer)),
     switchMapTo(obs)
+  );
+}
+
+/**
+ * @description ethereum -> substrate dvm
+ */
+export function issuingErc20(value: IssuingDVMToken): Observable<Tx> {
+  const { asset, recipient, amount, transfer, sender } = value;
+  const { address } = asset;
+
+  return getContractTxObs(
+    transfer.from.erc20Token.mappingAddress,
+    (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
+    abi.mappingTokenABI
   );
 }

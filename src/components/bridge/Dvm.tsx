@@ -13,9 +13,11 @@ import {
   BridgeFormProps,
   DVMTransfer,
   Erc20Token,
+  IssuingDVMToken,
   NetConfig,
   Network,
   NoNullTransferNetwork,
+  RedeemDVMToken,
   RequiredPartial,
   TransferFormValues,
   Tx,
@@ -24,17 +26,15 @@ import {
   AfterTxCreator,
   applyModalObs,
   approveToken,
-  backingLockErc20,
+  issuingErc20,
   createTxWorkflow,
   fromWei,
   getAllowance,
   getInfoFromHash,
   getUnit,
   insufficientBalanceRule,
-  IssuingDVMToken,
   isValidAddress,
   prettyNumber,
-  RedeemDVMToken,
   redeemErc20,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
@@ -126,7 +126,7 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
       }),
     [account, form, selectedErc20]
   );
-  const launchTx = useMemo(() => (isRedeem ? createErc20Tx(redeemErc20) : createErc20Tx(backingLockErc20)), [isRedeem]);
+  const launchTx = useMemo(() => (isRedeem ? createErc20Tx(redeemErc20) : createErc20Tx(issuingErc20)), [isRedeem]);
 
   useEffect(() => {
     const fn = () => (value: RedeemDVMToken | IssuingDVMToken) =>

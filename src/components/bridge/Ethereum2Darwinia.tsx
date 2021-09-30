@@ -18,6 +18,8 @@ import {
   NetConfig,
   Network,
   NoNullTransferNetwork,
+  RedeemDarwiniaToken,
+  RedeemDeposit,
   TransferFormValues,
   Tx,
 } from '../../model';
@@ -30,9 +32,7 @@ import {
   getInfoFromHash,
   isValidAddress,
   prettyNumber,
-  RedeemDarwiniaToken,
   redeemDarwiniaToken,
-  RedeemDeposit,
   redeemDeposit,
   toWei,
 } from '../../utils';

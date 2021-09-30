@@ -12,14 +12,14 @@ import {
   AvailableBalance,
   BridgeFormProps,
   Darwinia2EthereumTransfer,
+  IssuingDarwiniaToken,
   NoNullTransferNetwork,
   Token,
   TokenChainInfo,
   TransferFormValues,
   Tx,
 } from '../../model';
-import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, toWei } from '../../utils';
-import { issuingDarwiniaTokens, IssuingDarwiniaToken } from '../../utils/tx/d2e';
+import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, issuingDarwiniaTokens, toWei } from '../../utils';
 import { AssetGroup, AssetGroupValue } from '../controls/AssetGroup';
 import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
 import { RecipientItem } from '../controls/RecipientItem';

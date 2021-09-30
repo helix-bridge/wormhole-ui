@@ -7,22 +7,20 @@ import { from, map, Observable, switchMap, zip } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL, RegisterStatus } from '../../config';
 import { MemoedTokenInfo, useAfterSuccess, useApi, useMappedTokens, useTx } from '../../hooks';
-import { BridgeFormProps, DVMTransfer, Erc20Token, Network, Tx } from '../../model';
+import { BridgeFormProps, DVMTransfer, Erc20Token, IssuingDVMToken, Network, RedeemDVMToken, Tx } from '../../model';
 import {
   AfterTxCreator,
   applyModalObs,
   approveToken,
-  backingLockS2S,
+  redeemSubstrate,
   createTxWorkflow,
   fromWei,
   getAllowance,
   getUnit,
   insufficientBalanceRule,
-  IssuingDVMToken,
   isValidAddress,
   polkadotApi,
   prettyNumber,
-  RedeemDVMToken,
   toWei,
   zeroAmountRule,
 } from '../../utils';
@@ -143,7 +141,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
         ),
       ]).pipe(
         switchMap(([mappingAddress, specVersion]) =>
-          backingLockS2S(
+          redeemSubstrate(
             {
               ...value,
               amount: toWei({
