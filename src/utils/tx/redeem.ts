@@ -1,9 +1,11 @@
-import { Observable } from 'rxjs';
 import { decodeAddress } from '@polkadot/util-crypto';
+import { memoize } from 'lodash';
+import { Observable } from 'rxjs';
 import Web3 from 'web3';
-import { convertToDvm } from '..';
 import { abi } from '../../config';
 import { RedeemDarwiniaToken, RedeemDeposit, RedeemDVMToken, Token, Tx, TxFn } from '../../model';
+import { convertToDvm } from '../helper';
+import { polkadotApiManager } from '../network';
 import { buf2hex, getContractTxObs } from './common';
 
 /**
@@ -75,3 +77,21 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
     abi.mappingTokenABI
   );
 }
+
+export interface S2SInfo {
+  specVersion: string;
+  mappingAddress: string;
+}
+
+const s2sMappingParams: (rpc: string) => Promise<S2SInfo> = async (rpc: string) => {
+  const api = polkadotApiManager.manager.getInstance(rpc);
+
+  await api.isReady;
+
+  const mappingAddress = (await api.query.substrate2SubstrateIssuing.mappingFactoryAddress()).toString();
+  const specVersion = api.runtimeVersion.specVersion.toString();
+
+  return { specVersion, mappingAddress };
+};
+
+export const getS2SMappingParams = memoize(s2sMappingParams);

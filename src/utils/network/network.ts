@@ -253,7 +253,7 @@ export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> 
   return expectNetworkId === networkId;
 }
 
-export function getAvailableNetworks(net: Network): NetConfig | null {
+export function getAvailableNetwork(net: Network): NetConfig | null {
   // FIXME: by default we use the first vertices here.
   const [vertices] = (getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[net]) ?? []).filter(
     (item) => item.status === 'available'

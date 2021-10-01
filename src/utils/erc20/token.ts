@@ -1,5 +1,3 @@
-import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
-import { ApiPromise, WsProvider } from '@polkadot/api';
 import BN from 'bn.js';
 import { memoize, upperFirst } from 'lodash';
 import { EMPTY, forkJoin, from, NEVER, Observable, of, zip } from 'rxjs';
@@ -17,14 +15,15 @@ import {
   MMRProof,
 } from '../helper';
 import {
-  getAvailableNetworks,
+  getAvailableNetwork,
   getMetamaskActiveAccount,
   getNetworkMode,
   isNetworkMatch,
   isPolkadotNetwork,
+  polkadotApiManager,
 } from '../network';
 import { rxGet } from '../records';
-import { getContractTxObs } from '../tx';
+import { getContractTxObs, getS2SMappingParams } from '../tx';
 import { getNameAndLogo, getSymbolAndDecimals, getTokenBalance, getUnitFromAddress, tokenInfoGetter } from './meta';
 
 export type StoredProof = {
@@ -55,7 +54,6 @@ const getTokenInfo = async (tokenAddress: string, config: NetConfig) => {
  * for dvm: the address field represent the token's dvm address, the source field represent the token's ethereum address.
  *
  * Refactor
- * TODO: Depending on the config parameter, we may know whether eth mapped assets or s2s mapped assets are required on the view
  * If the config is a ethereum type, need to query eth mapped assets.
  * If the config is a substrate type, need to query s2s mapped assets.
  * If the config is a dvm type, hmmm..... current parameters is not enough to decide which type of asset should be querying.
@@ -71,29 +69,16 @@ export const getKnownMappedTokens = async (
 
   const isPolkadot = isPolkadotNetwork(arrival.name);
   const isNative = getNetworkMode(arrival) === 'native';
-  let s2sMappingAddress: string | undefined = undefined;
 
   if (isPolkadot && isNative) {
-    s2sMappingAddress = await getS2SMappingAddress(departure);
+    const { mappingAddress } = await getS2SMappingParams(departure.provider.rpc);
 
-    return await getFromDvm(currentAccount, departure, s2sMappingAddress);
+    return await getFromDvm(currentAccount, departure, mappingAddress);
   }
 
   return departure.type.includes('ethereum')
     ? await getFromEthereum(currentAccount, departure)
     : await getFromDvm(currentAccount, departure);
-};
-
-export const getS2SMappingAddress = async (config: NetConfig) => {
-  const provider = new WsProvider(config.provider.rpc);
-  const api = await ApiPromise.create({
-    provider,
-    typesBundle: typesBundleForPolkadotApps,
-  });
-
-  await api.isReady;
-
-  return (await api.query.substrate2SubstrateIssuing.mappingFactoryAddress()).toString();
 };
 
 /**
@@ -209,15 +194,13 @@ export const getSymbolType: (address: string, config: NetConfig) => Promise<{ sy
   };
 
 export const getDarwiniaApiObs = memoize((network: Network) => {
-  const targetConfig = getAvailableNetworks(network);
-  const provider = new WsProvider(targetConfig?.provider.rpc);
-  const apiObs = from(
-    ApiPromise.create({
-      provider,
-      typesBundle: typesBundleForPolkadotApps,
-    })
-  );
-  return apiObs;
+  const targetConfig = getAvailableNetwork(network);
+
+  if (!targetConfig?.provider.rpc) {
+    return EMPTY;
+  }
+
+  return from(polkadotApiManager.manager.getInstance(targetConfig.provider.rpc).isReady);
 });
 
 /**
@@ -235,7 +218,8 @@ export const getRegisterProof: (address: string, config: NetConfig) => Observabl
     return of(proofMemoItem);
   }
 
-  const apiObs = getDarwiniaApiObs(config.name);
+  const targetConfig = getAvailableNetwork(config.name);
+  const apiObs = from(polkadotApiManager.manager.getInstance(targetConfig!.provider.rpc).isReady);
 
   return rxGet<Erc20RegisterProofRes>({
     url: apiUrl(config.api.dapp, DarwiniaApiPath.issuingRegister),
@@ -351,7 +335,7 @@ export function confirmRegister(proof: StoredProof, config: NetConfig): Observab
   const { signatures, mmr_root, mmr_index, block_header } = registerProof;
   const { peaks, siblings } = mmrProof;
   const senderObs = from(getMetamaskActiveAccount());
-  const toConfig = getAvailableNetworks(config.name)!;
+  const toConfig = getAvailableNetwork(config.name)!;
   const mmrRootMessage = encodeMMRRootMessage({
     root: mmr_root,
     prefix: upperFirst(toConfig.name) as ClaimNetworkPrefix,

@@ -174,30 +174,28 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
         isDvm
       />
 
-      {chain.tokens.length && (
-        <Form.Item name={FORM_CONTROL.asset} label={t('Asset')} rules={[{ required: true }]}>
-          <Select
-            size="large"
-            onChange={async () => {
-              // TODO: check getBalances
-              getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
-            }}
-            placeholder={t('Please select token to be transfer')}
-          >
-            {chain.tokens.map(({ symbol }, index) => (
-              <Select.Option value={symbol} key={symbol + '_' + index} disabled={/kton/i.test(symbol)}>
-                <span>{symbol}</span>
-                {/** FIXME: what's the name ? we can only get symbol, decimals and ss58Format from api properties  */}
-                <sup className="ml-2 text-xs transform tra" title={t('name')}>
-                  {t('{{network}} native token', {
-                    network: capitalize(form.getFieldValue(FORM_CONTROL.transfer)?.from?.name ?? ''),
-                  })}
-                </sup>
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-      )}
+      <Form.Item name={FORM_CONTROL.asset} label={t('Asset')} rules={[{ required: true }]}>
+        <Select
+          size="large"
+          onChange={() => {
+            // TODO: check getBalances
+            getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
+          }}
+          placeholder={t('Please select token to be transfer')}
+        >
+          {(chain.tokens || []).map(({ symbol }, index) => (
+            <Select.Option value={symbol} key={symbol + '_' + index} disabled={/kton/i.test(symbol)}>
+              <span>{symbol}</span>
+              {/** FIXME: what's the name ? we can only get symbol, decimals and ss58Format from api properties  */}
+              <sup className="ml-2 text-xs transform tra" title={t('name')}>
+                {t('{{network}} native token', {
+                  network: capitalize(form.getFieldValue(FORM_CONTROL.transfer)?.from?.name ?? ''),
+                })}
+              </sup>
+            </Select.Option>
+          ))}
+        </Select>
+      </Form.Item>
 
       <Form.Item
         name={FORM_CONTROL.amount}

@@ -175,6 +175,14 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         <Nets
           onChange={(value) => {
             setTransfer(value);
+            form.resetFields([
+              FORM_CONTROL.sender,
+              FORM_CONTROL.recipient,
+              FORM_CONTROL.amount,
+              FORM_CONTROL.asset,
+              FORM_CONTROL.assets,
+              FORM_CONTROL.deposit,
+            ]);
           }}
           isCross={isCross}
         />

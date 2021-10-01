@@ -1,5 +1,3 @@
-import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
-import { ApiPromise, WsProvider } from '@polkadot/api';
 import { decodeAddress } from '@polkadot/util-crypto';
 import { catchError, EMPTY, filter, from, map, Observable, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
@@ -13,7 +11,7 @@ import {
   getMMRProof,
   getMPTProof,
 } from '../helper';
-import { getAvailableNetworks, getEthConnection } from '../network';
+import { getAvailableNetwork, getEthConnection, polkadotApiManager } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { getHistoryQueryParams, rxGet } from './api';
 
@@ -79,14 +77,8 @@ export function claimToken({
 }: ClaimInfo): Observable<Tx> {
   const network = networkPrefix.toLowerCase() as Network;
   const config = NETWORK_CONFIG[network];
-  const provider = new WsProvider(config.provider.rpc);
-  const apiObs = from(
-    ApiPromise.create({
-      provider,
-      typesBundle: typesBundleForPolkadotApps,
-    })
-  );
-  const toNetworkConfig = getAvailableNetworks(network)!;
+  const apiObs = from(polkadotApiManager.manager.getInstance(config.provider.rpc).isReady);
+  const toNetworkConfig = getAvailableNetwork(network)!;
   const header = encodeBlockHeader(blockHeaderStr);
   const storageKey = getD2ELockEventsStorageKey(blockNumber, config.lockEvents);
   // TODO: check connection

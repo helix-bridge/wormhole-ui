@@ -3,28 +3,36 @@ import BN from 'bn.js';
 import { isNull } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { from, map, Observable, switchMap, zip } from 'rxjs';
+import { from, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL, RegisterStatus } from '../../config';
 import { MemoedTokenInfo, useAfterSuccess, useApi, useMappedTokens, useTx } from '../../hooks';
-import { BridgeFormProps, DVMTransfer, Erc20Token, IssuingDVMToken, Network, RedeemDVMToken, Tx } from '../../model';
+import {
+  BridgeFormProps,
+  DVMTransfer,
+  Erc20Token,
+  IssuingDVMToken,
+  Network,
+  NoNullTransferNetwork,
+  RedeemDVMToken,
+  Tx,
+} from '../../model';
 import {
   AfterTxCreator,
   applyModalObs,
   approveToken,
-  redeemSubstrate,
   createTxWorkflow,
   fromWei,
   getAllowance,
+  getS2SMappingParams,
   getUnit,
   insufficientBalanceRule,
   isValidAddress,
-  polkadotApi,
   prettyNumber,
+  redeemSubstrate,
   toWei,
   zeroAmountRule,
 } from '../../utils';
-import { getS2SMappingAddress } from '../../utils/erc20/token';
 import { Balance } from '../controls/Balance';
 import { Erc20Control } from '../controls/Erc20Control';
 import { EthereumAccountItem } from '../controls/EthereumAccountItem';
@@ -110,14 +118,15 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
   const unit = useMemo(() => (selectedErc20 ? getUnit(+selectedErc20.decimals) : 'ether'), [selectedErc20]);
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess();
-  const refreshAllowance = useCallback(
-    () =>
-      getAllowance(account, '0xdc552396caec809752fed0c5e23fd3983766e758', selectedErc20).then((num) => {
-        setAllowance(num);
-        form.validateFields([FORM_CONTROL.amount]);
-      }),
-    [account, form, selectedErc20]
-  );
+  const refreshAllowance = useCallback(async () => {
+    const transfer = form.getFieldValue(FORM_CONTROL.transfer) as NoNullTransferNetwork;
+    const { mappingAddress } = await getS2SMappingParams(transfer.from.provider.rpc);
+    const allow = await getAllowance(account, mappingAddress, selectedErc20);
+
+    setAllowance(allow);
+    form.validateFields([FORM_CONTROL.amount]);
+  }, [account, form, selectedErc20]);
+
   useEffect(() => {
     const fn = () => (value: RedeemDVMToken | IssuingDVMToken) => {
       const beforeTx = applyModalObs({
@@ -134,13 +143,8 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
           </TransferConfirm>
         ),
       });
-      const obs = zip([
-        from(getS2SMappingAddress(value.transfer.from)),
-        from(polkadotApi(value.transfer.from.provider.rpc)).pipe(
-          map((api) => api.runtimeVersion.specVersion.toString())
-        ),
-      ]).pipe(
-        switchMap(([mappingAddress, specVersion]) =>
+      const obs = from(getS2SMappingParams(value.transfer.from.provider.rpc)).pipe(
+        switchMap(({ mappingAddress, specVersion }) =>
           redeemSubstrate(
             {
               ...value,
@@ -185,12 +189,14 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
         <Erc20Control
           loading={loading}
           tokens={tokens}
-          onChange={(erc20) => {
+          onChange={async (erc20) => {
             setSelectedErc20(erc20);
 
-            getAllowance(account, '0xdc552396caec809752fed0c5e23fd3983766e758', erc20).then((allow) => {
-              setAllowance(allow);
-            });
+            const transfer = form.getFieldValue(FORM_CONTROL.transfer) as NoNullTransferNetwork;
+            const { mappingAddress } = await getS2SMappingParams(transfer.from.provider.rpc);
+            const allow = await getAllowance(account, mappingAddress, erc20);
+
+            setAllowance(allow);
           }}
         />
       </Form.Item>
@@ -220,17 +226,19 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
               <Trans i18nKey="approveBalanceInsufficient">
                 Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
+                    const transfer = form.getFieldValue(FORM_CONTROL.transfer) as NoNullTransferNetwork;
                     const value: Pick<ApproveValue, 'transfer' | 'sender' | 'asset'> = {
                       sender: account,
-                      transfer: form.getFieldValue(FORM_CONTROL.transfer),
+                      transfer,
                       asset: selectedErc20,
                     };
+                    const { mappingAddress } = await getS2SMappingParams(transfer.from?.provider.rpc);
 
                     createApproveTx(
                       value,
                       afterTx(ApproveSuccess, { onDisappear: () => refreshAllowance() })(value),
-                      '0xdc552396caec809752fed0c5e23fd3983766e758'
+                      mappingAddress
                     ).subscribe(observer);
                   }}
                   type="link"

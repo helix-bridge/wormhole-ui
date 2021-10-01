@@ -85,8 +85,13 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     () => ({
       next: (connection: Connection) => {
         setConnection(connection);
-        if ((connection as PolkadotConnection).api) {
-          setApi((connection as PolkadotConnection).api);
+
+        const nApi = (connection as PolkadotConnection).api;
+
+        if (nApi) {
+          nApi?.isReady.then(() => {
+            setApi(nApi);
+          });
         }
       },
       error: (err: unknown) => {
