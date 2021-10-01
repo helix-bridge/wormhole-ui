@@ -17,6 +17,7 @@ import {
   TxFn,
 } from '../../model';
 import { empty } from '../helper';
+import { entrance } from '../network';
 
 /**
  * TODO: web3 types
@@ -137,8 +138,8 @@ export function getContractTxObs(
 ): Observable<Tx> {
   return new Observable((observer) => {
     try {
-      const web3js = new Web3(window.ethereum);
-      const contract = new web3js.eth.Contract(contractAbi, contractAddress);
+      const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+      const contract = new web3.eth.Contract(contractAbi, contractAddress);
 
       observer.next({ status: 'signing' });
 
@@ -188,8 +189,8 @@ export async function getAllowance(sender: string, spender: string, token: Erc20
     return Web3.utils.toBN(0);
   }
 
-  const web3js = new Web3(window.ethereum || window.web3.currentProvider);
-  const erc20Contract = new web3js.eth.Contract(abi.tokenABI, token.address);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+  const erc20Contract = new web3.eth.Contract(abi.tokenABI, token.address);
   const allowanceAmount = await erc20Contract.methods.allowance(sender, spender).call();
 
   return Web3.utils.toBN(allowanceAmount || 0);

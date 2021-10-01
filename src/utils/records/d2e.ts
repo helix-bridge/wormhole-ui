@@ -11,7 +11,7 @@ import {
   getMMRProof,
   getMPTProof,
 } from '../helper';
-import { getAvailableNetwork, getEthConnection, polkadotApiManager } from '../network';
+import { getAvailableNetwork, getEthConnection, entrance } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { getHistoryQueryParams, rxGet } from './api';
 
@@ -77,7 +77,7 @@ export function claimToken({
 }: ClaimInfo): Observable<Tx> {
   const network = networkPrefix.toLowerCase() as Network;
   const config = NETWORK_CONFIG[network];
-  const apiObs = from(polkadotApiManager.manager.getInstance(config.provider.rpc).isReady);
+  const apiObs = from(entrance.polkadot.getInstance(config.provider.rpc).isReady);
   const toNetworkConfig = getAvailableNetwork(network)!;
   const header = encodeBlockHeader(blockHeaderStr);
   const storageKey = getD2ELockEventsStorageKey(blockNumber, config.lockEvents);

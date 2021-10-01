@@ -3,6 +3,7 @@
 import contractMap from '@metamask/contract-metadata';
 import { memoize } from 'lodash';
 import Web3 from 'web3';
+import { entrance } from '..';
 import { abi } from '../../config';
 
 interface TokenCache {
@@ -22,7 +23,7 @@ async function metaInfo(tokenAddress: string): Promise<TokenCache> {
     return contractMap[tokenAddress];
   }
 
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const contract = new web3.eth.Contract(abi.Erc20ABI, tokenAddress);
   const symbol = await contract.methods.symbol().call();
   const decimals = await contract.methods.decimals().call();
@@ -44,7 +45,7 @@ async function metaInfo(tokenAddress: string): Promise<TokenCache> {
  * @returns balance of the account
  */
 export async function getTokenBalance(address: string, account: string, isEth = true) {
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const tokenAbi = isEth ? abi.Erc20ABI : abi.tokenABI;
   const contract = new web3.eth.Contract(tokenAbi, address);
 

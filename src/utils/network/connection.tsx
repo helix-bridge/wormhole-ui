@@ -27,7 +27,7 @@ import {
   TronConnection,
 } from '../../model';
 import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkReady } from './network';
-import { polkadotApiManager } from './polkadotApiManager';
+import { entrance } from './entrance';
 import { switchMetamaskNetwork } from './switch';
 
 type ConnectFn<T extends Connection> = (network: NetConfig, chainId?: string) => Observable<T>;
@@ -51,7 +51,7 @@ export const getPolkadotConnection: (network: NetConfig) => Observable<PolkadotC
 
       return new Observable((observer: Observer<PolkadotConnection>) => {
         const url = network.provider.rpc;
-        const api = polkadotApiManager.manager.getInstance(url);
+        const api = entrance.polkadot.getInstance(url);
         const envelop: PolkadotConnection = {
           status: 'success',
           accounts: !extensions.length && !accounts.length ? [] : accounts,

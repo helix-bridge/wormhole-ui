@@ -5,7 +5,7 @@ import Web3 from 'web3';
 import { abi } from '../../config';
 import { RedeemDarwiniaToken, RedeemDeposit, RedeemDVMToken, Token, Tx, TxFn } from '../../model';
 import { convertToDvm } from '../helper';
-import { polkadotApiManager } from '../network';
+import { entrance } from '../network';
 import { buf2hex, getContractTxObs } from './common';
 
 /**
@@ -84,7 +84,7 @@ export interface S2SInfo {
 }
 
 const s2sMappingParams: (rpc: string) => Promise<S2SInfo> = async (rpc: string) => {
-  const api = polkadotApiManager.manager.getInstance(rpc);
+  const api = entrance.polkadot.getInstance(rpc);
 
   await api.isReady;
 

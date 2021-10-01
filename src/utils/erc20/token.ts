@@ -2,6 +2,7 @@ import { upperFirst } from 'lodash';
 import { EMPTY, forkJoin, from, NEVER, Observable, of, zip } from 'rxjs';
 import { catchError, delay, map, retryWhen, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
+import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus } from '../../config';
 import { Erc20RegisterProof, Erc20RegisterProofRes, Erc20Token, NetConfig, Tx } from '../../model';
 import {
@@ -13,13 +14,7 @@ import {
   getMPTProof,
   MMRProof,
 } from '../helper';
-import {
-  getAvailableNetwork,
-  getMetamaskActiveAccount,
-  getNetworkMode,
-  isPolkadotNetwork,
-  polkadotApiManager,
-} from '../network';
+import { getAvailableNetwork, getMetamaskActiveAccount, getNetworkMode, isPolkadotNetwork, entrance } from '../network';
 import { rxGet } from '../records';
 import { getContractTxObs, getS2SMappingParams } from '../tx';
 import { getTokenBalance, getTokenMeta } from './meta';
@@ -40,7 +35,7 @@ const proofMemo: StoredProof[] = [];
  * @returns tokens that status maybe registered or registering
  */
 const getFromDvm = async (currentAccount: string, config: NetConfig, s2sMappingAddress?: string) => {
-  const web3Darwinia = new Web3(config.provider.rpc);
+  const web3Darwinia = entrance.web3.getInstance(config.provider.rpc);
   const mappingContract = new web3Darwinia.eth.Contract(
     abi.mappingTokenABI,
     s2sMappingAddress ?? config.erc20Token.mappingAddress
@@ -74,7 +69,7 @@ const getFromEthereum: (cur: string, con: NetConfig) => Promise<Erc20Token[]> = 
   currentAccount: string,
   config: NetConfig
 ) => {
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const backingContract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
   const length = await backingContract.methods.assetLength().call();
   const tokens = await Promise.all(
@@ -113,7 +108,7 @@ const getFromEthereum: (cur: string, con: NetConfig) => Promise<Erc20Token[]> = 
  */
 const getSymbolType: (address: string) => Promise<{ symbol: string; isString: boolean }> = async (address) => {
   try {
-    const web3 = new Web3(window.ethereum);
+    const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
     const stringContract = new web3.eth.Contract(abi.Erc20StringABI, address);
     const symbol = await stringContract.methods.symbol().call();
 
@@ -204,7 +199,7 @@ export const getRegisterProof: (address: string, config: NetConfig) => Observabl
   }
 
   const targetConfig = getAvailableNetwork(config.name);
-  const apiObs = from(polkadotApiManager.manager.getInstance(targetConfig!.provider.rpc).isReady);
+  const apiObs = from(entrance.polkadot.getInstance(targetConfig!.provider.rpc).isReady);
 
   return rxGet<Erc20RegisterProofRes>({
     url: apiUrl(config.api.dapp, DarwiniaApiPath.issuingRegister),
@@ -277,12 +272,16 @@ export const getTokenRegisterStatus: (
       console.warn(`Token address is invalid, except an ERC20 token address. Received value: ${address}`);
       return null;
     }
-    let web3 = new Web3(window.ethereum);
 
-    let contract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
+    let web3: Web3;
+    let contract: Contract;
 
-    if (!isEth) {
-      web3 = new Web3(config.provider.etherscan);
+    if (isEth) {
+      web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+
+      contract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
+    } else {
+      web3 = entrance.web3.getInstance(config.provider.etherscan);
 
       contract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
     }

@@ -28,6 +28,7 @@ import {
   applyModalObs,
   approveToken,
   createTxWorkflow,
+  entrance,
   fromWei,
   getInfoFromHash,
   isValidAddress,
@@ -67,7 +68,7 @@ const BN_ZERO = new BN(0);
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
 async function getRingBalance(account: string, config: NetConfig): Promise<BN | null> {
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
 
   try {
     const ringContract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.ring);
@@ -87,7 +88,7 @@ async function getRingBalance(account: string, config: NetConfig): Promise<BN | 
 }
 
 async function getKtonBalance(account: string, config: NetConfig): Promise<BN | null> {
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
 
   try {
     const ktonContract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.kton);
@@ -107,21 +108,21 @@ async function getKtonBalance(account: string, config: NetConfig): Promise<BN | 
 }
 
 async function getIssuingAllowance(from: string, config: NetConfig): Promise<BN> {
-  const web3js = new Web3(window.ethereum || window.web3.currentProvider);
-  const erc20Contract = new web3js.eth.Contract(abi.tokenABI, config.tokenContract.ring);
-  const allowanceAmount = await erc20Contract.methods.allowance(from, config.tokenContract.issuingDarwinia).call();
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+  const contract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.ring);
+  const allowanceAmount = await contract.methods.allowance(from, config.tokenContract.issuingDarwinia).call();
 
   return Web3.utils.toBN(allowanceAmount || 0);
 }
 
 async function getFee(config: NetConfig): Promise<BN> {
-  const web3js = new Web3(window.ethereum || window.web3.currentProvider);
-  const erc20Contract = new web3js.eth.Contract(abi.registryABI, config.tokenContract.registryEth);
-  const fee: number = await erc20Contract.methods
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+  const contract = new web3.eth.Contract(abi.registryABI, config.tokenContract.registryEth);
+  const fee: number = await contract.methods
     .uintOf('0x55494e545f4252494447455f4645450000000000000000000000000000000000')
     .call();
 
-  return web3js.utils.toBN(fee || 0);
+  return web3.utils.toBN(fee || 0);
 }
 
 function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo): Rule[] {

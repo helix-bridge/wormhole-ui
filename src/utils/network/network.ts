@@ -14,6 +14,7 @@ import {
   PolkadotConnection,
   Vertices,
 } from '../../model';
+import { entrance } from './entrance';
 
 function isSpecifyNetworkType(type: NetworkCategory) {
   const findBy = (name: Network) => NETWORK_CONFIG[name] || null;
@@ -247,7 +248,7 @@ export async function getMetamaskActiveAccount() {
  * @description is acutal network id match with expected.
  */
 export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> {
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const networkId = await web3.eth.net.getId();
 
   return expectNetworkId === networkId;
