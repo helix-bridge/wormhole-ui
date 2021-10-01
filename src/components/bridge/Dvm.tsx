@@ -1,4 +1,4 @@
-import { Button, Form, Input } from 'antd';
+import { Button, Descriptions, Form } from 'antd';
 import BN from 'bn.js';
 import { isNull } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -6,11 +6,12 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
-import { FORM_CONTROL } from '../../config';
+import { FORM_CONTROL, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
-import { useAfterSuccess, useApi, useDeparture, useMappedTokens, useTx } from '../../hooks';
+import { MemoedTokenInfo, useAfterSuccess, useApi, useMappedTokens, useTx } from '../../hooks';
 import {
   BridgeFormProps,
+  DVMToken,
   DVMTransfer,
   Erc20Token,
   IssuingDVMToken,
@@ -23,22 +24,20 @@ import {
   Tx,
 } from '../../model';
 import {
-  AfterTxCreator,
   applyModalObs,
   approveToken,
-  issuingErc20,
   createTxWorkflow,
   fromWei,
   getAllowance,
-  getInfoFromHash,
   getUnit,
   insufficientBalanceRule,
   isValidAddress,
   prettyNumber,
-  redeemErc20,
+  toWei,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
 import { Erc20Control } from '../controls/Erc20Control';
+import { EthereumAccountItem } from '../controls/EthereumAccountItem';
 import { MaxBalance } from '../controls/MaxBalance';
 import { RecipientItem } from '../controls/RecipientItem';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
@@ -47,91 +46,108 @@ import { Des } from '../modal/Des';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
 
-const BN_ZERO = new BN(0);
-
 export type ApproveValue = TransferFormValues<RequiredPartial<DVMTransfer, 'sender'>, NoNullTransferNetwork>;
 
 interface DVMProps {
-  isRedeem: boolean;
+  tokenRegisterStatus: RegisterStatus;
+  canRegister: boolean;
+  approveOptions?: Record<string, string>;
+  isDVM?: boolean;
+  transform: (value: DVMToken) => Observable<Tx>;
+  spenderResolver: (config: NetConfig) => Promise<string>;
 }
 
-function createApproveTx(
-  value: Pick<ApproveValue, 'sender' | 'transfer' | 'asset'>,
-  after: AfterTxCreator
-): Observable<Tx> {
-  const beforeTx = applyModalObs({
-    content: <ApproveConfirm value={value} />,
-  });
-  const { sender, transfer, asset } = value;
-  const txObs = approveToken({
-    sender,
-    transfer,
-    tokenAddress: asset?.address,
-    spender: transfer.from.tokenContract.issuingDarwinia,
-  });
-
-  return createTxWorkflow(beforeTx, txObs, after);
+interface TransferInfoProps {
+  amount: string;
+  tokenInfo: MemoedTokenInfo;
 }
 
-function createErc20Tx(fn: (value: RedeemDVMToken | IssuingDVMToken) => Observable<Tx>) {
-  return (value: RedeemDVMToken | IssuingDVMToken, after: AfterTxCreator): Observable<Tx> => {
-    const beforeTx = applyModalObs({
-      content: (
-        <TransferConfirm value={value}>
-          <Des
-            title={<Trans>Amount</Trans>}
-            content={
-              <span>
-                {value.amount} {value.asset.symbol}
-              </span>
-            }
-          ></Des>
-        </TransferConfirm>
-      ),
-    });
-    const txObs = fn(value);
+/* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
-    return createTxWorkflow(beforeTx, txObs, after);
-  };
+function TransferInfo({ tokenInfo, amount }: TransferInfoProps) {
+  const unit = getUnit(+tokenInfo.decimals);
+  const value = new BN(toWei({ value: amount || '0', unit }));
+
+  return (
+    <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
+      {!value.isZero() && (
+        <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
+          {fromWei({ value, unit })} {tokenInfo.symbol}
+        </Descriptions.Item>
+      )}
+    </Descriptions>
+  );
 }
 
-export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> & DVMProps) {
+/* ----------------------------------------------Main Section-------------------------------------------------- */
+
+// eslint-disable-next-line complexity
+export function DVM({
+  form,
+  setSubmit,
+  transform,
+  spenderResolver,
+  tokenRegisterStatus,
+  canRegister,
+  isDVM = true,
+}: BridgeFormProps<DVMTransfer> & DVMProps) {
   const { t } = useTranslation();
-  const { loading, tokens, refreshTokenBalance } = useMappedTokens(form.getFieldValue(FORM_CONTROL.transfer));
-  const [allowance, setAllowance] = useState(BN_ZERO);
-  const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
   const {
     connection: { accounts },
   } = useApi();
-  const { observer } = useTx();
-  const { updateDeparture } = useDeparture();
-  const { afterTx } = useAfterSuccess();
-  const account = useMemo(() => {
-    const acc = (accounts || [])[0];
-
-    return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
-  }, [accounts]);
-  const unit = useMemo(() => (selectedErc20 ? getUnit(+selectedErc20.decimals) : 'ether'), [selectedErc20]);
+  const { loading, tokens, refreshTokenBalance } = useMappedTokens(
+    form.getFieldValue(FORM_CONTROL.transfer),
+    tokenRegisterStatus
+  );
+  const [allowance, setAllowance] = useState(new BN(0));
+  const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
   const availableBalance = useMemo(() => {
     return !selectedErc20
       ? null
       : fromWei({ value: selectedErc20.balance, unit: getUnit(+selectedErc20.decimals) }, prettyNumber);
   }, [selectedErc20]);
+  const account = useMemo(() => {
+    const acc = (accounts || [])[0];
 
+    return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
+  }, [accounts]);
+  const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
+  const unit = useMemo(() => (selectedErc20 ? getUnit(+selectedErc20.decimals) : 'ether'), [selectedErc20]);
+  const { observer } = useTx();
+  const { afterTx } = useAfterSuccess();
   const refreshAllowance = useCallback(
-    (config: NetConfig) =>
-      getAllowance(account, config.tokenContract.issuingDarwinia ?? '', selectedErc20).then((num) => {
+    async (config: NetConfig) => {
+      const spender = await spenderResolver(config);
+
+      return getAllowance(account, spender, selectedErc20).then((num) => {
         setAllowance(num);
         form.validateFields([FORM_CONTROL.amount]);
-      }),
-    [account, form, selectedErc20]
+      });
+    },
+    [account, form, selectedErc20, spenderResolver]
   );
-  const launchTx = useMemo(() => (isRedeem ? createErc20Tx(redeemErc20) : createErc20Tx(issuingErc20)), [isRedeem]);
 
   useEffect(() => {
-    const fn = () => (value: RedeemDVMToken | IssuingDVMToken) =>
-      launchTx(
-        value,
+    const fn = () => (value: RedeemDVMToken | IssuingDVMToken) => {
+      const beforeTx = applyModalObs({
+        content: (
+          <TransferConfirm value={value}>
+            <Des
+              title={<Trans>Amount</Trans>}
+              content={
+                <span>
+                  {value.amount} {value.asset.symbol}
+                </span>
+              }
+            ></Des>
+          </TransferConfirm>
+        ),
+      });
+      const txObs = transform(value);
+
+      return createTxWorkflow(
+        beforeTx,
+        txObs,
         afterTx(TransferSuccess, {
           onDisappear: () => {
             refreshTokenBalance(value.asset.address);
@@ -139,52 +155,36 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
           },
         })(value)
       ).subscribe(observer);
+    };
 
     setSubmit(fn);
-  }, [afterTx, observer, refreshAllowance, refreshTokenBalance, setSubmit, launchTx]);
-
-  useEffect(() => {
-    if (!account) {
-      return;
-    }
-
-    const { recipient } = getInfoFromHash();
-
-    form.setFieldsValue({
-      [FORM_CONTROL.recipient]: recipient ?? '',
-      [FORM_CONTROL.sender]: account,
-    });
-
-    const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
-
-    updateDeparture({ from: netConfig || undefined, sender: form.getFieldValue(FORM_CONTROL.sender) });
-  }, [account, form, updateDeparture]);
+  }, [afterTx, observer, refreshAllowance, refreshTokenBalance, setSubmit, transform]);
 
   return (
     <>
-      <Form.Item name={FORM_CONTROL.sender} className="hidden" rules={[{ required: true }]}>
-        <Input disabled value={account} />
-      </Form.Item>
+      <EthereumAccountItem form={form} />
 
       <RecipientItem
         form={form}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
-        isDvm
+        isDvm={isDVM}
       />
 
       <Form.Item
         name={FORM_CONTROL.asset}
         label={t('Asset')}
         extra={
-          <span className="inline-block mt-2">
-            <Trans i18nKey="registrationTip">
-              If you can not find the token you want to send in the list, highly recommended to
-              <Link to={Path.register}> go to the registration page</Link>, where you will find it after completing the
-              registration steps.
-            </Trans>
-          </span>
+          canRegister ? (
+            <span className="inline-block mt-2">
+              <Trans i18nKey="registrationTip">
+                If you can not find the token you want to send in the list, highly recommended to
+                <Link to={Path.register}> go to the registration page</Link>, where you will find it after completing
+                the registration steps.
+              </Trans>
+            </span>
+          ) : null
         }
         rules={[{ required: true }]}
         className="mb-2"
@@ -192,12 +192,12 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
         <Erc20Control
           loading={loading}
           tokens={tokens}
-          onChange={(erc20) => {
+          onChange={async (erc20) => {
             setSelectedErc20(erc20);
 
-            const departure = form.getFieldValue(FORM_CONTROL.transfer).from as NetConfig;
+            const spender = await spenderResolver(form.getFieldValue(FORM_CONTROL.transfer).from);
 
-            getAllowance(account, departure.tokenContract.issuingDarwinia!, erc20).then((allow) => {
+            getAllowance(account, spender, erc20).then((allow) => {
               setAllowance(allow);
             });
           }}
@@ -228,15 +228,27 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
               <Trans i18nKey="approveBalanceInsufficient">
                 Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
+                    const transfer = form.getFieldValue(FORM_CONTROL.transfer) as NoNullTransferNetwork;
                     const value: Pick<ApproveValue, 'transfer' | 'sender' | 'asset'> = {
                       sender: account,
-                      transfer: form.getFieldValue(FORM_CONTROL.transfer),
+                      transfer,
                       asset: selectedErc20,
                     };
+                    const spender = await spenderResolver(transfer.from);
+                    const beforeTx = applyModalObs({
+                      content: <ApproveConfirm value={value} />,
+                    });
+                    const txObs = approveToken({
+                      sender: account,
+                      transfer,
+                      tokenAddress: selectedErc20?.address,
+                      spender,
+                    });
 
-                    createApproveTx(
-                      value,
+                    createTxWorkflow(
+                      beforeTx,
+                      txObs,
                       afterTx(ApproveSuccess, { onDisappear: () => refreshAllowance(value.transfer.from) })(value)
                     ).subscribe(observer);
                   }}
@@ -255,6 +267,7 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
           placeholder={t('Balance {{balance}}', {
             balance: isNull(availableBalance) ? t('Searching') : availableBalance,
           })}
+          onChange={setCurAmount}
           className="flex-1"
         >
           <MaxBalance
@@ -263,11 +276,14 @@ export function DVM({ form, setSubmit, isRedeem }: BridgeFormProps<DVMTransfer> 
               const amount = fromWei({ value: selectedErc20?.balance, unit }, prettyNumber);
 
               form.setFieldsValue({ [FORM_CONTROL.amount]: amount });
+              setCurAmount(amount);
             }}
             size="large"
           />
         </Balance>
       </Form.Item>
+
+      {!!curAmount && selectedErc20 && <TransferInfo amount={curAmount} tokenInfo={selectedErc20} />}
     </>
   );
 }

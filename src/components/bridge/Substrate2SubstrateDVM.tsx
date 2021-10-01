@@ -144,7 +144,6 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
     setSubmit(fn);
   }, [afterTx, api, chain.tokens, form, getBalances, observer, setSubmit]);
 
-  // eslint-disable-next-line complexity
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
 

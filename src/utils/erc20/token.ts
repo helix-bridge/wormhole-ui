@@ -35,12 +35,13 @@ const proofMemo: StoredProof[] = [];
  * @returns tokens that status maybe registered or registering
  */
 const getFromDvm = async (currentAccount: string, config: NetConfig, s2sMappingAddress?: string) => {
-  const web3Darwinia = entrance.web3.getInstance(config.provider.rpc);
-  const mappingContract = new web3Darwinia.eth.Contract(
+  const web3 = entrance.web3.getInstance(config.provider.rpc);
+  const mappingContract = new web3.eth.Contract(
     abi.mappingTokenABI,
     s2sMappingAddress ?? config.erc20Token.mappingAddress
   );
   const isS2S = !!s2sMappingAddress;
+  // TODO: connection not open on send
   const length = await mappingContract.methods.tokenLength().call(); // length: string
   const tokens = await Promise.all(
     new Array(+length).fill(0).map(async (_, index) => {
