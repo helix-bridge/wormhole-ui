@@ -4,19 +4,19 @@ import { useForm } from 'antd/lib/form/Form';
 import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { from, mergeMap } from 'rxjs';
+import Web3 from 'web3';
 import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
-import { MemoedTokenInfo, useApi, useMappedTokens, useLocalSearch, useTx } from '../../hooks';
+import { MemoedTokenInfo, useApi, useLocalSearch, useMappedTokens, useTx } from '../../hooks';
 import { Erc20Token, NetConfig } from '../../model';
 import { isSameNetConfig, isValidAddress } from '../../utils';
-import { getNameAndLogo, getSymbolAndDecimals } from '../../utils/erc20/meta';
+import { getTokenMeta } from '../../utils/erc20/meta';
 import {
   confirmRegister,
   getRegisterProof,
   getTokenRegisterStatus,
   launchRegister,
   StoredProof,
-  tokenSearchFactory,
 } from '../../utils/erc20/token';
 import { updateStorage } from '../../utils/helper/storage';
 import { Destination } from '../controls/Destination';
@@ -29,6 +29,18 @@ const DEFAULT_REGISTER_NETWORK = NETWORK_CONFIG.ropsten;
 enum TabKeys {
   register = 'register',
   upcoming = 'upcoming',
+}
+
+function tokenSearchFactory<T extends Pick<Erc20Token, 'address' | 'symbol'>>(tokens: T[]) {
+  return (value: string) => {
+    if (!value) {
+      return tokens;
+    }
+
+    return Web3.utils.isAddress(value)
+      ? tokens.filter((token) => token.address === value)
+      : tokens.filter((token) => token.symbol.toLowerCase().includes(value.toLowerCase()));
+  };
 }
 
 // eslint-disable-next-line complexity
@@ -73,11 +85,10 @@ export function Register() {
 
       const searchValue = !inputValue.startsWith('0x') ? '0x' + inputValue : inputValue;
       const tokenStatus = await getTokenRegisterStatus(searchValue, net);
-      const result = await getSymbolAndDecimals(searchValue, net);
-      const { name, logo } = getNameAndLogo(searchValue);
+      const result = await getTokenMeta(searchValue);
 
       setRegisteredStatus(tokenStatus === null ? -1 : tokenStatus);
-      setToken({ ...result, name: name ?? '', logo: logo ?? '', address: searchValue });
+      setToken({ ...result, address: searchValue });
       setIsLoading(false);
     })();
   }, [canStart, inputValue, net]);

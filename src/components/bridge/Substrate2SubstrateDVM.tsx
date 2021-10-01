@@ -187,7 +187,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
             <Select.Option value={symbol} key={symbol + '_' + index} disabled={/kton/i.test(symbol)}>
               <span>{symbol}</span>
               {/** FIXME: what's the name ? we can only get symbol, decimals and ss58Format from api properties  */}
-              <sup className="ml-2 text-xs transform tra" title={t('name')}>
+              <sup className="ml-2 text-xs" title={t('name')}>
                 {t('{{network}} native token', {
                   network: capitalize(form.getFieldValue(FORM_CONTROL.transfer)?.from?.name ?? ''),
                 })}

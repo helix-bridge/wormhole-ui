@@ -82,6 +82,10 @@ export const getPolkadotConnection: (network: NetConfig) => Observable<PolkadotC
           }, SHORT_DURATION * counter);
         };
 
+        if (api.isConnected) {
+          observer.next(envelop);
+        }
+
         api.on('connected', () => {
           observer.next(envelop);
         });

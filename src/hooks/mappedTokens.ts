@@ -96,23 +96,13 @@ export const useMappedTokens = (
         return;
       }
 
-      try {
-        setLoading(true);
+      setLoading(true);
 
-        const all = (await getKnownMappedTokens(currentAccount, from, to)) as Erc20Token[];
-        const tokens = status > 0 ? all.filter((item) => item.status && +item.status === status) : all;
+      const all = (await getKnownMappedTokens(currentAccount, from, to)) as Erc20Token[];
+      const tokens = status > 0 ? all.filter((item) => item.status && +item.status === status) : all;
 
-        updateTokens(tokens);
-      } catch (error) {
-        console.warn(
-          '%c [ error in useMappedTokens hook ]',
-          'font-size:13px; background:pink; color:#bf2c9f;',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (error as unknown as any).message
-        );
-      } finally {
-        setLoading(false);
-      }
+      updateTokens(tokens);
+      setLoading(false);
     })();
   }, [currentAccount, from, updateTokens, status, connection, to]);
 

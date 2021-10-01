@@ -7,7 +7,7 @@ import { RegisterStatus } from '../../config';
 import { MemoedTokenInfo } from '../../hooks';
 import { CustomFormControlProps, Erc20Token } from '../../model';
 import { fromWei, getUnit, prettyNumber } from '../../utils';
-import { getTokenName } from '../../utils/erc20/meta';
+import { EllipsisMiddle } from '../EllipsisMiddle';
 import { Erc20ListInfo } from '../erc20/Erc20ListInfo';
 
 interface Erc20ControlProps extends CustomFormControlProps<Erc20Token | null> {
@@ -35,7 +35,11 @@ export function Erc20Control({ value, onChange, loading, tokens }: PropsWithRef<
         value={token.address}
         key={token.address}
         disabled={disabled}
-        label={`${getTokenName(token.name, token.symbol) || '-'} -  ${token.address}`}
+        label={
+          <EllipsisMiddle>
+            {token.symbol} - {token.address}
+          </EllipsisMiddle>
+        }
       >
         <div className="flex justify-between items-center pr-3">
           <Erc20ListInfo token={token}></Erc20ListInfo>
