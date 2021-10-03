@@ -1,20 +1,23 @@
 {
   "baseUrl": "http://localhost:3007",
+  "chromeWebSecurity": true,
   "component": {
     "componentFolder": "src",
     "testFiles": "__tests__/**/*.test.{js,ts,jsx,tsx}"
   },
   "env": {
     "product": "",
-    "staging": ""
-  },
-  "folders": {
-    "fileServerFolder": "public"
+    "staging": "",
+    "coverage": false
   },
   "ignoreTestFiles": "*/examples/**",
-  "downloadsFolder": "./public/image",
-  "nodeVersion": "system",
-  "chromeWebSecurity": true,
+  "defaultCommandTimeout": 30000,
+  "pageLoadTimeout": 30000,
+  "requestTimeout": 3000,
+  "retries": { "runMode": 0, "openMode": 0 },
+  "userAgent": "synpress",
+  "video": true,
   "videoCompression": 15,
-  "video": true
+  "viewportHeight": 768,
+  "viewportWidth": 1366
 }

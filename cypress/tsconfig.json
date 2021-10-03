@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "types": ["cypress", "@types/puppeteer-core", "cypress-wait-until", "@testing-library/cypress"]
+  },
+  "include": ["**/*.ts"]
+}
