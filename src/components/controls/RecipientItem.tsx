@@ -47,7 +47,7 @@ export function RecipientItem({
         className="mb-2"
       >
         <Input
-          onChange={(event) => {
+          onBlur={(event) => {
             patchUrl({ recipient: event.target.value });
           }}
           disabled={lock}
