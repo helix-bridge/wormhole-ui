@@ -1,0 +1,55 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [staging, master]
+
+jobs:
+  test-cypress:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run E2E tests 🧪
+        uses: cypress-io/github-action@v2
+        with:
+          start: yarn start
+          wait-on: 'http://localhost:3007'
+          wait-on-timeout: 300
+          command: yarn test:e2e:ci
+          record: true
+          group: 'Actions example'
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: cypress-videos
+          path: cypress/videos
+
+      - name: Render comment
+        if: failure()
+        id: template-failure
+        uses: chuhlomin/render-template@v1.2
+        with:
+          template: .github/comment/pr-cypress.md
+          vars: |
+            today: ${{ steps.vars.outputs.today }}
+            job: ${{ github.job }}
+            run_id: ${{ github.run_id }}
+            run_number: ${{ github.run_number }}
+
+      - name: Publish comment
+        if: failure()
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.template-failure.outputs.result }}
+          edit-mode: replace

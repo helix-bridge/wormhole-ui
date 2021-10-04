@@ -5,16 +5,21 @@
     "componentFolder": "src",
     "testFiles": "__tests__/**/*.test.{js,ts,jsx,tsx}"
   },
+  "defaultCommandTimeout": 30000,
   "env": {
+    "coverage": false,
     "product": "",
-    "staging": "",
-    "coverage": false
+    "staging": ""
   },
   "ignoreTestFiles": "*/examples/**",
-  "defaultCommandTimeout": 30000,
+  "nodeVersion": "system",
   "pageLoadTimeout": 30000,
+  "projectId": "37wetq",
   "requestTimeout": 3000,
-  "retries": { "runMode": 0, "openMode": 0 },
+  "retries": {
+    "openMode": 0,
+    "runMode": 0
+  },
   "userAgent": "synpress",
   "video": true,
   "videoCompression": 15,
