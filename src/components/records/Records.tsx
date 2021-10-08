@@ -12,13 +12,13 @@ import {
   HistoryReq,
   HistoryRouteParam,
   NetConfig,
-  Network,
-  NetworkMode,
   Paginator,
   RedeemHistory,
   RingBurnHistory,
+  Vertices,
 } from '../../model';
 import {
+  getCrossChainArrivals,
   getDisplayName,
   getHistoryRouteParams,
   getNetConfigByVer,
@@ -38,11 +38,6 @@ import {
 import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
 
-interface SelectItem {
-  network: Network;
-  mode: NetworkMode;
-}
-
 // eslint-disable-next-line complexity
 export function Records() {
   const { t } = useTranslation();
@@ -50,7 +45,7 @@ export function Records() {
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
   const { setToFilters, toNetworks, fromNetworks } = useNetworks(true);
-  const [departure, setDeparture] = useState<SelectItem>({
+  const [departure, setDeparture] = useState<Vertices>({
     network: searchParams.network || fromNetworks[0].name,
     mode: searchParams.mode || getNetworkMode(fromNetworks[0]),
   });
@@ -60,11 +55,13 @@ export function Records() {
   const [sourceData, setSourceData] = useState<{ count: number; list: any[] }>({ count: 0, list: [] });
   const [confirmed, setConfirmed] = useState<boolean | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [arrival, setArrival] = useState<SelectItem>({
-    network: toNetworks[0].name,
-    mode: getNetworkMode(toNetworks[0]),
+  const [arrival, setArrival] = useState<Vertices>(() => {
+    const config = getNetConfigByVer(departure);
+    const data = getCrossChainArrivals(config!);
+
+    return data[0];
   });
-  const canUpdate = useCallback((addr: string | null, selected: SelectItem) => {
+  const canUpdate = useCallback((addr: string | null, selected: Vertices) => {
     const { network, mode } = selected;
 
     if (addr && network) {
@@ -198,11 +195,15 @@ export function Records() {
       isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
     setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
-  }, [fromNetworks, departure.network, setToFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    setArrival({ network: toNetworks[0].name, mode: getNetworkMode(toNetworks[0]) });
-  }, [toNetworks]);
+    const config = getNetConfigByVer(departure);
+    const data = getCrossChainArrivals(config!);
+
+    setArrival(data[0]);
+  }, [departure]);
 
   return (
     <>
@@ -217,7 +218,10 @@ export function Records() {
               const target = fromNetworks.find(
                 (item) => getDisplayName(item).toLowerCase() === name.toLowerCase()
               ) as NetConfig;
+              const isSameEnv = (net: NetConfig) =>
+                isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
+              setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
               setDeparture({ network: target.name, mode: getNetworkMode(target) });
               setPaginator({ row: 10, page: 0 });
               setSourceData({ list: [], count: 0 });
@@ -238,12 +242,13 @@ export function Records() {
             <Select
               size="large"
               dropdownClassName="dropdown-networks"
-              value={getDisplayName(toNetworks[0])}
+              value={getDisplayName(getNetConfigByVer(arrival)!)}
               className="type-select capitalize"
               onSelect={(name: string) => {
                 const target = toNetworks.find(
                   (item) => getDisplayName(item).toLowerCase() === name.toLowerCase()
                 ) as NetConfig;
+
                 setArrival({ network: target.name, mode: getNetworkMode(target) });
                 setPaginator({ row: 10, page: 0 });
                 setSourceData({ list: [], count: 0 });

@@ -319,3 +319,7 @@ export function isChainIdEqual(id1: string | number, id2: string | number): bool
 
   return id1 === id2;
 }
+
+export function getCrossChainArrivals(departure: NetConfig): Arrival[] {
+  return getArrivals(NETWORK_GRAPH, departure);
+}
