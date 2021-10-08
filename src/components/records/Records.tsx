@@ -31,9 +31,9 @@ import {
   isSameNetworkCurry,
   isTronNetwork,
   isValidAddress,
-  queryD2ERecords,
-  queryE2DGenesisRecords,
-  queryE2DRecords,
+  queryDarwinia2EthereumIssuingRecords,
+  queryEthereum2DarwiniaGenesisRecords,
+  queryEthereum2DarwiniaRedeemRecords,
 } from '../../utils';
 import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
@@ -163,14 +163,14 @@ export function Records() {
 
     if (isEthereumNetwork(departure.network) && isPolkadotNetwork(arrival.network)) {
       if (isGenesis) {
-        subscription = queryE2DGenesisRecords(params).subscribe(observer);
+        subscription = queryEthereum2DarwiniaGenesisRecords(params).subscribe(observer);
       } else {
-        subscription = queryE2DRecords(params).subscribe(observer);
+        subscription = queryEthereum2DarwiniaRedeemRecords(params).subscribe(observer);
       }
     } else if (isPolkadotNetwork(departure.network) && isEthereumNetwork(arrival.network)) {
-      subscription = queryD2ERecords(params).subscribe(observer);
+      subscription = queryDarwinia2EthereumIssuingRecords(params).subscribe(observer);
     } else if (isTronNetwork(departure.network)) {
-      subscription = queryE2DGenesisRecords({
+      subscription = queryEthereum2DarwiniaGenesisRecords({
         ...params,
         address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '',
       }).subscribe(observer);

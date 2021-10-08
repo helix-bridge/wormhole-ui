@@ -15,7 +15,7 @@ import { getAvailableNetwork, getEthConnection, entrance } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { getHistoryQueryParams, rxGet } from './api';
 
-export function queryD2ERecords({
+export function queryDarwinia2EthereumIssuingRecords({
   address,
   confirmed,
   network,
