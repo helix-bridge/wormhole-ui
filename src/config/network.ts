@@ -269,7 +269,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpc: 'wss://pangoro-rpc.darwinia.network',
       etherscan: '',
     },
-    ss58Prefix: 18,
+    ss58Prefix: 42,
     tokenContract: {
       native: 'PRING',
       issuingDarwinia: '', // e2d redeem address

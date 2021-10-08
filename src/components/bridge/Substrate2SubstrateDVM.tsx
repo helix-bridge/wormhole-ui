@@ -67,7 +67,7 @@ function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
     <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
       {value.gte(fee) && !value.isZero() && (
         <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
-          {fromWei({ value: value.sub(fee), unit })} {tokenInfo.symbol}
+          {fromWei({ value: value.sub(fee), unit })} x{tokenInfo.symbol}
         </Descriptions.Item>
       )}
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
