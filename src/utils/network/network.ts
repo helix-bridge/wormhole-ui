@@ -123,7 +123,7 @@ export async function isTronLinkReady(): Promise<boolean> {
 }
 
 export function getNetworkMode(config: NetConfig): NetworkMode {
-  return config.dvm ? 'dvm' : 'native';
+  return config?.dvm ? 'dvm' : 'native';
 }
 
 export function getNetConfigByVer(vertices: Vertices) {
@@ -270,7 +270,7 @@ export function getAvailableNetwork(net: Network): NetConfig | null {
 export function getDisplayName(config: NetConfig): string {
   const mode = getNetworkMode(config);
 
-  return mode === 'dvm' ? `${config.fullName}-Smart` : config.fullName;
+  return mode === 'dvm' ? `${config.fullName}-Smart` : config?.fullName;
 }
 
 export function getVerticesFromDisplayName(name: string): Vertices {

@@ -34,9 +34,9 @@ export const airportsArrivalFilter = arrivalFilterCreator(AIRDROP_GRAPH);
 export function useNetworks(isCross: boolean) {
   const { enableTestNetworks } = useApi();
   const [fromFilters, setFromFilters] = useState<NetworkFilter[]>([]);
-  const [fromNetworks, setFromNetworks] = useState<NetConfig[]>([]);
+  const [fromNetworks, setFromNetworks] = useState<NetConfig[]>(NETWORKS);
   const [toFilters, setToFilters] = useState<NetworkFilter[]>([]);
-  const [toNetworks, setToNetworks] = useState<NetConfig[]>([]);
+  const [toNetworks, setToNetworks] = useState<NetConfig[]>(NETWORKS);
   const getNetworks = useCallback(
     (filters: NetworkFilter[]) => {
       return [...getGlobalFilters(enableTestNetworks), ...filters].reduce(

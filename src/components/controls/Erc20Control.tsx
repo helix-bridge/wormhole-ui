@@ -85,7 +85,7 @@ export function Erc20Control({ value, onChange, loading, tokens }: PropsWithRef<
 
       <Select.OptGroup label={<Typography.Title level={5}>{t('Available')}</Typography.Title>}>
         {!confirmed.length ? (
-          <Select.Option key="confimedEmpty" value="confirmed" disabled className="text-center">
+          <Select.Option key="confirmedEmpty" value="confirmed" disabled className="text-center">
             {t('No Data')}
           </Select.Option>
         ) : (
