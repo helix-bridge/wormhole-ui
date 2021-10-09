@@ -36,7 +36,7 @@ export function PolkadotAccountsItem({ getBalances, onChange }: PolkadotAccounts
   return (
     <Form.Item
       name={FORM_CONTROL.sender}
-      label={t('Payment Account')}
+      label={t('Sender Account')}
       rules={[{ required: true }]}
       extra={
         <span>

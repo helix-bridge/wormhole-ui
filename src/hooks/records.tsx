@@ -10,7 +10,7 @@ interface RecordsHook<T> {
   refetch?: (...args: any) => Subscription;
 }
 
-export function useGet<T = unknown>(req: RecordsQueryRequest): RecordsHook<T> {
+export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsHook<T> {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Record<string, unknown> | null>(null);
   const [data, setData] = useState<T | null>(null);

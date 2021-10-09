@@ -4,11 +4,6 @@ import { AIRDROP_GRAPH, AIRPORTS, NETWORKS } from '../config';
 import { Arrival, Departure, NetConfig, NetworkFilter } from '../model';
 import { useApi } from './api';
 
-export enum Direction {
-  from = 'from',
-  to = 'to',
-}
-
 const omitTestChain: NetworkFilter = (net) => !net.isTest;
 
 const getGlobalFilters = (isTestDisplay: boolean) => (isTestDisplay ? [] : [omitTestChain]);
