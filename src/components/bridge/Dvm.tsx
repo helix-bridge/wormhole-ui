@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Observable } from 'rxjs';
-import Web3 from 'web3';
 import { FORM_CONTROL, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
 import { MemoedTokenInfo, useAfterSuccess, useApi, useMappedTokens, useTx } from '../../hooks';
@@ -220,7 +219,7 @@ export function DVM({
           }),
           {
             validator: (_, value: string) => {
-              const val = new BN(Web3.utils.toWei(value));
+              const val = new BN(toWei({ value }));
 
               return allowance.gte(val) ? Promise.resolve() : Promise.reject();
             },

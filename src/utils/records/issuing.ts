@@ -15,6 +15,8 @@ import { getAvailableNetwork, getEthConnection, entrance } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { getHistoryQueryParams, rxGet } from './api';
 
+/* -------------------------------------------D2E---------------------------------------------- */
+
 export function queryDarwinia2EthereumIssuingRecords({
   address,
   confirmed,
@@ -145,3 +147,7 @@ function getD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsS
 
   return matchedStorageKey?.key;
 }
+
+/* -------------------------------------------S2S---------------------------------------------- */
+
+// export function querySubstrate2SubstrateIssuingRecords(req: HistoryReq) {}

@@ -87,3 +87,60 @@ export interface Erc20RegisterProof {
 }
 
 export type Erc20RegisterProofRes = Erc20RegisterProof | null;
+
+/* ------------------------------------S2S section-------------------------------------------- */
+
+export interface BurnRecord {
+  message_id: string;
+  // TODO: may be need two transaction here?
+  transaction: string;
+  sender: string;
+  recipient: string;
+  token: string;
+  amount: string;
+  // eslint-disable-next-line no-magic-numbers
+  result: 0 | 1 | 2;
+  start_timestamp: string;
+  end_timestamp: string;
+}
+
+export interface BurnRecordsRes {
+  burnRecordEntities: BurnRecord[];
+}
+
+export interface BurnRecordRes {
+  burnRecordEntity: BurnRecord;
+}
+
+export interface TokenLockRes {
+  transfers: {
+    totalCount: number;
+    nodes: TokenLockNode[];
+  };
+}
+
+interface TokenLockNode {
+  fromId: string;
+  toId: string;
+  amount: string; // fee?
+  block: Block;
+}
+
+interface Block {
+  events: Events;
+}
+
+interface Events {
+  nodes: Node[];
+}
+
+interface Node {
+  method: string;
+  timestamp: string;
+  data: string;
+  extrinsic: Extrinsic;
+}
+
+interface Extrinsic {
+  id: string;
+}

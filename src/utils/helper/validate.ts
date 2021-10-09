@@ -20,7 +20,7 @@ export const isValidAddress = (address: string, network: Network | NetworkCatego
   }
 
   if (network === 'polkadot') {
-    return isSS58Address(address);
+    return strict ? isSS58Address(address, 0) : isSS58Address(address);
   }
 
   if (isPolkadotNetwork(network as Network)) {

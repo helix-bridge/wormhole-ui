@@ -39,6 +39,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: 'https://crab.subscan.io',
+      subGraph: '',
     },
     dvm: {
       ring: '0x588abe3F7EE935137102C5e2B8042788935f4CB0',
@@ -81,6 +82,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: '',
+      subGraph: '',
     },
     dvm: {
       ring: '',
@@ -137,6 +139,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: '',
+      subGraph: '',
     },
     erc20Token: {
       bankingAddress: '',
@@ -180,6 +183,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
+      subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/DarwiniaMappingTokenFactory',
     },
     dvm: {
       ring: '0xbBD91aD844557ADCbb97296216b3B3c977FCC4F2',
@@ -232,6 +236,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
+      subGraph: '',
     },
     dvm: {
       ring: '',
@@ -284,6 +289,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
+      subGraph: '',
     },
     erc20Token: {
       bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
@@ -327,6 +333,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: '',
       dapp: 'https://api.darwinia.network',
       subscan: '',
+      subGraph: '',
     },
     erc20Token: {
       bankingAddress: '',

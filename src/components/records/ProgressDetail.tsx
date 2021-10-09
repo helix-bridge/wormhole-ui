@@ -26,13 +26,14 @@ export interface ProgressDetailProps {
   to: ProgressInfo;
   hasRelay: boolean;
   // eslint-disable-next-line no-magic-numbers
-  step: 2 | 3 | 4;
+  step: 1 | 2 | 3 | 4;
   claim?: () => void;
+  stepDescriptions?: { originConfirmed?: string; targetConfirmed?: string };
 }
 
 export enum CrosseState {
-  // eslint-disable-next-line no-magic-numbers
-  takeOff = 2,
+  pending = 1,
+  takeOff,
   relayed,
   claimed,
 }
@@ -91,7 +92,7 @@ const StepWrapper = ({
 };
 
 // eslint-disable-next-line complexity
-export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDetailProps) {
+export function ProgressDetail({ from, to, step, hasRelay, claim, stepDescriptions = {} }: ProgressDetailProps) {
   const { t } = useTranslation();
   const { tx } = useTx();
   const { txHash: fromHash, network: fromNetwork } = from;
@@ -118,7 +119,7 @@ export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDeta
 
       <StepWrapper
         icon={txProgressIcon[iconName(fromNetwork)]}
-        title={t('{{chain}} Confirmed', { chain: fromNetwork })}
+        title={t(stepDescriptions.originConfirmed || '{{chain}} Confirmed', { chain: fromNetwork })}
       >
         <SubscanLink txHash={fromHash} network={fromNetwork}>
           <Button size="small" className="text-xs">
@@ -148,7 +149,7 @@ export function ProgressDetail({ from, to, step, hasRelay, claim }: ProgressDeta
 
       <StepWrapper
         icon={txProgressIcon[iconName(toNetwork, true)]}
-        title={t('{{chain}} Confirmed', { chain: toNetwork })}
+        title={t(stepDescriptions.targetConfirmed || '{{chain}} Confirmed', { chain: toNetwork })}
         className={needClaim ? '' : 'text-gray-300'}
       >
         {needClaim && toHash && (

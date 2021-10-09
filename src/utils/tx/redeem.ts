@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../config';
 import { RedeemDarwiniaToken, RedeemDeposit, RedeemDVMToken, Token, Tx, TxFn } from '../../model';
-import { convertToDvm } from '../helper';
+import { convertToDvm, toWei } from '../helper';
 import { entrance } from '../network';
 import { buf2hex, getContractTxObs } from './common';
 
@@ -15,7 +15,7 @@ export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, transfe
   const contractAddress = transfer.from.tokenContract[asset as Token] as string;
 
   recipient = buf2hex(decodeAddress(recipient, false, transfer.to.ss58Prefix!).buffer);
-  amount = Web3.utils.toWei(amount, 'ether');
+  amount = toWei({ value: amount });
 
   return getContractTxObs(contractAddress, (contract) =>
     contract.methods

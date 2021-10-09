@@ -145,7 +145,7 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
   };
   const isLessThenMax = {
     validator: (_r: Rule, curVal: string) => {
-      const value = new BN(Web3.utils.toWei(curVal));
+      const value = new BN(toWei({ value: curVal }));
       const maximum = balance;
 
       return value.lte(maximum!) ? Promise.resolve() : Promise.reject(amountGtBalanceMsg);
@@ -157,7 +157,7 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
   if (asset === E2DAssetEnum.ring) {
     const gtThanFee: Rule = {
       validator: (_r, curVal: string) => {
-        const value = new BN(Web3.utils.toWei(curVal));
+        const value = new BN(toWei({ value: curVal }));
         return value.gte(fee!) ? Promise.resolve() : Promise.reject();
       },
       message: t('The transfer amount is not enough to cover the fee'),
@@ -475,7 +475,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
                 const val =
                   form.getFieldValue(FORM_CONTROL.asset) !== E2DAssetEnum.ring
                     ? fee ?? BN_ZERO
-                    : new BN(Web3.utils.toWei(value));
+                    : new BN(toWei({ value }));
 
                 return allowance.gte(val) ? Promise.resolve() : Promise.reject();
               },

@@ -3,10 +3,11 @@ import { flow, isBoolean, negate, upperFirst } from 'lodash';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { EMPTY, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { NETWORK_CONFIG } from '../../config';
-import { useNetworks } from '../../hooks';
+import { useNetworks, useS2SRecords } from '../../hooks';
 import {
+  BurnRecord,
   D2EHistory,
   D2EHistoryRes,
   HistoryReq,
@@ -37,6 +38,7 @@ import {
 } from '../../utils';
 import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
+import { S2SRecord } from './S2SRecord';
 
 // eslint-disable-next-line complexity
 export function Records() {
@@ -61,6 +63,7 @@ export function Records() {
 
     return data[0];
   });
+  // eslint-disable-next-line complexity
   const canUpdate = useCallback((addr: string | null, selected: Vertices) => {
     const { network, mode } = selected;
 
@@ -70,7 +73,7 @@ export function Records() {
       } else {
         const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(network);
 
-        return category && isValidAddress(addr, category);
+        return category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
       }
     }
 
@@ -95,15 +98,15 @@ export function Records() {
     // eslint-disable-next-line complexity
     () => {
       let nodes: ReactElement[] | undefined = [];
-      const from = departure.network;
+      const come = departure.network;
       const to = arrival.network;
 
-      if ((isEthereumNetwork(from) && isPolkadotNetwork(to)) || isTronNetwork(from)) {
+      if ((isEthereumNetwork(come) && isPolkadotNetwork(to)) || isTronNetwork(come)) {
         // e2d & tron
         nodes = ((sourceData.list || []) as (RingBurnHistory | RedeemHistory)[]).map((item, index) => (
-          <E2DRecord record={item} network={NETWORK_CONFIG[from || 'ethereum']} key={item.block_timestamp || index} />
+          <E2DRecord record={item} network={NETWORK_CONFIG[come || 'ethereum']} key={item.block_timestamp || index} />
         ));
-      } else if (isPolkadotNetwork(from) && isEthereumNetwork(to)) {
+      } else if (isPolkadotNetwork(come) && isEthereumNetwork(to)) {
         // d2e
         nodes = ((sourceData.list || []) as D2EHistory[]).map((item) => (
           <D2ERecord
@@ -114,13 +117,20 @@ export function Records() {
                 best: (sourceData as D2EHistoryRes).best,
               },
             }}
-            network={NETWORK_CONFIG[from || 'darwinia']}
+            network={NETWORK_CONFIG[come || 'darwinia']}
             key={item.block_timestamp}
           />
         ));
-      } else if (isPolkadotNetwork(from) && isPolkadotNetwork(to)) {
+      } else if (isPolkadotNetwork(come) && isPolkadotNetwork(to)) {
         // s2s
-        nodes = [];
+        nodes = ((sourceData.list || []) as BurnRecord[]).map((item) => (
+          <S2SRecord
+            network={getNetConfigByVer(departure)!}
+            record={item}
+            arrival={getNetConfigByVer(arrival)!}
+            key={item.message_id}
+          />
+        ));
       } else {
         nodes = [];
       }
@@ -132,8 +142,9 @@ export function Records() {
         </>
       );
     },
-    [departure.network, arrival.network, sourceData, loading, t]
+    [departure, arrival, sourceData, loading, t]
   );
+  const queryS2SRecords = useS2SRecords(getNetConfigByVer(departure)!);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -175,7 +186,12 @@ export function Records() {
         address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '',
       }).subscribe(observer);
     } else if (isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network)) {
-      subscription = EMPTY.subscribe(observer);
+      /**
+       * TODO: At redeem side, subgraph does not support total count field in graphql response, limit and offset parameters are hardcoded.
+       * TODO: At issuing side, the records actually composed by tow http response, so the count is not accurate.
+       * So hard code paginator here
+       */
+      subscription = queryS2SRecords({ ...params, paginator: { row: 200, page: 0 } }).subscribe(observer);
     } else {
       setLoading(false);
     }
@@ -185,7 +201,7 @@ export function Records() {
         subscription.unsubscribe();
       }
     };
-  }, [confirmed, address, canUpdate, departure, paginator, isGenesis, arrival.network]);
+  }, [confirmed, address, canUpdate, departure, paginator, isGenesis, arrival.network, queryS2SRecords]);
 
   useEffect(() => {
     const target = fromNetworks.find(
@@ -200,9 +216,9 @@ export function Records() {
 
   useEffect(() => {
     const config = getNetConfigByVer(departure);
-    const data = getCrossChainArrivals(config!);
+    const arrivals = getCrossChainArrivals(config!);
 
-    setArrival(data[0]);
+    setArrival(arrivals[0]);
   }, [departure]);
 
   return (

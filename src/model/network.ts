@@ -25,7 +25,14 @@ interface Facade {
 
 type TokenContract = { [key in Token]?: string };
 
-type Api = { subql: string; evolution: string; dapp: string; subscan: string; [key: string]: string };
+type Api = {
+  subql: string;
+  evolution: string;
+  dapp: string;
+  subscan: string;
+  subGraph: string;
+  [key: string]: string;
+};
 
 export interface LockEventsStorage {
   min: number;
