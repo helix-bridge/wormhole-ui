@@ -20,6 +20,7 @@ export type SS58Prefix = 0 | 2 | 18 | 42 | null;
 
 interface Facade {
   logo: string;
+  logoMinor: string;
   logoWithText: string;
 }
 

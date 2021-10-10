@@ -61,6 +61,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/crab-button-mobile.png',
+      logoMinor: '/image/crab.svg',
       logoWithText: '/image/crab-logo.svg',
     },
     fullName: 'Darwinia Crab',
@@ -103,6 +104,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/darwinia-button-mobile.png',
+      logoMinor: '/image/darwinia.svg',
       logoWithText: '/image/darwinia-logo.svg',
     },
     fullName: 'Darwinia',
@@ -156,6 +158,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: 'image/eth-logo.svg',
+      logoMinor: 'image/eth.svg',
       logoWithText: '',
     },
     fullName: 'Ethereum',
@@ -205,6 +208,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/pangolin-button-mobile.png',
+      logoMinor: '/image/pangolin.svg',
       logoWithText: '/image/pangolin-logo.svg',
     },
     fullName: 'Pangolin',
@@ -258,6 +262,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/pangoro-button-mobile.png',
+      logoMinor: '/image/pangoro-button-mobile.png',
       logoWithText: '',
     },
     fullName: 'Pangoro',
@@ -306,6 +311,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/eth-logo.svg',
+      logoMinor: '/image/eth.svg',
       logoWithText: '',
     },
     fullName: 'Ropsten',
@@ -350,6 +356,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/tron-button-mobile.png',
+      logoMinor: '/image/tron-button-mobile.png',
       logoWithText: '',
     },
     fullName: 'Tron',

@@ -1,19 +1,76 @@
+import React, { CSSProperties, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApi } from '../hooks';
-import { ShortAccount } from './ShortAccount';
+import { getNetworkMode, isEthereumNetwork, isPolkadotNetwork, isTronNetwork } from '../utils';
+import { EllipsisMiddle } from './EllipsisMiddle';
 
-export function ActiveAccount() {
+interface ActiveAccountProps {
+  isLargeRounded?: boolean;
+  logoStyle?: CSSProperties;
+  containerStyle?: CSSProperties;
+  className?: string;
+  textClassName?: string;
+  onClick?: () => void;
+}
+
+// eslint-disable-next-line complexity
+export function ActiveAccount({
+  logoStyle,
+  containerStyle,
+  isLargeRounded = true,
+  className = '',
+  onClick = () => {
+    // do nothing
+  },
+}: ActiveAccountProps) {
   const {
-    connection: { status, accounts, type },
+    network,
+    connection: { status, accounts },
   } = useApi();
+  const containerCls = useMemo(
+    () =>
+      `flex items-center justify-between leading-normal whitespace-nowrap bg-pangolin 
+        ${isLargeRounded ? 'rounded-xl ' : 'rounded-lg '}
+        ${className}`,
+    [isLargeRounded, className]
+  );
+  const { t } = useTranslation();
+  const walletLogo = useMemo(() => {
+    const metamask = 'image/metamask-fox.svg';
+    const polkadot = 'image/polkadot.svg';
 
-  if (status !== 'success' || type !== 'metamask' || !accounts?.length) {
+    if (isEthereumNetwork(network?.name)) {
+      return 'image/metamask-fox.svg';
+    }
+
+    if (isPolkadotNetwork(network?.name)) {
+      return getNetworkMode(network!) === 'dvm' ? metamask : polkadot;
+    }
+
+    if (isTronNetwork(network?.name)) {
+      return 'image/tron-button-mobile.png';
+    }
+
+    return '';
+  }, [network]);
+
+  if (status !== 'success' || !accounts?.length || !network) {
     return null;
   }
 
   return (
-    <div className="rounded-3xl flex items-center md:dark:bg-gray-800 md:bg-gray-100 h-10 px-4">
-      <img src="image/metamask-fox.svg" className="h-4 md:h-6 mr-2" />
-      <ShortAccount account={accounts[0].address} className="h-full hidden md:flex pr-4 lg:pr-0" />
+    <div className={containerCls} onClick={onClick} style={containerStyle || {}}>
+      <img
+        src={network.facade.logoMinor}
+        style={logoStyle || { height: 32 }}
+        className="hidden sm:inline-block"
+        alt=""
+      />
+      <span className="text-white mr-2 ml-1 hidden sm:inline">{t(network.fullName)}</span>
+      <div className="self-stretch flex items-center justify-between sm:px-1 bg-white dark:bg-gray-800 sm:my-px sm:mx-px rounded-lg sm:rounded-xl text-gray-800 dark:text-gray-200 w-36 sm:w-48 md:w-56 ">
+        <img src={walletLogo} style={{ height: 18 }} className="mx-2" />
+        <EllipsisMiddle>{accounts[0].address}</EllipsisMiddle>
+      </div>
     </div>
   );
 }
