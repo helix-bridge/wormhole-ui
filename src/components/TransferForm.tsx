@@ -25,11 +25,11 @@ import {
 } from '../utils';
 import { Airport } from './Airport';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
-import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
+import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaSmart2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
 import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaSmart';
-import { Substrate2SubstrateDVM } from './bridge/Substrate2SubstrateDVM';
-import { SubstrateDVM2Substrate } from './bridge/SubstrateDVM2Substrate';
+import { Substrate2SubstrateDVM } from './bridge/Substrate2SubstrateSmart';
+import { SubstrateDVM2Substrate } from './bridge/SubstrateSmart2Substrate';
 import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
