@@ -27,7 +27,7 @@ import { Airport } from './Airport';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
 import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
-import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaDVM';
+import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaSmart';
 import { Substrate2SubstrateDVM } from './bridge/Substrate2SubstrateDVM';
 import { SubstrateDVM2Substrate } from './bridge/SubstrateDVM2Substrate';
 import { Nets } from './controls/Nets';
