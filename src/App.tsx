@@ -27,6 +27,7 @@ interface Nav {
 const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
 const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
 const transferRecords: Nav = { label: 'Transfer Records', path: Path.history };
+const guide: Nav = { label: 'Guide', path: 'https://docs.darwinia.network/tutorials/wiki-tut-wormhole', extra: true };
 
 function NavLink({ nav, theme }: { nav: Nav; theme: THEME }) {
   const { t } = useTranslation();
@@ -72,21 +73,13 @@ function RouteLink({ path, label }: Nav) {
 
 // eslint-disable-next-line complexity
 function App() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { enableTestNetworks, setEnableTestNetworks, isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
-  const guide = useMemo(
-    () => ({
-      label: 'Guide',
-      path: `https://docs.darwinia.network/${i18n.language.startsWith('zh') ? 'zh-CN' : 'en'}/wiki-tut-wormhole`,
-      extra: true,
-    }),
-    [i18n.language]
-  );
   const navMenus = useMemo(
     () => (isDev ? [crossChain, transferRecords, erc20Manager, guide] : [crossChain, transferRecords, guide]),
-    [isDev, guide]
+    [isDev]
   );
 
   return (
