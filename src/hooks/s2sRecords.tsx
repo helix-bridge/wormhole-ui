@@ -10,7 +10,7 @@ import {
   S2S_ISSUING_LOCKED_RECORDS_QUERY,
   S2S_REDEEM_RECORDS_QUERY,
 } from '../config';
-import { BurnRecord, BurnRecordsRes, HistoryReq, NetConfig, TokenLockRes } from '../model';
+import { BurnRecordsRes, HistoryReq, NetConfig, S2SHistoryRecord, TokenLockRes } from '../model';
 import { getNetworkMode } from '../utils';
 
 enum S2SRecordResult {
@@ -21,7 +21,7 @@ enum S2SRecordResult {
 
 export function useS2SRecords(
   departure: NetConfig
-): (req: HistoryReq) => Observable<{ count: number; list: BurnRecord[] }> {
+): (req: HistoryReq) => Observable<{ count: number; list: S2SHistoryRecord[] }> {
   const issuingClient = useMemo(() => new GraphQLClient({ url: departure.api.subql }), [departure.api.subql]);
   const redeemClient = useMemo(
     () =>
@@ -74,19 +74,20 @@ export function useS2SRecords(
             ];
 
             return {
-              message_id: messageId,
-              transaction: extrinsic.id,
+              messageId,
+              requestTxHash: extrinsic.id,
+              responseTxHash: '',
               sender,
               recipient,
               amount: amount.toString(),
               token: native.address,
-              start_timestamp: getUnixTime(new Date(timestamp)).toString(),
+              startTimestamp: getUnixTime(new Date(timestamp)).toString(),
               result: S2SRecordResult.locked,
-              end_timestamp: '',
-            } as BurnRecord;
+              endTimestamp: '',
+            } as S2SHistoryRecord;
           });
 
-          return uniqBy(result, (item) => item.message_id); // FIXME: why duplicated?
+          return uniqBy(result, (item) => item.messageId); // FIXME: why duplicated?
         }),
         catchError(() => of([]))
       );
@@ -95,7 +96,11 @@ export function useS2SRecords(
           const { nodes = [] } = res.data?.transfers ?? {};
 
           return nodes.map((item) => {
-            const { data, timestamp } = item.block.events.nodes[0] || {};
+            const {
+              data,
+              timestamp,
+              extrinsic: { id },
+            } = item.block.events.nodes[0] || {};
             // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars,
             const [messageId, _1, _2, result] = JSON.parse(data) as [
               string,
@@ -107,7 +112,8 @@ export function useS2SRecords(
             return {
               messageId,
               result: result ? S2SRecordResult.lockConfirmedSuccess : S2SRecordResult.lockConfirmedFail,
-              end_timestamp: getUnixTime(new Date(timestamp)).toString(),
+              endTimestamp: getUnixTime(new Date(timestamp)).toString(),
+              responseTxHash: id,
             };
           });
         }),
@@ -118,11 +124,11 @@ export function useS2SRecords(
         map(([locked, completed]) => {
           const list = locked
             .map((item) => {
-              const exist = completed.find((rec) => rec.messageId === item.message_id);
+              const exist = completed.find((rec) => rec.messageId === item.messageId);
 
               return exist ? { ...item, ...exist } : item;
             })
-            .filter((item) => resultList.includes(item.result)) as BurnRecord[];
+            .filter((item) => resultList.includes(item.result)) as S2SHistoryRecord[];
 
           return { count: list.length, list };
         })
@@ -148,7 +154,19 @@ export function useS2SRecords(
         map((res) => {
           const list = res.data?.burnRecordEntities ?? [];
 
-          return { count: list.length, list };
+          return {
+            count: list.length,
+            list: list.map(
+              ({ request_transaction, response_transaction, message_id, start_timestamp, end_timestamp, ...rest }) => ({
+                messageId: message_id,
+                requestTxHash: request_transaction,
+                responseTxHash: response_transaction,
+                startTimestamp: start_timestamp,
+                endTimestamp: end_timestamp,
+                ...rest,
+              })
+            ),
+          };
         }),
         catchError(() => {
           message.error(t('Querying failed, please try it again later'));

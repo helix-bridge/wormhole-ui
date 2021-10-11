@@ -46,7 +46,8 @@ export const S2S_REDEEM_RECORDS_QUERY = `
       orderDirection: desc
     ){
       message_id
-      transaction
+      request_transaction
+      response_transaction
       sender
       result
       recipient

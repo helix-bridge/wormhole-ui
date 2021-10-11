@@ -7,7 +7,6 @@ import { Subscription } from 'rxjs';
 import { NETWORK_CONFIG } from '../../config';
 import { useNetworks, useS2SRecords } from '../../hooks';
 import {
-  BurnRecord,
   D2EHistory,
   D2EHistoryRes,
   HistoryReq,
@@ -16,6 +15,7 @@ import {
   Paginator,
   RedeemHistory,
   RingBurnHistory,
+  S2SHistoryRecord,
   Vertices,
 } from '../../model';
 import {
@@ -121,12 +121,12 @@ export function Records() {
         ));
       } else if (isPolkadotNetwork(come) && isPolkadotNetwork(to)) {
         // s2s
-        nodes = ((sourceData.list || []) as BurnRecord[]).map((item) => (
+        nodes = ((sourceData.list || []) as S2SHistoryRecord[]).map((item) => (
           <S2SRecord
             network={getNetConfigByVer(departure)!}
             record={item}
             arrival={getNetConfigByVer(arrival)!}
-            key={item.message_id}
+            key={item.messageId}
           />
         ));
       } else {
