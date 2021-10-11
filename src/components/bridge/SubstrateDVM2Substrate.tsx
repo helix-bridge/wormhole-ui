@@ -3,7 +3,7 @@ import { from, switchMap } from 'rxjs';
 import { RegisterStatus } from '../../config';
 import { BridgeFormProps, DVMToken, DVMTransfer, NetConfig } from '../../model';
 import { getS2SMappingParams, getUnit, redeemSubstrate, toWei } from '../../utils';
-import { DVM } from './Smart';
+import { DVM } from './DVM';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
