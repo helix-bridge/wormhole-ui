@@ -73,16 +73,6 @@ export function Erc20Control({ value, onChange, loading, tokens }: PropsWithRef<
       }}
       optionLabelProp="label"
     >
-      <Select.OptGroup label={<Typography.Title level={5}>{t('In progress')}</Typography.Title>}>
-        {!inprogress.length ? (
-          <Select.Option key="inprogressEmpty" value="inprogress" disabled className="text-center">
-            {t('No Data')}
-          </Select.Option>
-        ) : (
-          inprogress.map((token) => option(token as Erc20Token, true))
-        )}
-      </Select.OptGroup>
-
       <Select.OptGroup label={<Typography.Title level={5}>{t('Available')}</Typography.Title>}>
         {!confirmed.length ? (
           <Select.Option key="confirmedEmpty" value="confirmed" disabled className="text-center">
@@ -90,6 +80,16 @@ export function Erc20Control({ value, onChange, loading, tokens }: PropsWithRef<
           </Select.Option>
         ) : (
           confirmed.map((token) => option(token as Erc20Token))
+        )}
+      </Select.OptGroup>
+
+      <Select.OptGroup label={<Typography.Title level={5}>{t('In progress')}</Typography.Title>}>
+        {!inprogress.length ? (
+          <Select.Option key="inprogressEmpty" value="inprogress" disabled className="text-center">
+            {t('No Data')}
+          </Select.Option>
+        ) : (
+          inprogress.map((token) => option(token as Erc20Token, true))
         )}
       </Select.OptGroup>
     </Select>

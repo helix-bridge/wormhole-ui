@@ -9,7 +9,9 @@ import { applyModal, genHistoryRouteParams, getNetworkMode } from '../utils';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
-export function useAfterSuccess<T extends TransferFormValues<{ sender: string }, NoNullTransferNetwork>>() {
+export function useAfterSuccess<
+  T extends TransferFormValues<{ sender: string; recipient?: string }, NoNullTransferNetwork>
+>() {
   const { t } = useTranslation();
   const history = useHistory();
 
@@ -39,9 +41,11 @@ export function useAfterSuccess<T extends TransferFormValues<{ sender: string },
                 Path.history +
                   '?' +
                   genHistoryRouteParams({
-                    network: value.transfer.from.name,
+                    from: value.transfer.from.name,
                     sender: value.sender,
-                    mode: getNetworkMode(value.transfer.from),
+                    to: value.transfer.to.name,
+                    fMode: getNetworkMode(value.transfer.from),
+                    tMode: getNetworkMode(value.transfer.to),
                   })
               );
             },
