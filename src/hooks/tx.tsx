@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { Path } from '../config/routes';
 import { NoNullTransferNetwork, TransferFormValues, Tx, TxHashType, TxSuccessComponentProps } from '../model';
 import { TxContext, TxCtx } from '../providers';
-import { applyModal, genHistoryRouteParams } from '../utils';
+import { applyModal, genHistoryRouteParams, getNetworkMode } from '../utils';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
@@ -36,7 +36,13 @@ export function useAfterSuccess<T extends TransferFormValues<{ sender: string },
             onClick: () => {
               destroy();
               history.push(
-                Path.history + '?' + genHistoryRouteParams({ network: value.transfer.from.name, sender: value.sender })
+                Path.history +
+                  '?' +
+                  genHistoryRouteParams({
+                    network: value.transfer.from.name,
+                    sender: value.sender,
+                    mode: getNetworkMode(value.transfer.from),
+                  })
               );
             },
           },

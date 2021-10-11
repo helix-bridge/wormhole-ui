@@ -228,7 +228,7 @@ export function Records() {
           <Select
             size="large"
             dropdownClassName="dropdown-networks"
-            defaultValue={getDisplayName(fromNetworks[0])}
+            defaultValue={getDisplayName(getNetConfigByVer(departure)!)}
             className="capitalize"
             onSelect={(name: string) => {
               const target = fromNetworks.find(

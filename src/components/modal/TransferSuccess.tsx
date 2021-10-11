@@ -11,7 +11,14 @@ import {
   TransferFormValues,
   TxSuccessComponentProps,
 } from '../../model';
-import { convertToSS58, fromWei, isEthereumNetwork, isPolkadotNetwork } from '../../utils';
+import {
+  convertToSS58,
+  fromWei,
+  getDisplayName,
+  getNetworkMode,
+  isEthereumNetwork,
+  isPolkadotNetwork,
+} from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
@@ -36,7 +43,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
   const linkProps = { [hashType]: tx.hash };
   const sender = useMemo(
     () =>
-      isPolkadotNetwork(value.transfer.from.name)
+      isPolkadotNetwork(value.transfer.from.name) && getNetworkMode(value.transfer.from) !== 'dvm'
         ? convertToSS58(value.sender, value.transfer.from.ss58Prefix)
         : value.sender,
     [value]
@@ -46,7 +53,9 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
     <>
       <Des
         title={
-          <span className="capitalize">{t('{{network}} Network Address', { network: value.transfer.from?.name })}</span>
+          <span className="capitalize">
+            {t('{{network}} Network Address', { network: getDisplayName(value.transfer.from) })}
+          </span>
         }
         content={sender}
         icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}
@@ -54,7 +63,9 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
 
       <Des
         title={
-          <span className="capitalize">{t('{{network}} Network Address', { network: value.transfer.to?.name })}</span>
+          <span className="capitalize">
+            {t('{{network}} Network Address', { network: getDisplayName(value.transfer.to) })}
+          </span>
         }
         content={value.recipient}
         icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}

@@ -1,7 +1,6 @@
 import React, { CSSProperties, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useApi } from '../hooks';
-import { getNetworkMode, isEthereumNetwork, isPolkadotNetwork, isTronNetwork } from '../utils';
+import { getDisplayName, getNetworkMode, isEthereumNetwork, isPolkadotNetwork, isTronNetwork } from '../utils';
 import { EllipsisMiddle } from './EllipsisMiddle';
 
 interface ActiveAccountProps {
@@ -34,7 +33,6 @@ export function ActiveAccount({
         ${className}`,
     [isLargeRounded, className]
   );
-  const { t } = useTranslation();
   const walletLogo = useMemo(() => {
     const metamask = 'image/metamask-fox.svg';
     const polkadot = 'image/polkadot.svg';
@@ -66,7 +64,7 @@ export function ActiveAccount({
         className="hidden sm:inline-block"
         alt=""
       />
-      <span className="text-white mr-2 ml-1 hidden sm:inline">{t(network.fullName)}</span>
+      <span className="text-white mr-2 ml-1 hidden sm:inline">{getDisplayName(network)}</span>
       <div className="self-stretch flex items-center justify-between sm:px-1 bg-white dark:bg-gray-800 sm:my-px sm:mx-px rounded-lg sm:rounded-xl text-gray-800 dark:text-gray-200 w-36 sm:w-48 md:w-56 ">
         <img src={walletLogo} style={{ height: 18 }} className="mx-2" />
         <EllipsisMiddle>{accounts[0].address}</EllipsisMiddle>
