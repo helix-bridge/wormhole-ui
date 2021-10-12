@@ -1,4 +1,6 @@
+import { message } from 'antd';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { from as fromPromise, map, of, switchMap, tap } from 'rxjs';
 import { RegisterStatus } from '../config';
 import {
   Action,
@@ -15,19 +17,22 @@ import { useApi } from './api';
 
 export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'>;
 
-export type ActionType = 'updateTokens' | 'updateProof' | 'switchToConfirmed';
+export type ActionType = 'updateTokens' | 'updateProof' | 'switchToConfirmed' | 'updateTotal';
 
 interface State {
   tokens: MemoedTokenInfo[];
   proofs: StoredProof[];
+  total: number;
 }
 
 const initialState: State = {
   tokens: [],
   proofs: [],
+  total: 0,
 };
 
-function reducer(state = initialState, action: Action<ActionType, MemoedTokenInfo[] | StoredProof | string>) {
+// eslint-disable-next-line complexity
+function reducer(state = initialState, action: Action<ActionType, MemoedTokenInfo[] | StoredProof | string | number>) {
   switch (action.type) {
     case 'updateTokens':
       return { ...state, tokens: action.payload as MemoedTokenInfo[] };
@@ -43,6 +48,8 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
       }
       return { ...state, tokens: data };
     }
+    case 'updateTotal':
+      return { ...state, total: +action.payload as number };
     default:
       return state;
   }
@@ -63,6 +70,7 @@ export const useMappedTokens = (
     (tokens: MemoedTokenInfo[]) => dispatch({ payload: tokens, type: 'updateTokens' }),
     []
   );
+  const updateTotal = useCallback((total: number) => dispatch({ payload: total, type: 'updateTotal' }), []);
   const addKnownProof = useCallback((proofs: StoredProof) => dispatch({ payload: proofs, type: 'updateProof' }), []);
   const switchToConfirmed = useCallback((token: string) => dispatch({ payload: token, type: 'switchToConfirmed' }), []);
   const { connection } = useApi();
@@ -82,29 +90,45 @@ export const useMappedTokens = (
   );
 
   useEffect(() => {
-    // eslint-disable-next-line complexity
-    (async () => {
-      if (connection.type !== 'metamask' || !from || !to) {
-        updateTokens([]);
-        return;
+    if (connection.type !== 'metamask' || !from || !to) {
+      updateTokens([]);
+      return;
+    }
+
+    const subscription = fromPromise(isNetworkConsistent(from!.name, (connection as EthereumConnection).chainId))
+      .pipe(
+        tap(() => setLoading(true)),
+        switchMap((isMatch) => {
+          if (!isMatch) {
+            return of({ total: 0, tokens: [] });
+          }
+
+          return getKnownMappedTokens(currentAccount, from, to).pipe(
+            map(({ tokens, total }) => ({
+              total,
+              tokens: status > 0 ? tokens.filter((item) => item.status && +item.status === status) : tokens,
+            }))
+          );
+        })
+      )
+      .subscribe({
+        next: ({ tokens, total }) => {
+          updateTokens(tokens);
+          updateTotal(total);
+        },
+        error: () => {
+          message.error('Querying failed, please try it again later');
+          setLoading(false);
+        },
+        complete: () => setLoading(false),
+      });
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
       }
-
-      const isMatch = await isNetworkConsistent(from!.name, (connection as EthereumConnection).chainId);
-
-      if (!isMatch) {
-        updateTokens([]);
-        return;
-      }
-
-      setLoading(true);
-
-      const all = (await getKnownMappedTokens(currentAccount, from, to)) as Erc20Token[];
-      const tokens = status > 0 ? all.filter((item) => item.status && +item.status === status) : all;
-
-      updateTokens(tokens);
-      setLoading(false);
-    })();
-  }, [currentAccount, from, updateTokens, status, connection, to]);
+    };
+  }, [currentAccount, from, updateTokens, status, connection, to, updateTotal]);
 
   return {
     ...state,

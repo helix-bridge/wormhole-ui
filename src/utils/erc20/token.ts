@@ -1,10 +1,10 @@
 import { upperFirst } from 'lodash';
-import { EMPTY, forkJoin, from, NEVER, Observable, of, zip } from 'rxjs';
-import { catchError, delay, map, retryWhen, switchMap, tap } from 'rxjs/operators';
+import { EMPTY, forkJoin, from, NEVER, Observable, of, timer, take, zip, combineLatest } from 'rxjs';
+import { catchError, delay, map, mergeMap, retry, retryWhen, scan, startWith, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus } from '../../config';
-import { Erc20RegisterProof, Erc20RegisterProofRes, Erc20Token, NetConfig, Tx } from '../../model';
+import { Erc20RegisterProof, Erc20RegisterProofRes, Erc20Token, MappedToken, NetConfig, Tx } from '../../model';
 import {
   apiUrl,
   ClaimNetworkPrefix,
@@ -34,75 +34,90 @@ const proofMemo: StoredProof[] = [];
  * @params {string} currentAccount
  * @returns tokens that status maybe registered or registering
  */
-const getFromDvm = async (currentAccount: string, config: NetConfig, s2sMappingAddress?: string) => {
+function getMappedTokensFromDvm(currentAccount: string, config: NetConfig, s2sMappingAddress?: string) {
   const web3 = entrance.web3.getInstance(config.provider.rpc);
   const mappingContract = new web3.eth.Contract(
     abi.mappingTokenABI,
     s2sMappingAddress ?? config.erc20Token.mappingAddress
   );
   const isS2S = !!s2sMappingAddress;
-  // TODO: connection not open on send
-  const length = await mappingContract.methods.tokenLength().call(); // length: string
-  const tokens = await Promise.all(
-    new Array(+length).fill(0).map(async (_, index) => {
-      const address = await mappingContract.methods.allTokens(index).call(); // dvm address
-      const info = await mappingContract.methods.tokenToInfo(address).call(); // { source, backing }
-      const token = await getTokenMeta(address);
-      const status = isS2S ? 1 : await getTokenRegisterStatus(info.source, config, false);
-      let balance = Web3.utils.toBN(0);
+  const countObs = from(mappingContract.methods.tokenLength().call() as Promise<number>);
+  const getToken = (index: number) =>
+    from(mappingContract.methods.allTokens(index).call() as Promise<string>).pipe(
+      switchMap((address) => {
+        const tokenObs = from(getTokenMeta(address));
+        const infoObs = from(
+          mappingContract.methods.tokenToInfo(address).call() as Promise<{ source: string; backing: string }>
+        );
+        const statusObs = isS2S
+          ? of(1)
+          : infoObs.pipe(switchMap(({ source }) => getTokenRegisterStatus(source, config, false)));
+        const balanceObs = currentAccount
+          ? from(getTokenBalance(address, currentAccount, false))
+          : of(Web3.utils.toBN(0));
 
-      if (currentAccount) {
-        balance = await getTokenBalance(address, currentAccount, false);
-      }
-
-      return { ...info, ...token, balance, status, address };
-    })
-  );
-
-  return tokens;
-};
+        return zip(
+          [tokenObs, infoObs, statusObs, balanceObs],
+          (token, info, status, balance) =>
+            ({
+              ...info,
+              ...token,
+              balance,
+              status,
+              address,
+            } as MappedToken)
+        );
+      })
+    );
+  return getMappedTokens(countObs, getToken);
+}
 
 /**
  * @description get all tokens at ethereum side
  * @returns tokens that status maybe registered or registering
  */
-const getFromEthereum: (cur: string, con: NetConfig) => Promise<Erc20Token[]> = async (
-  currentAccount: string,
-  config: NetConfig
-) => {
+function getMappedTokensFromEthereum(currentAccount: string, config: NetConfig) {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const backingContract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
-  const length = await backingContract.methods.assetLength().call();
-  const tokens = await Promise.all(
-    new Array(+length).fill(0).map(async (_, index) => {
-      const address = await backingContract.methods.allAssets(index).call();
-      const info = await getTokenMeta(address).catch((err) => {
-        console.warn('%c [ err ]-120', 'font-size:13px; background:pink; color:#bf2c9f;', err.message);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return {} as any;
-      });
-      const status = await getTokenRegisterStatus(address, config);
-      let balance = Web3.utils.toBN(0);
+  const countObs = from(backingContract.methods.assetLength().call() as Promise<number>);
+  const getToken = (index: number) =>
+    from(backingContract.methods.allAssets(index).call() as Promise<string>).pipe(
+      switchMap((address) => {
+        const infoObs = from(getTokenMeta(address)).pipe(catchError(() => of({})));
+        const statusObs = from(getTokenRegisterStatus(address, config));
+        const balanceObs = currentAccount ? from(getTokenBalance(address, currentAccount)) : of(Web3.utils.toBN(0));
 
-      if (currentAccount) {
-        balance = await getTokenBalance(address, currentAccount);
-      }
+        return zip(
+          [infoObs, statusObs, balanceObs],
+          (info, status, balance) =>
+            ({
+              ...info,
+              balance,
+              status,
+              address,
+              source: address,
+              backing: backingContract.options.address,
+            } as MappedToken)
+        );
+      })
+    );
 
-      return {
-        ...info,
-        balance,
-        status,
-        address,
-        source: address,
-        backing: backingContract.options.address,
-      };
-    })
-  ).catch(() => {
-    return [];
-  });
+  return getMappedTokens(countObs, getToken);
+}
 
-  return tokens;
-};
+function getMappedTokens(countObs: Observable<number>, token: (index: number) => Observable<MappedToken>) {
+  const interval = 200;
+  const retryCount = 5;
+  const tokensObs = countObs.pipe(
+    retry(retryCount),
+    switchMap((len) => timer(interval, 0).pipe(take(len))),
+    mergeMap((index) => token(index)),
+    scan((acc: MappedToken[], cur: MappedToken) => [...acc, cur], []),
+    startWith([])
+  );
+
+  return combineLatest([countObs.pipe(retry(retryCount)), tokensObs], (total, tokens) => ({ total, tokens }));
+}
 
 /**
  * @function getSymbolType - Predicate the return type of the symbol method in erc20 token abi;
@@ -130,27 +145,28 @@ const getSymbolType: (address: string) => Promise<{ symbol: string; isString: bo
  * for eth: both address and source fields in result are all represent the token's ethereum address, actually equal
  * for dvm: the address field represent the token's dvm address, the source field represent the token's ethereum address.
  */
-export const getKnownMappedTokens = async (
+// eslint-disable-next-line complexity
+export const getKnownMappedTokens = (
   currentAccount: string,
   departure: NetConfig,
   arrival: NetConfig
-): Promise<Erc20Token[]> => {
+): Observable<{ total: number; tokens: Erc20Token[] }> => {
   if (!currentAccount) {
-    return [];
+    return of({ total: 0, tokens: [] });
   }
 
   const isPolkadot = isPolkadotNetwork(arrival.name);
   const isNative = getNetworkMode(arrival) === 'native';
 
   if (isPolkadot && isNative) {
-    const { mappingAddress } = await getS2SMappingParams(departure.provider.rpc);
-
-    return await getFromDvm(currentAccount, departure, mappingAddress);
+    return from(getS2SMappingParams(departure.provider.rpc)).pipe(
+      switchMap(({ mappingAddress }) => getMappedTokensFromDvm(currentAccount, departure, mappingAddress))
+    );
   }
 
   return departure.type.includes('ethereum')
-    ? await getFromEthereum(currentAccount, departure)
-    : await getFromDvm(currentAccount, departure);
+    ? getMappedTokensFromEthereum(currentAccount, departure)
+    : getMappedTokensFromDvm(currentAccount, departure);
 };
 
 /**

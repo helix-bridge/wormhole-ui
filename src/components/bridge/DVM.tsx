@@ -1,6 +1,6 @@
 import { Button, Descriptions, Form } from 'antd';
 import BN from 'bn.js';
-import { isNull } from 'lodash';
+import { isNull, memoize } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -26,10 +26,13 @@ import {
   applyModalObs,
   approveToken,
   createTxWorkflow,
+  entrance,
   fromWei,
   getAllowance,
+  getNetworkMode,
   getUnit,
   insufficientBalanceRule,
+  isPolkadotNetwork,
   isValidAddress,
   prettyNumber,
   toWei,
@@ -59,19 +62,47 @@ interface DVMProps {
 interface TransferInfoProps {
   amount: string;
   tokenInfo: MemoedTokenInfo;
+  arrival: NetConfig;
 }
+const getPolkadotSymbol = memoize(async (provider: string, tokenInfo: MemoedTokenInfo) => {
+  const api = entrance.polkadot.getInstance(provider);
+
+  if (!api.isConnected) {
+    await api.connect();
+  }
+
+  await api.isReady;
+
+  const chainState = await api.rpc.system.properties();
+  const { tokenSymbol } = chainState.toHuman();
+  // FIXME: in fact, the token cannot be found because there is no clear mapping logic
+  const target = (tokenSymbol as string[]).find((item) => tokenInfo.symbol.endsWith(item));
+
+  return target ?? tokenInfo.symbol.slice(1);
+});
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
-function TransferInfo({ tokenInfo, amount }: TransferInfoProps) {
+function TransferInfo({ tokenInfo, amount, arrival }: TransferInfoProps) {
+  const [symbol, setSymbol] = useState('');
   const unit = getUnit(+tokenInfo.decimals);
   const value = new BN(toWei({ value: amount || '0', unit }));
+
+  useEffect(() => {
+    const mode = getNetworkMode(arrival);
+    (async () => {
+      if (isPolkadotNetwork(arrival.name) && mode === 'native') {
+        const result = await getPolkadotSymbol(arrival.provider.rpc, tokenInfo);
+        setSymbol(result);
+      }
+    })();
+  }, [arrival, tokenInfo]);
 
   return (
     <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
       {!value.isZero() && (
         <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
-          {fromWei({ value, unit })} {tokenInfo.symbol}
+          {fromWei({ value, unit })} {symbol}
         </Descriptions.Item>
       )}
     </Descriptions>
@@ -94,7 +125,7 @@ export function DVM({
   const {
     connection: { accounts },
   } = useApi();
-  const { loading, tokens, refreshTokenBalance } = useMappedTokens(
+  const { total, tokens, refreshTokenBalance } = useMappedTokens(
     form.getFieldValue(FORM_CONTROL.transfer),
     tokenRegisterStatus
   );
@@ -189,8 +220,8 @@ export function DVM({
         className="mb-2"
       >
         <Erc20Control
-          loading={loading}
           tokens={tokens}
+          total={total}
           onChange={async (erc20) => {
             setSelectedErc20(erc20);
 
@@ -282,7 +313,13 @@ export function DVM({
         </Balance>
       </Form.Item>
 
-      {!!curAmount && selectedErc20 && <TransferInfo amount={curAmount} tokenInfo={selectedErc20} />}
+      {!!curAmount && selectedErc20 && (
+        <TransferInfo
+          amount={curAmount}
+          tokenInfo={selectedErc20}
+          arrival={form.getFieldValue(FORM_CONTROL.transfer).to}
+        />
+      )}
     </>
   );
 }

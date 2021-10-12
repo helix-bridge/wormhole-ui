@@ -31,7 +31,7 @@ export function S2SRecord({
       step={step}
       blockTimestamp={+(endTimestamp || startTimestamp || Date.now())}
       recipient={isRedeem ? convertToSS58(recipient, arrival.ss58Prefix) : recipient}
-      assets={[{ amount, currency: isRedeem ? 'mRing' : 'oRing', unit: 'gwei' }]}
+      assets={[{ amount, currency: isRedeem ? 'xRing' : 'oRing', unit: 'gwei' }]}
     >
       <ProgressDetail
         from={{ network: departure.name, txHash: requestTxHash }}
