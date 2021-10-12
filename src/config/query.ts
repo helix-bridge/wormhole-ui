@@ -59,48 +59,22 @@ export const S2S_REDEEM_RECORDS_QUERY = `
   }
 `;
 
-export const S2S_ISSUING_LOCKED_RECORDS_QUERY = `
-  query transfers($account: String!, $offset: Int!, $limit: Int!) {
-    transfers(offset: $offset, last: $limit, filter: { fromId: { equalTo: $account } }, orderBy: TIMESTAMP_DESC) {
+export const S2S_ISSUING_RECORDS_QUERY = `
+  query s2sEvents($account: String!, $offset: Int!, $limit: Int!, $result: [Int!]) {
+    s2sEvents(offset: $offset, last: $limit, filter: { sender: { equalTo: $account }, result: { in: $result } }, orderBy: START_TIMESTAMP_DESC) {
       totalCount
       nodes {
-        fromId
-        toId
-        block {
-          events(filter: { method: { equalTo: "TokenLocked" }}) {
-            nodes {
-              data
-              timestamp
-              extrinsic {
-                id
-              }
-            }
-          }
-        }
+        id
+        sender
+        recipient
+        result
+        startTimestamp
+        endTimestamp
+        requestTxHash
+        token
+        responseTxHash
+        amount
       }
-    } 
-  }
-`;
-
-export const S2S_ISSUING_CONFIRMED_RECORDS_QUERY = `
-  query transfers($account: String!, $offset: Int!, $limit: Int!) {
-    transfers(offset: $offset, last: $limit, filter: { fromId: { equalTo: $account } }, orderBy: TIMESTAMP_DESC) {
-      totalCount
-      nodes {
-        fromId
-        toId
-        block {
-          events(filter: { method: { equalTo: "TokenLockedConfirmed" }}) {
-            nodes {
-              data
-              timestamp
-              extrinsic {
-                id
-              }
-            }
-          }
-        }
-      }
-    } 
+    }
   }
 `;

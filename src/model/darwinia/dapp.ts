@@ -90,7 +90,7 @@ export type Erc20RegisterProofRes = Erc20RegisterProof | null;
 
 /* ------------------------------------S2S section-------------------------------------------- */
 
-export interface BurnRecord {
+export interface S2SBurnRecord {
   message_id: string;
   request_transaction: string;
   response_transaction: string;
@@ -118,43 +118,13 @@ export interface S2SHistoryRecord {
   endTimestamp: string;
 }
 
-export interface BurnRecordsRes {
-  burnRecordEntities: BurnRecord[];
+export interface S2SBurnRecordsRes {
+  burnRecordEntities: S2SBurnRecord[];
 }
 
-export interface BurnRecordRes {
-  burnRecordEntity: BurnRecord;
-}
-
-export interface TokenLockRes {
-  transfers: {
+export interface S2SLockedRecordRes {
+  s2sEvents: {
     totalCount: number;
-    nodes: TokenLockNode[];
+    nodes: (Omit<S2SHistoryRecord, 'messageId'> & { id: string })[];
   };
-}
-
-interface TokenLockNode {
-  fromId: string;
-  toId: string;
-  amount: string; // fee?
-  block: Block;
-}
-
-interface Block {
-  events: Events;
-}
-
-interface Events {
-  nodes: Node[];
-}
-
-interface Node {
-  method: string;
-  timestamp: string;
-  data: string;
-  extrinsic: Extrinsic;
-}
-
-interface Extrinsic {
-  id: string;
 }

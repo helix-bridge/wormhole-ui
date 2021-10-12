@@ -185,11 +185,13 @@ export function Records() {
       }).subscribe(observer);
     } else if (isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network)) {
       /**
+       * @see https://github.com/graphprotocol/graph-node/issues/1309
        * TODO: At redeem side, subgraph does not support total count field in graphql response, limit and offset parameters are hardcoded.
-       * TODO: At issuing side, the records actually composed by tow http response, so the count is not accurate.
-       * So hard code paginator here
        */
-      subscription = queryS2SRecords({ ...params, paginator: { row: 200, page: 0 } }).subscribe(observer);
+      subscription = queryS2SRecords({
+        ...params,
+        paginator: departure.mode === 'dvm' ? { row: 200, page: 0 } : paginator,
+      }).subscribe(observer);
     } else {
       setLoading(false);
     }
