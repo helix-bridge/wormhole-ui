@@ -186,8 +186,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
-      subGraph:
-        'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory/graphql',
+      subGraph: 'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory',
     },
     dvm: {
       ring: '0xbBD91aD844557ADCbb97296216b3B3c977FCC4F2',

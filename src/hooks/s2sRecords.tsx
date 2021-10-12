@@ -24,7 +24,7 @@ export function useS2SRecords(
       new GraphQLClient({
         url:
           departure.api.subGraph ||
-          'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory/graphql',
+          'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory',
       }),
     [departure.api.subGraph]
   );

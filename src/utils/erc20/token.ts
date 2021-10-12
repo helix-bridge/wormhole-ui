@@ -129,11 +129,6 @@ const getSymbolType: (address: string) => Promise<{ symbol: string; isString: bo
  * @params {string} networkType - eth or darwinia
  * for eth: both address and source fields in result are all represent the token's ethereum address, actually equal
  * for dvm: the address field represent the token's dvm address, the source field represent the token's ethereum address.
- *
- * Refactor
- * If the config is a ethereum type, need to query eth mapped assets.
- * If the config is a substrate type, need to query s2s mapped assets.
- * If the config is a dvm type, hmmm..... current parameters is not enough to decide which type of asset should be querying.
  */
 export const getKnownMappedTokens = async (
   currentAccount: string,
