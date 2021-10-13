@@ -1,26 +1,38 @@
+import { message } from 'antd';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { from as fromPromise, map, of, switchMap, tap } from 'rxjs';
 import { RegisterStatus } from '../config';
-import { Action, Erc20RegisterStatus, Erc20Token, EthereumConnection, Network, RequiredPartial } from '../model';
+import {
+  Action,
+  Erc20RegisterStatus,
+  Erc20Token,
+  EthereumConnection,
+  RequiredPartial,
+  TransferNetwork,
+} from '../model';
 import { isNetworkConsistent } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
-import { getKnownErc20Tokens, StoredProof } from '../utils/erc20/token';
+import { getKnownMappedTokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
 
 export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'>;
 
-export type ActionType = 'updateTokens' | 'updateProof' | 'switchToConfirmed';
+export type ActionType = 'updateTokens' | 'updateProof' | 'switchToConfirmed' | 'updateTotal';
 
 interface State {
   tokens: MemoedTokenInfo[];
   proofs: StoredProof[];
+  total: number;
 }
 
 const initialState: State = {
   tokens: [],
   proofs: [],
+  total: 0,
 };
 
-function reducer(state = initialState, action: Action<ActionType, MemoedTokenInfo[] | StoredProof | string>) {
+// eslint-disable-next-line complexity
+function reducer(state = initialState, action: Action<ActionType, MemoedTokenInfo[] | StoredProof | string | number>) {
   switch (action.type) {
     case 'updateTokens':
       return { ...state, tokens: action.payload as MemoedTokenInfo[] };
@@ -36,6 +48,8 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
       }
       return { ...state, tokens: data };
     }
+    case 'updateTotal':
+      return { ...state, total: +action.payload as number };
     default:
       return state;
   }
@@ -46,8 +60,8 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
  * @params {string} networkType
  * @params {number} status - token register status 1:registered 2:registering
  */
-export const useKnownErc20Tokens = (
-  network: Network | null,
+export const useMappedTokens = (
+  { from, to }: TransferNetwork,
   status: Erc20RegisterStatus = RegisterStatus.unregister
 ) => {
   const [loading, setLoading] = useState(false);
@@ -56,6 +70,7 @@ export const useKnownErc20Tokens = (
     (tokens: MemoedTokenInfo[]) => dispatch({ payload: tokens, type: 'updateTokens' }),
     []
   );
+  const updateTotal = useCallback((total: number) => dispatch({ payload: total, type: 'updateTotal' }), []);
   const addKnownProof = useCallback((proofs: StoredProof) => dispatch({ payload: proofs, type: 'updateProof' }), []);
   const switchToConfirmed = useCallback((token: string) => dispatch({ payload: token, type: 'switchToConfirmed' }), []);
   const { connection } = useApi();
@@ -75,39 +90,45 @@ export const useKnownErc20Tokens = (
   );
 
   useEffect(() => {
-    // eslint-disable-next-line complexity
-    (async () => {
-      if (connection.type !== 'metamask' || network === null) {
-        updateTokens([]);
-        return;
+    if (connection.type !== 'metamask' || !from || !to) {
+      updateTokens([]);
+      return;
+    }
+
+    const subscription = fromPromise(isNetworkConsistent(from!.name, (connection as EthereumConnection).chainId))
+      .pipe(
+        tap(() => setLoading(true)),
+        switchMap((isMatch) => {
+          if (!isMatch) {
+            return of({ total: 0, tokens: [] });
+          }
+
+          return getKnownMappedTokens(currentAccount, from, to).pipe(
+            map(({ tokens, total }) => ({
+              total,
+              tokens: status > 0 ? tokens.filter((item) => item.status && +item.status === status) : tokens,
+            }))
+          );
+        })
+      )
+      .subscribe({
+        next: ({ tokens, total }) => {
+          updateTokens(tokens);
+          updateTotal(total);
+        },
+        error: () => {
+          message.error('Querying failed, please try it again later');
+          setLoading(false);
+        },
+        complete: () => setLoading(false),
+      });
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
       }
-
-      const isMatch = await isNetworkConsistent(network, (connection as EthereumConnection).chainId);
-
-      if (!isMatch) {
-        updateTokens([]);
-        return;
-      }
-
-      try {
-        setLoading(true);
-
-        const all = (await getKnownErc20Tokens(currentAccount, network)) as Erc20Token[];
-        const tokens = status > 0 ? all.filter((item) => item.status && +item.status === status) : all;
-
-        updateTokens(tokens);
-      } catch (error) {
-        console.warn(
-          '%c [ error in useAllToken hook ]-56',
-          'font-size:13px; background:pink; color:#bf2c9f;',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (error as unknown as any).message
-        );
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [currentAccount, network, updateTokens, status, connection]);
+    };
+  }, [currentAccount, from, updateTokens, status, connection, to, updateTotal]);
 
   return {
     ...state,

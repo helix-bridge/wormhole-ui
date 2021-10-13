@@ -1,7 +1,7 @@
 import BN from 'bn.js';
 import { RegisterStatus } from '../config';
 
-export interface Erc20Token {
+export interface MappedToken {
   address: string;
   source: string;
   backing: string;
@@ -12,6 +12,8 @@ export interface Erc20Token {
   status: RegisterStatus | null;
   balance: BN;
 }
+
+export type Erc20Token = MappedToken;
 
 // eslint-disable-next-line no-magic-numbers
 export type Erc20RegisterStatus = 0 | 1 | 2;

@@ -1,5 +1,5 @@
 import { LockOutlined, UnlockOutlined, UnorderedListOutlined } from '@ant-design/icons';
-import { Badge, Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip, Typography } from 'antd';
+import { Button, Dropdown, Layout, Menu, Switch as ASwitch, Tooltip, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
@@ -27,6 +27,7 @@ interface Nav {
 const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
 const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
 const transferRecords: Nav = { label: 'Transfer Records', path: Path.history };
+const guide: Nav = { label: 'Guide', path: 'https://docs.darwinia.network/tutorials/wiki-tut-wormhole', extra: true };
 
 function NavLink({ nav, theme }: { nav: Nav; theme: THEME }) {
   const { t } = useTranslation();
@@ -72,21 +73,13 @@ function RouteLink({ path, label }: Nav) {
 
 // eslint-disable-next-line complexity
 function App() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { enableTestNetworks, setEnableTestNetworks, isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
-  const guide = useMemo(
-    () => ({
-      label: 'Guide',
-      path: `https://docs.darwinia.network/${i18n.language === 'zh' ? 'zh-CN' : i18n.language}/wiki-tut-wormhole`,
-      extra: true,
-    }),
-    [i18n.language]
-  );
   const navMenus = useMemo(
     () => (isDev ? [crossChain, transferRecords, erc20Manager, guide] : [crossChain, transferRecords, guide]),
-    [isDev, guide]
+    [isDev]
   );
 
   return (
@@ -95,18 +88,14 @@ function App() {
         className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-2"
         style={{ marginTop: -1 }}
       >
-        <div className="flex">
+        <Tooltip title={t('Wormhole is in beta. Please use at your own risk level')}>
           <Link to={Path.root}>
-            <img src="/image/logo.svg" alt="" className="h-4 hidden md:h-8 md:inline-block" />
+            <img src="/image/logo-beta.svg" alt="" className="h-4 hidden md:h-8 md:inline-block" />
             <img src="/image/logo-mini.svg" alt="" className="h-16 md:hidden md:h-6 inline-block" />
           </Link>
+        </Tooltip>
 
-          <Tooltip title={t('Wormhole is in beta. Please use at your own risk level')}>
-            <Badge size="small" count={'beta'} className="mt-2"></Badge>
-          </Tooltip>
-        </div>
-
-        <div className="flex xl:justify-between lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-24">
+        <div className="flex xl:justify-between lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-12">
           <div className="hidden gap-8 lg:flex">
             {navMenus.map((nav, index) =>
               Array.isArray(nav) ? (

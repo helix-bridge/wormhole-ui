@@ -2,11 +2,13 @@ import { Modal, ModalFuncProps, ModalProps } from 'antd';
 import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
 import { Trans } from 'react-i18next';
+import BN from 'bn.js';
 import { EMPTY, finalize, Observable, Observer, switchMap, tap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../config';
 import {
   DVMTransfer,
+  Erc20Token,
   Ethereum2DarwiniaTransfer,
   NoNullTransferNetwork,
   RequiredPartial,
@@ -15,6 +17,7 @@ import {
   TxFn,
 } from '../../model';
 import { empty } from '../helper';
+import { entrance } from '../network';
 
 /**
  * TODO: web3 types
@@ -135,8 +138,8 @@ export function getContractTxObs(
 ): Observable<Tx> {
   return new Observable((observer) => {
     try {
-      const web3js = new Web3(window.ethereum);
-      const contract = new web3js.eth.Contract(contractAbi, contractAddress);
+      const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+      const contract = new web3.eth.Contract(contractAbi, contractAddress);
 
       observer.next({ status: 'signing' });
 
@@ -159,20 +162,36 @@ export function getContractTxObs(
 }
 
 export const approveToken: TxFn<
-  RequiredPartial<
-    TransferFormValues<Ethereum2DarwiniaTransfer & DVMTransfer, NoNullTransferNetwork>,
-    'sender' | 'transfer'
-  > & { contractAddress?: string }
-> = ({ sender, transfer, contractAddress }) => {
-  const hardCodeAmount = '100000000000000000000000000';
-
-  if (!contractAddress) {
-    throw new Error(`Can not approve the token with address ${contractAddress}`);
+  RequiredPartial<TransferFormValues<Ethereum2DarwiniaTransfer & DVMTransfer, NoNullTransferNetwork>, 'sender'> & {
+    tokenAddress?: string;
+    spender?: string;
+    sendOptions?: { gas: string; gasPrice: string };
+  }
+> = ({ sender, tokenAddress, spender, sendOptions }) => {
+  if (!tokenAddress) {
+    throw new Error(`Can not approve the token with address ${tokenAddress}`);
   }
 
-  return getContractTxObs(contractAddress, (contract) =>
-    contract.methods
-      .approve(transfer.from.tokenContract.issuingDarwinia, Web3.utils.toWei(hardCodeAmount))
-      .send({ from: sender })
+  if (!spender) {
+    throw new Error(`No spender account set`);
+  }
+
+  const hardCodeAmount = '100000000000000000000000000';
+  const params = sendOptions ? { from: sender, ...sendOptions } : { from: sender };
+
+  return getContractTxObs(tokenAddress, (contract) =>
+    contract.methods.approve(spender, Web3.utils.toWei(hardCodeAmount)).send(params)
   );
 };
+
+export async function getAllowance(sender: string, spender: string, token: Erc20Token | null): Promise<BN> {
+  if (!token) {
+    return Web3.utils.toBN(0);
+  }
+
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+  const erc20Contract = new web3.eth.Contract(abi.tokenABI, token.address);
+  const allowanceAmount = await erc20Contract.methods.allowance(sender, spender).call();
+
+  return Web3.utils.toBN(allowanceAmount || 0);
+}

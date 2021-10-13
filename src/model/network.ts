@@ -3,7 +3,7 @@ import { IAccountMeta } from './account';
 import { Config } from './common';
 import { AddEthereumChainParameter } from './metamask';
 
-export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia';
+export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia' | 'pangoro';
 
 export type EthereumTypeNetwork = 'ethereum' | 'ropsten';
 
@@ -20,12 +20,20 @@ export type SS58Prefix = 0 | 2 | 18 | 42 | null;
 
 interface Facade {
   logo: string;
+  logoMinor: string;
   logoWithText: string;
 }
 
 type TokenContract = { [key in Token]?: string };
 
-type Api = { subql: string; evolution: string; dapp: string; subscan: string; [key: string]: string };
+type Api = {
+  subql: string;
+  evolution: string;
+  dapp: string;
+  subscan: string;
+  subGraph: string;
+  [key: string]: string;
+};
 
 export interface LockEventsStorage {
   min: number;

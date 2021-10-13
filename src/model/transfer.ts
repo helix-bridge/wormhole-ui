@@ -1,4 +1,5 @@
 import { FormInstance } from 'antd';
+import { Subscription } from 'rxjs';
 import { Unit } from 'web3-utils';
 import { Erc20Token } from './erc20';
 import { Deposit } from './evolution';
@@ -15,9 +16,11 @@ export interface CustomFormControlProps<T = string> {
   onChange?: (value: T) => void;
 }
 
+export type SubmitFn = (value: TransferFormValues) => Subscription;
+
 export interface BridgeFormProps<T extends TransferParty> {
   form: FormInstance<TransferFormValues<T>>;
-  setSubmit: React.Dispatch<React.SetStateAction<(value: TransferFormValues) => void>>;
+  setSubmit: React.Dispatch<React.SetStateAction<SubmitFn>>;
 }
 
 /* ---------------------------------------------------Bridge elements--------------------------------------------------- */
@@ -54,8 +57,15 @@ export type Darwinia2EthereumAsset = Exclude<Token, 'native'>;
 export interface Darwinia2EthereumTransfer extends TransferParty {
   assets: (TransferAsset<Darwinia2EthereumAsset> & { checked?: boolean; unit?: Unit })[];
 }
+
 /* ---------------------------------------------------DVM--------------------------------------------------- */
 
 export type DVMAsset = Erc20Token;
 
 export interface DVMTransfer extends TransferParty, TransferAsset<DVMAsset> {}
+
+/* ---------------------------------------------------s2s--------------------------------------------------- */
+
+export type SubstrateAsset = string | Erc20Token;
+
+export interface Substrate2SubstrateDVMTransfer extends TransferParty, TransferAsset<SubstrateAsset> {}

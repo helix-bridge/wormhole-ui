@@ -13,7 +13,7 @@ export function EllipsisMiddle({ children, className }: PropsWithChildren<{ clas
       <Typography.Text
         className="whitespace-nowrap overflow-hidden align-middle inline-flex justify-end"
         copyable
-        style={{ width: 'calc(37.5% - 1.45em)', marginLeft: -1, color: 'inherit' }}
+        style={{ width: 'calc(37.5% - 1.45em)', marginLeft: '-0.35em', color: 'inherit' }}
       >
         {children}
       </Typography.Text>

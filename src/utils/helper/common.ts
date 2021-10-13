@@ -1,4 +1,5 @@
 import { partialRight } from 'lodash';
+import { EMPTY } from 'rxjs';
 
 export function swap<T, U>(value: T | U, value1: U, value2: T): T | U {
   return value === value1 ? value2 : value1;
@@ -20,6 +21,11 @@ export function asUTCString(timestamp: string): string {
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 export function empty(...args: any[]) {
   // nothing to do
+}
+
+// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+export function emptyObsFactory() {
+  return EMPTY.subscribe();
 }
 
 export function makeSure<T = () => void>(fn: T | null | undefined): T | typeof empty {

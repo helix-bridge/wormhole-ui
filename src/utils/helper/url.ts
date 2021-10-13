@@ -91,17 +91,16 @@ export function apiUrl(domain: string, path: string): string {
   return domain + '/api/' + path;
 }
 
-export const genHistoryRouteParams: (param: Record<string, string | undefined | null>) => string = ({
-  network,
-  sender,
-  state,
-}) => {
+// eslint-disable-next-line complexity
+export const genHistoryRouteParams: (param: HistoryRouteParam) => string = ({ from, sender, to, fMode, tMode }) => {
   const params = new URLSearchParams();
 
   [
-    { key: 'network', value: network || '' },
+    { key: 'from', value: from || '' },
     { key: 'sender', value: sender || '' },
-    { key: 'state', value: state || '' },
+    { key: 'to', value: to || '' },
+    { key: 'fMode', value: fMode || 'native' },
+    { key: 'tMode', value: tMode || 'native' },
   ].forEach(({ key, value }) => {
     if (value) {
       params.set(key, value);
@@ -115,8 +114,10 @@ export const getHistoryRouteParams: (search: string) => WithNull<HistoryRoutePar
   const params = new URLSearchParams(search);
 
   return {
-    network: params.get('network'),
+    from: params.get('from'),
     sender: params.get('sender'),
-    state: params.get('state'),
+    to: params.get('to'),
+    fMode: params.get('fMode'),
+    tMode: params.get('tMode'),
   } as HistoryRouteParam;
 };

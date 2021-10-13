@@ -1,8 +1,9 @@
 import { Network } from './network';
 
 export interface HistoryRouteParam {
-  network: Network;
+  from: Network;
   sender: string;
-  state: 'inprogress' | 'completed';
-  mode: 'native' | 'dvm';
+  to: Network;
+  fMode: 'native' | 'dvm';
+  tMode: 'native' | 'dvm';
 }

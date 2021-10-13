@@ -1,21 +1,25 @@
 import { Affix, Empty, Input, message, Pagination, Radio, Select, Spin } from 'antd';
-import { flow, uniqBy, upperFirst } from 'lodash';
+import { flow, isBoolean, negate, upperFirst } from 'lodash';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Subscription } from 'rxjs';
-import { NETWORKS, NETWORK_CONFIG } from '../../config';
+import { NETWORK_CONFIG } from '../../config';
+import { useNetworks, useS2SRecords } from '../../hooks';
 import {
   D2EHistory,
   D2EHistoryRes,
   HistoryReq,
   HistoryRouteParam,
-  NetworkMode,
+  NetConfig,
   Paginator,
   RedeemHistory,
   RingBurnHistory,
+  S2SHistoryRecord,
+  Vertices,
 } from '../../model';
 import {
+  getCrossChainArrivals,
   getDisplayName,
   getHistoryRouteParams,
   getNetConfigByVer,
@@ -24,23 +28,17 @@ import {
   getVerticesFromDisplayName,
   isEthereumNetwork,
   isPolkadotNetwork,
+  isReachable,
+  isSameNetworkCurry,
   isTronNetwork,
   isValidAddress,
-  queryD2ERecords,
-  queryE2DGenesisRecords,
-  queryE2DRecords,
+  queryDarwinia2EthereumIssuingRecords,
+  queryEthereum2DarwiniaGenesisRecords,
+  queryEthereum2DarwiniaRedeemRecords,
 } from '../../utils';
 import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
-
-const DEPARTURES = uniqBy(
-  NETWORKS.map((item) => ({
-    name: getDisplayName(item),
-    network: item.name,
-    mode: getNetworkMode(item),
-  })),
-  'name'
-);
+import { S2SRecord } from './S2SRecord';
 
 // eslint-disable-next-line complexity
 export function Records() {
@@ -48,30 +46,41 @@ export function Records() {
   const { search } = useLocation<HistoryRouteParam>();
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
-  const [network, setNetwork] = useState(searchParams.network || DEPARTURES[0].network);
-  const [networkMode, setNetworkMode] = useState(searchParams.mode || DEPARTURES[0].mode);
+  const { setToFilters, toNetworks, fromNetworks } = useNetworks(true);
+  const [departure, setDeparture] = useState<Vertices>({
+    network: searchParams.from || fromNetworks[0].name,
+    mode: searchParams.fMode || getNetworkMode(fromNetworks[0]),
+  });
   const [paginator, setPaginator] = useState<Paginator>({ row: 10, page: 0 });
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [sourceData, setSourceData] = useState<{ count: number; list: any[] }>({ count: 0, list: [] });
   const [confirmed, setConfirmed] = useState<boolean | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const canUpdate = useCallback((addr: string | null, net: string | null, mode: NetworkMode) => {
-    if (addr && net) {
+  const [arrival, setArrival] = useState<Vertices>({
+    network: searchParams.to || toNetworks[0].name,
+    mode: searchParams.tMode || getNetworkMode(toNetworks[0]),
+  });
+  // eslint-disable-next-line complexity
+  const canUpdate = useCallback((addr: string | null, selected: Vertices) => {
+    const { network, mode } = selected;
+
+    if (addr && network) {
       if (mode === 'dvm') {
         return isValidAddress(addr, 'ethereum');
       } else {
-        const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(net);
+        const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(network);
 
-        return category && isValidAddress(addr, category);
+        return category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
       }
     }
 
     return false;
   }, []);
   const searchPlaceholder = useMemo(() => {
+    const { network, mode } = departure;
     if (isPolkadotNetwork(network)) {
-      return networkMode === 'dvm'
+      return mode === 'dvm'
         ? t('Please fill in a {{network}} smart address which start with 0x', { network: upperFirst(network) })
         : t('Please fill in a substrate address of the {{network}} network.', { network: upperFirst(network) });
     }
@@ -81,22 +90,22 @@ export function Records() {
     }
 
     return t('Please enter a valid {{network}} address', { network: upperFirst(network) });
-  }, [network, networkMode, t]);
+  }, [departure, t]);
 
   const ele = useMemo(
     // eslint-disable-next-line complexity
     () => {
       let nodes: ReactElement[] | undefined = [];
+      const come = departure.network;
+      const to = arrival.network;
 
-      if (isEthereumNetwork(network) || isTronNetwork(network)) {
+      if ((isEthereumNetwork(come) && isPolkadotNetwork(to)) || isTronNetwork(come)) {
+        // e2d & tron
         nodes = ((sourceData.list || []) as (RingBurnHistory | RedeemHistory)[]).map((item, index) => (
-          <E2DRecord
-            record={item}
-            network={NETWORK_CONFIG[network || 'ethereum']}
-            key={item.block_timestamp || index}
-          />
+          <E2DRecord record={item} network={NETWORK_CONFIG[come || 'ethereum']} key={item.block_timestamp || index} />
         ));
-      } else if (isPolkadotNetwork(network)) {
+      } else if (isPolkadotNetwork(come) && isEthereumNetwork(to)) {
+        // d2e
         nodes = ((sourceData.list || []) as D2EHistory[]).map((item) => (
           <D2ERecord
             record={{
@@ -106,8 +115,18 @@ export function Records() {
                 best: (sourceData as D2EHistoryRes).best,
               },
             }}
-            network={NETWORK_CONFIG[network || 'darwinia']}
+            network={NETWORK_CONFIG[come || 'darwinia']}
             key={item.block_timestamp}
+          />
+        ));
+      } else if (isPolkadotNetwork(come) && isPolkadotNetwork(to)) {
+        // s2s
+        nodes = ((sourceData.list || []) as S2SHistoryRecord[]).map((item) => (
+          <S2SRecord
+            network={getNetConfigByVer(departure)!}
+            record={item}
+            arrival={getNetConfigByVer(arrival)!}
+            key={item.messageId}
           />
         ));
       } else {
@@ -121,23 +140,24 @@ export function Records() {
         </>
       );
     },
-    [loading, network, sourceData, t]
+    [departure, arrival, sourceData, loading, t]
   );
+  const queryS2SRecords = useS2SRecords(getNetConfigByVer(departure)!);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
-    if (!address || !canUpdate(address, network, networkMode)) {
+    if (!address || !canUpdate(address, departure)) {
       return;
     }
 
     const params: HistoryReq =
       confirmed === null
         ? {
-            network,
+            network: departure.network,
             address,
             paginator,
           }
-        : { network, address, paginator, confirmed };
+        : { network: departure.network, address, paginator, confirmed };
     const observer = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       next: (res: any) => {
@@ -150,18 +170,27 @@ export function Records() {
 
     setLoading(true);
 
-    if (isEthereumNetwork(network)) {
+    if (isEthereumNetwork(departure.network) && isPolkadotNetwork(arrival.network)) {
       if (isGenesis) {
-        subscription = queryE2DGenesisRecords(params).subscribe(observer);
+        subscription = queryEthereum2DarwiniaGenesisRecords(params).subscribe(observer);
       } else {
-        subscription = queryE2DRecords(params).subscribe(observer);
+        subscription = queryEthereum2DarwiniaRedeemRecords(params).subscribe(observer);
       }
-    } else if (isPolkadotNetwork(network)) {
-      subscription = queryD2ERecords(params).subscribe(observer);
-    } else if (isTronNetwork(network)) {
-      subscription = queryE2DGenesisRecords({
+    } else if (isPolkadotNetwork(departure.network) && isEthereumNetwork(arrival.network)) {
+      subscription = queryDarwinia2EthereumIssuingRecords(params).subscribe(observer);
+    } else if (isTronNetwork(departure.network)) {
+      subscription = queryEthereum2DarwiniaGenesisRecords({
         ...params,
         address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '',
+      }).subscribe(observer);
+    } else if (isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network)) {
+      /**
+       * @see https://github.com/graphprotocol/graph-node/issues/1309
+       * TODO: At redeem side, subgraph does not support total count field in graphql response, limit and offset parameters are hardcoded.
+       */
+      subscription = queryS2SRecords({
+        ...params,
+        paginator: departure.mode === 'dvm' ? { row: 200, page: 0 } : paginator,
       }).subscribe(observer);
     } else {
       setLoading(false);
@@ -172,34 +201,102 @@ export function Records() {
         subscription.unsubscribe();
       }
     };
-  }, [confirmed, address, canUpdate, network, networkMode, paginator, isGenesis]);
+  }, [confirmed, address, canUpdate, departure, paginator, isGenesis, arrival.network, queryS2SRecords]);
+
+  useEffect(() => {
+    const config = getNetConfigByVer(departure);
+    const arrivals = getCrossChainArrivals(config!);
+
+    setArrival(arrivals[0]);
+  }, [departure]);
+
+  useEffect(() => {
+    const target = fromNetworks.find(
+      (item) => item.name.toLowerCase() === departure.network.toLowerCase()
+    ) as NetConfig;
+    const isSameEnv = (net: NetConfig) =>
+      isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
+
+    setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
+
+    const { to, tMode } = searchParams;
+
+    if (to && tMode) {
+      setArrival({
+        network: to,
+        mode: tMode,
+      });
+    } else {
+      const config = getNetConfigByVer(departure);
+      const data = getCrossChainArrivals(config!);
+
+      setArrival(data[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
       <Affix offsetTop={63}>
-        <Input.Group size="large" className="select-search flex items-center w-full mb-8dark:bg-black">
+        <Input.Group size="large" className="select-search flex items-center w-full mb-8dark:bg-black flex-1">
           <Select
             size="large"
             dropdownClassName="dropdown-networks"
-            defaultValue={searchParams?.network || DEPARTURES[0].network}
+            value={getDisplayName(getNetConfigByVer(departure)!)}
             className="capitalize"
             onSelect={(name: string) => {
-              const departure = DEPARTURES.find((item) => item.name.toLowerCase() === name.toLowerCase());
+              const target = fromNetworks.find(
+                (item) => getDisplayName(item).toLowerCase() === name.toLowerCase()
+              ) as NetConfig;
+              const isSameEnv = (net: NetConfig) =>
+                isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
-              setNetwork(departure!.network);
-              setNetworkMode(departure!.mode);
+              setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
+              setDeparture({ network: target.name, mode: getNetworkMode(target) });
               setPaginator({ row: 10, page: 0 });
               setSourceData({ list: [], count: 0 });
             }}
           >
-            {DEPARTURES.map(({ name }) => (
-              <Select.Option value={name} key={name} className="capitalize">
-                {name}
-              </Select.Option>
-            ))}
+            {fromNetworks.map((item) => {
+              const name = getDisplayName(item);
+
+              return (
+                <Select.Option value={name} key={name} className="capitalize">
+                  <span title={t('From')}>{name}</span>
+                </Select.Option>
+              );
+            })}
           </Select>
 
-          {isEthereumNetwork(network) && (
+          {departure && (
+            <Select
+              size="large"
+              dropdownClassName="dropdown-networks"
+              value={getDisplayName(getNetConfigByVer(arrival)!)}
+              className="type-select capitalize"
+              onSelect={(name: string) => {
+                const target = toNetworks.find(
+                  (item) => getDisplayName(item).toLowerCase() === name.toLowerCase()
+                ) as NetConfig;
+
+                setArrival({ network: target.name, mode: getNetworkMode(target) });
+                setPaginator({ row: 10, page: 0 });
+                setSourceData({ list: [], count: 0 });
+              }}
+            >
+              {toNetworks.map((item) => {
+                const name = getDisplayName(item);
+
+                return (
+                  <Select.Option value={name} key={name} className="capitalize">
+                    <span title={t('To')}>{name}</span>
+                  </Select.Option>
+                );
+              })}
+            </Select>
+          )}
+
+          {isEthereumNetwork(departure.network) && (
             <Select
               value={Number(isGenesis)}
               size="large"
@@ -222,8 +319,9 @@ export function Records() {
             defaultValue={searchParams?.sender || ''}
             loading={loading}
             placeholder={searchPlaceholder}
+            onChange={(event) => setAddress(event.target.value)}
             onSearch={(value) => {
-              if (canUpdate(value, network, networkMode)) {
+              if (canUpdate(value, departure)) {
                 setAddress(value);
               } else {
                 message.error(t(searchPlaceholder));

@@ -1,8 +1,7 @@
 import { ApiPromise } from '@polkadot/api';
 import { createContext, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { EMPTY, Subscription } from 'rxjs';
-import { Units } from 'web3-utils';
-import { Action, Connection, NetConfig, Network, NetworkMode, PolkadotConnection } from '../model';
+import { Action, Chain, Connection, NetConfig, Network, NetworkMode, PolkadotConnection } from '../model';
 import { connect, getInitialSetting, getNetConfigByVer, getUnit, isEthereumNetwork, isPolkadotNetwork } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 
@@ -11,16 +10,6 @@ interface StoreState {
   network: NetConfig | null;
   isDev: boolean;
   enableTestNetworks: boolean;
-}
-
-export interface TokenChainInfo {
-  symbol: string;
-  decimal: keyof Units;
-}
-
-export interface Chain {
-  tokens: TokenChainInfo[];
-  ss58Format: string;
 }
 
 type ActionType = 'setNetwork' | 'setConnection' | 'setEnableTestNetworks';
@@ -96,8 +85,13 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     () => ({
       next: (connection: Connection) => {
         setConnection(connection);
-        if ((connection as PolkadotConnection).api) {
-          setApi((connection as PolkadotConnection).api);
+
+        const nApi = (connection as PolkadotConnection).api;
+
+        if (nApi) {
+          nApi?.isReady.then(() => {
+            setApi(nApi);
+          });
         }
       },
       error: (err: unknown) => {

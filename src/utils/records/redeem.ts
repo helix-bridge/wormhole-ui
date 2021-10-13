@@ -5,7 +5,12 @@ import { HistoryReq, RedeemHistoryRes, RingBurnHistoryRes } from '../../model';
 import { apiUrl } from '../helper';
 import { getHistoryQueryParams, rxGet } from './api';
 
-export function queryE2DRecords({ address, confirmed, network, paginator }: HistoryReq): Observable<RedeemHistoryRes> {
+export function queryEthereum2DarwiniaRedeemRecords({
+  address,
+  confirmed,
+  network,
+  paginator,
+}: HistoryReq): Observable<RedeemHistoryRes> {
   if (network === null || address === null || address === '') {
     return EMPTY;
   }
@@ -34,7 +39,7 @@ export function queryE2DRecords({ address, confirmed, network, paginator }: Hist
   );
 }
 
-export function queryE2DGenesisRecords({
+export function queryEthereum2DarwiniaGenesisRecords({
   address,
   confirmed,
   network,

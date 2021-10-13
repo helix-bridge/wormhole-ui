@@ -87,3 +87,44 @@ export interface Erc20RegisterProof {
 }
 
 export type Erc20RegisterProofRes = Erc20RegisterProof | null;
+
+/* ------------------------------------S2S section-------------------------------------------- */
+
+export interface S2SBurnRecord {
+  message_id: string;
+  request_transaction: string;
+  response_transaction: string;
+  sender: string;
+  recipient: string;
+  token: string;
+  amount: string;
+  // eslint-disable-next-line no-magic-numbers
+  result: 0 | 1 | 2;
+  start_timestamp: string;
+  end_timestamp: string;
+}
+
+export interface S2SHistoryRecord {
+  messageId: string;
+  requestTxHash: string;
+  responseTxHash: string;
+  sender: string;
+  recipient: string;
+  token: string;
+  amount: string;
+  // eslint-disable-next-line no-magic-numbers
+  result: 0 | 1 | 2;
+  startTimestamp: string;
+  endTimestamp: string;
+}
+
+export interface S2SBurnRecordsRes {
+  burnRecordEntities: S2SBurnRecord[];
+}
+
+export interface S2SLockedRecordRes {
+  s2sEvents: {
+    totalCount: number;
+    nodes: (Omit<S2SHistoryRecord, 'messageId'> & { id: string })[];
+  };
+}
