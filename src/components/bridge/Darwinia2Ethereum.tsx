@@ -283,7 +283,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
   return (
     <>
       <PolkadotAccountsItem
-        getBalances={getBalances}
+        availableBalances={availableBalances}
         onChange={(value) => getBalances(value).then(setAvailableBalances)}
       />
 
