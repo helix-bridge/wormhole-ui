@@ -415,10 +415,13 @@ export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
     { network: Graph.pangolin, mode: 'dvm' },
     [
       { network: Graph.ropsten, status: 'available', mode: 'native' },
-      { network: Graph.pangoro, status: 'available', mode: 'native' },
+      { network: Graph.pangoro, status: 'available', mode: 'native', stable: true },
     ],
   ],
-  [{ network: Graph.pangoro, mode: 'native' }, [{ network: Graph.pangolin, status: 'available', mode: 'dvm' }]],
+  [
+    { network: Graph.pangoro, mode: 'native' },
+    [{ network: Graph.pangolin, status: 'available', mode: 'dvm', stable: true }],
+  ],
   [
     { network: Graph.ropsten, mode: 'native' },
     [
