@@ -40,6 +40,8 @@ import { D2ERecord } from './D2ERecord';
 import { E2DRecord } from './E2DRecord';
 import { S2SRecord } from './S2SRecord';
 
+const PAGINATOR_DEFAULT = { row: 10, page: 0 };
+
 // eslint-disable-next-line complexity
 export function Records() {
   const { t } = useTranslation();
@@ -51,7 +53,7 @@ export function Records() {
     network: searchParams.from || fromNetworks[0].name,
     mode: searchParams.fMode || getNetworkMode(fromNetworks[0]),
   });
-  const [paginator, setPaginator] = useState<Paginator>({ row: 10, page: 0 });
+  const [paginator, setPaginator] = useState<Paginator>(PAGINATOR_DEFAULT);
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [sourceData, setSourceData] = useState<{ count: number; list: any[] }>({ count: 0, list: [] });
@@ -253,7 +255,7 @@ export function Records() {
 
               setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
               setDeparture({ network: target.name, mode: getNetworkMode(target) });
-              setPaginator({ row: 10, page: 0 });
+              setPaginator(PAGINATOR_DEFAULT);
               setSourceData({ list: [], count: 0 });
             }}
           >
@@ -280,7 +282,7 @@ export function Records() {
                 ) as NetConfig;
 
                 setArrival({ network: target.name, mode: getNetworkMode(target) });
-                setPaginator({ row: 10, page: 0 });
+                setPaginator(PAGINATOR_DEFAULT);
                 setSourceData({ list: [], count: 0 });
               }}
             >

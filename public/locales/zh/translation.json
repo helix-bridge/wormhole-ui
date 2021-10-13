@@ -132,6 +132,7 @@
   "registrationTip": "如果在列表中无法找到你想要发送的 token，强烈建议您到<1>注册页面</1>完成此 token 的注册步骤，完成后您可以在此列表中查询到它",
   "viewAirdropHistory": "查看 <1>空投记录</1>",
   "{{chain}} Confirmed": "{{chain}} 已确认",
+  "{{chain}} Confirm Failed": "{{chain}} 确认失败",
   "{{chain}} Locked": "{{chain}} 已锁定",
   "{{enable}} the test networks to appear in the network selection panel": "{{enable}}测试网出现在网络选择菜单中",
   "{{name}} query failed, please wait and try again": "{{name}} 查询失败，请稍候再试",

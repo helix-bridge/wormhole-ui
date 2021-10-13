@@ -39,7 +39,7 @@ export function AssetOverview({ amount, deposit, currency, unit = 'ether' }: Ass
   return (
     <Typography.Text className="mr-4">
       <span className="mr-2">{fromWei({ value: amount, unit }, prettyNumber)}</span>
-      <span className="uppercase">{currency}</span>
+      <span>{currency}</span>
     </Typography.Text>
   );
 }

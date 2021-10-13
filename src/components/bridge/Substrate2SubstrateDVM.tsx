@@ -99,7 +99,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
   const { afterTx } = useAfterSuccess<TransferFormValues<Substrate2SubstrateDVMTransfer, NoNullTransferNetwork>>();
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account: string) => {
-      if (!api || !chain.tokens.length) {
+      if (!api || !chain.tokens.length || !form.getFieldValue(FORM_CONTROL.asset)) {
         return [];
       }
 
@@ -161,7 +161,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
   return (
     <>
       <PolkadotAccountsItem
-        getBalances={getBalances}
+        availableBalances={availableBalances}
         onChange={(value) => getBalances(value).then(setAvailableBalances)}
       />
 
