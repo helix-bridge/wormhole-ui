@@ -18,23 +18,23 @@ import {
   NetConfig,
   Network,
   NoNullTransferNetwork,
+  RedeemDarwiniaToken,
+  RedeemDeposit,
   TransferFormValues,
   Tx,
 } from '../../model';
 import {
   AfterTxCreator,
   applyModalObs,
-  approveRingToIssuing,
+  approveToken,
   createTxWorkflow,
-  empty,
+  entrance,
   fromWei,
   getInfoFromHash,
   isValidAddress,
   prettyNumber,
-  RedeemDeposit,
-  redeemDeposit,
-  RedeemDarwiniaToken,
   redeemDarwiniaToken,
+  redeemDeposit,
   toWei,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
@@ -68,7 +68,7 @@ const BN_ZERO = new BN(0);
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
 async function getRingBalance(account: string, config: NetConfig): Promise<BN | null> {
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
 
   try {
     const ringContract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.ring);
@@ -88,7 +88,7 @@ async function getRingBalance(account: string, config: NetConfig): Promise<BN | 
 }
 
 async function getKtonBalance(account: string, config: NetConfig): Promise<BN | null> {
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
 
   try {
     const ktonContract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.kton);
@@ -108,21 +108,21 @@ async function getKtonBalance(account: string, config: NetConfig): Promise<BN | 
 }
 
 async function getIssuingAllowance(from: string, config: NetConfig): Promise<BN> {
-  const web3js = new Web3(window.ethereum || window.web3.currentProvider);
-  const erc20Contract = new web3js.eth.Contract(abi.tokenABI, config.tokenContract.ring);
-  const allowanceAmount = await erc20Contract.methods.allowance(from, config.tokenContract.issuingDarwinia).call();
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+  const contract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.ring);
+  const allowanceAmount = await contract.methods.allowance(from, config.tokenContract.issuingDarwinia).call();
 
   return Web3.utils.toBN(allowanceAmount || 0);
 }
 
 async function getFee(config: NetConfig): Promise<BN> {
-  const web3js = new Web3(window.ethereum || window.web3.currentProvider);
-  const erc20Contract = new web3js.eth.Contract(abi.registryABI, config.tokenContract.registryEth);
-  const fee: number = await erc20Contract.methods
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+  const contract = new web3.eth.Contract(abi.registryABI, config.tokenContract.registryEth);
+  const fee: number = await contract.methods
     .uintOf('0x55494e545f4252494447455f4645450000000000000000000000000000000000')
     .call();
 
-  return web3js.utils.toBN(fee || 0);
+  return web3.utils.toBN(fee || 0);
 }
 
 function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo): Rule[] {
@@ -138,14 +138,14 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
   const isBalance = isExit(balance, 'Balance');
   const isRingExist = isExit(ringBalance, 'RING');
   const ringEnoughMsg = t('The ring balance it not enough to cover the fee');
-  const amountGtBalanceMsg = t('The transfer amount must less or equal than the balance');
+  const amountGtBalanceMsg = t('Insufficient balance');
   const ringGtThanFee: Rule = {
     validator: (_r, _v) => (ringBalance?.gte(fee!) ? Promise.resolve() : Promise.reject(ringEnoughMsg)),
     message: ringEnoughMsg,
   };
   const isLessThenMax = {
     validator: (_r: Rule, curVal: string) => {
-      const value = new BN(Web3.utils.toWei(curVal));
+      const value = new BN(toWei({ value: curVal }));
       const maximum = balance;
 
       return value.lte(maximum!) ? Promise.resolve() : Promise.reject(amountGtBalanceMsg);
@@ -157,7 +157,7 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
   if (asset === E2DAssetEnum.ring) {
     const gtThanFee: Rule = {
       validator: (_r, curVal: string) => {
-        const value = new BN(Web3.utils.toWei(curVal));
+        const value = new BN(toWei({ value: curVal }));
         return value.gte(fee!) ? Promise.resolve() : Promise.reject();
       },
       message: t('The transfer amount is not enough to cover the fee'),
@@ -221,7 +221,15 @@ function createApproveRingTx(value: Pick<ApproveValue, 'transfer' | 'sender'>, a
   const beforeTx = applyModalObs({
     content: <ApproveConfirm value={value} />,
   });
-  const txObs = approveRingToIssuing(value);
+  const {
+    sender,
+    transfer: { from },
+  } = value;
+  const txObs = approveToken({
+    sender,
+    spender: from.tokenContract.issuingDarwinia,
+    tokenAddress: from.tokenContract.ring,
+  });
 
   return createTxWorkflow(beforeTx, txObs, after);
 }
@@ -263,6 +271,9 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
 
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
+/**
+ * @description test chain: ropsten -> pangolin
+ */
 // eslint-disable-next-line complexity
 export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2DarwiniaTransfer>) {
   const { t } = useTranslation();
@@ -328,17 +339,17 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
 
   const updateSubmit = useCallback(
     (curAsset: E2DAssetEnum | Erc20Token | null) => {
-      let fn = empty;
-
       if (curAsset === E2DAssetEnum.deposit) {
-        fn = () => (value: RedeemDeposit) =>
+        const fn = () => (value: RedeemDeposit) =>
           createCrossDepositTx(
             value,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as any })(value)
           ).subscribe(observer);
+
+        setSubmit(fn);
       } else {
-        fn = () => (value: RedeemDarwiniaToken) => {
+        const fn = () => (value: RedeemDarwiniaToken) => {
           const { amount, asset: iAsset, ...rest } = value;
           const actual = {
             ...rest,
@@ -359,9 +370,9 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
             afterTx(TransferSuccess, { onDisappear: refreshBalance })(actual)
           ).subscribe(observer);
         };
-      }
 
-      setSubmit(fn);
+        setSubmit(fn);
+      }
     },
     [afterTx, fee, observer, refreshBalance, refreshDeposit, setSubmit]
   );
@@ -464,7 +475,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
                 const val =
                   form.getFieldValue(FORM_CONTROL.asset) !== E2DAssetEnum.ring
                     ? fee ?? BN_ZERO
-                    : new BN(Web3.utils.toWei(value));
+                    : new BN(toWei({ value }));
 
                 return allowance.gte(val) ? Promise.resolve() : Promise.reject();
               },

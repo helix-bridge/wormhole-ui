@@ -9,7 +9,7 @@ import Web3 from 'web3';
 import { DATE_TIME_FORMATE, FORM_CONTROL } from '../config';
 import { useApi } from '../hooks';
 import { BridgeFormProps, TransferFormValues, TransferNetwork } from '../model';
-import { buf2hex, getAirdropData, isValidAddress } from '../utils';
+import { buf2hex, entrance, getAirdropData, isValidAddress } from '../utils';
 
 type AirportValues = TransferFormValues<{
   sender: string;
@@ -35,7 +35,7 @@ function signWith(data: AirportValues): Observable<SignRes> {
   const address = buf2hex(decodeAddress(recipient, false, ss58Prefix).buffer);
   // eslint-disable-next-line no-magic-numbers
   const raw = 'Pay RINGs to the Crab account:' + address.slice(2);
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   let signObs = of('');
 
   if (come?.name === 'ethereum') {
@@ -81,11 +81,10 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
   }, [account, form, transfer.from]);
 
   useEffect(() => {
-    const fn = () => (value: AirportValues) => {
+    const fn = () => (value: AirportValues) =>
       signWith(value).subscribe(() => {
         message.success(t('Claim success!'));
       });
-    };
 
     setSubmit(fn);
   }, [setSubmit, t]);

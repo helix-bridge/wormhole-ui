@@ -1,5 +1,3 @@
-import { typesBundle } from '@darwinia/types/mix';
-import { ApiPromise, WsProvider } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import { Modal } from 'antd';
 import Link from 'antd/lib/typography/Link';
@@ -29,6 +27,7 @@ import {
   TronConnection,
 } from '../../model';
 import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkReady } from './network';
+import { entrance } from './entrance';
 import { switchMetamaskNetwork } from './switch';
 
 type ConnectFn<T extends Connection> = (network: NetConfig, chainId?: string) => Observable<T>;
@@ -52,11 +51,7 @@ export const getPolkadotConnection: (network: NetConfig) => Observable<PolkadotC
 
       return new Observable((observer: Observer<PolkadotConnection>) => {
         const url = network.provider.rpc;
-        const provider = new WsProvider(url);
-        const api = new ApiPromise({
-          provider,
-          typesBundle,
-        });
+        const api = entrance.polkadot.getInstance(url);
         const envelop: PolkadotConnection = {
           status: 'success',
           accounts: !extensions.length && !accounts.length ? [] : accounts,
@@ -87,14 +82,12 @@ export const getPolkadotConnection: (network: NetConfig) => Observable<PolkadotC
           }, SHORT_DURATION * counter);
         };
 
-        api.on('ready', () => {
+        if (api.isConnected) {
           observer.next(envelop);
-        });
+        }
 
         api.on('connected', () => {
-          api.isReady.then(() => {
-            observer.next(envelop);
-          });
+          observer.next(envelop);
         });
 
         api.on('disconnected', () => {

@@ -32,3 +32,49 @@ export const TRANSFERS_QUERY = `
     }
   }
 `;
+
+export const S2S_REDEEM_RECORDS_QUERY = `
+  query burnRecordEntities($account: String!, $offset: Int, $limit: Int, $result: [Int!] ) {
+    burnRecordEntities(
+      skip: $offset,
+      first: $limit,
+      where: { 
+        sender: $account,
+        result_in: $result
+      }, 
+      orderBy: start_timestamp,
+      orderDirection: desc
+    ){
+      message_id
+      request_transaction
+      response_transaction
+      sender
+      result
+      recipient
+      token
+      amount
+      start_timestamp
+      end_timestamp
+    }
+  }
+`;
+
+export const S2S_ISSUING_RECORDS_QUERY = `
+  query s2sEvents($account: String!, $offset: Int!, $limit: Int!, $result: [Int!]) {
+    s2sEvents(offset: $offset, last: $limit, filter: { sender: { equalTo: $account }, result: { in: $result } }, orderBy: START_TIMESTAMP_DESC) {
+      totalCount
+      nodes {
+        id
+        sender
+        recipient
+        result
+        startTimestamp
+        endTimestamp
+        requestTxHash
+        token
+        responseTxHash
+        amount
+      }
+    }
+  }
+`;

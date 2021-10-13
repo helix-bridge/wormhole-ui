@@ -6,13 +6,16 @@ import crab from '../theme/network/crab.json';
 import crabDark from '../theme/network/dark/crab.json';
 import darwiniaDark from '../theme/network/dark/darwinia.json';
 import pangolinDark from '../theme/network/dark/pangolin.json';
+import pangoroDark from '../theme/network/dark/pangoro.json';
 import darwinia from '../theme/network/darwinia.json';
 import pangolin from '../theme/network/pangolin.json';
+import pangoro from '../theme/network/pangoro.json';
 
 export const NETWORK_LIGHT_THEME: NetworkConfig<{ [key in keyof typeof darwinia]: string }> = {
   crab,
   darwinia,
   pangolin,
+  pangoro,
   ethereum: pangolin,
   ropsten: pangolin,
   tron: pangolin,
@@ -28,6 +31,7 @@ export const NETWORK_DARK_THEME: NetworkConfig<{ [key in keyof typeof darwiniaDa
   crab: crabDark,
   darwinia: darwiniaDark,
   pangolin: pangolinDark,
+  pangoro: pangoroDark,
   ethereum: pangolinDark,
   ropsten: pangolinDark,
   tron: pangolinDark,

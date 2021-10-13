@@ -1,26 +1,27 @@
 import { QuestionCircleFilled, ReloadOutlined } from '@ant-design/icons';
 import { ApiPromise } from '@polkadot/api';
-import { Button, Descriptions, Form, Select, Tooltip } from 'antd';
+import { Button, Descriptions, Form, Tooltip } from 'antd';
 import BN from 'bn.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TFunction, Trans, useTranslation } from 'react-i18next';
 import { from, Observable } from 'rxjs';
 import Web3 from 'web3';
-import { Unit } from 'web3-utils';
 import { FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
 import {
+  AvailableBalance,
   BridgeFormProps,
   Darwinia2EthereumTransfer,
+  IssuingDarwiniaToken,
   NoNullTransferNetwork,
-  SS58Prefix,
   Token,
+  TokenChainInfo,
   TransferFormValues,
   Tx,
 } from '../../model';
-import { AfterTxCreator, applyModalObs, convertToSS58, createTxWorkflow, fromWei, toWei } from '../../utils';
-import { issuingDarwiniaToken, IssuingDarwiniaToken } from '../../utils/tx/d2e';
-import { AssetGroup, AssetGroupValue, AvailableBalance } from '../controls/AssetGroup';
+import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, issuingDarwiniaTokens, toWei } from '../../utils';
+import { AssetGroup, AssetGroupValue } from '../controls/AssetGroup';
+import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
 import { RecipientItem } from '../controls/RecipientItem';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
@@ -32,29 +33,9 @@ interface AmountCheckInfo {
   t: TFunction;
 }
 
-const BALANCES_INITIAL: AvailableBalance[] = [
-  { max: 0, asset: 'ring' },
-  { max: 0, asset: 'kton' },
-];
-
 const BN_ZERO = new BN(0);
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
-
-async function getTokenBalanceDarwinia(api: ApiPromise, account = ''): Promise<[string, string]> {
-  try {
-    await api?.isReady;
-    // type = 0 query ring balance.  type = 1 query kton balance.
-    /* eslint-disable */
-    const ringUsableBalance = await (api?.rpc as any).balances.usableBalance(0, account);
-    const ktonUsableBalance = await (api?.rpc as any).balances.usableBalance(1, account);
-    /* eslint-enable */
-
-    return [ringUsableBalance.usableBalance.toString(), ktonUsableBalance.usableBalance.toString()];
-  } catch (error) {
-    return ['0', '0'];
-  }
-}
 
 async function getFee(api: ApiPromise | null): Promise<BN> {
   const fixed = Web3.utils.toBN('50000000000');
@@ -72,8 +53,12 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
   }
 }
 
+export const getChainInfo = (tokens: TokenChainInfo[], target: Token) =>
+  target && tokens.find((token) => token.symbol.toLowerCase().includes(target));
+
 // eslint-disable-next-line complexity
 function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
+  const { chain } = useApi();
   // eslint-disable-next-line complexity
   const isRingBalanceEnough = useMemo(() => {
     if (!fee || !ringBalance) {
@@ -95,6 +80,14 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
       !!assets.filter((item) => !!item.checked && new BN(item?.amount || '0').gt(BN_ZERO)).length
     );
   }, [assets, fee]);
+  const chainSymbol = useCallback(
+    (token: Token) => {
+      const info = getChainInfo(chain.tokens, 'ring');
+
+      return info?.symbol || token.toUpperCase();
+    },
+    [chain.tokens]
+  );
   const animationCount = 5;
 
   if (!fee || !ringBalance) {
@@ -129,10 +122,10 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
                     <span className="mr-2" key={asset}>{`${fromWei({
                       value: origin.sub(fee),
                       unit: 'gwei',
-                    })} ${asset.toUpperCase()}`}</span>
+                    })} ${chainSymbol('ring')}`}</span>
                   );
                 } else {
-                  return <span className="mr-2" key={asset}>{`${amount ?? 0} ${asset?.toUpperCase()}`}</span>;
+                  return <span className="mr-2" key={asset}>{`${amount ?? 0} ${chainSymbol('kton')}`}</span>;
                 }
               }
             })}
@@ -142,7 +135,7 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
 
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
         <span className="flex items-center">
-          {fromWei({ value: fee, unit: 'gwei' })} RING{' '}
+          {fromWei({ value: fee, unit: 'gwei' })} {chainSymbol('ring')}
           <Tooltip
             title={
               <ul className="pl-4 list-disc">
@@ -173,13 +166,16 @@ function ethereumBackingLockDarwinia(
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });
-  const obs = issuingDarwiniaToken(value, api);
+  const obs = issuingDarwiniaTokens(value, api);
 
   return createTxWorkflow(beforeTx, obs, after);
 }
 
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
+/**
+ * @description test chain: pangolin -> ropsten
+ */
 // eslint-disable-next-line complexity
 export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2EthereumTransfer>) {
   const { t } = useTranslation();
@@ -188,9 +184,8 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
     api,
     chain,
   } = useApi();
-  const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>(BALANCES_INITIAL);
+  const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
   const [fee, setFee] = useState<BN | null>(null);
-  const [payAccount, setPayAccount] = useState<string | null>(() => form.getFieldValue(FORM_CONTROL.sender) ?? null);
   const [currentAssets, setCurAssets] = useState<AssetGroupValue>([]);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
@@ -199,61 +194,46 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
     () => (availableBalances || []).find((item) => item.asset === 'ring'),
     [availableBalances]
   );
-  const getChainInfo = useCallback(
-    (target: Token) => target && chain.tokens.find((token) => token.symbol.toLowerCase().includes(target)),
-    [chain.tokens]
-  );
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account) => {
       if (!api) {
-        return BALANCES_INITIAL;
+        return [];
       }
 
-      const [ring, kton] = await getTokenBalanceDarwinia(api, account);
+      const {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        data: { free: ring = '0', freeKton: kton = '0' },
+      } = await api.query.system.account(account);
 
       return [
         {
           max: ring,
           asset: 'ring',
-          chainInfo: getChainInfo('ring'),
+          chainInfo: getChainInfo(chain.tokens, 'ring'),
           checked: true,
         },
         {
           max: kton,
           asset: 'kton',
-          chainInfo: getChainInfo('kton'),
+          chainInfo: getChainInfo(chain.tokens, 'kton'),
         },
       ];
     },
-    [api, getChainInfo]
+    [api, chain.tokens]
   );
-
-  const BalanceInfo = useMemo(() => {
-    return (
-      <span>
-        {t('Balance ')}
-        <span>
-          {availableBalances.map(({ asset, max, chainInfo }) => (
-            <span key={asset} className="mr-2">
-              {fromWei({ value: max, unit: (chainInfo?.decimal as Unit) || 'gwei' })} {asset.toUpperCase()}
-            </span>
-          ))}
-        </span>
-      </span>
-    );
-  }, [availableBalances, t]);
 
   useEffect(() => {
     const fn = () => (data: IssuingDarwiniaToken) => {
       const { assets, sender } = data;
       const assetsToSend = assets?.map((item) => {
         const { asset, amount, checked } = item as Required<Darwinia2EthereumTransfer['assets'][0]>;
-        const unit = getChainInfo(asset as Token)?.decimal || 'gwei';
+        const unit = getChainInfo(chain.tokens, asset as Token)?.decimal || 'gwei';
 
         return { asset, unit, amount: checked ? toWei({ value: amount, unit }) : '0' };
       });
 
-      ethereumBackingLockDarwinia(
+      return ethereumBackingLockDarwinia(
         { ...data, assets: assetsToSend },
         afterTx(TransferSuccess, {
           hashType: 'block',
@@ -273,13 +253,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
     };
 
     setSubmit(fn);
-  }, [afterTx, api, form, getBalances, getChainInfo, observer, setSubmit]);
-
-  useEffect(() => {
-    const sub$$ = from(getBalances(payAccount ?? '')).subscribe(setAvailableBalances);
-
-    return () => sub$$.unsubscribe();
-  }, [payAccount, getBalances]);
+  }, [afterTx, api, chain.tokens, form, getBalances, observer, setSubmit]);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -300,27 +274,18 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
     return () => sub$$.unsubscribe();
   }, [form, api, accounts, updateDeparture]);
 
+  useEffect(() => {
+    const sender = (accounts && accounts[0] && accounts[0].address) || '';
+
+    getBalances(sender).then(setAvailableBalances);
+  }, [accounts, getBalances]);
+
   return (
     <>
-      <Form.Item
-        name={FORM_CONTROL.sender}
-        label={t('Payment Account')}
-        rules={[{ required: true }]}
-        extra={BalanceInfo}
-      >
-        <Select
-          size="large"
-          onChange={(addr: string) => {
-            setPayAccount(addr);
-          }}
-        >
-          {(accounts ?? []).map(({ meta, address }) => (
-            <Select.Option value={address} key={address}>
-              {meta?.name} - {convertToSS58(address, chain.ss58Format as unknown as SS58Prefix)}
-            </Select.Option>
-          ))}
-        </Select>
-      </Form.Item>
+      <PolkadotAccountsItem
+        getBalances={getBalances}
+        onChange={(value) => getBalances(value).then(setAvailableBalances)}
+      />
 
       <RecipientItem
         form={form}

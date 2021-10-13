@@ -8,6 +8,7 @@ export enum Graph {
   darwinia = 'darwinia',
   ethereum = 'ethereum',
   pangolin = 'pangolin',
+  pangoro = 'pangoro',
   ropsten = 'ropsten',
   tron = 'tron',
 }
@@ -38,6 +39,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: 'https://crab.subscan.io',
+      subGraph: '',
     },
     dvm: {
       ring: '0x588abe3F7EE935137102C5e2B8042788935f4CB0',
@@ -59,6 +61,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/crab-button-mobile.png',
+      logoMinor: '/image/crab.svg',
       logoWithText: '/image/crab-logo.svg',
     },
     fullName: 'Darwinia Crab',
@@ -80,6 +83,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: '',
+      subGraph: '',
     },
     dvm: {
       ring: '',
@@ -100,6 +104,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/darwinia-button-mobile.png',
+      logoMinor: '/image/darwinia.svg',
       logoWithText: '/image/darwinia-logo.svg',
     },
     fullName: 'Darwinia',
@@ -136,6 +141,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
       subscan: '',
+      subGraph: '',
     },
     erc20Token: {
       bankingAddress: '',
@@ -152,6 +158,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: 'image/eth-logo.svg',
+      logoMinor: 'image/eth.svg',
       logoWithText: '',
     },
     fullName: 'Ethereum',
@@ -179,6 +186,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
+      subGraph: 'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory',
     },
     dvm: {
       ring: '0xbBD91aD844557ADCbb97296216b3B3c977FCC4F2',
@@ -200,6 +208,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/pangolin-button-mobile.png',
+      logoMinor: '/image/pangolin.svg',
       logoWithText: '/image/pangolin-logo.svg',
     },
     fullName: 'Pangolin',
@@ -225,12 +234,67 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     type: ['polkadot', 'darwinia'],
   },
+  pangoro: {
+    api: {
+      subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
+      evolution: EVOLUTION_DOMAIN.dev,
+      dapp: 'https://api.darwinia.network.l2me.com',
+      subscan: '',
+      subGraph: '',
+    },
+    dvm: {
+      ring: '',
+      kton: '',
+    },
+    erc20Token: {
+      bankingAddress: '',
+      mappingAddress: '',
+      proofAddress: '',
+    },
+    ethereumChain: {
+      chainId: '',
+      chainName: '',
+      nativeCurrency: {
+        decimals: 18,
+      },
+      rpcUrls: ['https://pangoro-rpc.darwinia.network/'],
+      blockExplorerUrls: ['https://pangoro.subscan.io/'],
+    },
+    facade: {
+      logo: '/image/pangoro-button-mobile.png',
+      logoMinor: '/image/pangoro-button-mobile.png',
+      logoWithText: '',
+    },
+    fullName: 'Pangoro',
+    isTest: true,
+    lockEvents: [
+      {
+        min: 0,
+        max: null,
+        key: '',
+      },
+    ],
+    name: 'pangoro',
+    provider: {
+      rpc: 'wss://pangoro-rpc.darwinia.network',
+      etherscan: '',
+    },
+    ss58Prefix: 42,
+    tokenContract: {
+      native: 'PRING',
+      issuingDarwinia: '', // e2d redeem address
+      bankEthereum: '', // d2e claim address
+      bankDarwinia: '', // e2d redeem deposit address
+    },
+    type: ['polkadot', 'darwinia'],
+  },
   ropsten: {
     api: {
       subql: '',
       evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
       subscan: '',
+      subGraph: '',
     },
     erc20Token: {
       bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
@@ -247,6 +311,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/eth-logo.svg',
+      logoMinor: '/image/eth.svg',
       logoWithText: '',
     },
     fullName: 'Ropsten',
@@ -274,6 +339,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: '',
       dapp: 'https://api.darwinia.network',
       subscan: '',
+      subGraph: '',
     },
     erc20Token: {
       bankingAddress: '',
@@ -290,6 +356,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/tron-button-mobile.png',
+      logoMinor: '/image/tron-button-mobile.png',
       logoWithText: '',
     },
     fullName: 'Tron',
@@ -344,7 +411,14 @@ export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
     { network: Graph.pangolin, mode: 'native' },
     [{ network: Graph.ropsten, status: 'available', mode: 'native', stable: true }],
   ],
-  [{ network: Graph.pangolin, mode: 'dvm' }, [{ network: Graph.ropsten, status: 'available', mode: 'native' }]],
+  [
+    { network: Graph.pangolin, mode: 'dvm' },
+    [
+      { network: Graph.ropsten, status: 'available', mode: 'native' },
+      { network: Graph.pangoro, status: 'available', mode: 'native' },
+    ],
+  ],
+  [{ network: Graph.pangoro, mode: 'native' }, [{ network: Graph.pangolin, status: 'available', mode: 'dvm' }]],
   [
     { network: Graph.ropsten, mode: 'native' },
     [
