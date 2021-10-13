@@ -31,14 +31,20 @@ export function S2SRecord({
       step={step}
       blockTimestamp={+(endTimestamp || startTimestamp || Date.now())}
       recipient={isRedeem ? convertToSS58(recipient, arrival.ss58Prefix) : recipient}
-      assets={[{ amount, currency: isRedeem ? 'xRing' : 'oRing', unit: 'gwei' }]}
+      assets={[{ amount, currency: isRedeem ? 'xORING' : 'oRING', unit: 'gwei' }]}
     >
       <ProgressDetail
         from={{ network: departure.name, txHash: requestTxHash }}
         to={{ network: departure.name, txHash: responseTxHash }}
         hasRelay={false}
         step={step}
-        stepDescriptions={{ originConfirmed: '{{chain}} Locked' }}
+        stepDescriptions={{
+          originConfirmed: { text: '{{chain}} Locked', success: true },
+          targetConfirmed: {
+            text: result === 1 ? '{{chain}} Confirmed' : '{{chain}} Confirm Failed',
+            success: result === 1,
+          },
+        }}
       />
     </Record>
   );

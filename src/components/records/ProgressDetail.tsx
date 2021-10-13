@@ -1,6 +1,6 @@
 import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Button, Row, Tag } from 'antd';
-import { PropsWithChildren, useCallback } from 'react';
+import { PropsWithChildren, ReactNode, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTx } from '../../hooks';
 import { Network } from '../../model';
@@ -21,6 +21,11 @@ interface ProgressInfo {
   txHash?: string;
 }
 
+interface StepDescription {
+  text: string;
+  success: boolean;
+}
+
 export interface ProgressDetailProps {
   from: ProgressInfo;
   to: ProgressInfo;
@@ -28,7 +33,7 @@ export interface ProgressDetailProps {
   // eslint-disable-next-line no-magic-numbers
   step: 1 | 2 | 3 | 4;
   claim?: () => void;
-  stepDescriptions?: { originConfirmed?: string; targetConfirmed?: string };
+  stepDescriptions?: { originConfirmed?: StepDescription; targetConfirmed?: StepDescription };
 }
 
 export enum CrosseState {
@@ -75,7 +80,7 @@ const StepWrapper = ({
   icon,
   title,
   className,
-}: PropsWithChildren<{ icon: string; title: string; className?: string }>) => {
+}: PropsWithChildren<{ icon: string; title: string | ReactNode; className?: string }>) => {
   return (
     <Row
       className={`step flex flex-col justify-around items-center h-36 text-center text-xs md:text-base after:bg-white dark:after:bg-gray-800 dark:after:bg-opacity-20 ${
@@ -97,7 +102,6 @@ export function ProgressDetail({ from, to, step, hasRelay, claim, stepDescriptio
   const { tx } = useTx();
   const { txHash: fromHash, network: fromNetwork } = from;
   const { txHash: toHash, network: toNetwork } = to;
-  // const needConfirm = step === ProgressStep.confirm;
   const needClaim = step >= CrosseState.claimed;
   const relayed = step >= CrosseState.relayed;
   const iconName = useCallback(
@@ -119,7 +123,7 @@ export function ProgressDetail({ from, to, step, hasRelay, claim, stepDescriptio
 
       <StepWrapper
         icon={txProgressIcon[iconName(fromNetwork)]}
-        title={t(stepDescriptions.originConfirmed || '{{chain}} Confirmed', { chain: fromNetwork })}
+        title={t(stepDescriptions.originConfirmed?.text || '{{chain}} Confirmed', { chain: fromNetwork })}
       >
         <SubscanLink txHash={fromHash} network={fromNetwork}>
           <Button size="small" className="text-xs">
@@ -149,7 +153,11 @@ export function ProgressDetail({ from, to, step, hasRelay, claim, stepDescriptio
 
       <StepWrapper
         icon={txProgressIcon[iconName(toNetwork, true)]}
-        title={t(stepDescriptions.targetConfirmed || '{{chain}} Confirmed', { chain: toNetwork })}
+        title={
+          <span className={stepDescriptions.targetConfirmed?.success === false ? 'text-red-500' : ''}>
+            {t(stepDescriptions.targetConfirmed?.text || '{{chain}} Confirmed', { chain: toNetwork })}
+          </span>
+        }
         className={needClaim ? '' : 'text-gray-300'}
       >
         {needClaim && toHash && (

@@ -132,6 +132,7 @@
   "registrationTip": "If you can not find the token you want to send in the list, highly recommended to <1> go to the registration page</1>, where you will find it after completing the registration steps.",
   "viewAirdropHistory": "You can view your <1>Airdrop history</1>",
   "{{chain}} Confirmed": "{{chain}} Confirmed",
+  "{{chain}} Confirm Failed": "{{chain}} Confirm Failed",
   "{{chain}} Locked": "{{chain}} Locked",
   "{{enable}} the test networks to appear in the network selection panel": "{{enable}} the test networks to appear in the network selection panel",
   "{{name}} query failed, please wait and try again": "{{name}} query failed, please wait and try again",
