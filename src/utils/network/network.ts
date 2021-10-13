@@ -14,6 +14,7 @@ import {
   PolkadotConnection,
   Vertices,
 } from '../../model';
+import { entrance } from './entrance';
 
 function isSpecifyNetworkType(type: NetworkCategory) {
   const findBy = (name: Network) => NETWORK_CONFIG[name] || null;
@@ -71,7 +72,7 @@ const isSameNetwork = (net1: NetConfig | null, net2: NetConfig | null) => {
 };
 
 const getArrivals = (source: Map<Departure, Arrival[]>, departure: NetConfig) => {
-  const mode: NetworkMode = departure.dvm ? 'dvm' : 'native';
+  const mode: NetworkMode = getNetworkMode(departure);
   const target = [...source].find(([item]) => item.network === departure.name && item.mode === mode);
 
   return target ? target[1] : [];
@@ -83,9 +84,8 @@ const isInNodeList = (source: Map<Departure, Arrival[]>) => (net1: NetConfig | n
   }
 
   const vertices = getArrivals(source, net1);
-  const nets = vertices.map((ver) => ver.network);
 
-  return nets.includes(net2.name);
+  return !!vertices.find((item) => item.network === net2.name && item.mode === getNetworkMode(net2));
 };
 
 const isInCrossList = isInNodeList(NETWORK_GRAPH);
@@ -123,7 +123,7 @@ export async function isTronLinkReady(): Promise<boolean> {
 }
 
 export function getNetworkMode(config: NetConfig): NetworkMode {
-  return config.dvm ? 'dvm' : 'native';
+  return config?.dvm ? 'dvm' : 'native';
 }
 
 export function getNetConfigByVer(vertices: Vertices) {
@@ -160,12 +160,24 @@ export function getNetworkByName(name: Network | null | undefined) {
   return null;
 }
 
-export function getVertices(from: Network, to: Network): Arrival | null {
+// eslint-disable-next-line complexity
+export function getArrival(from: NetConfig | null | undefined, to: NetConfig | null | undefined): Arrival | null {
   if (!from || !to) {
     return null;
   }
 
-  return getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[from]).find((item) => item.network === to) ?? null;
+  const mode = getNetworkMode(from);
+  let departure = NETWORK_CONFIG[from.name];
+
+  if (mode === 'native') {
+    departure = omit(departure, 'dvm');
+  }
+
+  if (mode === 'dvm' && !Object.prototype.hasOwnProperty.call(departure, 'dvm')) {
+    console.warn('Try to get arrival config in dvm mode, but the config does not include dvm info');
+  }
+
+  return getArrivals(NETWORK_GRAPH, departure).find((item) => item.network === to.name) ?? null;
 }
 
 export async function isNetworkConsistent(network: Network, id = ''): Promise<boolean> {
@@ -190,12 +202,12 @@ export function isNativeMetamaskChain(network: Network): boolean {
   return ids.includes(+params.chainId);
 }
 
-export function hasBridge(from: Network, to: Network): boolean {
-  return !!getVertices(from, to);
+export function hasBridge(from: NetConfig, to: NetConfig): boolean {
+  return !!getArrival(from, to);
 }
 
-export function isBridgeAvailable(from: Network, to: Network): boolean {
-  const bridge = getVertices(from, to);
+export function isBridgeAvailable(from: NetConfig, to: NetConfig): boolean {
+  const bridge = getArrival(from, to);
 
   return !!bridge && bridge.status === 'available';
 }
@@ -236,13 +248,13 @@ export async function getMetamaskActiveAccount() {
  * @description is acutal network id match with expected.
  */
 export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> {
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const networkId = await web3.eth.net.getId();
 
   return expectNetworkId === networkId;
 }
 
-export function getAvailableNetworks(net: Network): NetConfig | null {
+export function getAvailableNetwork(net: Network): NetConfig | null {
   // FIXME: by default we use the first vertices here.
   const [vertices] = (getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[net]) ?? []).filter(
     (item) => item.status === 'available'
@@ -258,7 +270,7 @@ export function getAvailableNetworks(net: Network): NetConfig | null {
 export function getDisplayName(config: NetConfig): string {
   const mode = getNetworkMode(config);
 
-  return mode === 'dvm' ? `${config.fullName}-Smart` : config.fullName;
+  return mode === 'dvm' ? `${config.fullName}-Smart` : config?.fullName;
 }
 
 export function getVerticesFromDisplayName(name: string): Vertices {
@@ -281,11 +293,16 @@ export async function getConfigByConnection(connection: Connection): Promise<Net
     const { api } = connection as PolkadotConnection;
 
     try {
+      // TODO: WebSocket is not connected error;
       const chain = await api?.rpc.system.chain();
 
       return chain ? omit(NETWORK_CONFIG[chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;
     } catch (err) {
-      console.error('%c [ err ]-263', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+      console.error(
+        '%c [ err ]-263',
+        'font-size:13px; background:pink; color:#bf2c9f;',
+        (err as unknown as Record<string, string>).message
+      );
     }
   }
 
@@ -301,4 +318,8 @@ export function isChainIdEqual(id1: string | number, id2: string | number): bool
   id2 = Web3.utils.toHex(id2);
 
   return id1 === id2;
+}
+
+export function getCrossChainArrivals(departure: NetConfig): Arrival[] {
+  return getArrivals(NETWORK_GRAPH, departure);
 }

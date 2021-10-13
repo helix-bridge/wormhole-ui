@@ -10,6 +10,7 @@ interface SubmitButtonProps extends ButtonProps {
   to: NetConfig | null;
   requireTo?: boolean;
   hideSubmit?: boolean;
+  launch?: () => void;
 }
 
 export function FromItemButton({ children, className, ...others }: ButtonProps) {
@@ -34,6 +35,7 @@ export function SubmitButton({
   children,
   requireTo,
   disabled,
+  launch,
   hideSubmit = false,
 }: PropsWithChildren<SubmitButtonProps>) {
   const { t } = useTranslation();
@@ -50,7 +52,7 @@ export function SubmitButton({
     return <FromItemButton disabled>{t(tx.status)}</FromItemButton>;
   }
 
-  if (from?.name && to?.name && hasBridge(from.name, to.name) && !isBridgeAvailable(from.name, to.name)) {
+  if (from?.name && to?.name && hasBridge(from, to) && !isBridgeAvailable(from, to)) {
     return <FromItemButton disabled>{t('Coming Soon')}</FromItemButton>;
   }
 
@@ -78,13 +80,22 @@ export function SubmitButton({
     );
   }
 
-  if ((status === 'success' && !from?.name) || status === 'pending') {
+  if ((status === 'success' && !from?.name) || status === 'pending' || hideSubmit) {
     return null;
   }
 
-  return !hideSubmit ? (
+  return !launch ? (
     <FromItemButton disabled={(!!requireTo && !to) || disabled} htmlType="submit">
       {children || t('Submit')}
     </FromItemButton>
-  ) : null;
+  ) : (
+    <FromItemButton
+      disabled={(!!requireTo && !to) || disabled}
+      onClick={() => {
+        launch();
+      }}
+    >
+      {children || t('Submit')}
+    </FromItemButton>
+  );
 }

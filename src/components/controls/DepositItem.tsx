@@ -4,7 +4,7 @@ import { addDays, format, fromUnixTime } from 'date-fns';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EvoApiPath, FORM_CONTROL } from '../../config';
-import { useGet } from '../../hooks';
+import { useRecordsQuery } from '../../hooks';
 import { CustomFormControlProps, Deposit, DepositResponse, NetConfig } from '../../model';
 import { apiUrl, empty } from '../../utils';
 
@@ -36,7 +36,7 @@ export function DepositItem({
   rules = [],
 }: CustomFormControlProps<Deposit | null> & DepositItemProps) {
   const { t } = useTranslation();
-  const { data, error, loading } = useGet<DepositResponse>({
+  const { data, error, loading } = useRecordsQuery<DepositResponse>({
     url: apiUrl(config.api.evolution, EvoApiPath.deposit),
     params: { address },
     // url: apiUrl('https://www.evolution.land', EvoApiPath.deposit),
