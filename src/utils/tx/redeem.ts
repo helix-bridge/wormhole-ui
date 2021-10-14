@@ -78,7 +78,7 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
   );
 }
 
-export interface S2SInfo {
+interface S2SInfo {
   specVersion: string;
   mappingAddress: string;
 }
