@@ -172,5 +172,9 @@ declare namespace Cypress {
     etherscanWaitForTxSuccess(txid: string): Chainable<Subject>;
 
     clearWindows(): Chainable<Subject>;
+
+    acceptMetamaskAccess(): Chainable<Subject>;
+
+    confirmMetamaskTransaction(): Chainable<Subject>;
   }
 }

@@ -5,12 +5,27 @@
     "componentFolder": "src",
     "testFiles": "__tests__/**/*.test.{js,ts,jsx,tsx}"
   },
+  "defaultCommandTimeout": 30000,
   "env": {
+    "coverage": false,
     "product": "",
     "staging": "",
-    "coverage": false
+    "cypress-react-selector": {
+      "root": "#root"
+    }
   },
   "ignoreTestFiles": "*/examples/**",
-  "downloadsFolder": "./public/image",
-  "nodeVersion": "system"
+  "nodeVersion": "system",
+  "pageLoadTimeout": 30000,
+  "projectId": "37wetq",
+  "requestTimeout": 3000,
+  "retries": {
+    "openMode": 0,
+    "runMode": 0
+  },
+  "userAgent": "synpress",
+  "video": true,
+  "videoCompression": 15,
+  "viewportHeight": 768,
+  "viewportWidth": 1366
 }
