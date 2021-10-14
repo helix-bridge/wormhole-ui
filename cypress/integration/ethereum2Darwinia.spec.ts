@@ -27,8 +27,7 @@ describe('Ethereum to Darwinia', () => {
     cy.get('div[role="alert"]').contains('Please enter a valid Pangolin address');
   });
 
-  it.only('should launch tx', () => {
-    cy.acceptMetamaskAccess(); // allow metamask connect;
+  it('should launch tx', () => {
     cy.react('RecipientItem').find('input').type('2pr19FiRxWEcerFt4tS3ZnJjhBXak69KNoJuGkaEY8ngBXEd');
     cy.react('Balance').type('3');
 
@@ -42,6 +41,7 @@ describe('Ethereum to Darwinia', () => {
 
     cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
 
+    cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
     cy.get('.ant-modal-confirm-content', { timeout: 2 * 60 * 1000 })
