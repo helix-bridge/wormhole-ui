@@ -1,6 +1,6 @@
 import { Affix, Empty, Input, message, Pagination, Radio, Select, Spin } from 'antd';
 import { flow, isBoolean, negate, upperFirst } from 'lodash';
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Subscription } from 'rxjs';
@@ -44,6 +44,25 @@ const PAGINATOR_DEFAULT = { row: 10, page: 0 };
 const SOURCE_DATA_DEFAULT = { count: 0, list: [] };
 
 // eslint-disable-next-line complexity
+const canUpdate = (addr: string | null, departure: Vertices, arrival: Vertices) => {
+  const { network, mode } = departure;
+
+  if (addr && network) {
+    if (mode === 'dvm') {
+      return isEthereumNetwork(arrival.network)
+        ? isValidAddress(addr, departure.network)
+        : isValidAddress(addr, 'ethereum');
+    } else {
+      const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(network);
+
+      return category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
+    }
+  }
+
+  return false;
+};
+
+// eslint-disable-next-line complexity
 export function Records() {
   const { t } = useTranslation();
   const { search } = useLocation<HistoryRouteParam>();
@@ -64,26 +83,10 @@ export function Records() {
     network: searchParams.to || toNetworks[0].name,
     mode: searchParams.tMode || getNetworkMode(toNetworks[0]),
   });
-  // eslint-disable-next-line complexity
-  const canUpdate = useCallback((addr: string | null, selected: Vertices) => {
-    const { network, mode } = selected;
-
-    if (addr && network) {
-      if (mode === 'dvm') {
-        return isValidAddress(addr, 'ethereum');
-      } else {
-        const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(network);
-
-        return category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
-      }
-    }
-
-    return false;
-  }, []);
   const searchPlaceholder = useMemo(() => {
     const { network, mode } = departure;
     if (isPolkadotNetwork(network)) {
-      return mode === 'dvm'
+      return mode === 'dvm' && !isEthereumNetwork(arrival.network)
         ? t('Please fill in a {{network}} smart address which start with 0x', { network: upperFirst(network) })
         : t('Please fill in a substrate address of the {{network}} network.', { network: upperFirst(network) });
     }
@@ -93,7 +96,7 @@ export function Records() {
     }
 
     return t('Please enter a valid {{network}} address', { network: upperFirst(network) });
-  }, [departure, t]);
+  }, [departure, arrival, t]);
 
   const ele = useMemo(
     // eslint-disable-next-line complexity
@@ -149,7 +152,7 @@ export function Records() {
 
   // eslint-disable-next-line complexity
   useEffect(() => {
-    if (!address || !canUpdate(address, departure)) {
+    if (!address || !canUpdate(address, departure, arrival)) {
       return;
     }
 
@@ -204,7 +207,7 @@ export function Records() {
         subscription.unsubscribe();
       }
     };
-  }, [confirmed, address, canUpdate, departure, paginator, isGenesis, arrival.network, queryS2SRecords]);
+  }, [confirmed, address, departure, paginator, isGenesis, arrival.network, queryS2SRecords, arrival]);
 
   useEffect(() => {
     const config = getNetConfigByVer(departure);
@@ -324,7 +327,7 @@ export function Records() {
             placeholder={searchPlaceholder}
             onChange={(event) => setAddress(event.target.value)}
             onSearch={(value) => {
-              if (canUpdate(value, departure)) {
+              if (canUpdate(value, departure, arrival)) {
                 setAddress(value);
               } else {
                 message.error(t(searchPlaceholder));

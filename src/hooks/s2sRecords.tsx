@@ -15,17 +15,18 @@ enum S2SRecordResult {
   lockConfirmedFail,
 }
 
+const REDEEM_DEFAULT = 'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory';
+const ISSUING_DEFAULT = 'https://api.subquery.network/sq/darwinia-network/pangolin';
+
 export function useS2SRecords(
   departure: NetConfig
 ): (req: HistoryReq) => Observable<{ count: number; list: S2SHistoryRecord[] }> {
-  const issuingClient = useMemo(() => new GraphQLClient({ url: departure.api.subql }), [departure.api.subql]);
+  const issuingClient = useMemo(
+    () => new GraphQLClient({ url: departure.api.subql || ISSUING_DEFAULT }),
+    [departure.api.subql]
+  );
   const redeemClient = useMemo(
-    () =>
-      new GraphQLClient({
-        url:
-          departure.api.subGraph ||
-          'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory',
-      }),
+    () => new GraphQLClient({ url: departure.api.subGraph || REDEEM_DEFAULT }),
     [departure.api.subGraph]
   );
   const { t } = useTranslation();
