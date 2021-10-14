@@ -27,7 +27,8 @@ describe('Ethereum to Darwinia', () => {
     cy.get('div[role="alert"]').contains('Please enter a valid Pangolin address');
   });
 
-  it('should launch tx', () => {
+  it.only('should launch tx', () => {
+    cy.acceptMetamaskAccess(); // allow metamask connect;
     cy.react('RecipientItem').find('input').type('2pr19FiRxWEcerFt4tS3ZnJjhBXak69KNoJuGkaEY8ngBXEd');
     cy.react('Balance').type('3');
 
