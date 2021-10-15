@@ -70,9 +70,10 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
     (contract) => {
       const val = Web3.utils.toHex('50000000000000000000');
 
+      // @see https://github.com/darwinia-network/wormhole-ui/issues/139
       return contract.methods
         .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
-        .send({ from: sender, gas: '21000000', gasPrice: '50000000000', value: val });
+        .send({ from: sender, gas: '250000', gasPrice: '50000000000', value: val });
     },
     abi.mappingTokenABI
   );
