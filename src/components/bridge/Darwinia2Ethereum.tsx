@@ -37,6 +37,25 @@ const BN_ZERO = new BN(0);
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
+/**
+ * @description other api can get balances:  api.derive.balances.all, api.query.system.account;
+ * @see https://github.com/darwinia-network/wormhole-ui/issues/142
+ */
+async function getTokenBalanceDarwinia(api: ApiPromise, account = ''): Promise<[string, string]> {
+  try {
+    await api?.isReady;
+    // type = 0 query ring balance.  type = 1 query kton balance.
+    /* eslint-disable */
+    const ringUsableBalance = await (api?.rpc as any).balances.usableBalance(0, account);
+    const ktonUsableBalance = await (api?.rpc as any).balances.usableBalance(1, account);
+    /* eslint-enable */
+
+    return [ringUsableBalance.usableBalance.toString(), ktonUsableBalance.usableBalance.toString()];
+  } catch (error) {
+    return ['0', '0'];
+  }
+}
+
 async function getFee(api: ApiPromise | null): Promise<BN> {
   const fixed = Web3.utils.toBN('50000000000');
 
@@ -200,11 +219,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
         return [];
       }
 
-      const {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        data: { free: ring = '0', freeKton: kton = '0' },
-      } = await api.query.system.account(account);
+      const [ring, kton] = await getTokenBalanceDarwinia(api, account);
 
       return [
         {
