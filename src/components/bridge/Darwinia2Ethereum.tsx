@@ -3,7 +3,7 @@ import { ApiPromise } from '@polkadot/api';
 import { Button, Descriptions, Form, Tooltip } from 'antd';
 import BN from 'bn.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { TFunction, Trans, useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { from, Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
@@ -30,7 +30,6 @@ interface AmountCheckInfo {
   fee: BN | null;
   ringBalance?: BN | null;
   assets: AssetGroupValue;
-  t: TFunction;
 }
 
 const BN_ZERO = new BN(0);
@@ -57,7 +56,7 @@ export const getChainInfo = (tokens: TokenChainInfo[], target: Token) =>
   target && tokens.find((token) => token.symbol.toLowerCase().includes(target));
 
 // eslint-disable-next-line complexity
-function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
+function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
   const { chain } = useApi();
   // eslint-disable-next-line complexity
   const isRingBalanceEnough = useMemo(() => {
@@ -93,7 +92,7 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
   if (!fee || !ringBalance) {
     return (
       <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : animationCount }}>
-        {t('Transfer information querying')}
+        <Trans>Transfer information querying</Trans>
       </p>
     );
   }
@@ -151,6 +150,19 @@ function TransferInfo({ fee, ringBalance, assets, t }: AmountCheckInfo) {
             <QuestionCircleFilled className="ml-2 cursor-pointer" />
           </Tooltip>
         </span>
+        <span></span>
+      </Descriptions.Item>
+
+      <Descriptions.Item>
+        <p className="text-gray-400 text-xs">
+          <Trans>Please initiate a claim transaction of the Ethereum network in the Transfer Records.</Trans>
+        </p>
+      </Descriptions.Item>
+
+      <Descriptions.Item>
+        <p className="text-gray-400 text-xs">
+          <Trans>Each claim transaction of Ethereum is estimated to use 600,000 Gas.</Trans>
+        </p>
       </Descriptions.Item>
     </Descriptions>
   );
@@ -327,7 +339,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
         />
       </Form.Item>
 
-      <TransferInfo fee={fee} ringBalance={new BN(ringBalance?.max || '0')} assets={currentAssets} t={t} />
+      <TransferInfo fee={fee} ringBalance={new BN(ringBalance?.max || '0')} assets={currentAssets} />
     </>
   );
 }
