@@ -9,7 +9,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:latest
+      image: node:16.11-buster
       options: --privileged
     steps:
       - uses: actions/checkout@v2
