@@ -279,7 +279,7 @@ export function DVM({
         <Balance
           size="large"
           placeholder={t('Balance {{balance}}', {
-            balance: isNull(availableBalance) ? t('Searching') : availableBalance,
+            balance: isNull(availableBalance) ? t('Querying') : availableBalance,
           })}
           onChange={setCurAmount}
           className="flex-1"

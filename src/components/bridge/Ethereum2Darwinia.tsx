@@ -4,7 +4,6 @@ import { FormInstance, Rule } from 'antd/lib/form';
 import BN from 'bn.js';
 import { format } from 'date-fns';
 import { TFunction } from 'i18next';
-import { isNull } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Observable } from 'rxjs';
@@ -46,6 +45,7 @@ import { ApproveSuccess } from '../modal/ApproveSuccess';
 import { Des } from '../modal/Des';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
+import { getTokenBalance, getMappedTokenMeta, TokenCache } from '../../utils/erc20/meta';
 
 enum E2DAssetEnum {
   ring = 'ring',
@@ -67,44 +67,12 @@ const BN_ZERO = new BN(0);
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
-async function getRingBalance(account: string, config: NetConfig): Promise<BN | null> {
-  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+async function queryTokenMeta(config: NetConfig) {
+  const { ring, kton } = config.tokenContract;
+  const ringMeta = await getMappedTokenMeta(ring as string);
+  const ktonMeta = await getMappedTokenMeta(kton as string);
 
-  try {
-    const ringContract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.ring);
-    const ring = await ringContract.methods.balanceOf(account).call();
-
-    return Web3.utils.toBN(ring);
-  } catch (error) {
-    console.error(
-      '%c [ get ring balance in ethereum error ]',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any).message
-    );
-
-    return null;
-  }
-}
-
-async function getKtonBalance(account: string, config: NetConfig): Promise<BN | null> {
-  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-
-  try {
-    const ktonContract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.kton);
-    const kton = await ktonContract.methods.balanceOf(account).call();
-
-    return web3.utils.toBN(kton);
-  } catch (error) {
-    console.error(
-      '%c [ get kton balance in ethereum error ]',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any).message
-    );
-  }
-
-  return null;
+  return [ringMeta, ktonMeta];
 }
 
 async function getIssuingAllowance(from: string, config: NetConfig): Promise<BN> {
@@ -200,7 +168,7 @@ function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountChe
             title={
               <ul className="pl-4 list-disc">
                 <li>
-                  <Trans>Fee paid per transaction, event if the asset type is not RING</Trans>
+                  <Trans>Fee paid per transaction</Trans>
                 </li>
               </ul>
             }
@@ -281,9 +249,11 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
   const [max, setMax] = useState<BN | null>(null);
   const [fee, setFee] = useState<BN | null>(null);
   const [ringBalance, setRingBalance] = useState<BN | null>(null);
+  const [isBalanceQuerying, setIsBalanceQuerying] = useState<boolean>(true);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
   const [asset, setAsset] = useState<E2DAssetEnum>(() => form.getFieldValue(FORM_CONTROL.asset) ?? E2DAssetEnum.ring);
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
+  const [tokens, setTokens] = useState<TokenCache[]>([]);
   const {
     connection: { accounts },
   } = useApi();
@@ -314,10 +284,13 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
   const refreshBalance = useCallback(
     (value: RedeemDarwiniaToken | ApproveValue) => {
       if (value.asset === E2DAssetEnum.kton) {
-        getKtonBalance(account, value.transfer.from).then((balance) => setMax(balance));
+        getTokenBalance(value.transfer.from.tokenContract.kton as string, account, false).then((balance) =>
+          setMax(balance)
+        );
       }
 
-      getRingBalance(account, value.transfer.from).then((balance) => {
+      // always need to refresh ring balance, because of it is a fee token
+      getTokenBalance(value.transfer.from.tokenContract.ring as string, account, false).then((balance) => {
         if (value.asset === E2DAssetEnum.ring) {
           setMax(balance);
         }
@@ -332,7 +305,9 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
   const refreshDeposit = useCallback(
     (value: RedeemDeposit) => {
       setRemovedDepositIds(() => [...removedDepositIds, value.deposit.deposit_id]);
-      getRingBalance(account, value.transfer.from).then((balance) => setRingBalance(balance));
+      getTokenBalance(value.transfer.from.tokenContract.ring as string, account, false).then((balance) =>
+        setRingBalance(balance)
+      );
     },
     [account, removedDepositIds]
   );
@@ -391,14 +366,19 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
       [FORM_CONTROL.sender]: account,
     });
 
-    Promise.all([getRingBalance(account, netConfig), getFee(netConfig), getIssuingAllowance(account, netConfig)]).then(
-      ([balance, crossFee, allow]) => {
-        setRingBalance(balance);
-        setMax(balance);
-        setFee(crossFee);
-        setAllowance(allow);
-      }
-    );
+    Promise.all([
+      getTokenBalance(netConfig.tokenContract.ring as string, account, false),
+      getFee(netConfig),
+      getIssuingAllowance(account, netConfig),
+      queryTokenMeta(netConfig),
+    ]).then(([balance, crossFee, allow, tokenMeta]) => {
+      setRingBalance(balance);
+      setMax(balance);
+      setFee(crossFee);
+      setAllowance(allow);
+      setIsBalanceQuerying(false);
+      setTokens(tokenMeta);
+    });
     updateDeparture({ from: netConfig || undefined, sender: form.getFieldValue(FORM_CONTROL.sender) });
   }, [account, form, updateDeparture]);
 
@@ -433,22 +413,31 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
             let balance: BN | null = null;
             const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
 
+            setIsBalanceQuerying(true);
+
             if (value === E2DAssetEnum.ring) {
-              balance = await getRingBalance(account, netConfig);
+              balance = await getTokenBalance(netConfig.tokenContract.ring as string, account, false);
 
               setRingBalance(balance);
             }
 
             if (value === E2DAssetEnum.kton) {
-              balance = await getKtonBalance(account, netConfig);
+              balance = await getTokenBalance(netConfig.tokenContract.kton as string, account, false);
             }
 
             setAsset(value);
             setMax(balance);
+            setIsBalanceQuerying(false);
           }}
         >
-          <Select.Option value={E2DAssetEnum.ring}>RING</Select.Option>
-          <Select.Option value={E2DAssetEnum.kton}>KTON</Select.Option>
+          {tokens.map(({ symbol, address, name }) => (
+            <Select.Option value={symbol.toLowerCase()} key={address}>
+              <span>{symbol}</span>
+              <sup className="ml-2 text-xs" title={t('name')}>
+                {name}
+              </sup>
+            </Select.Option>
+          ))}
           <Select.Option value={E2DAssetEnum.deposit} className="uppercase">
             {t('Deposit')}
           </Select.Option>
@@ -508,7 +497,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
           <Balance
             size="large"
             placeholder={t('Balance {{balance}}', {
-              balance: isNull(availableBalance) ? t('Searching') : availableBalance,
+              balance: isBalanceQuerying ? t('Querying') : availableBalance,
             })}
             className="flex-1"
             onChange={(val) => setCurAmount(val)}

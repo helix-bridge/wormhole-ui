@@ -10,7 +10,7 @@ import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useLocalSearch, useMappedTokens, useTx } from '../../hooks';
 import { Erc20Token, NetConfig } from '../../model';
 import { isSameNetConfig, isValidAddress } from '../../utils';
-import { getTokenMeta } from '../../utils/erc20/meta';
+import { getErc20Meta } from '../../utils/erc20/meta';
 import {
   confirmRegister,
   getRegisterProof,
@@ -85,7 +85,7 @@ export function Register() {
 
       const searchValue = !inputValue.startsWith('0x') ? '0x' + inputValue : inputValue;
       const tokenStatus = await getTokenRegisterStatus(searchValue, net);
-      const result = await getTokenMeta(searchValue);
+      const result = await getErc20Meta(searchValue);
 
       setRegisteredStatus(tokenStatus === null ? -1 : tokenStatus);
       setToken({ ...result, address: searchValue });

@@ -220,7 +220,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
           size="large"
           placeholder={t('Balance {{balance}}', {
             balance: !availableBalance
-              ? t('Searching')
+              ? t('Querying')
               : fromWei({ value: availableBalance?.max, unit: availableBalance?.chainInfo?.decimal }, prettyNumber),
           })}
           className="flex-1"
