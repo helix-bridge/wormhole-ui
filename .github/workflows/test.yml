@@ -8,6 +8,9 @@ jobs:
   test-cypress:
     name: Test
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+      options: --privileged
     steps:
       - uses: actions/checkout@v2
       - name: Run E2E tests 🧪

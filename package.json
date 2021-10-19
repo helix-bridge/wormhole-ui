@@ -83,7 +83,7 @@
     "codelyzer": "^6.0.1",
     "cross-env": "^7.0.3",
     "cross-zip": "^4.0.0",
-    "cypress": "^8.4.1",
+    "cypress": "^8.6.0",
     "cypress-react-selector": "^2.3.11",
     "cypress-wait-until": "^1.7.1",
     "eslint": "^7.27.0",
