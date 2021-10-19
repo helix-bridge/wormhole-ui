@@ -24,8 +24,6 @@ interface Facade {
   logoWithText: string;
 }
 
-type TokenContract = { [key in Token]?: string };
-
 type Api = {
   subql: string;
   evolution: string;
@@ -69,7 +67,9 @@ export interface NetConfig {
   name: Network;
   provider: Provider;
   ss58Prefix: SS58Prefix;
-  tokenContract: TokenContract & {
+  tokenContract: {
+    ring?: string;
+    kton?: string;
     registryEth?: string;
     issuingDarwinia?: string;
     bankEthereum?: string;

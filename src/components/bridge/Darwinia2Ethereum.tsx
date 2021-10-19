@@ -71,8 +71,14 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
   }
 }
 
-export const getChainInfo = (tokens: TokenChainInfo[], target: Token) =>
-  target && tokens.find((token) => token.symbol.toLowerCase().includes(target));
+export const getChainInfo: (tokens: TokenChainInfo[], target: string) => TokenChainInfo | undefined = (
+  tokens: TokenChainInfo[],
+  target: string
+) => {
+  if (target) {
+    return tokens.find((token) => token.symbol.toLowerCase().includes(target));
+  }
+};
 
 // eslint-disable-next-line complexity
 function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
@@ -100,7 +106,7 @@ function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
   }, [assets, fee]);
   const chainSymbol = useCallback(
     (token: Token) => {
-      const info = getChainInfo(chain.tokens, 'ring');
+      const info = getChainInfo(chain.tokens, token);
 
       return info?.symbol || token.toUpperCase();
     },
@@ -231,6 +237,8 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
         return [];
       }
 
+      await api.isReady;
+
       const [ring, kton] = await getTokenBalanceDarwinia(api, account);
 
       return [
@@ -255,9 +263,9 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
       const { assets, sender } = data;
       const assetsToSend = assets?.map((item) => {
         const { asset, amount, checked } = item as Required<Darwinia2EthereumTransfer['assets'][0]>;
-        const unit = getChainInfo(chain.tokens, asset as Token)?.decimal || 'gwei';
+        const { decimal = 'gwei', symbol = asset } = getChainInfo(chain.tokens, asset as string) as TokenChainInfo;
 
-        return { asset, unit, amount: checked ? toWei({ value: amount, unit }) : '0' };
+        return { asset: symbol, unit: decimal, amount: checked ? toWei({ value: amount, unit: decimal }) : '0' };
       });
 
       return ethereumBackingLockDarwinia(

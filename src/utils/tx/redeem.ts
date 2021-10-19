@@ -3,7 +3,7 @@ import { memoize } from 'lodash';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../config';
-import { RedeemDarwiniaToken, RedeemDeposit, RedeemDVMToken, Token, Tx, TxFn } from '../../model';
+import { RedeemDarwiniaToken, RedeemDeposit, RedeemDVMToken, Tx, TxFn } from '../../model';
 import { convertToDvm, toWei } from '../helper';
 import { entrance } from '../network';
 import { buf2hex, getContractTxObs } from './common';
@@ -12,7 +12,7 @@ import { buf2hex, getContractTxObs } from './common';
  * @description darwinia <- ethereum
  */
 export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, transfer, asset, amount, recipient }) => {
-  const contractAddress = transfer.from.tokenContract[asset as Token] as string;
+  const contractAddress = transfer.from.tokenContract[asset as 'ring' | 'kton'] as string;
 
   recipient = buf2hex(decodeAddress(recipient, false, transfer.to.ss58Prefix!).buffer);
   amount = toWei({ value: amount });
