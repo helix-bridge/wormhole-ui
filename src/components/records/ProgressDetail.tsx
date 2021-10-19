@@ -1,5 +1,5 @@
 import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Button, Row, Tag } from 'antd';
+import { Button, Row, Tooltip } from 'antd';
 import { PropsWithChildren, ReactNode, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTx } from '../../hooks';
@@ -140,14 +140,16 @@ export function ProgressDetail({ from, to, step, hasRelay, claim, stepDescriptio
         >
           {claim && relayed && (
             <Button disabled={!!tx} icon={tx ? <LoadingOutlined /> : null} onClick={() => claim()} size="small">
-              {t(tx ? 'Claiming' : 'Claim')}
+              {tx ? (
+                t('Claiming')
+              ) : (
+                <Tooltip title={t('Each claim transaction of Ethereum is estimated to use 600,000 Gas.')}>
+                  {t('Claim')}
+                </Tooltip>
+              )}
             </Button>
           )}
-          {!claim && relayed && (
-            <Tag color="success" icon={<CheckCircleOutlined />} className="flex items-center">
-              {t('Claimed')}
-            </Tag>
-          )}
+          {!claim && relayed && <CheckCircleOutlined style={{ color: 'rgb(5, 150, 105)' }} className="text-xl" />}
         </StepWrapper>
       )}
 
