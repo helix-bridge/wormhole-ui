@@ -1,5 +1,5 @@
 import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Button, Row, Tag, Tooltip } from 'antd';
+import { Button, Row, Tooltip } from 'antd';
 import { PropsWithChildren, ReactNode, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTx } from '../../hooks';
