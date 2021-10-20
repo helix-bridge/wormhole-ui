@@ -210,10 +210,9 @@ export function DVM({
             setSelectedErc20(erc20);
 
             const spender = await spenderResolver(form.getFieldValue(FORM_CONTROL.transfer).from);
+            const allow = await getAllowance(account, spender, erc20);
 
-            getAllowance(account, spender, erc20).then((allow) => {
-              setAllowance(allow);
-            });
+            setAllowance(allow);
           }}
         />
       </Form.Item>

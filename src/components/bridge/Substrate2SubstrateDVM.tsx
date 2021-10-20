@@ -1,15 +1,13 @@
-import { AccountData } from '@darwinia/types';
-import { Descriptions, Form, Select } from 'antd';
+import { Descriptions, Form, Progress, Select } from 'antd';
 import BN from 'bn.js';
 import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
+import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
 import {
   AvailableBalance,
   BridgeFormProps,
-  DVMTransfer,
   IssuingSubstrateToken,
   Network,
   NoNullTransferNetwork,
@@ -39,8 +37,6 @@ import { TransferSuccess } from '../modal/TransferSuccess';
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
 /* ----------------------------------------------Tx section-------------------------------------------------- */
-
-/* ----------------------------------------------Main Section-------------------------------------------------- */
 
 interface TransferInfoProps {
   fee: BN;
@@ -79,11 +75,13 @@ function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
   );
 }
 
+/* ----------------------------------------------Main Section-------------------------------------------------- */
+
 /**
  * @description test chain: pangoro -> pangolin dvm
  */
 // eslint-disable-next-line complexity
-export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMTransfer>) {
+export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Substrate2SubstrateDVMTransfer>) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
@@ -97,6 +95,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<TransferFormValues<Substrate2SubstrateDVMTransfer, NoNullTransferNetwork>>();
+  const getAvailableBalances = useDarwiniaAvailableBalances();
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account: string) => {
       if (!api || !chain.tokens.length || !form.getFieldValue(FORM_CONTROL.asset)) {
@@ -104,20 +103,11 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
       }
 
       const asset = form.getFieldValue(FORM_CONTROL.asset) as string;
-      const { data } = await api.query.system.account(account);
-      const { free, freeKton } = data as unknown as AccountData;
-      const balance = /ring/i.test(asset) ? free : freeKton;
+      const balances = await getAvailableBalances(account);
 
-      return [
-        {
-          max: balance.toString(),
-          asset,
-          chainInfo: chain.tokens.find((item) => item.symbol === asset),
-          checked: true,
-        },
-      ];
+      return balances.filter((item) => asset.toLowerCase().includes(item.asset.toLowerCase()));
     },
-    [api, chain.tokens, form]
+    [api, chain.tokens.length, form, getAvailableBalances]
   );
 
   useEffect(() => {
@@ -158,6 +148,13 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
     getBalances(sender).then(setAvailableBalances);
   }, [accounts, getBalances]);
 
+  useEffect(() => {
+    if (chain.tokens.length) {
+      form.setFieldsValue({ [FORM_CONTROL.asset]: chain.tokens[0].symbol });
+      getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
+    }
+  }, [chain.tokens, form, getBalances]);
+
   return (
     <>
       <PolkadotAccountsItem
@@ -177,7 +174,6 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
         <Select
           size="large"
           onChange={() => {
-            // TODO: check getBalances
             getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
           }}
           placeholder={t('Please select token to be transfer')}
@@ -195,6 +191,16 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<DVMT
           ))}
         </Select>
       </Form.Item>
+
+      {!chain.tokens.length && (
+        <Progress
+          percent={100}
+          showInfo={false}
+          status="active"
+          strokeColor={{ from: '#5745de', to: '#ec3783' }}
+          className="relative -top-6"
+        />
+      )}
 
       <Form.Item
         name={FORM_CONTROL.amount}

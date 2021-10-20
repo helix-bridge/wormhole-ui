@@ -7,7 +7,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { from, Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
+import { getChainInfo, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
 import {
   AvailableBalance,
   BridgeFormProps,
@@ -36,25 +36,6 @@ const BN_ZERO = new BN(0);
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
-/**
- * @description other api can get balances:  api.derive.balances.all, api.query.system.account;
- * @see https://github.com/darwinia-network/wormhole-ui/issues/142
- */
-async function getTokenBalanceDarwinia(api: ApiPromise, account = ''): Promise<[string, string]> {
-  try {
-    await api?.isReady;
-    // type = 0 query ring balance.  type = 1 query kton balance.
-    /* eslint-disable */
-    const ringUsableBalance = await (api?.rpc as any).balances.usableBalance(0, account);
-    const ktonUsableBalance = await (api?.rpc as any).balances.usableBalance(1, account);
-    /* eslint-enable */
-
-    return [ringUsableBalance.usableBalance.toString(), ktonUsableBalance.usableBalance.toString()];
-  } catch (error) {
-    return ['0', '0'];
-  }
-}
-
 async function getFee(api: ApiPromise | null): Promise<BN> {
   const fixed = Web3.utils.toBN('50000000000');
 
@@ -70,15 +51,6 @@ async function getFee(api: ApiPromise | null): Promise<BN> {
     return fixed;
   }
 }
-
-export const getChainInfo: (tokens: TokenChainInfo[], target: string) => TokenChainInfo | undefined = (
-  tokens: TokenChainInfo[],
-  target: string
-) => {
-  if (target) {
-    return tokens.find((token) => token.symbol.toLowerCase().includes(target));
-  }
-};
 
 // eslint-disable-next-line complexity
 function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
@@ -231,32 +203,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
     () => (availableBalances || []).find((item) => item.asset === 'ring'),
     [availableBalances]
   );
-  const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
-    async (account) => {
-      if (!api) {
-        return [];
-      }
-
-      await api.isReady;
-
-      const [ring, kton] = await getTokenBalanceDarwinia(api, account);
-
-      return [
-        {
-          max: ring,
-          asset: 'ring',
-          chainInfo: getChainInfo(chain.tokens, 'ring'),
-          checked: true,
-        },
-        {
-          max: kton,
-          asset: 'kton',
-          chainInfo: getChainInfo(chain.tokens, 'kton'),
-        },
-      ];
-    },
-    [api, chain.tokens]
-  );
+  const getBalances = useDarwiniaAvailableBalances();
 
   useEffect(() => {
     const fn = () => (data: IssuingDarwiniaToken) => {
