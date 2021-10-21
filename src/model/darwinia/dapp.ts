@@ -8,9 +8,9 @@ export interface Paginator {
 
 export interface HistoryReq {
   address: string;
-  network: Network;
+  network: Network; // departure network
   paginator: Paginator;
-  confirmed?: boolean | null;
+  confirmed: boolean | null;
 }
 
 /* ------------------------------------E2D section-------------------------------------------- */

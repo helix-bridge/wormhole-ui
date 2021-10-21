@@ -16,7 +16,7 @@ import {
   isReachable,
   isSameNetworkCurry,
 } from '../../utils';
-import { RecordList, canQuery } from './RecordList';
+import { RecordList, isAddressValid } from './RecordList';
 
 // eslint-disable-next-line complexity
 export function CrossRecords() {
@@ -165,10 +165,12 @@ export function CrossRecords() {
             placeholder={searchPlaceholder}
             onChange={(event) => setAddress(event.target.value)}
             onSearch={(value) => {
-              if (canQuery(value, departure, arrival)) {
-                setAddress(value);
-              } else {
+              if (!isAddressValid(value, departure)) {
                 message.error(t(searchPlaceholder));
+              } else if (!isReachable(getNetConfigByVer(departure))(getNetConfigByVer(arrival))) {
+                message.error(t('Origin network is not matched to the target network'));
+              } else {
+                setAddress(value);
               }
             }}
             enterButton={t('Search')}

@@ -22,6 +22,8 @@ import {
   isPolkadotNetwork,
   isTronNetwork,
   queryDarwinia2EthereumIssuingRecords,
+  queryDarwiniaDVM2EthereumIssuingRecords,
+  queryEthereum2DarwiniaDVMRedeemRecords,
   queryEthereum2DarwiniaGenesisRecords,
   queryEthereum2DarwiniaRedeemRecords,
   RecordsQueryRequest,
@@ -67,10 +69,6 @@ const isEthereum2DVM: BridgePredicateFn = (departure, arrival) => {
  */
 const isS2S: BridgePredicateFn = (departure, arrival) => {
   return [isSubstrate2SubstrateDVM, isSubstrateDVM2Substrate].some((fn) => fn(departure, arrival));
-};
-
-const isE2DVM: BridgePredicateFn = (departure, arrival) => {
-  return [isEthereum2DVM, isDVM2Ethereum].some((fn) => fn(departure, arrival));
 };
 
 /* ---------------------------------------------------Common Query--------------------------------------------- */
@@ -146,12 +144,20 @@ export function useRecords(departure: Departure, arrival: Departure) {
         return queryEthereum2DarwiniaRedeemRecords;
       }
 
+      if (isDarwinia2Ethereum(departure, arrival)) {
+        return queryDarwinia2EthereumIssuingRecords;
+      }
+
       if (isS2S(departure, arrival)) {
         return queryS2SRecords;
       }
 
-      if ([isE2DVM, isDarwinia2Ethereum].some((fn) => fn(departure, arrival))) {
-        return queryDarwinia2EthereumIssuingRecords;
+      if (isEthereum2DVM(departure, arrival)) {
+        return queryEthereum2DarwiniaDVMRedeemRecords;
+      }
+
+      if (isDVM2Ethereum(departure, arrival)) {
+        return queryDarwiniaDVM2EthereumIssuingRecords;
       }
 
       return (_: HistoryReq) => EMPTY;
@@ -161,6 +167,12 @@ export function useRecords(departure: Departure, arrival: Departure) {
 
   const queryRecords = useCallback(
     (params: HistoryReq, isGenesis: boolean) => {
+      const { network, address } = params;
+
+      if (!network || !address) {
+        return EMPTY;
+      }
+
       const req = genParams(params);
       const fn = genQueryFn(isGenesis);
 

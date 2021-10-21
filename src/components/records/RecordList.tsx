@@ -9,6 +9,7 @@ import {
   getNetworkCategory,
   getVerticesFromDisplayName,
   isEthereumNetwork,
+  isReachable,
   isValidAddress,
 } from '../../utils';
 import { ErrorBoundary } from '../ErrorBoundary';
@@ -27,22 +28,22 @@ interface RecordListProps {
 }
 
 // eslint-disable-next-line complexity
-export const canQuery = (addr: string | null, departure: Vertices, arrival: Vertices) => {
+export const isAddressValid = (addr: string | null, departure: Vertices) => {
   const { network, mode } = departure;
 
+  let addressValid = false;
+
   if (addr && network) {
-    if (mode === 'dvm') {
-      return isEthereumNetwork(arrival.network)
-        ? isValidAddress(addr, departure.network)
-        : isValidAddress(addr, 'ethereum');
+    if (mode === 'dvm' || isEthereumNetwork(departure.network)) {
+      addressValid = isValidAddress(addr, 'ethereum');
     } else {
       const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(network);
 
-      return category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
+      addressValid = category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
     }
   }
 
-  return false;
+  return addressValid;
 };
 
 export function RecordList({ departure, arrival, address, confirmed, onLoading, isGenesis = false }: RecordListProps) {
@@ -67,7 +68,11 @@ export function RecordList({ departure, arrival, address, confirmed, onLoading, 
   );
 
   useEffect(() => {
-    if (!address || !canQuery(address, departure, arrival)) {
+    if (
+      !address ||
+      !isAddressValid(address, departure) ||
+      !isReachable(getNetConfigByVer(departure))(getNetConfigByVer(arrival))
+    ) {
       setSourceData(SOURCE_DATA_DEFAULT);
       setPaginator(PAGINATOR_DEFAULT);
       return;
