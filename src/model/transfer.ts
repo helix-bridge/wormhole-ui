@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { Unit } from 'web3-utils';
 import { Erc20Token } from './erc20';
 import { Deposit } from './evolution';
-import { NetConfig, Token } from './network';
+import { NetConfig, Token, Vertices } from './network';
 import { DeepRequired } from './util';
 
 /* ---------------------------------------------------Components props--------------------------------------------------- */
@@ -22,6 +22,8 @@ export interface BridgeFormProps<T extends TransferParty> {
   form: FormInstance<TransferFormValues<T>>;
   setSubmit: React.Dispatch<React.SetStateAction<SubmitFn>>;
 }
+
+export type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => boolean;
 
 /* ---------------------------------------------------Bridge elements--------------------------------------------------- */
 
@@ -64,7 +66,7 @@ export type DVMAsset = Erc20Token;
 
 export interface DVMTransfer extends TransferParty, TransferAsset<DVMAsset> {}
 
-/* ---------------------------------------------------s2s--------------------------------------------------- */
+/* ---------------------------------------------------S2S--------------------------------------------------- */
 
 export type SubstrateAsset = string | Erc20Token;
 
