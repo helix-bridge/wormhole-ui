@@ -9,7 +9,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     container:
-      image: node:16.11-buster
+      image: cypress/browsers:node14.17.0-chrome91-ff89
       options: --privileged
     steps:
       - uses: actions/checkout@v2
@@ -21,6 +21,7 @@ jobs:
           wait-on-timeout: 300
           command: yarn test:e2e:ci
           record: true
+          browser: chrome
           group: 'Actions example'
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
