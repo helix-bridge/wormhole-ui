@@ -10,7 +10,7 @@
     "test:unit": "cross-env REACT_APP_HOST_TYPE=cy cypress open-ct",
     "test:unit:ci": "cross-env REACT_APP_HOST_TYPE=cy cypress run-ct",
     "test:e2e": "cross-env CYPRESS_REMOTE_DEBUGGING_PORT=9222 cypress open",
-    "test:e2e:ci": "cross-env CYPRESS_REMOTE_DEBUGGING_PORT=9222 cypress run --browser=chrome --headed",
+    "test:e2e:ci": "cross-env CHOKIDAR_USEPOLLING=1 CYPRESS_REMOTE_DEBUGGING_PORT=9222 cypress run --browser=chrome --headed",
     "eject": "react-scripts eject",
     "stylelint": "stylelint \"src/**/*.scss\" --config stylelint.config.js",
     "i18next:scanner": "i18next-scanner --config i18next-scanner.config.js",
