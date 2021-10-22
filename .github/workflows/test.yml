@@ -9,7 +9,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     container:
-      image: registry.gitlab.com/repotea-workspace/kangumi/cypress-browsers-edge:sha-aab07fab
+      image: registry.gitlab.com/repotea-workspace/kangumi/cypress-browsers-edge:sha-9506ef52
       options: --privileged
     steps:
       - uses: actions/checkout@v2
