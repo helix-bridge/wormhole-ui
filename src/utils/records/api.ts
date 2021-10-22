@@ -1,20 +1,11 @@
-import { isBoolean, isNull, isUndefined } from 'lodash';
-import { Observable, map } from 'rxjs';
+import { isNull, isUndefined } from 'lodash';
+import { map, Observable } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
-import { EResponse, HistoryReq } from '../../model';
+import { EResponse } from '../../model';
 
 export interface RecordsQueryRequest {
   url: string;
-  params: Record<string, string | number>;
-}
-
-export function getHistoryQueryParams({ address, confirmed, paginator }: Omit<HistoryReq, 'network'>) {
-  const params = {
-    address,
-    ...(paginator ?? { row: 50, page: 0 }),
-  };
-
-  return isBoolean(confirmed) ? { ...params, confirmed: confirmed.toString() } : params;
+  params: Record<string, string | number | boolean | undefined | null>;
 }
 
 export function rxGet<T>({ url, params }: RecordsQueryRequest): Observable<T | null> {

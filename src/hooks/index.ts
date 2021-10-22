@@ -6,5 +6,4 @@ export * from './lock';
 export * from './mappedTokens';
 export * from './networks';
 export * from './records';
-export * from './s2sRecords';
 export * from './tx';

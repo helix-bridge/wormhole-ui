@@ -71,6 +71,7 @@
   "No available CRING for claiming": "没有可供领取的 CRING",
   "Normal": "普通",
   "OK": "好的",
+  "Origin network is not matched to the target network": "源链和目标源不匹配",
   "Please be sure to fill in the real Darwinia mainnet account, and keep the account recovery files such as mnemonic properly.": "请务必填写真实的 Darwinia 主网地址，并妥善保管助记词等账号恢复文件。",
   "Please enter a valid {{network}} address": "请输入有效的 {{network}} 地址",
   "Please fill in a substrate address of the {{network}} network.": "请输入 {{network}} 网络的 substrate 地址",

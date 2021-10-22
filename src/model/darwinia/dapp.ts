@@ -8,9 +8,9 @@ export interface Paginator {
 
 export interface HistoryReq {
   address: string;
-  network: Network;
+  network: Network; // departure network
   paginator: Paginator;
-  confirmed?: boolean;
+  confirmed: boolean | null;
 }
 
 /* ------------------------------------E2D section-------------------------------------------- */
@@ -58,13 +58,11 @@ export interface D2EHistory {
   tx: string;
 }
 
-export interface D2EHistoryRes {
-  count: number;
+export type D2EHistoryRes = DListRes<D2EHistory> & {
   implName: string;
   best: number;
   MMRRoot: string;
-  list: D2EHistory[];
-}
+};
 
 export type D2EMeta = Pick<D2EHistoryRes, 'best' | 'MMRRoot'>;
 
