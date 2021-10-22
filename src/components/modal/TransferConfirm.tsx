@@ -1,4 +1,4 @@
-import { RightOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined } from '@ant-design/icons';
 import { PropsWithChildren, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Darwinia2EthereumTransfer, TxConfirmComponentProps } from '../../model';
@@ -18,7 +18,7 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
           content={value.assets.map((bill: Darwinia2EthereumTransfer['assets'][0]) => (
             <span key={bill.asset} className="mr-6">
               {fromWei({ value: bill.amount, unit: bill.unit ?? 'ether' })}
-              <span className="uppercase ml-2">{bill.asset}</span>
+              <span className="ml-2">{bill.asset}</span>
             </span>
           ))}
         ></Des>
@@ -52,15 +52,15 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
         content={
           <>
             <span className="capitalize">{getDisplayName(value.transfer.from)}</span>
-            <RightOutlined className="mx-4" />
+            <ArrowRightOutlined className="mx-4" />
             <span className="capitalize">{getDisplayName(value.transfer.to)}</span>
           </>
         }
       />
 
-      <Des title={t('From')} content={sender} />
+      <Des title={t('Sender Account')} content={sender} />
 
-      <Des title={t('To')} content={value.recipient}></Des>
+      <Des title={t('Recipient')} content={value.recipient}></Des>
 
       {amountDes}
     </>

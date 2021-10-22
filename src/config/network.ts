@@ -72,9 +72,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       etherscan: '',
     },
     ss58Prefix: 42,
-    tokenContract: {
-      native: 'CRING',
-    },
+    tokenContract: {},
     type: ['polkadot', 'darwinia'],
   },
   darwinia: {
@@ -128,7 +126,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     ss58Prefix: 18,
     tokenContract: {
-      native: 'RING',
       issuingDarwinia: '0xea7938985898af7fd945b03b7bc2e405e744e913',
       bankEthereum: '0x5f44dd8e59f56aa04fe54e95cc690560ae706b18',
       bankDarwinia: '0x649fdf6ee483a96e020b889571e93700fbd82d88',
@@ -170,7 +167,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     ss58Prefix: 18,
     tokenContract: {
-      native: 'eth',
       ring: '0x9469d013805bffb7d3debe5e7839237e535ec483',
       kton: '0x9f284e1337a815fe77d2ff4ae46544645b20c5ff',
       registryEth: '0x6B0940772516B69088904564A56d09CFe6Bb3D85',
@@ -227,7 +223,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     ss58Prefix: 18,
     tokenContract: {
-      native: 'PRING',
       issuingDarwinia: '0x49262B932E439271d05634c32978294C7Ea15d0C', // e2d redeem address
       bankEthereum: '0x98fAE9274562FE131e2CF5771ebFB0bB232aFd25', // d2e claim address
       bankDarwinia: '0x6EF538314829EfA8386Fc43386cB13B4e0A67D1e', // e2d redeem deposit address
@@ -281,7 +276,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     ss58Prefix: 42,
     tokenContract: {
-      native: 'PRING',
       issuingDarwinia: '', // e2d redeem address
       bankEthereum: '', // d2e claim address
       bankDarwinia: '', // e2d redeem deposit address
@@ -323,7 +317,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     ss58Prefix: 18,
     tokenContract: {
-      native: 'eth',
       ring: '0xb52FBE2B925ab79a821b261C82c5Ba0814AAA5e0', // e2d ring balance address
       kton: '0x1994100c58753793D52c6f457f189aa3ce9cEe94', // e2d kton balance address
       registryEth: '0x6982702995b053A21389219c1BFc0b188eB5a372', // e2d cross chain fee querying address
@@ -368,7 +361,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     ss58Prefix: 18,
     tokenContract: {
-      native: '',
       ring: '', // e2d ring balance address
       kton: '', // e2d kton balance address
       registryEth: '', // e2d cross chain fee querying address

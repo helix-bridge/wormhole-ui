@@ -3,10 +3,11 @@
 import contractMap from '@metamask/contract-metadata';
 import { memoize } from 'lodash';
 import Web3 from 'web3';
+import { AbiItem } from 'web3-utils';
 import { entrance } from '..';
 import { abi } from '../../config';
 
-interface TokenCache {
+export interface TokenCache {
   address: string;
   symbol: string;
   decimals: string;
@@ -18,13 +19,13 @@ interface TokenCache {
 const DEFAULT_SYMBOL = '';
 const DEFAULT_DECIMALS = '18';
 
-async function metaInfo(tokenAddress: string): Promise<TokenCache> {
+async function getTokenMeta(tokenAddress: string, contractAbi: AbiItem[]): Promise<TokenCache> {
   if (contractMap[tokenAddress]) {
     return contractMap[tokenAddress];
   }
 
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const contract = new web3.eth.Contract(abi.Erc20ABI, tokenAddress);
+  const contract = new web3.eth.Contract(contractAbi, tokenAddress);
   const symbol = await contract.methods.symbol().call();
   const decimals = await contract.methods.decimals().call();
   const name = await contract.methods.name().call();
@@ -38,15 +39,25 @@ async function metaInfo(tokenAddress: string): Promise<TokenCache> {
   };
 }
 
+async function erc20Meta(tokenAddress: string): Promise<TokenCache> {
+  return getTokenMeta(tokenAddress, abi.Erc20ABI);
+}
+
+async function mappedMeta(tokenAddress: string): Promise<TokenCache> {
+  const { symbol, name, ...rest } = await getTokenMeta(tokenAddress, abi.tokenABI);
+
+  return { ...rest, symbol: Web3.utils.hexToString(symbol), name: Web3.utils.hexToString(name) };
+}
+
 /**
  *
  * @param tokenAddress - token contract address
  * @param account - current active metamask account
  * @returns balance of the account
  */
-export async function getTokenBalance(address: string, account: string, isEth = true) {
+export async function getTokenBalance(address: string, account: string, isErc20Native = true) {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const tokenAbi = isEth ? abi.Erc20ABI : abi.tokenABI;
+  const tokenAbi = isErc20Native ? abi.Erc20ABI : abi.tokenABI;
   const contract = new web3.eth.Contract(tokenAbi, address);
 
   try {
@@ -64,4 +75,6 @@ export async function getTokenBalance(address: string, account: string, isEth = 
   return Web3.utils.toBN(0);
 }
 
-export const getTokenMeta = memoize(metaInfo);
+export const getErc20Meta = memoize(erc20Meta);
+
+export const getMappedTokenMeta = memoize(mappedMeta);
