@@ -71,6 +71,7 @@
   "No available CRING for claiming": "No available CRING for claiming",
   "Normal": "Normal",
   "OK": "OK",
+  "Origin network is not matched to the target network": "Origin network is not matched to the target network",
   "Please be sure to fill in the real Darwinia mainnet account, and keep the account recovery files such as mnemonic properly.": "Please be sure to fill in the real Darwinia mainnet account, and keep the account recovery files such as mnemonic properly.",
   "Please enter a valid {{network}} address": "Please enter a valid {{network}} address",
   "Please fill in a substrate address of the {{network}} network.": "Please fill in a substrate address of the {{network}} network.",

@@ -2,5 +2,6 @@ import { NetConfig } from '../model';
 
 export interface RecordComponentProps<T> {
   record: T;
-  network: NetConfig | null;
+  departure: NetConfig | null;
+  arrival: NetConfig | null;
 }

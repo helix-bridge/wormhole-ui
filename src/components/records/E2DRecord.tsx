@@ -9,10 +9,11 @@ import { Record, RecordProps } from './Record';
 // eslint-disable-next-line complexity
 export function E2DRecord({
   record,
-  network,
+  departure,
+  arrival,
 }: RecordComponentProps<E2DRecordType & Partial<RingBurnHistory & RedeemHistory> & { isGenesis?: boolean }>) {
   const { chain, amount, currency, target, block_timestamp, is_relayed, tx, darwinia_tx, isGenesis } = record;
-  const decimal = network?.ss58Prefix ?? 0;
+  const decimal = departure?.ss58Prefix ?? 0;
 
   let step = CrosseState.takeOff;
 
@@ -35,11 +36,11 @@ export function E2DRecord({
     step,
     hasRelay: !!is_relayed,
     from: {
-      network: network?.name || (getLegalName(chain) as Network),
+      network: departure?.name || (getLegalName(chain) as Network),
       txHash: tx,
     },
     to: {
-      network: network?.name === 'ethereum' ? 'darwinia' : 'pangolin',
+      network: arrival?.name || 'darwinia',
       txHash: darwinia_tx,
     },
   };

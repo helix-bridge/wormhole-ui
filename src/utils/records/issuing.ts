@@ -1,5 +1,5 @@
 import { decodeAddress } from '@polkadot/util-crypto';
-import { catchError, EMPTY, filter, from, map, Observable, switchMap, take, zip } from 'rxjs';
+import { catchError, filter, from, map, Observable, of, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
 import { D2EHistoryRes, D2EMeta, HistoryReq, LockEventsStorage, Network, Tx } from '../../model';
@@ -11,37 +11,71 @@ import {
   getMMRProof,
   getMPTProof,
 } from '../helper';
-import { getAvailableNetwork, getEthConnection, entrance } from '../network';
+import { entrance, getAvailableNetwork, getEthConnection } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
-import { getHistoryQueryParams, rxGet } from './api';
+import { rxGet } from './api';
+
+/* -------------------------------------------Inner Helper Fn---------------------------------------------- */
+
+function getD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsStorage[] = []) {
+  const matchedStorageKey = lockEvents?.find(
+    (item) => item.min <= blockNumber && (item.max === null || item?.max >= blockNumber)
+  );
+
+  return matchedStorageKey?.key;
+}
 
 /* -------------------------------------------D2E---------------------------------------------- */
 
+/**
+ * @description darwinia -> ethereum
+ */
 export function queryDarwinia2EthereumIssuingRecords({
   address,
   confirmed,
   network,
   paginator,
 }: HistoryReq): Observable<D2EHistoryRes | null> {
-  if (network === null || address === null || address === '') {
-    return EMPTY;
-  }
-
-  const config = NETWORK_CONFIG[network];
-  const api = config.api.dapp;
+  const api = NETWORK_CONFIG[network].api.dapp;
 
   return rxGet<D2EHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.locks),
-    params: getHistoryQueryParams({ address: buf2hex(decodeAddress(address).buffer), confirmed, paginator }),
+    params: { address: buf2hex(decodeAddress(address).buffer), confirmed, ...paginator },
   }).pipe(
     catchError((err) => {
       console.error('%c [ d2e records request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
-      return [];
+      return of(null);
     })
   );
 }
 
-export interface ClaimInfo {
+/* -------------------------------------------DVM2E---------------------------------------------- */
+
+/**
+ * @description darwinia DVM -> ethereum
+ */
+export function queryDarwiniaDVM2EthereumIssuingRecords({
+  address,
+  confirmed,
+  network,
+  paginator,
+}: HistoryReq): Observable<D2EHistoryRes | null> {
+  const api = NETWORK_CONFIG[network].api.dapp;
+
+  return rxGet<D2EHistoryRes>({
+    url: apiUrl(api, DarwiniaApiPath.issuingBurns),
+    params: { sender: address, confirmed, ...paginator },
+  }).pipe(
+    catchError((err) => {
+      console.error('%c [ dvm2e records request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+      return of(null);
+    })
+  );
+}
+
+/* -------------------------------------------Claim Token---------------------------------------------- */
+
+interface ClaimInfo {
   networkPrefix: ClaimNetworkPrefix;
   mmrIndex: number;
   mmrRoot: string;
@@ -52,21 +86,9 @@ export interface ClaimInfo {
   meta: D2EMeta;
 }
 
-export interface Proof {
-  root: string;
-  MMRIndex: number;
-  blockNumber: number;
-  blockHeader: string;
-  peaks: string[];
-  siblings: string[];
-  eventsProofStr: string;
-}
-
-export interface AppendedProof extends Proof {
-  message: string;
-  signatures: string[];
-}
-
+/**
+ * @description darwinia -> ethereum & darwinia DVM -> ethereum  needs claim action
+ */
 export function claimToken({
   networkPrefix,
   mmrIndex,
@@ -139,15 +161,3 @@ export function claimToken({
     switchMap((txFn) => getContractTxObs(toNetworkConfig.tokenContract.bankEthereum || '', txFn, abi.tokenIssuingABI))
   );
 }
-
-function getD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsStorage[] = []) {
-  const matchedStorageKey = lockEvents?.find(
-    (item) => item.min <= blockNumber && (item.max === null || item?.max >= blockNumber)
-  );
-
-  return matchedStorageKey?.key;
-}
-
-/* -------------------------------------------S2S---------------------------------------------- */
-
-// export function querySubstrate2SubstrateIssuingRecords(req: HistoryReq) {}
