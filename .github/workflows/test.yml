@@ -9,7 +9,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node14.15.0-chrome86-ff82
+      image: registry.gitlab.com/repotea-workspace/kangumi/cypress-browsers-edge:sha-aab07fab
       options: --privileged
     steps:
       - uses: actions/checkout@v2
