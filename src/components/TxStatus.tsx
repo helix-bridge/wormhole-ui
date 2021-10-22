@@ -1,7 +1,7 @@
 import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, SyncOutlined } from '@ant-design/icons';
-import { Alert, AlertProps } from 'antd';
+import { Alert, AlertProps, Typography } from 'antd';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans } from 'react-i18next';
 import { Tx } from '../model';
 
 interface TxStatusProps extends Partial<AlertProps> {
@@ -11,23 +11,48 @@ interface TxStatusProps extends Partial<AlertProps> {
 // eslint-disable-next-line complexity
 const getAlertProps = (tx: Tx): AlertProps => {
   if (tx.status === 'signing') {
-    return { type: 'info', message: 'Wait for approve', icon: <InfoCircleOutlined /> };
+    return {
+      type: 'info',
+      message: <Trans>Waiting for approve, you need to approve this transaction in your wallet</Trans>,
+      icon: <InfoCircleOutlined />,
+    };
   }
 
   if (tx.status === 'broadcast') {
-    return { type: 'info', message: 'Broadcasted, waiting process', icon: <SyncOutlined spin /> };
+    return {
+      type: 'info',
+      message: <Trans>Has been broadcast, waiting for the node to receive</Trans>,
+      icon: <SyncOutlined spin />,
+    };
   }
 
   if (tx.status === 'queued') {
-    return { type: 'info', message: 'Queue, waiting process', icon: <SyncOutlined spin /> };
+    return {
+      type: 'info',
+      message: <Trans>Has been added to the queue, waiting to be packaged</Trans>,
+      icon: <SyncOutlined spin />,
+    };
   }
 
   if (tx.status === 'inblock') {
-    return { type: 'info', message: 'Transfer has been packaged', icon: <SyncOutlined spin /> };
+    return { type: 'info', message: <Trans>The transaction has been packaged</Trans>, icon: <SyncOutlined spin /> };
   }
 
   if (tx.status === 'finalized') {
-    return { type: 'success', message: 'Transaction success {{hash}}', icon: <CheckCircleOutlined /> };
+    return {
+      type: 'success',
+      message: (
+        <div>
+          <p>
+            <Trans>
+              The transaction has been sent, please check the transaction progress in the history or browser.
+            </Trans>
+          </p>
+          <Typography.Text copyable>{tx.hash}</Typography.Text>
+        </div>
+      ),
+      icon: <CheckCircleOutlined />,
+    };
   }
 
   if (tx.status === 'error') {
@@ -42,8 +67,6 @@ const getAlertProps = (tx: Tx): AlertProps => {
 };
 
 export function TxStatus({ tx, ...others }: TxStatusProps) {
-  const { t } = useTranslation();
-
   if (!tx) {
     return null;
   }
@@ -54,7 +77,7 @@ export function TxStatus({ tx, ...others }: TxStatusProps) {
     <Alert
       {...others}
       className="flex fixed top-20 right-8 border-none max-w-sm"
-      message={t(message as string, { hash: tx.hash ?? '' })}
+      message={message}
       icon={icon}
       type={type}
       showIcon

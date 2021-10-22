@@ -17,7 +17,7 @@ import {
 import { getAvailableNetwork, getMetamaskActiveAccount, getNetworkMode, isPolkadotNetwork, entrance } from '../network';
 import { rxGet } from '../records';
 import { getContractTxObs, getS2SMappingParams } from '../tx';
-import { getTokenBalance, getTokenMeta } from './meta';
+import { getTokenBalance, getErc20Meta } from './meta';
 
 export type StoredProof = {
   mmrProof: MMRProof;
@@ -45,7 +45,7 @@ function getMappedTokensFromDvm(currentAccount: string, config: NetConfig, s2sMa
   const getToken = (index: number) =>
     from(mappingContract.methods.allTokens(index).call() as Promise<string>).pipe(
       switchMap((address) => {
-        const tokenObs = from(getTokenMeta(address));
+        const tokenObs = from(getErc20Meta(address));
         const infoObs = from(
           mappingContract.methods.tokenToInfo(address).call() as Promise<{ source: string; backing: string }>
         );
@@ -83,7 +83,7 @@ function getMappedTokensFromEthereum(currentAccount: string, config: NetConfig) 
   const getToken = (index: number) =>
     from(backingContract.methods.allAssets(index).call() as Promise<string>).pipe(
       switchMap((address) => {
-        const infoObs = from(getTokenMeta(address)).pipe(catchError(() => of({})));
+        const infoObs = from(getErc20Meta(address)).pipe(catchError(() => of({})));
         const statusObs = from(getTokenRegisterStatus(address, config));
         const balanceObs = currentAccount ? from(getTokenBalance(address, currentAccount)) : of(Web3.utils.toBN(0));
 
@@ -130,7 +130,7 @@ const getSymbolType: (address: string) => Promise<{ symbol: string; isString: bo
 
     return { symbol, isString: true };
   } catch (error) {
-    const { symbol } = await getTokenMeta(address);
+    const { symbol } = await getErc20Meta(address);
 
     return { symbol, isString: false };
   }
