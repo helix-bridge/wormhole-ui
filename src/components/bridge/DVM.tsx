@@ -210,10 +210,9 @@ export function DVM({
             setSelectedErc20(erc20);
 
             const spender = await spenderResolver(form.getFieldValue(FORM_CONTROL.transfer).from);
+            const allow = await getAllowance(account, spender, erc20);
 
-            getAllowance(account, spender, erc20).then((allow) => {
-              setAllowance(allow);
-            });
+            setAllowance(allow);
           }}
         />
       </Form.Item>
@@ -279,7 +278,7 @@ export function DVM({
         <Balance
           size="large"
           placeholder={t('Balance {{balance}}', {
-            balance: isNull(availableBalance) ? t('Searching') : availableBalance,
+            balance: isNull(availableBalance) ? t('Querying') : availableBalance,
           })}
           onChange={setCurAmount}
           className="flex-1"

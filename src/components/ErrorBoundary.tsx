@@ -1,6 +1,6 @@
 import React, { PropsWithChildren } from 'react';
 
-export class ErrorBoundary extends React.Component<PropsWithChildren<Record<string, string>>> {
+export class ErrorBoundary extends React.Component<PropsWithChildren<unknown>> {
   state: { error: Error | null; errorInfo: string[] | null } = { error: null, errorInfo: null };
 
   componentDidCatch(error: Error, errorInfo: { componentStack: string }) {

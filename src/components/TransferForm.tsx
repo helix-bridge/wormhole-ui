@@ -1,36 +1,14 @@
 import { Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { isEqual } from 'lodash';
-import React, { FunctionComponent, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
-import {
-  BridgeFormProps,
-  Departure,
-  Network,
-  NetworkMode,
-  SubmitFn,
-  TransferFormValues,
-  TransferNetwork,
-  TransferParty,
-} from '../model';
-import {
-  emptyObsFactory,
-  getInitialSetting,
-  getNetConfigByVer,
-  getNetworkMode,
-  isReachable,
-  isSameNetConfig,
-} from '../utils';
+import { Network, NetworkMode, SubmitFn, TransferFormValues, TransferNetwork } from '../model';
+import { emptyObsFactory, getInitialSetting, getNetConfigByVer, isReachable, isSameNetConfig } from '../utils';
 import { Airport } from './Airport';
-import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
-import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
-import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
-import { Ethereum2DarwiniaDVM } from './bridge/Ethereum2DarwiniaDVM';
-import { Substrate2SubstrateDVM } from './bridge/Substrate2SubstrateDVM';
-import { SubstrateDVM2Substrate } from './bridge/SubstrateDVM2Substrate';
 import { Nets } from './controls/Nets';
+import { getBridge } from './finder';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
 const getTransferFromSettings: () => TransferNetwork = () => {
@@ -56,75 +34,6 @@ const validateTransfer: (transfer: TransferNetwork, isCross: boolean) => Transfe
   const reachable = isReachable(from, isCross)(to); // from -> to is available;
 
   return isSameEnv && reachable ? transfer : { from: null, to: null };
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DEPARTURES: [[Departure, Departure?], FunctionComponent<BridgeFormProps<any>>][] = [
-  [[{ network: 'ethereum', mode: 'native' }], Ethereum2Darwinia],
-  [[{ network: 'ropsten', mode: 'native' }], Ethereum2Darwinia],
-  [[{ network: 'darwinia', mode: 'native' }], Darwinia2Ethereum],
-  [[{ network: 'pangolin', mode: 'native' }], Darwinia2Ethereum],
-  [
-    [
-      { network: 'ethereum', mode: 'native' },
-      { network: 'darwinia', mode: 'dvm' },
-    ],
-    Ethereum2DarwiniaDVM,
-  ],
-  [
-    [
-      { network: 'ropsten', mode: 'native' },
-      { network: 'pangolin', mode: 'dvm' },
-    ],
-    Ethereum2DarwiniaDVM,
-  ],
-  [[{ network: 'darwinia', mode: 'dvm' }], DarwiniaDVM2Ethereum],
-  [[{ network: 'pangolin', mode: 'dvm' }], DarwiniaDVM2Ethereum],
-  [[{ network: 'pangoro', mode: 'native' }], Substrate2SubstrateDVM],
-  [
-    [
-      { network: 'pangolin', mode: 'dvm' },
-      { network: 'pangoro', mode: 'native' },
-    ],
-    SubstrateDVM2Substrate,
-  ],
-];
-
-// eslint-disable-next-line complexity
-const getDeparture: (transfer: TransferNetwork) => FunctionComponent<BridgeFormProps<TransferParty>> = ({
-  from,
-  to,
-}) => {
-  if (!from) {
-    return () => <></>;
-  }
-
-  const fMode = getNetworkMode(from);
-
-  if (!to) {
-    const target = DEPARTURES.find(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
-
-    if (target) {
-      return target[1];
-    }
-  } else {
-    const targets = DEPARTURES.filter(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
-
-    if (targets.length === 1) {
-      return targets[0][1];
-    } else {
-      const tMode = getNetworkMode(to);
-      const target =
-        targets.find(([parties]) => isEqual(parties[1], { network: to.name, mode: tMode })) ||
-        targets.find(([parties]) => parties[1] === undefined && tMode === 'native');
-
-      if (target) {
-        return target[1];
-      }
-    }
-  }
-
-  return () => <span>Coming Soon...</span>;
 };
 
 // eslint-disable-next-line complexity
@@ -188,7 +97,7 @@ export function TransferForm({ isCross = true }: { isCross?: boolean }) {
         />
       </Form.Item>
 
-      {isCross && isFromReady && React.createElement(getDeparture(transfer), { form, setSubmit })}
+      {isCross && isFromReady && React.createElement(getBridge(transfer), { form, setSubmit })}
       {!isCross && isFromReady && <Airport form={form} transfer={transfer} setSubmit={setSubmit} />}
 
       <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>

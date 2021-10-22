@@ -8,7 +8,7 @@ import { CrosseState, ProgressDetail } from './ProgressDetail';
 import { Record, RecordProps } from './Record';
 
 // eslint-disable-next-line complexity
-export function D2ERecord({ network, record }: RecordComponentProps<D2ERecordType & { meta: D2EMeta }>) {
+export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D2ERecordType & { meta: D2EMeta }>) {
   const { observer, setTx } = useTx();
   const {
     block_timestamp,
@@ -41,8 +41,8 @@ export function D2ERecord({ network, record }: RecordComponentProps<D2ERecordTyp
   const [hash, setHash] = useState('');
 
   const data: RecordProps = {
-    from: { network: network?.name || 'darwinia', txHash: extrinsic_index },
-    to: { network: network?.name === 'darwinia' ? 'ethereum' : 'ropsten', txHash: tx || hash },
+    from: { network: departure?.name || 'darwinia', txHash: extrinsic_index },
+    to: { network: arrival?.name || 'ethereum', txHash: tx || hash },
     assets: [
       { amount: ring_value, unit: 'gwei', currency: 'RING' },
       { amount: kton_value, unit: 'gwei', currency: 'KTON' },

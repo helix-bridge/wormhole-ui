@@ -25,6 +25,10 @@ export function Record(props: PropsWithChildren<RecordProps>) {
   const { network: toNetwork } = to;
   const percent = useMemo(() => (PERCENT_HUNDRED / STEPS_TOTAL) * step, [step]);
 
+  if (!blockTimestamp) {
+    return null;
+  }
+
   return (
     <Collapse key={blockTimestamp} accordion expandIconPosition="right" className="mb-4">
       <Panel
@@ -35,8 +39,8 @@ export function Record(props: PropsWithChildren<RecordProps>) {
 
               <div className="relative flex items-center justify-around flex-1 col-span-2 h-12 bg-gray-200 dark:bg-gray-900 bg-opacity-50 record-overview">
                 <span>
-                  {assets.map((asset) => (
-                    <AssetOverview key={asset.currency} {...asset} />
+                  {assets.map((asset, index) => (
+                    <AssetOverview key={asset.currency ?? index} {...asset} />
                   ))}
                 </span>
 

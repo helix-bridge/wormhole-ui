@@ -26,7 +26,7 @@ function Detail({ amount, asset }: TransferAsset<string | Erc20Token>) {
   return (
     <div>
       <span>{amount}</span>
-      <span className="uppercase ml-4">{typeof asset === 'string' ? asset : asset?.symbol}</span>
+      <span className="ml-4">{typeof asset === 'string' ? asset : asset?.symbol}</span>
     </div>
   );
 }
