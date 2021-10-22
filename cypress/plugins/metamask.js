@@ -244,11 +244,11 @@ module.exports = {
     await puppeteer.waitClearAndType(newGasFee, confirmPageElements.gasFeeInput, notificationPage);
     console.log('debug 5');
     // metamask reloads popup after changing a fee, you have to wait for this event otherwise transaction will fail
-    await puppeteer.metamaskWindow().waitForTimeout(3000);
+    await puppeteer.metamaskWindow().waitForTimeout(5000);
     console.log('debug 6');
     await puppeteer.waitAndClick(confirmPageElements.confirmButton, notificationPage);
     console.log('debug 7');
-    await puppeteer.metamaskWindow().waitForTimeout(3000);
+    await puppeteer.metamaskWindow().waitForTimeout(5000);
     console.log('debug 8');
     return true;
   },
