@@ -4,6 +4,7 @@ import {
   DVMTransfer,
   Ethereum2DarwiniaTransfer,
   NoNullTransferNetwork,
+  Substrate2SubstrateDVMTransfer,
   TransferFormValues,
 } from './transfer';
 import { DeepRequired } from './util';
@@ -74,6 +75,6 @@ export type IssuingDarwiniaToken = TransferFormValues<
 >;
 
 export type IssuingSubstrateToken = TransferFormValues<
-  DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
+  DeepRequired<Substrate2SubstrateDVMTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
   NoNullTransferNetwork
 >;

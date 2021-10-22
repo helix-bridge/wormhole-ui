@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { Unit } from 'web3-utils';
 import { Erc20Token } from './erc20';
 import { Deposit } from './evolution';
-import { NetConfig, Token } from './network';
+import { NetConfig } from './network';
 import { DeepRequired } from './util';
 
 /* ---------------------------------------------------Components props--------------------------------------------------- */
@@ -37,14 +37,18 @@ export interface TransferParty {
   sender: string;
 }
 
-export interface TransferAsset<T> {
+/**
+ * for native token, T = string;
+ * for mapped token, T = Mapped Token;
+ */
+export interface TransferAsset<T = string> {
   amount: string;
   asset: T | null;
 }
 
 /* ---------------------------------------------------E2D--------------------------------------------------- */
 
-export type Ethereum2DarwiniaAsset = 'ring' | 'kton' | 'deposit';
+type Ethereum2DarwiniaAsset = 'ring' | 'kton' | 'deposit';
 
 export interface Ethereum2DarwiniaTransfer extends TransferParty, TransferAsset<Ethereum2DarwiniaAsset> {
   deposit?: Deposit;
@@ -52,10 +56,8 @@ export interface Ethereum2DarwiniaTransfer extends TransferParty, TransferAsset<
 
 /* ---------------------------------------------------D2E--------------------------------------------------- */
 
-export type Darwinia2EthereumAsset = Exclude<Token, 'native'>;
-
 export interface Darwinia2EthereumTransfer extends TransferParty {
-  assets: (TransferAsset<Darwinia2EthereumAsset> & { checked?: boolean; unit?: Unit })[];
+  assets: (TransferAsset & { checked?: boolean; unit?: Unit })[];
 }
 
 /* ---------------------------------------------------DVM--------------------------------------------------- */
