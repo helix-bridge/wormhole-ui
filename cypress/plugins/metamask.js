@@ -234,14 +234,22 @@ module.exports = {
   },
   confirmTransaction: async () => {
     const isKovanTestnet = getNetwork().networkName === 'kovan';
+    console.log('debug 1');
     const notificationPage = await puppeteer.switchToMetamaskNotification();
+    console.log('debug 2');
     const currentGasFee = await puppeteer.waitAndGetValue(confirmPageElements.gasFeeInput, notificationPage);
+    console.log('debug 3');
     const newGasFee = isKovanTestnet ? '1' : (Number(currentGasFee) + 10).toString();
+    console.log('debug 4');
     await puppeteer.waitClearAndType(newGasFee, confirmPageElements.gasFeeInput, notificationPage);
+    console.log('debug 5');
     // metamask reloads popup after changing a fee, you have to wait for this event otherwise transaction will fail
     await puppeteer.metamaskWindow().waitForTimeout(3000);
+    console.log('debug 6');
     await puppeteer.waitAndClick(confirmPageElements.confirmButton, notificationPage);
+    console.log('debug 7');
     await puppeteer.metamaskWindow().waitForTimeout(3000);
+    console.log('debug 8');
     return true;
   },
   rejectTransaction: async () => {
