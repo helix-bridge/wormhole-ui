@@ -1,4 +1,5 @@
 export * from './api';
+export * from './darwiniaBalances';
 export * from './departure';
 export * from './localSearch';
 export * from './lock';
