@@ -9,7 +9,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node14.17.0-chrome91-ff89
+      image: cypress/browsers:node14.10.1-edge88
       options: --privileged
     steps:
       - uses: actions/checkout@v2
