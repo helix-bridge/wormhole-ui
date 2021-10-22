@@ -1,14 +1,17 @@
 import { upperFirst } from 'lodash';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RecordComponentProps } from '../../config';
 import { useTx } from '../../hooks';
 import { D2EHistory as D2ERecordType, D2EMeta } from '../../model';
 import { ClaimNetworkPrefix, claimToken } from '../../utils';
-import { CrosseState, ProgressDetail } from './ProgressDetail';
-import { Record, RecordProps } from './Record';
+import { RelayerIcon } from '../icons';
+import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
+import { Record } from './Record';
 
 // eslint-disable-next-line complexity
 export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D2ERecordType & { meta: D2EMeta }>) {
+  const { t } = useTranslation();
   const { observer, setTx } = useTx();
   const {
     block_timestamp,
@@ -25,65 +28,91 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
     block_hash,
     meta,
   } = record;
-  const [step, setStep] = useState(() => {
-    let state = CrosseState.takeOff;
-
-    if (signatures) {
-      state = CrosseState.relayed;
-    }
-
-    if (signatures && tx !== '') {
-      state = CrosseState.claimed;
-    }
-
-    return state;
-  });
   const [hash, setHash] = useState('');
+  const claim = useCallback(() => {
+    setTx({ status: 'queued' });
+    claimToken({
+      networkPrefix: upperFirst(departure?.name) as ClaimNetworkPrefix,
+      mmrIndex: mmr_index,
+      mmrRoot: mmr_root,
+      mmrSignatures: signatures,
+      blockNumber: block_num,
+      blockHeaderStr: block_header,
+      blockHash: block_hash,
+      meta,
+    }).subscribe({
+      ...observer,
+      next: (state) => {
+        if (state.status === 'finalized' && state.hash) {
+          setHash(hash);
+        }
+        observer.next(state);
+      },
+    });
+  }, [
+    block_hash,
+    block_header,
+    block_num,
+    departure?.name,
+    hash,
+    meta,
+    mmr_index,
+    mmr_root,
+    observer,
+    setTx,
+    signatures,
+  ]);
 
-  const data: RecordProps = {
-    from: { network: departure?.name || 'darwinia', txHash: extrinsic_index },
-    to: { network: arrival?.name || 'ethereum', txHash: tx || hash },
-    assets: [
-      { amount: ring_value, unit: 'gwei', currency: 'RING' },
-      { amount: kton_value, unit: 'gwei', currency: 'KTON' },
-    ],
-    step,
-    recipient: target,
-    blockTimestamp: block_timestamp,
-    hasRelay: true,
-  };
+  // eslint-disable-next-line complexity
+  const progresses = useMemo<ProgressProps[]>(() => {
+    const originLocked: ProgressProps = {
+      title: t('{{chain}} Confirmed', { chain: departure?.name }),
+      steps: [
+        {
+          name: 'confirm',
+          state: extrinsic_index ? State.completed : State.pending,
+          tx: extrinsic_index,
+        },
+      ],
+      Icon: iconsMap[departure?.name ?? 'pangolin'],
+      network: departure,
+    };
+    const relayerConfirmed: ProgressProps = {
+      title: t('ChainRelay Confirmed'),
+      steps: [
+        {
+          name: 'confirm',
+          state: signatures ? State.completed : State.pending,
+          mutateState: signatures && !tx ? claim : undefined,
+        },
+      ],
+      Icon: RelayerIcon,
+      network: null,
+    };
+    const targetConfirmedHash = tx || hash;
+    const targetConfirmedState = targetConfirmedHash ? State.completed : State.pending;
+    const targetConfirmed: ProgressProps = {
+      title: t('{{chain}} Confirmed', { chain: arrival?.name }),
+      steps: [{ name: 'confirm', state: targetConfirmedState, tx: targetConfirmedHash }],
+      Icon: iconsMap[arrival?.name ?? 'ropsten'],
+      network: arrival,
+    };
+    return [transactionSend, originLocked, relayerConfirmed, targetConfirmed];
+  }, [arrival, claim, departure, extrinsic_index, hash, signatures, t, tx]);
 
   return (
-    <Record {...data}>
-      <ProgressDetail
-        {...data}
-        claim={
-          !hash && !tx
-            ? () => {
-                setTx({ status: 'queued' });
-                claimToken({
-                  networkPrefix: upperFirst(data.from.network) as ClaimNetworkPrefix,
-                  mmrIndex: mmr_index,
-                  mmrRoot: mmr_root,
-                  mmrSignatures: signatures,
-                  blockNumber: block_num,
-                  blockHeaderStr: block_header,
-                  blockHash: block_hash,
-                  meta,
-                }).subscribe({
-                  ...observer,
-                  next: (state) => {
-                    if (state.status === 'finalized' && state.hash) {
-                      setStep(CrosseState.claimed);
-                      setHash(hash);
-                    }
-                    observer.next(state);
-                  },
-                });
-              }
-            : undefined
-        }
-      />
+    <Record
+      departure={departure}
+      arrival={arrival}
+      assets={[
+        { amount: ring_value, unit: 'gwei', currency: 'RING' },
+        { amount: kton_value, unit: 'gwei', currency: 'KTON' },
+      ]}
+      recipient={target}
+      blockTimestamp={block_timestamp}
+      items={progresses}
+    >
+      <Progresses items={progresses} />
     </Record>
   );
 }
