@@ -240,7 +240,7 @@ module.exports = {
     const currentGasFee = await puppeteer.waitAndGetValue(confirmPageElements.gasFeeInput, notificationPage);
     console.log('debug 3');
     const newGasFee = isKovanTestnet ? '1' : (Number(currentGasFee) + 10).toString();
-    console.log('debug 4');
+    console.log('debug 4, newGasFee: ', newGasFee);
     await puppeteer.waitClearAndType(newGasFee, confirmPageElements.gasFeeInput, notificationPage);
     console.log('debug 5');
     // metamask reloads popup after changing a fee, you have to wait for this event otherwise transaction will fail
