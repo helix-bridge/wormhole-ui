@@ -19,7 +19,15 @@ import {
   TransferFormValues,
   Tx,
 } from '../../model';
-import { AfterTxCreator, applyModalObs, createTxWorkflow, fromWei, issuingDarwiniaTokens, toWei } from '../../utils';
+import {
+  AfterTxCreator,
+  applyModalObs,
+  createTxWorkflow,
+  fromWei,
+  isRing,
+  issuingDarwiniaTokens,
+  toWei,
+} from '../../utils';
 import { AssetGroup, AssetGroupValue } from '../controls/AssetGroup';
 import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
 import { RecipientItem } from '../controls/RecipientItem';
@@ -61,14 +69,14 @@ function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
       return false;
     }
 
-    const ring = assets.find((item) => item.asset === 'ring' && item.checked);
+    const ring = assets.find((item) => isRing(item.asset) && item.checked);
     const ringAmount = new BN(toWei({ value: ring?.amount || '0', unit: 'gwei' }));
 
     return ring ? ringAmount.gte(fee) && ringAmount.lte(ringBalance) : ringBalance.gte(fee);
   }, [assets, fee, ringBalance]);
 
   const hasAssetSet = useMemo(() => {
-    const target = assets.find((item) => item.asset === 'ring');
+    const target = assets.find((item) => isRing(item.asset));
     const origin = new BN(toWei({ value: target?.amount ?? '0', unit: 'gwei' }));
 
     return (
@@ -111,7 +119,7 @@ function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
               } else {
                 const { asset, amount } = item;
 
-                if (asset === 'ring') {
+                if (isRing(asset)) {
                   const origin = new BN(toWei({ value: amount, unit: 'gwei' }));
 
                   return (
@@ -199,10 +207,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<TransferFormValues<Darwinia2EthereumTransfer, NoNullTransferNetwork>>();
-  const ringBalance = useMemo(
-    () => (availableBalances || []).find((item) => item.asset === 'ring'),
-    [availableBalances]
-  );
+  const ringBalance = useMemo(() => (availableBalances || []).find((item) => isRing(item.asset)), [availableBalances]);
   const getBalances = useDarwiniaAvailableBalances();
 
   useEffect(() => {

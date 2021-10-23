@@ -1,6 +1,7 @@
 import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import { from, Observable, Observer, switchMapTo, tap } from 'rxjs';
+import { isKton, isRing } from '..';
 import { abi } from '../../config';
 import { IssuingDarwiniaToken, IssuingDVMToken, IssuingSubstrateToken, Tx } from '../../model';
 import { getContractTxObs } from './common';
@@ -46,8 +47,8 @@ function extrinsicSpy(observer: Observer<Tx>) {
  */
 export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromise): Observable<Tx> {
   const { sender, recipient, assets } = value;
-  const { amount: ring } = assets.find((item) => item.asset === 'ring') || { amount: '0' };
-  const { amount: kton } = assets.find((item) => item.asset === 'kton') || { amount: '0' };
+  const { amount: ring } = assets.find((item) => isRing(item.asset)) || { amount: '0' };
+  const { amount: kton } = assets.find((item) => isKton(item.asset)) || { amount: '0' };
   const obs = new Observable((observer: Observer<Tx>) => {
     api.tx.ethereumBacking
       .lock(ring, kton, recipient)
