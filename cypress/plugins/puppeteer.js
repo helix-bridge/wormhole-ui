@@ -157,7 +157,36 @@ module.exports = {
   waitClearAndType: async (text, selector, page = metamaskWindow) => {
     await module.exports.waitFor(selector, page);
     const input = await page.$(selector);
-    await input.click({ clickCount: 3 });
+    /*
+    todo: there need to find the real reason
+
+      1) Ethereum to Darwinia
+           should launch tx:
+         CypressError: `cy.task('confirmMetamaskTransaction')` failed with the following error:
+
+    > Node is either not visible or not an HTMLElement
+
+    https://on.cypress.io/api/task
+          at http://localhost:3007/__cypress/runner/cypress_runner.js:158901:78
+          at tryCatcher (http://localhost:3007/__cypress/runner/cypress_runner.js:13212:23)
+          at Promise._settlePromiseFromHandler (http://localhost:3007/__cypress/runner/cypress_runner.js:11147:31)
+          at Promise._settlePromise (http://localhost:3007/__cypress/runner/cypress_runner.js:11204:18)
+          at Promise._settlePromise0 (http://localhost:3007/__cypress/runner/cypress_runner.js:11249:10)
+          at Promise._settlePromises (http://localhost:3007/__cypress/runner/cypress_runner.js:11325:18)
+          at _drainQueueStep (http://localhost:3007/__cypress/runner/cypress_runner.js:7919:12)
+          at _drainQueue (http://localhost:3007/__cypress/runner/cypress_runner.js:7912:9)
+          at Async.../../node_modules/bluebird/js/release/async.js.Async._drainQueues (http://localhost:3007/__cypress/runner/cypress_runner.js:7928:5)
+          at Async.drainQueues (http://localhost:3007/__cypress/runner/cypress_runner.js:7798:14)
+      From Your Spec Code:
+          at Context.eval (http://localhost:3007/__cypress/tests?p=cypress/support/index.ts:452:15)
+
+      From Node.js Internals:
+        Error: Node is either not visible or not an HTMLElement
+            at ElementHandle.clickablePoint (/__w/wormhole-ui/wormhole-ui/node_modules/puppeteer-core/src/common/JSHandle.ts:436:13)
+            at processTicksAndRejections (internal/process/task_queues.js:95:5)
+            at ElementHandle.click (/__w/wormhole-ui/wormhole-ui/node_modules/puppeteer-core/src/common/JSHandle.ts:498:22)
+     */
+    // await input.click({ clickCount: 3 });
     await input.type(text);
   },
   waitForText: async (selector, text, page = metamaskWindow) => {
