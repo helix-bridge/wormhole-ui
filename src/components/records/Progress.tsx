@@ -90,11 +90,8 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
 
     return null;
   }, [network, progressItemState, t, tx]);
-  const action = useMemo(() => {
-    if (lastState === State.completed) {
-      return <CheckCircleOutlined style={{ color: 'rgb(5, 150, 105)' }} className="text-xl" />;
-    }
 
+  const action = useMemo(() => {
     if (mutateState) {
       return (
         <Button
@@ -116,6 +113,10 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
           )}
         </Button>
       );
+    }
+
+    if (lastState === State.completed) {
+      return <CheckCircleOutlined style={{ color: 'rgb(5, 150, 105)' }} className="text-xl" />;
     }
 
     return null;
