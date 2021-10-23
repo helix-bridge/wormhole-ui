@@ -5,7 +5,7 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
 import { AvailableBalance, CustomFormControlProps, Darwinia2EthereumTransfer, Network } from '../../model';
-import { amountLessThanFeeRule, fromWei, getPrecisionByUnit, insufficientBalanceRule } from '../../utils';
+import { amountLessThanFeeRule, fromWei, getPrecisionByUnit, insufficientBalanceRule, isRing } from '../../utils';
 import { Balance } from './Balance';
 import { MaxBalance } from './MaxBalance';
 
@@ -37,7 +37,7 @@ export function AssetGroup({
     },
     [onChange]
   );
-  const ringBalance = useMemo(() => (balances || []).find((item) => item.asset === 'ring'), [balances]);
+  const ringBalance = useMemo(() => (balances || []).find((item) => isRing(item.asset)), [balances]);
   const feeFormatted = useMemo(() => {
     return fromWei({ value: fee, unit: ringBalance?.chainInfo?.decimal ?? 'gwei' });
   }, [fee, ringBalance]);

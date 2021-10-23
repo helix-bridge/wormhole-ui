@@ -50,9 +50,7 @@ export interface TransferAsset<T = string> {
 
 /* ---------------------------------------------------E2D--------------------------------------------------- */
 
-type Ethereum2DarwiniaAsset = 'ring' | 'kton' | 'deposit';
-
-export interface Ethereum2DarwiniaTransfer extends TransferParty, TransferAsset<Ethereum2DarwiniaAsset> {
+export interface Ethereum2DarwiniaTransfer extends TransferParty, TransferAsset {
   deposit?: Deposit;
 }
 
