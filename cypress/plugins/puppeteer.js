@@ -155,10 +155,16 @@ module.exports = {
     }
   },
   waitClearAndType: async (text, selector, page = metamaskWindow) => {
+    console.log('selector: ', selector)
+    console.log('puppeteer 1');
     await module.exports.waitFor(selector, page);
+    console.log('puppeteer 2');
     const input = await page.$(selector);
+    console.log('puppeteer 3');
     await input.click({ clickCount: 3 });
+    console.log('puppeteer 4');
     await input.type(text);
+    console.log('puppeteer 5');
   },
   waitForText: async (selector, text, page = metamaskWindow) => {
     await module.exports.waitFor(selector, page);
