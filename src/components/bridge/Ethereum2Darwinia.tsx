@@ -1,5 +1,5 @@
 import { QuestionCircleFilled } from '@ant-design/icons';
-import { Button, Descriptions, Form, Input, Select, Tooltip } from 'antd';
+import { Button, Descriptions, Form, Input, Progress, Select, Tooltip } from 'antd';
 import { FormInstance, Rule } from 'antd/lib/form';
 import BN from 'bn.js';
 import { format } from 'date-fns';
@@ -400,7 +400,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
         }
       />
 
-      <Form.Item name={FORM_CONTROL.asset} initialValue="RING" label={t('Asset')}>
+      <Form.Item name={FORM_CONTROL.asset} initialValue="ring" label={t('Asset')}>
         <Select
           size="large"
           onChange={async (value: string) => {
@@ -439,6 +439,15 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
           </Select.Option>
         </Select>
       </Form.Item>
+      {!tokens.length && (
+        <Progress
+          percent={100}
+          showInfo={false}
+          status="active"
+          strokeColor={{ from: '#5745de', to: '#ec3783' }}
+          className="relative -top-6"
+        />
+      )}
 
       {isDeposit(asset) ? (
         <DepositItem
