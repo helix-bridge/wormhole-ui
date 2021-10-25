@@ -34,6 +34,10 @@ export function Record(props: PropsWithChildren<RecordProps>) {
     return null;
   }
 
+  if (!blockTimestamp) {
+    return null;
+  }
+
   return (
     <Collapse key={blockTimestamp} accordion expandIconPosition="right" className="mb-4">
       <Panel
