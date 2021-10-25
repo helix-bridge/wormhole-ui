@@ -116,7 +116,7 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
     }
 
     if (lastState === State.completed) {
-      return <CheckCircleOutlined style={{ color: 'rgb(5, 150, 105)' }} className="text-xl" />;
+      return <CheckCircleOutlined className="text-xl text-green-500" />;
     }
 
     return null;
