@@ -202,7 +202,7 @@ Cypress.Commands.add('getMobileSizes', () => {
 });
 
 Cypress.Commands.add('waitForResources', (resources = []) => {
-  const globalTimeout = 30000;
+  const globalTimeout = 60000;
   const resourceCheckInterval = 2000;
   const idleTimesInit = 3;
   let idleTimes = idleTimesInit;
