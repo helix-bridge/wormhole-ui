@@ -100,7 +100,7 @@ export const getBridge = (transfer: TransferNetwork) => {
   return result[ComponentIndex.bridge] ?? (() => <span>Coming Soon...</span>);
 };
 
-export const getRecord = (transfer: TransferNetwork) => {
+export const getRecordComponent = (transfer: TransferNetwork) => {
   const result = findBridge(transfer) ?? [];
 
   return result[ComponentIndex.record] ?? (() => <span>Coming Soon...</span>);

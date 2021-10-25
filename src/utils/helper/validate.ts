@@ -85,6 +85,12 @@ export const isSameAddress = (from: string, to: string): boolean => {
   return fromAddress === toAddress;
 };
 
+export const isRing = (name: string | null | undefined) => /ring/i.test(String(name));
+
+export const isKton = (name: string | null | undefined) => /kton/i.test(String(name));
+
+export const isDeposit = (name: string | null | undefined) => /deposit/i.test(String(name));
+
 /* ------------------------------------Form Validators------------------------------------- */
 
 export type Validator = ValidatorRule['validator'];
@@ -117,7 +123,7 @@ const amountLessThanFeeValidatorFactory: ValidatorFactory = (options) => (_, val
   const cur = new BN(toWei({ value: val, unit: decimal }));
   let pass = true;
 
-  if (/ring/i.test(String(asset))) {
+  if (isRing(asset)) {
     pass = cur.gte(new BN(fee || 0));
   }
 

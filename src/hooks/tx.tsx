@@ -3,9 +3,17 @@ import { FunctionComponent, useCallback, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 import { Path } from '../config/routes';
-import { NoNullTransferNetwork, TransferFormValues, Tx, TxHashType, TxSuccessComponentProps } from '../model';
+import {
+  NoNullTransferNetwork,
+  SS58Prefix,
+  TransferFormValues,
+  Tx,
+  TxHashType,
+  TxSuccessComponentProps,
+} from '../model';
 import { TxContext, TxCtx } from '../providers';
-import { applyModal, genHistoryRouteParams, getNetworkMode } from '../utils';
+import { applyModal, convertToSS58, genHistoryRouteParams, getNetworkMode, isEthereumNetwork } from '../utils';
+import { useApi } from './api';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
@@ -14,6 +22,7 @@ export function useAfterSuccess<
 >() {
   const { t } = useTranslation();
   const history = useHistory();
+  const { chain } = useApi();
 
   const afterTx = useCallback(
     (
@@ -37,15 +46,23 @@ export function useAfterSuccess<
             size: 'large',
             onClick: () => {
               destroy();
+
+              const { from, to } = value.transfer;
+              const fMode = getNetworkMode(from);
+              const sender =
+                isEthereumNetwork(value.transfer.from.name) || fMode === 'dvm'
+                  ? value.sender
+                  : convertToSS58(value.sender, chain.ss58Format as unknown as SS58Prefix);
+
               history.push(
                 Path.history +
                   '?' +
                   genHistoryRouteParams({
-                    from: value.transfer.from.name,
-                    sender: value.sender,
-                    to: value.transfer.to.name,
-                    fMode: getNetworkMode(value.transfer.from),
-                    tMode: getNetworkMode(value.transfer.to),
+                    from: from.name,
+                    fMode,
+                    sender,
+                    to: to.name,
+                    tMode: getNetworkMode(to),
                   })
               );
             },
@@ -56,7 +73,7 @@ export function useAfterSuccess<
           },
         });
       },
-    [history, t]
+    [chain.ss58Format, history, t]
   );
 
   return { afterTx };

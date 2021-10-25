@@ -4,26 +4,35 @@ import { format } from 'date-fns';
 import { fromUnixTime } from 'date-fns/esm';
 import { PropsWithChildren, useMemo } from 'react';
 import { DATE_TIME_FORMATE } from '../../config';
+import { NetConfig } from '../../model';
 import { EllipsisMiddle } from '../EllipsisMiddle';
 import { AssetOverview, AssetOverviewProps } from './AssetOverview';
-import { ProgressDetailProps } from './ProgressDetail';
+import { ProgressesProps, State } from './Progress';
 
 const { Panel } = Collapse;
 
-export interface RecordProps extends ProgressDetailProps {
+export interface RecordProps extends ProgressesProps {
   blockTimestamp: number;
   recipient: string;
   assets: AssetOverviewProps[];
+  departure: NetConfig | null;
+  arrival: NetConfig | null;
 }
 
-const STEPS_TOTAL = 4;
 const PERCENT_HUNDRED = 100;
 
 export function Record(props: PropsWithChildren<RecordProps>) {
-  const { assets, recipient, blockTimestamp, from, to, children, step } = props;
-  const { network: fromNetwork } = from;
-  const { network: toNetwork } = to;
-  const percent = useMemo(() => (PERCENT_HUNDRED / STEPS_TOTAL) * step, [step]);
+  const { assets, recipient, blockTimestamp, departure, arrival, items, children } = props;
+  const percent = useMemo(() => {
+    const total = items.length;
+    const finished = items.filter((item) => item.steps.every((step) => step.state !== State.pending));
+
+    return (finished.length / total) * PERCENT_HUNDRED;
+  }, [items]);
+
+  if (!blockTimestamp) {
+    return null;
+  }
 
   if (!blockTimestamp) {
     return null;
@@ -35,7 +44,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
         header={
           <div className="grid grid-cols-3 gap-0 lg:gap-16">
             <div className="flex gap-4 items-center col-span-3 md:col-span-2 md:mr-8">
-              <img className="w-6 md:w-12 mx-auto" src={`/image/${fromNetwork}-button-mobile.png`} />
+              <img className="w-6 md:w-12 mx-auto" src={`/image/${departure?.name}-button-mobile.png`} />
 
               <div className="relative flex items-center justify-around flex-1 col-span-2 h-12 bg-gray-200 dark:bg-gray-900 bg-opacity-50 record-overview">
                 <span>
@@ -52,7 +61,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
 
                 <Progress
                   percent={percent}
-                  steps={STEPS_TOTAL}
+                  steps={items.length}
                   showInfo={false}
                   strokeColor={percent === PERCENT_HUNDRED ? 'green' : 'normal'}
                   className="w-full absolute bottom-0 records-progress"
@@ -60,7 +69,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
                 />
               </div>
 
-              <img className="w-6 md:w-12 mx-auto" src={`/image/${toNetwork}-button-mobile.png`} />
+              <img className="w-6 md:w-12 mx-auto" src={`/image/${arrival?.name}-button-mobile.png`} />
             </div>
 
             <div className="flex flex-col justify-between ml-0 md:ml-4 mt-2 md:mt-0 col-span-3 md:col-span-1">

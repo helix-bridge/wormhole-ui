@@ -13,7 +13,7 @@ import {
   isValidAddress,
 } from '../../utils';
 import { ErrorBoundary } from '../ErrorBoundary';
-import { getRecord } from '../finder';
+import { getRecordComponent } from '../finder';
 
 const PAGINATOR_DEFAULT = { row: 10, page: 0 };
 const SOURCE_DATA_DEFAULT = { count: 0, list: [] };
@@ -53,7 +53,7 @@ export function RecordList({ departure, arrival, address, confirmed, onLoading, 
   const [paginator, setPaginator] = useState<Paginator>(PAGINATOR_DEFAULT);
   const [loading, setLoading] = useState(false);
   const Record = useMemo(
-    () => getRecord({ from: getNetConfigByVer(departure), to: getNetConfigByVer(arrival) }),
+    () => getRecordComponent({ from: getNetConfigByVer(departure), to: getNetConfigByVer(arrival) }),
     [departure, arrival]
   );
   const { queryRecords } = useRecords(departure, arrival);
