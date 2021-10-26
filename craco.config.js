@@ -1,9 +1,8 @@
-const AntDesignThemePlugin = require('antd-theme-webpack-plugin');
+const AntDesignThemePlugin = require('./plugins/antd-theme-plugin');
 const path = require('path');
-const { addBeforeLoader, loaderByName } = require('@craco/craco');
 const antdVarsPath = './src/theme/antd/vars.less';
 const CracoAntDesignPlugin = require('craco-antd');
-const { getLessVars } = require('antd-theme-generator');
+const { getLessVars } = require('./plugins/ant-theme-generator');
 const themeVariables = getLessVars(path.join(__dirname, antdVarsPath));
 const defaultVars = getLessVars(path.join(__dirname, './node_modules/antd/lib/style/themes/default.less'));
 const darkVars = {

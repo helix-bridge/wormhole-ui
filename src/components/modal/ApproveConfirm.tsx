@@ -11,7 +11,6 @@ export function ApproveConfirm({ value }: { value: TransferFormValues<{ sender: 
         <span className="capitalize">{t('{{network}} Network Address', { network: value.transfer.from?.name })}</span>
       }
       content={value.sender}
-      // icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}
     ></Des>
   );
 }
