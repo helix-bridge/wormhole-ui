@@ -10,3 +10,4 @@ coverage
 cypress
 
 **/__tests__/
+**/plugin/**/*.js

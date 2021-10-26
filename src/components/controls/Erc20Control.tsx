@@ -46,7 +46,7 @@ export function Erc20Control({ value, onChange, tokens, total }: PropsWithRef<Er
           {token.status === 1 ? (
             <span>{fromWei({ value: token.balance, unit: getUnit(+token.decimals) }, prettyNumber)}</span>
           ) : (
-            <Loading3QuartersOutlined style={{ color: '#fe3876' }} />
+            <Loading3QuartersOutlined className="text-red-500" />
           )}
         </div>
       </Select.Option>

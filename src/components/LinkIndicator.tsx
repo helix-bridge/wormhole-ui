@@ -59,7 +59,7 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
   }, [connection]);
 
   if (connection.status === 'connecting') {
-    return <SyncOutlined spin style={{ color: '#1890ff' }} />;
+    return <SyncOutlined spin className="text-blue-500" />;
   }
 
   if (connection.status === 'success') {
@@ -95,14 +95,14 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
           </div>
         }
       >
-        <LinkOutlined style={{ color: isConsistent ? '#10b981' : '#fbbf24' }} />
+        <LinkOutlined className={isConsistent ? 'text-green-500' : 'text-red-500'} />
       </Popover>
     );
   }
 
   return (
     <Tooltip title={t('Network disconnected')}>
-      <DisconnectOutlined style={{ color: '#ef4444' }} />
+      <DisconnectOutlined className="text-red-500" />
     </Tooltip>
   );
 }

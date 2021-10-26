@@ -113,7 +113,7 @@ export function AirdropRecords() {
               {target ? (
                 <CheckCircleFilled style={{ color }} className="text-2xl" />
               ) : (
-                <CloseCircleOutlined style={{ color: 'red' }} className="text-2xl" />
+                <CloseCircleOutlined className="text-2xl text-red-500" />
               )}
               <span className="ml-4">{t(target ? 'Claims' : 'Not Claimed')}</span>
             </div>
