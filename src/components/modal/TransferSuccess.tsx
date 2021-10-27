@@ -92,7 +92,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
       </p>
 
       <SubscanLink {...linkProps} network={value.transfer.from?.name as Network}>
-        {t('View in {{scan}} browser', {
+        {t('View in {{scan}} explorer', {
           scan: isEthereumNetwork(value.transfer.from?.name) ? 'Etherscan' : 'Subscan',
         })}
       </SubscanLink>

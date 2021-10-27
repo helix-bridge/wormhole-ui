@@ -13,7 +13,7 @@ function Icon() {
       <title>编组 2</title>
       <g id="页面-1" stroke="none" strokeWidth="1" fill="currenColor" fillRule="evenodd">
         <g id="编组-2">
-          <g id="Pangolin1" fill="#5745DE" fillRule="nonzero">
+          <g id="Pangolin1" fill="currentColor" fillRule="nonzero">
             <rect id="矩形" x="0" y="0" width="100%" height="100%"></rect>
           </g>
           <g id="编组" transform="translate(26.345543, 44.000000)">

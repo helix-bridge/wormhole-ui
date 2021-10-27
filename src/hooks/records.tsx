@@ -245,8 +245,8 @@ export function useS2SRecords(
           const { totalCount = 0, nodes = [] } = res.data?.s2sEvents ?? {};
           const list = nodes.map(({ id, startTimestamp, endTimestamp, ...rest }) => ({
             messageId: id,
-            startTimestamp: getUnixTime(new Date(startTimestamp)).toString(),
-            endTimestamp: getUnixTime(new Date(endTimestamp)).toString(),
+            startTimestamp: startTimestamp && getUnixTime(new Date(startTimestamp)).toString(),
+            endTimestamp: endTimestamp && getUnixTime(new Date(endTimestamp)).toString(),
             ...rest,
           })) as S2SHistoryRecord[];
 

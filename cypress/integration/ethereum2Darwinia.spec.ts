@@ -46,6 +46,6 @@ describe('Ethereum to Darwinia', () => {
 
     cy.get('.ant-modal-confirm-content', { timeout: 2 * 60 * 1000 })
       .find('a')
-      .should('have.text', 'View in Etherscan browser');
+      .should('have.text', 'View in Etherscan explorer');
   });
 });

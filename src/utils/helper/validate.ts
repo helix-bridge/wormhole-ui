@@ -97,7 +97,7 @@ export type Validator = ValidatorRule['validator'];
 
 export interface ValidateOptions {
   t: TFunction;
-  compared?: string | BN | number;
+  compared?: string | BN | number | null;
   token?: TokenChainInfo;
   asset?: string;
 }
@@ -118,13 +118,17 @@ export const zeroAmountRule: ValidatorRuleFactory = (options) => {
 
 const amountLessThanFeeValidatorFactory: ValidatorFactory = (options) => (_, val) => {
   const { token, compared: fee, asset } = options;
-  const { decimal = 'gwei' } = token || {};
 
+  if (!fee) {
+    return Promise.reject();
+  }
+
+  const { decimal = 'gwei' } = token || {};
   const cur = new BN(toWei({ value: val, unit: decimal }));
   let pass = true;
 
   if (isRing(asset)) {
-    pass = cur.gte(new BN(fee || 0));
+    pass = cur.gte(new BN(fee));
   }
 
   return pass ? Promise.resolve() : Promise.reject();
@@ -139,7 +143,7 @@ export const amountLessThanFeeRule: ValidatorRuleFactory = (options) => {
 
 const insufficientBalanceValidatorFactory: ValidatorFactory = (options) => (_, val) => {
   const { compared = '0', token } = options;
-  const max = new BN(compared);
+  const max = new BN(compared as string);
   const value = new BN(toWei({ value: val, unit: token?.decimal ?? 'gwei' }));
 
   return value.gt(max) ? Promise.reject() : Promise.resolve();
