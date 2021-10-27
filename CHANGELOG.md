@@ -1,10 +1,17 @@
+## [2.1.2](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.1...v2.1.2) (2021-10-27)
+
+### Bug Fixes
+
+- progress order ([8e9d4aa](https://github.com/darwinia-network/wormhole-pro/commit/8e9d4aa8ecfa676051f25c61fc600aff1d202df9))
+- token predicate logic ([#159](https://github.com/darwinia-network/wormhole-pro/issues/159)) ([41e9814](https://github.com/darwinia-network/wormhole-pro/commit/41e98141e3c03207e9b638a7fbefe6f51b857282))
+
 ## [2.1.1](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.0...v2.1.1) (2021-10-22)
 
 ### Bug Fixes
 
-- **#139:** reduce gas value in s2s redeem ([#146](https://github.com/darwinia-network/wormhole-pro/issues/146)) ([df7cb3f](https://github.com/darwinia-network/wormhole-pro/commit/df7cb3f6fa8b2590e39d47f1753c48a76bb54403)), closes [#139](https://github.com/darwinia-network/wormhole-pro/issues/139)
-- **#142:** d2e balance ([#151](https://github.com/darwinia-network/wormhole-pro/issues/151)) ([080e60f](https://github.com/darwinia-network/wormhole-pro/commit/080e60f7a8d0c1f258aca1709728299f7ee26891)), closes [#142](https://github.com/darwinia-network/wormhole-pro/issues/142)
-- **#144:** add d2e tip msg ([#149](https://github.com/darwinia-network/wormhole-pro/issues/149)) ([6d06af6](https://github.com/darwinia-network/wormhole-pro/commit/6d06af6d9edaacbab0eed386a8b3d051cc40f768)), closes [#144](https://github.com/darwinia-network/wormhole-pro/issues/144)
+- **#139:** reduce gas value in s2s redeem ([#146](https://github.com/darwinia-network/wormhole-pro/issues/146)) ([bb289b3](https://github.com/darwinia-network/wormhole-pro/commit/bb289b372462f76da4eea308fa8634d8631dbdc0)), closes [#139](https://github.com/darwinia-network/wormhole-pro/issues/139)
+- **#142:** d2e balance ([#151](https://github.com/darwinia-network/wormhole-pro/issues/151)) ([a7148c8](https://github.com/darwinia-network/wormhole-pro/commit/a7148c89b453f66c4f9113fa443822ab60dd60ef)), closes [#142](https://github.com/darwinia-network/wormhole-pro/issues/142)
+- **#144:** add d2e tip msg ([#149](https://github.com/darwinia-network/wormhole-pro/issues/149)) ([05fe2ec](https://github.com/darwinia-network/wormhole-pro/commit/05fe2ecce689034c882660687c509bbeaecccdf1)), closes [#144](https://github.com/darwinia-network/wormhole-pro/issues/144)
 
 # [2.1.0](https://github.com/darwinia-network/wormhole-pro/compare/v2.0.2...v2.1.0) (2021-10-13)
 
