@@ -1,4 +1,5 @@
 import { Descriptions, Form, Progress, Select } from 'antd';
+import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import BN from 'bn.js';
 import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -39,7 +40,7 @@ import { TransferSuccess } from '../modal/TransferSuccess';
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
 interface TransferInfoProps {
-  fee: BN;
+  fee: BN | null;
   balance: BN | string | number;
   amount: string;
   tokenInfo: TokenChainInfo;
@@ -49,12 +50,16 @@ interface TransferInfoProps {
 function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
   const unit = tokenInfo.decimal;
   const value = new BN(toWei({ value: amount || '0', unit }));
+  const iterationCount = 5;
 
-  if (!fee || fee.isZero() || !balance) {
+  if (!fee || !balance) {
+    return null;
+  }
+
+  if (fee.isZero()) {
     return (
-      // eslint-disable-next-line no-magic-numbers
-      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
-        <Trans>Transfer information querying</Trans>
+      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: iterationCount }}>
+        <Trans>The fee query failed, please refresh page or try it again later</Trans>
       </p>
     );
   }
@@ -91,7 +96,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
   const availableBalance = useMemo(() => availableBalances[0] ?? null, [availableBalances]);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
-  const [fee] = useState<BN>(new BN(ISSUING_SUBSTRATE_FEE));
+  const [fee, setFee] = useState<BN | null>(null);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<TransferFormValues<Substrate2SubstrateDVMTransfer, NoNullTransferNetwork>>();
@@ -141,6 +146,19 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
     updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
   }, [form, api, accounts, updateDeparture]);
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (api.rpc as any).fee.marketFee().then((res: any) => {
+      const marketFee = res.amount.toString();
+
+      setFee(new BN(marketFee || ISSUING_SUBSTRATE_FEE));
+    });
+  }, [api]);
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
@@ -211,7 +229,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
           zeroAmountRule({ t }),
           amountLessThanFeeRule({
             t,
-            compared: fee.toString(),
+            compared: fee ? fee.toString() : null,
             token: availableBalance?.chainInfo,
             asset: String(form.getFieldValue(FORM_CONTROL.asset)),
           }),
@@ -247,12 +265,14 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       </Form.Item>
 
       {!!availableBalances.length && availableBalances[0].chainInfo && (
-        <TransferInfo
-          fee={fee}
-          balance={availableBalances[0].max}
-          amount={curAmount}
-          tokenInfo={availableBalances[0].chainInfo}
-        />
+        <ErrorBoundary>
+          <TransferInfo
+            fee={fee}
+            balance={availableBalances[0].max}
+            amount={curAmount}
+            tokenInfo={availableBalances[0].chainInfo}
+          />
+        </ErrorBoundary>
       )}
     </>
   );

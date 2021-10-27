@@ -45,7 +45,7 @@ const getAlertProps = (tx: Tx): AlertProps => {
         <div>
           <p>
             <Trans>
-              The transaction has been sent, please check the transaction progress in the history or browser.
+              The transaction has been sent, please check the transaction progress in the history or explorer.
             </Trans>
           </p>
           <Typography.Text copyable>{tx.hash}</Typography.Text>
