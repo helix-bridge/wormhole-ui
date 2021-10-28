@@ -126,7 +126,19 @@ export function getNetworkMode(config: NetConfig): NetworkMode {
   return config?.dvm ? 'dvm' : 'native';
 }
 
-export function getNetConfigByVer(vertices: Vertices) {
+/**
+ * @description map net config to vertices
+ */
+export function netConfigToVertices(config: NetConfig) {
+  const vertices: Vertices = { network: config.name, mode: getNetworkMode(config) };
+
+  return vertices;
+}
+
+/**
+ * @description map vertices to net config
+ */
+export function verticesToNetConfig(vertices: Vertices) {
   if (!vertices) {
     return null;
   }
@@ -202,16 +214,6 @@ export function isNativeMetamaskChain(network: Network): boolean {
   return ids.includes(+params.chainId);
 }
 
-export function hasBridge(from: NetConfig, to: NetConfig): boolean {
-  return !!getArrival(from, to);
-}
-
-export function isBridgeAvailable(from: NetConfig, to: NetConfig): boolean {
-  const bridge = getArrival(from, to);
-
-  return !!bridge && bridge.status === 'available';
-}
-
 export function getNetworkCategory(config: NetConfig): NetworkCategory | null {
   if (config.type.includes('polkadot')) {
     return config.dvm ? 'dvm' : 'polkadot';
@@ -245,7 +247,7 @@ export async function getMetamaskActiveAccount() {
 /**
  *
  * @params network id
- * @description is acutal network id match with expected.
+ * @description is actual network id match with expected.
  */
 export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);

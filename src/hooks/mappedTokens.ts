@@ -116,8 +116,9 @@ export const useMappedTokens = (
           updateTokens(tokens);
           updateTotal(total);
         },
-        error: () => {
+        error: (error) => {
           message.error('Querying failed, please try it again later');
+          console.warn('%c [ query mapping token error ]', 'font-size:13px; background:pink; color:#bf2c9f;', error);
           setLoading(false);
         },
         complete: () => setLoading(false),

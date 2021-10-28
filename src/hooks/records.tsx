@@ -6,20 +6,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { catchError, EMPTY, from, map, Observable, of, Subscription } from 'rxjs';
 import { S2S_ISSUING_RECORDS_QUERY, S2S_REDEEM_RECORDS_QUERY } from '../config';
+import { Departure, HistoryReq, NetConfig, S2SBurnRecordsRes, S2SHistoryRecord, S2SLockedRecordRes } from '../model';
 import {
-  BridgePredicateFn,
-  Departure,
-  HistoryReq,
-  NetConfig,
-  S2SBurnRecordsRes,
-  S2SHistoryRecord,
-  S2SLockedRecordRes,
-} from '../model';
-import {
-  getNetConfigByVer,
+  verticesToNetConfig,
   getNetworkMode,
-  isEthereumNetwork,
-  isPolkadotNetwork,
+  isDarwinia2Ethereum,
+  isDVM2Ethereum,
+  isEthereum2Darwinia,
+  isEthereum2DVM,
+  isS2S,
+  isSubstrateDVM2Substrate,
   isTronNetwork,
   queryDarwinia2EthereumIssuingRecords,
   queryDarwiniaDVM2EthereumIssuingRecords,
@@ -37,39 +33,6 @@ interface RecordsHook<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   refetch?: (...args: any) => Subscription;
 }
-
-/* ---------------------------------------------------Helper Fns--------------------------------------------- */
-
-const isSubstrate2SubstrateDVM: BridgePredicateFn = (departure, arrival) => {
-  return isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network) && arrival.mode === 'dvm';
-};
-
-const isSubstrateDVM2Substrate: BridgePredicateFn = (departure, arrival) => {
-  return isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network) && departure.mode === 'dvm';
-};
-
-const isEthereum2Darwinia: BridgePredicateFn = (departure, arrival) => {
-  return isEthereumNetwork(departure.network) && isPolkadotNetwork(arrival.network) && arrival.mode === 'native';
-};
-
-const isDarwinia2Ethereum: BridgePredicateFn = (departure, arrival) => {
-  return isPolkadotNetwork(departure.network) && isEthereumNetwork(arrival.network) && departure.mode === 'native';
-};
-
-const isDVM2Ethereum: BridgePredicateFn = (departure, arrival) => {
-  return isPolkadotNetwork(departure.network) && isEthereumNetwork(arrival.network) && departure.mode === 'dvm';
-};
-
-const isEthereum2DVM: BridgePredicateFn = (departure, arrival) => {
-  return isEthereumNetwork(departure.network) && isPolkadotNetwork(arrival.network) && arrival.mode === 'dvm';
-};
-
-/**
- * Shorthand functions for predication without direction
- */
-const isS2S: BridgePredicateFn = (departure, arrival) => {
-  return [isSubstrate2SubstrateDVM, isSubstrateDVM2Substrate].some((fn) => fn(departure, arrival));
-};
 
 /* ---------------------------------------------------Common Query--------------------------------------------- */
 
@@ -111,7 +74,7 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 }
 
 export function useRecords(departure: Departure, arrival: Departure) {
-  const queryS2SRecords = useS2SRecords(getNetConfigByVer(departure)!);
+  const queryS2SRecords = useS2SRecords(verticesToNetConfig(departure)!);
   const genParams = useCallback(
     (params: HistoryReq) => {
       const req = omitBy<HistoryReq>(params, isNull) as HistoryReq;

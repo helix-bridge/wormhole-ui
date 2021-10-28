@@ -42,7 +42,6 @@ export interface LockEventsStorage {
 export interface Erc20TokenConfig {
   proofAddress: string;
   bankingAddress: string;
-  mappingAddress: string;
 }
 
 export interface DVMConfig {
