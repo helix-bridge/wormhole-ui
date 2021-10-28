@@ -75,14 +75,16 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
         .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
         .send({ from: sender, gas: '250000', gasPrice: '50000000000', value: val });
     },
-    abi.mappingTokenABI
+    abi.S2SMappingTokenABI
   );
 }
 
-interface S2SInfo {
-  specVersion: string;
+interface MappingInfo {
+  specVersion?: string;
   mappingAddress: string;
 }
+
+type S2SInfo = Required<MappingInfo>;
 
 const s2sMappingParams: (rpc: string) => Promise<S2SInfo> = async (rpc: string) => {
   const api = entrance.polkadot.getInstance(rpc);
@@ -96,3 +98,7 @@ const s2sMappingParams: (rpc: string) => Promise<S2SInfo> = async (rpc: string) 
 };
 
 export const getS2SMappingParams = memoize(s2sMappingParams);
+
+export const getErc20MappingPrams: (rpc: string) => Promise<MappingInfo> = (_: string) => {
+  return Promise.resolve({ mappingAddress: '0xcB8531Bc0B7C8F41B55CF4E94698C37b130597B9' });
+};

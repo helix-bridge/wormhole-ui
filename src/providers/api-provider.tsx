@@ -2,7 +2,14 @@ import { ApiPromise } from '@polkadot/api';
 import { createContext, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { EMPTY, Subscription } from 'rxjs';
 import { Action, Chain, Connection, NetConfig, Network, NetworkMode, PolkadotConnection } from '../model';
-import { connect, getInitialSetting, getNetConfigByVer, getUnit, isEthereumNetwork, isPolkadotNetwork } from '../utils';
+import {
+  connect,
+  getInitialSetting,
+  verticesToNetConfig,
+  getUnit,
+  isEthereumNetwork,
+  isPolkadotNetwork,
+} from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
@@ -20,7 +27,7 @@ const initialNetworkConfig = () => {
   const network = getInitialSetting<Network>('from', null);
   const mode = getInitialSetting<NetworkMode>('fMode', 'native') ?? 'native';
 
-  return network && getNetConfigByVer({ network, mode });
+  return network && verticesToNetConfig({ network, mode });
 };
 
 const initialConnection: Connection = {

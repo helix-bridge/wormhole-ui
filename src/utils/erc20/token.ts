@@ -1,5 +1,5 @@
 import { upperFirst } from 'lodash';
-import { EMPTY, forkJoin, from, NEVER, Observable, of, timer, take, zip, combineLatest } from 'rxjs';
+import { combineLatest, EMPTY, forkJoin, from, iif, NEVER, Observable, of, take, timer, zip } from 'rxjs';
 import { catchError, delay, map, mergeMap, retry, retryWhen, scan, startWith, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
@@ -12,12 +12,14 @@ import {
   encodeMMRRootMessage,
   getMMRProof,
   getMPTProof,
+  isS2S,
+  isSubstrateDVM2Substrate,
   MMRProof,
 } from '../helper';
-import { getAvailableNetwork, getMetamaskActiveAccount, getNetworkMode, isPolkadotNetwork, entrance } from '../network';
+import { entrance, getAvailableNetwork, getMetamaskActiveAccount, netConfigToVertices } from '../network';
 import { rxGet } from '../records';
-import { getContractTxObs, getS2SMappingParams } from '../tx';
-import { getTokenBalance, getErc20Meta } from './meta';
+import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
+import { getErc20Meta, getTokenBalance } from './meta';
 
 export type StoredProof = {
   mmrProof: MMRProof;
@@ -34,24 +36,33 @@ const proofMemo: StoredProof[] = [];
  * @params {string} currentAccount
  * @returns tokens that status maybe registered or registering
  */
-function getMappedTokensFromDvm(currentAccount: string, config: NetConfig, s2sMappingAddress?: string) {
-  const web3 = entrance.web3.getInstance(config.provider.rpc);
+function getMappedTokensFromDvm(
+  currentAccount: string,
+  departure: NetConfig,
+  arrival: NetConfig,
+  mappingAddress: string
+) {
+  const web3 = entrance.web3.getInstance(departure.provider.rpc);
+  const s2s = isS2S(netConfigToVertices(departure), netConfigToVertices(arrival));
   const mappingContract = new web3.eth.Contract(
-    abi.mappingTokenABI,
-    s2sMappingAddress ?? config.erc20Token.mappingAddress
+    s2s ? abi.S2SMappingTokenABI : abi.Erc20MappingTokenABI,
+    mappingAddress
   );
-  const isS2S = !!s2sMappingAddress;
   const countObs = from(mappingContract.methods.tokenLength().call() as Promise<number>);
+  // FIXME: method predicate logic below should be removed after abi method is unified.
   const getToken = (index: number) =>
-    from(mappingContract.methods.allTokens(index).call() as Promise<string>).pipe(
+    from(mappingContract.methods[s2s ? 'allMappingTokens' : 'allTokens'](index).call() as Promise<string>).pipe(
       switchMap((address) => {
         const tokenObs = from(getErc20Meta(address));
         const infoObs = from(
-          mappingContract.methods.tokenToInfo(address).call() as Promise<{ source: string; backing: string }>
+          mappingContract.methods[s2s ? 'mappingToken2Info' : 'tokenToInfo'](address).call() as Promise<{
+            source: string;
+            backing: string;
+          }>
         );
-        const statusObs = isS2S
+        const statusObs = s2s
           ? of(1)
-          : infoObs.pipe(switchMap(({ source }) => getTokenRegisterStatus(source, config, false)));
+          : infoObs.pipe(switchMap(({ source }) => getTokenRegisterStatus(source, departure, false)));
         const balanceObs = currentAccount
           ? from(getTokenBalance(address, currentAccount, false))
           : of(Web3.utils.toBN(0));
@@ -69,6 +80,7 @@ function getMappedTokensFromDvm(currentAccount: string, config: NetConfig, s2sMa
         );
       })
     );
+
   return getMappedTokens(countObs, getToken);
 }
 
@@ -155,18 +167,17 @@ export const getKnownMappedTokens = (
     return of({ total: 0, tokens: [] });
   }
 
-  const isPolkadot = isPolkadotNetwork(arrival.name);
-  const isNative = getNetworkMode(arrival) === 'native';
-
-  if (isPolkadot && isNative) {
-    return from(getS2SMappingParams(departure.provider.rpc)).pipe(
-      switchMap(({ mappingAddress }) => getMappedTokensFromDvm(currentAccount, departure, mappingAddress))
-    );
-  }
+  const mappingAddressObs = iif(
+    () => isSubstrateDVM2Substrate(netConfigToVertices(departure), netConfigToVertices(arrival)),
+    from(getS2SMappingParams(departure.provider.rpc)),
+    from(getErc20MappingPrams(departure.provider.rpc))
+  );
 
   return departure.type.includes('ethereum')
     ? getMappedTokensFromEthereum(currentAccount, departure)
-    : getMappedTokensFromDvm(currentAccount, departure);
+    : mappingAddressObs.pipe(
+        switchMap(({ mappingAddress }) => getMappedTokensFromDvm(currentAccount, departure, arrival, mappingAddress))
+      );
 };
 
 /**

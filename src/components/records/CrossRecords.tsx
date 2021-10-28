@@ -9,7 +9,7 @@ import {
   getCrossChainArrivals,
   getDisplayName,
   getHistoryRouteParams,
-  getNetConfigByVer,
+  verticesToNetConfig,
   getNetworkMode,
   isEthereumNetwork,
   isPolkadotNetwork,
@@ -53,7 +53,7 @@ export function CrossRecords() {
   }, [departure, arrival, t]);
 
   useEffect(() => {
-    const config = getNetConfigByVer(departure);
+    const config = verticesToNetConfig(departure);
     const arrivals = getCrossChainArrivals(config!);
 
     setArrival(arrivals[0]);
@@ -76,7 +76,7 @@ export function CrossRecords() {
         mode: tMode,
       });
     } else {
-      const config = getNetConfigByVer(departure);
+      const config = verticesToNetConfig(departure);
       const data = getCrossChainArrivals(config!);
 
       setArrival(data[0]);
@@ -91,7 +91,7 @@ export function CrossRecords() {
           <Select
             size="large"
             dropdownClassName="dropdown-networks"
-            value={getDisplayName(getNetConfigByVer(departure)!)}
+            value={getDisplayName(verticesToNetConfig(departure)!)}
             className="capitalize"
             onSelect={(name: string) => {
               const target = fromNetworks.find(
@@ -119,7 +119,7 @@ export function CrossRecords() {
             <Select
               size="large"
               dropdownClassName="dropdown-networks"
-              value={getDisplayName(getNetConfigByVer(arrival)!)}
+              value={getDisplayName(verticesToNetConfig(arrival)!)}
               className="type-select capitalize"
               onSelect={(name: string) => {
                 const target = toNetworks.find(
@@ -167,7 +167,7 @@ export function CrossRecords() {
             onSearch={(value) => {
               if (!isAddressValid(value, departure)) {
                 message.error(t(searchPlaceholder));
-              } else if (!isReachable(getNetConfigByVer(departure))(getNetConfigByVer(arrival))) {
+              } else if (!isReachable(verticesToNetConfig(departure))(verticesToNetConfig(arrival))) {
                 message.error(t('Origin network is not matched to the target network'));
               } else {
                 setAddress(value);

@@ -1,10 +1,11 @@
 import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { web3FromAddress } from '@polkadot/extension-dapp';
-import { from, Observable, Observer, switchMapTo, tap } from 'rxjs';
-import { isKton, isRing } from '..';
+import { from, Observable, Observer, switchMap, switchMapTo, tap } from 'rxjs';
 import { abi } from '../../config';
 import { IssuingDarwiniaToken, IssuingDVMToken, IssuingSubstrateToken, Tx } from '../../model';
+import { isKton, isRing } from '../helper/validate';
 import { getContractTxObs } from './common';
+import { getErc20MappingPrams } from './redeem';
 
 function extrinsicSpy(observer: Observer<Tx>) {
   observer.next({ status: 'signing' });
@@ -104,9 +105,13 @@ export function issuingErc20(value: IssuingDVMToken): Observable<Tx> {
   const { asset, recipient, amount, transfer, sender } = value;
   const { address } = asset;
 
-  return getContractTxObs(
-    transfer.from.erc20Token.mappingAddress,
-    (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
-    abi.mappingTokenABI
+  return from(getErc20MappingPrams(transfer.from.provider.rpc)).pipe(
+    switchMap(({ mappingAddress }) =>
+      getContractTxObs(
+        mappingAddress,
+        (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
+        abi.Erc20MappingTokenABI
+      )
+    )
   );
 }
