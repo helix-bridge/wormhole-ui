@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useRecords } from '../../hooks';
 import { Paginator, Vertices } from '../../model';
 import {
-  getNetConfigByVer,
+  verticesToNetConfig,
   getNetworkCategory,
   getVerticesFromDisplayName,
   isEthereumNetwork,
@@ -37,7 +37,7 @@ export const isAddressValid = (addr: string | null, departure: Vertices) => {
     if (mode === 'dvm' || isEthereumNetwork(departure.network)) {
       addressValid = isValidAddress(addr, 'ethereum');
     } else {
-      const category = flow([getVerticesFromDisplayName, getNetConfigByVer, getNetworkCategory])(network);
+      const category = flow([getVerticesFromDisplayName, verticesToNetConfig, getNetworkCategory])(network);
 
       addressValid = category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
     }
@@ -53,7 +53,7 @@ export function RecordList({ departure, arrival, address, confirmed, onLoading, 
   const [paginator, setPaginator] = useState<Paginator>(PAGINATOR_DEFAULT);
   const [loading, setLoading] = useState(false);
   const Record = useMemo(
-    () => getRecordComponent({ from: getNetConfigByVer(departure), to: getNetConfigByVer(arrival) }),
+    () => getRecordComponent({ from: verticesToNetConfig(departure), to: verticesToNetConfig(arrival) }),
     [departure, arrival]
   );
   const { queryRecords } = useRecords(departure, arrival);
@@ -71,7 +71,7 @@ export function RecordList({ departure, arrival, address, confirmed, onLoading, 
     if (
       !address ||
       !isAddressValid(address, departure) ||
-      !isReachable(getNetConfigByVer(departure))(getNetConfigByVer(arrival))
+      !isReachable(verticesToNetConfig(departure))(verticesToNetConfig(arrival))
     ) {
       setSourceData(SOURCE_DATA_DEFAULT);
       setPaginator(PAGINATOR_DEFAULT);
@@ -105,8 +105,8 @@ export function RecordList({ departure, arrival, address, confirmed, onLoading, 
       {sourceData.list.map((item, index) => (
         <Record
           record={{ ...item, meta: omit(sourceData, ['list', 'count']) }}
-          departure={getNetConfigByVer(departure)}
-          arrival={getNetConfigByVer(arrival)}
+          departure={verticesToNetConfig(departure)}
+          arrival={verticesToNetConfig(arrival)}
           key={item.block_timestamp || item.messageId || index}
         />
       ))}

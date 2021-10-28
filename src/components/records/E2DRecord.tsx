@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { RecordComponentProps } from '../../config';
 import { Network } from '../../model';
 import { E2DHistory as E2DRecordType, RedeemHistory, RingBurnHistory } from '../../model/darwinia';
-import { getLegalName, getNetConfigByVer } from '../../utils';
+import { getLegalName, verticesToNetConfig } from '../../utils';
 import { RelayerIcon } from '../icons';
 import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
 import { Record } from './Record';
@@ -22,7 +22,7 @@ export function E2DRecord({
   // eslint-disable-next-line complexity
   const progresses = useMemo(() => {
     const from = isGenesis
-      ? getNetConfigByVer({
+      ? verticesToNetConfig({
           network: getLegalName(chain) as Network,
           mode: 'native',
         })

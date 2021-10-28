@@ -9,7 +9,8 @@ import tokenIssuingABI from './tokenIssuingABI.json';
 import Erc20Byte32ABI from './Erc20-bytes32.json';
 import Erc20StringABI from './Erc20-string.json';
 import Erc20ABI from './Erc20.json';
-import mappingTokenABI from './mappingToken.json';
+import Erc20MappingTokenABI from './Erc20MappingToken.json';
+import S2SMappingTokenABI from './S2SMappingToken.json';
 import relayABI from './relay.json';
 
 type keys =
@@ -19,11 +20,11 @@ type keys =
   | 'bankABI'
   | 'tokenIssuingABI'
   | 'bankErc20ABI'
-  | 'bankErc20ABI'
   | 'Erc20ABI'
   | 'Erc20StringABI'
   | 'Erc20Byte32ABI'
-  | 'mappingTokenABI'
+  | 'Erc20MappingTokenABI'
+  | 'S2SMappingTokenABI'
   | 'relayABI';
 
 export const abi = {
@@ -34,9 +35,10 @@ export const abi = {
   Erc20Byte32ABI,
   Erc20StringABI,
   ktonABI,
-  mappingTokenABI,
+  Erc20MappingTokenABI,
   registryABI,
   relayABI,
+  S2SMappingTokenABI,
   tokenABI,
   tokenIssuingABI,
 } as {
