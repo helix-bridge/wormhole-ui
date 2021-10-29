@@ -108,6 +108,10 @@ Cypress.Commands.add('acceptMetamaskAccess', () => {
   return cy.task('acceptMetamaskAccess');
 });
 
+Cypress.Commands.add('acceptMetamaskSwitch', (config) => {
+  return cy.task('acceptMetamaskSwitch', config);
+});
+
 Cypress.Commands.add('confirmMetamaskTransaction', () => {
   return cy.task('confirmMetamaskTransaction');
 });

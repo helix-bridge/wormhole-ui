@@ -6,20 +6,53 @@ describe('Substrate DVM to Substrate', () => {
     cy.waitForReact();
   });
 
-  /**
-   * Test below actually should in unit tests;
-   */
-  it('should check recipient format', () => {
-    cy.acceptMetamaskAccess(); // allow metamask connect;
-    cy.get('#transfer_recipient').type('0xak13ks9fkFelwflsk', { animationDistanceThreshold: 1 });
-    cy.get('div[role="alert"]').contains('Please enter a valid Pangoro address');
+  it('approve before launch tx', () => {
+    // cy.acceptMetamaskAccess(); // allow metamask connect;
+    cy.get('.ant-notification-notice-btn > .ant-btn')
+      .click()
+      .then(() => {
+        /**
+         * !metamask has two steps here: 1. approve  2. switch
+         */
+        cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
+        cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
+      });
+
+    cy.react('RecipientItem').find('input').type('5FA7CzAgT5fNDFRdb4UWSZX3b9HJsPuR7F5BF4YotSpKxAA2');
+    cy.react('Erc20Control')
+      .find('input')
+      .click()
+      .then(() => {
+        cy.get('.ant-select-item-option-content').contains('xORING').click();
+      });
+    cy.react('Balance').type('3');
+
+    cy.get('button').contains('approve').click();
+    cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
+
+    cy.wait(5000);
+    cy.confirmMetamaskPermissionToSpend();
+
+    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
+      .find('a')
+      .should('have.text', 'View in Etherscan explorer');
   });
 
   it('should launch tx', () => {
     cy.react('RecipientItem').find('input').type('5FA7CzAgT5fNDFRdb4UWSZX3b9HJsPuR7F5BF4YotSpKxAA2');
-    cy.react('Erc20Control').find('select').select('xORING');
-    cy.react('Balance').type('3');
+    cy.react('Erc20Control')
+      .find('input')
+      .click()
+      .then(() => {
+        cy.get('.ant-select-item-option-content').contains('xORING').click();
+      });
 
+    /**
+     * if type balance immediately, allowance may be fetching, test maybe failed.
+     */
+    cy.wait(3000);
+
+    cy.react('Balance').type('3');
     cy.react('SubmitButton').click();
 
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin-Smart');
@@ -33,7 +66,7 @@ describe('Substrate DVM to Substrate', () => {
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: 2 * 60 * 1000 })
+    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
       .find('a')
       .should('have.text', 'View in Etherscan explorer');
   });

@@ -102,11 +102,7 @@ module.exports = (on, config) => {
       return networkAdded;
     },
     changeMetamaskNetwork: async (network) => {
-      if (process.env.NETWORK_NAME) {
-        network = process.env.NETWORK_NAME;
-      } else {
-        network = 'kovan';
-      }
+      network = network ?? process.env.NETWORK_NAME ?? 'ropsten';
       const networkChanged = await metamask.changeNetwork(network);
       return networkChanged;
     },
@@ -144,6 +140,10 @@ module.exports = (on, config) => {
     },
     acceptMetamaskAccess: async () => {
       const accepted = await metamask.acceptAccess();
+      return accepted;
+    },
+    acceptMetamaskSwitch: async (config: { networkName: string; networkId: number; isTestnet: boolean}) => { 
+      const accepted = await metamask.acceptSwitch(config);
       return accepted;
     },
     confirmMetamaskTransaction: async () => {

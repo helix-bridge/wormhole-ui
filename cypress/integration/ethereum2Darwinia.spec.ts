@@ -44,7 +44,7 @@ describe('Ethereum to Darwinia', () => {
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: 2 * 60 * 1000 })
+    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
       .find('a')
       .should('have.text', 'View in Etherscan explorer');
   });

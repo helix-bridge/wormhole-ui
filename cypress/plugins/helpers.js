@@ -76,14 +76,18 @@ module.exports = {
   prepareMetamask: async (version) => {
     const release = await module.exports.getMetamaskReleases(version);
     const downloadsDirectory = path.resolve(__dirname, 'extensions');
-    if (!fs.existsSync(downloadsDirectory)) {
+    
+    if (fs.existsSync(downloadsDirectory)) {
+      return path.resolve(__dirname, './extensions/metamask');
+    } else {
       fs.mkdirSync(downloadsDirectory);
     }
+
     const downloadDestination = path.join(downloadsDirectory, release.filename);
     await module.exports.download(release.downloadUrl, downloadDestination);
     const metamaskDirectory = path.join(downloadsDirectory, 'metamask');
     await module.exports.extract(downloadDestination, metamaskDirectory);
+
     return metamaskDirectory;
-    // return path.resolve(__dirname, '../extensions/metamask');
   },
 };
