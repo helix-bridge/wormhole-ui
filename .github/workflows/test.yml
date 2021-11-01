@@ -38,22 +38,40 @@ jobs:
           name: cypress-videos
           path: cypress/videos
 
-      - name: Render comment
+      - name: Render failure comment
         if: failure()
         id: template-failure
         uses: chuhlomin/render-template@v1.2
         with:
-          template: .github/comment/pr-cypress.md
+          template: .github/comment/pr-cypress-failure.md
           vars: |
             today: ${{ steps.vars.outputs.today }}
             job: ${{ github.job }}
             run_id: ${{ github.run_id }}
             run_number: ${{ github.run_number }}
 
-      - name: Publish comment
+      - name: Publish failure comment
         if: failure()
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: ${{ steps.template-failure.outputs.result }}
+          edit-mode: replace
+
+      - name: Render success comment
+        id: template-success
+        uses: chuhlomin/render-template@v1.2
+        with:
+          template: .github/comment/pr-cypress-success.md
+          vars: |
+            today: ${{ steps.vars.outputs.today }}
+            job: ${{ github.job }}
+            run_id: ${{ github.run_id }}
+            run_number: ${{ github.run_number }}
+
+      - name: Publish success comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.template-success.outputs.result }}
           edit-mode: replace
