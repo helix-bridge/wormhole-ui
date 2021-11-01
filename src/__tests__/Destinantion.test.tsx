@@ -62,7 +62,7 @@ describe('Destination component', () => {
 
   it('Display the network correctly', () => {
     const logo = img(NETWORKS[2].facade.logo.split('/')[1]);
-    const value = { ...NETWORKS[2], facade: { logo, logoWithText: '' } };
+    const value = { ...NETWORKS[2], facade: { logo, logoWithText: '', logoMinor: '' } };
 
     mount(
       <Suspense fallback="loading">

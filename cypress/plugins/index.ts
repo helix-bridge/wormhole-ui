@@ -28,7 +28,6 @@ const etherscan = require('./etherscan');
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
-  // require('@carlos0202/cypress-metamask/plugins')(on);
   cracoPlugin(on, config, cracoConf);
   on('before:browser:launch', async (browser, launchOptions) => {
     // metamask welcome screen blocks cypress from loading
