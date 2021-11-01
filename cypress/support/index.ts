@@ -60,11 +60,3 @@ before(() => {
     'qwertyuiop'
   );
 });
-
-after(() => {
-  cy.getNetwork().then((network) => {
-    if (network !== 'ropsten') {
-      cy.changeMetamaskNetwork('ropsten');
-    }
-  });
-});
