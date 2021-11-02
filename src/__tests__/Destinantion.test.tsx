@@ -9,12 +9,70 @@ import '../index.scss';
 import '../theme/antd/index.less';
 import i18n from '../config/i18n';
 import { img } from './utils';
+import { getDisplayName } from '../utils';
 
 i18n.init({
   lng: 'en',
 });
 
-describe('Destination component', () => {
+const patchedNetworks = NETWORKS.map((item) => ({
+  ...item,
+  facade: { ...item.facade, logo: '/public' + item.facade.logo },
+}));
+
+context('Destination component', () => {
+  describe('select mode', () => {
+    it('should render all network options', () => {
+      mount(
+        <Suspense fallback="loading">
+          <Destination networks={patchedNetworks} title="from" />
+        </Suspense>
+      );
+
+      cy.get('.ant-select')
+        .click()
+        .then(() => {
+          patchedNetworks.forEach((item) => {
+            cy.get(`img[src="${item.facade.logo}"]`).should('be.visible');
+            cy.contains(getDisplayName(item));
+
+            if (item.isTest) {
+              cy.contains(getDisplayName(item)).next().contains('Test');
+            }
+          });
+        });
+    });
+
+    it('display selected network', () => {
+      const target = patchedNetworks.find((item) => item.name === 'pangolin');
+
+      mount(
+        <Suspense fallback="loading">
+          <Destination networks={patchedNetworks} value={target} title="from" />
+        </Suspense>
+      );
+      cy.get(`img[src="${target.facade.logo}"]`).should('be.visible');
+      cy.contains(getDisplayName(target));
+      cy.get('.ant-tag').contains('Test');
+    });
+
+    it('can select network', () => {
+      const target = patchedNetworks.find((item) => item.name === 'pangoro');
+
+      mount(
+        <Suspense fallback="loading">
+          <Destination networks={patchedNetworks} title="from" />
+        </Suspense>
+      );
+
+      cy.get('.ant-select').click();
+      cy.get('.ant-select-item').contains(getDisplayName(target)).click();
+      cy.get(`img[src="${target.facade.logo}"]`).should('be.visible');
+      cy.contains(getDisplayName(target));
+      cy.get('.ant-tag').contains('Test');
+    });
+  });
+
   describe('card mode', () => {
     it('should display network logo', () => {
       mount(

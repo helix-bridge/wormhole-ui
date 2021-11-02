@@ -153,8 +153,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpcUrls: [],
     },
     facade: {
-      logo: 'image/eth-logo.svg',
-      logoMinor: 'image/eth.svg',
+      logo: '/image/eth-logo.svg',
+      logoMinor: '/image/eth.svg',
       logoWithText: '',
     },
     fullName: 'Ethereum',
