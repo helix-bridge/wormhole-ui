@@ -15,11 +15,9 @@ describe('Substrate DVM to Substrate', () => {
     cy.get('.ant-notification-notice-btn > .ant-btn')
       .click()
       .then(() => {
-        /**
-         * !metamask has two steps here: 1. approve  2. switch
-         */
+        // metamask has may have two steps here: 1. approve  2. switch
         cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
-        cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
+        // cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
       });
 
     cy.react('RecipientItem').find('input').type('5FA7CzAgT5fNDFRdb4UWSZX3b9HJsPuR7F5BF4YotSpKxAA2');
