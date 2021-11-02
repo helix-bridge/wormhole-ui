@@ -153,6 +153,11 @@ declare namespace Cypress {
      */
     setupMetamask(secretWords: string, network: string | object, password: string): Chainable<Subject>;
     /**
+     * Active the prepared metamask
+     * @example
+     */
+    activeMetamask(): Chainable<Subject>;
+    /**
      * Execute settle on Exchanger contract
      * @example
      * cy.snxExchangerSettle('sETH', '0x...', '123123123123123123...')

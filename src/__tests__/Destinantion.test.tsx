@@ -15,76 +15,85 @@ i18n.init({
 });
 
 describe('Destination component', () => {
-  it('should display network logo', () => {
-    mount(
-      <Suspense fallback="loading">
-        <Destination networks={NETWORKS} defaultLogo={img('network.png')} title="from" />
-      </Suspense>
-    );
-    cy.get(`img[src="${img('network.png')}"]`).should('be.visible');
-  });
+  describe('card mode', () => {
+    it('should display network logo', () => {
+      mount(
+        <Suspense fallback="loading">
+          <Destination networks={NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
+        </Suspense>
+      );
+      cy.get(`img[src="${img('network.png')}"]`).should('be.visible');
+    });
 
-  it('should display default menu content', () => {
-    mount(
-      <Suspense fallback="loading">
-        <Destination networks={NETWORKS} defaultLogo={img('network.png')} title="from" />
-      </Suspense>
-    );
-    cy.get('.ant-dropdown-trigger').contains('Select Network').should('be.visible');
-  });
+    it('should display default menu content', () => {
+      mount(
+        <Suspense fallback="loading">
+          <Destination networks={NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
+        </Suspense>
+      );
+      cy.get('.ant-dropdown-trigger').contains('Select Network').should('be.visible');
+    });
 
-  it('should display the network menus properly', () => {
-    mount(
-      <Suspense fallback="loading">
-        <Destination networks={NETWORKS} defaultLogo={img('network.png')} title="from" />
-      </Suspense>
-    );
+    it('should display the network menus properly', () => {
+      mount(
+        <Suspense fallback="loading">
+          <Destination networks={NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
+        </Suspense>
+      );
 
-    cy.get('.ant-dropdown-trigger')
-      .click()
-      .then(() => {
-        // menu total = network length + 1;
-        cy.get('.ant-dropdown-menu-item')
-          .should('be.visible')
-          .and('have.length', NETWORKS.length + 1);
+      cy.get('.ant-dropdown-trigger')
+        .click()
+        .then(() => {
+          // menu total = network length + 1;
+          cy.get('.ant-dropdown-menu-item')
+            .should('be.visible')
+            .and('have.length', NETWORKS.length + 1);
 
-        // all networks should be rendered
-        NETWORKS.forEach((network) => {
-          cy.get('.ant-dropdown-menu-item').contains(network.fullName);
+          // all networks should be rendered
+          NETWORKS.forEach((network) => {
+            cy.get('.ant-dropdown-menu-item').contains(network.fullName);
+          });
+
+          // test networks should have tag sibling
+          NETWORKS.filter((item) => item.isTest).forEach((network) => {
+            cy.get('.ant-dropdown-menu-item').contains(network.fullName).next().contains('Test');
+          });
         });
+    });
 
-        // test networks should have tag sibling
-        NETWORKS.filter((item) => item.isTest).forEach((network) => {
-          cy.get('.ant-dropdown-menu-item').contains(network.fullName).next().contains('Test');
-        });
-      });
-  });
+    it('Display the network correctly', () => {
+      const logo = img(NETWORKS[2].facade.logo.split('/')[2]);
+      const value = { ...NETWORKS[2], facade: { logo, logoWithText: '', logoMinor: '' } };
 
-  it('Display the network correctly', () => {
-    const logo = img(NETWORKS[2].facade.logo.split('/')[1]);
-    const value = { ...NETWORKS[2], facade: { logo, logoWithText: '', logoMinor: '' } };
+      mount(
+        <Suspense fallback="loading">
+          <Destination
+            value={value}
+            networks={NETWORKS}
+            mode="card"
+            defaultLogo={img('network.png')}
+            title="from"
+            extra={<DisconnectOutlined />}
+          />
+        </Suspense>
+      );
+      cy.get('.ant-dropdown-trigger').contains(NETWORKS[2].fullName);
+      cy.get(`img[src="${logo}"]`).should('be.visible');
+    });
 
-    mount(
-      <Suspense fallback="loading">
-        <Destination
-          value={value}
-          networks={NETWORKS}
-          defaultLogo={img('network.png')}
-          title="from"
-          extra={<DisconnectOutlined />}
-        />
-      </Suspense>
-    );
-    cy.get('.ant-dropdown-trigger').contains(NETWORKS[2].fullName);
-    cy.get(`img[src="${logo}"]`).should('be.visible');
-  });
-
-  it('Should render the extra icon', () => {
-    mount(
-      <Suspense fallback="loading">
-        <Destination networks={NETWORKS} defaultLogo={img('network.png')} title="from" extra={<DisconnectOutlined />} />
-      </Suspense>
-    );
-    cy.get('.ant-dropdown-trigger').find('.anticon-disconnect');
+    it('Should render the extra icon', () => {
+      mount(
+        <Suspense fallback="loading">
+          <Destination
+            networks={NETWORKS}
+            defaultLogo={img('network.png')}
+            title="from"
+            mode="card"
+            extra={<DisconnectOutlined />}
+          />
+        </Suspense>
+      );
+      cy.get('.ant-dropdown-trigger').find('.anticon-disconnect');
+    });
   });
 });

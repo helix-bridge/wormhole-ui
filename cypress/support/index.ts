@@ -52,11 +52,3 @@ Cypress.on('window:before:load', (win) => {
     cy.now('task', 'warn', message);
   });
 });
-
-before(() => {
-  cy.setupMetamask(
-    'add, door, once, guide, nest, upper, minute, donkey, liar, wool, reflect, satisfy',
-    'ropsten',
-    'qwertyuiop'
-  );
-});

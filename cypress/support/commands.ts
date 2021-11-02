@@ -142,6 +142,14 @@ Cypress.Commands.add('getNetwork', () => {
   return cy.task('getNetwork');
 });
 
+Cypress.Commands.add('activeMetamask', () => {
+  cy.setupMetamask(
+    'add, door, once, guide, nest, upper, minute, donkey, liar, wool, reflect, satisfy',
+    'ropsten',
+    'qwertyuiop'
+  );
+});
+
 // SNX commands
 
 Cypress.Commands.add('snxExchangerSettle', (asset, walletAddress, privateKey) => {

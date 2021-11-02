@@ -1,6 +1,10 @@
 /// <reference types="cypress" />
 
 describe('Substrate DVM to Substrate', () => {
+  before(() => {
+    cy.activeMetamask();
+  });
+
   beforeEach(() => {
     cy.visit(Cypress.config().baseUrl + '/#fm%3Ddvm%26tm%3Dnative%26f%3Dpangolin%26t%3Dpangoro');
     cy.waitForReact();

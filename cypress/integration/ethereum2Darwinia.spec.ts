@@ -8,6 +8,10 @@ const {
 } = require('../pages/metamask/notification-page');
 
 describe('Ethereum to Darwinia', () => {
+  before(() => {
+    cy.activeMetamask();
+  });
+
   beforeEach(() => {
     cy.visit(Cypress.config().baseUrl + '/#fm%3Dnative%26tm%3Dnative%26f%3Dropsten%26t%3Dpangolin');
     cy.waitForReact();
