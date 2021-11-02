@@ -5,6 +5,7 @@ module.exports = {
       animation: {
         whirl: 'whirl 1s linear',
         'whirl-reverse': 'whirl-reverse 1s linear',
+        'ball-scale-pulse': 'ball-scale-pulse 2s ease-in-out infinite',
         //   "ra-1": "animate-arrow-1 1s ease-in-out infinite",
         //   "ra-2": "animate-arrow-2 1s ease-in-out infinite 0.1s",
         //   "ra-3": "animate-arrow-3 1s ease-in-out infinite 0.2s",
@@ -23,6 +24,11 @@ module.exports = {
           '50%': { transform: 'rotateY(120deg)', opacity: 0 },
           '75%': { transform: 'rotateY(90deg)', opacity: 0.3 },
           '100%': { transform: 'rotateY(180deg)', opacity: 1 },
+        },
+        'ball-scale-pulse': {
+          '0%': { transform: 'scale(0)' },
+          '50%': { transform: 'scale(1)' },
+          '100%': { transform: 'scale(0)' },
         },
         //   'right-arrow-1': {
         //     '0%': { transform: 'translateX(-40px);opacity: 0;' },

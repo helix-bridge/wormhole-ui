@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-import ReactLoading from 'react-loading';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
+import { BallScalePulse } from './components/BallScalePulse';
 import './index.scss';
 import { ApiProvider, GqlProvider, TxProvider } from './providers';
 import { AccountProvider } from './providers/account-provider';
@@ -12,8 +12,8 @@ import './theme/antd/index.less';
 ReactDOM.render(
   <Suspense
     fallback={
-      <div className="flex justify-center items-center w-screen h-screen bg-gray-800">
-        <ReactLoading type="bars" color="#fff" />
+      <div className="flex justify-center items-center w-screen h-screen">
+        <BallScalePulse />
       </div>
     }
   >
