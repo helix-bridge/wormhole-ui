@@ -1,4 +1,4 @@
-name: Test
+name: Unit Test
 
 on:
   pull_request:
@@ -13,13 +13,13 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v2
-      - name: Run E2E tests 🧪
+      - name: Run Unit tests 🧪
         uses: cypress-io/github-action@v2
         with:
           start: yarn start
           wait-on: 'http://localhost:3007'
           wait-on-timeout: 300
-          command: yarn test:e2e:ci
+          command: yarn test:unit:ci
           record: true
           browser: chrome
           group: 'Actions example'
@@ -29,13 +29,13 @@ jobs:
       - uses: actions/upload-artifact@v1
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-unit
           path: cypress/screenshots
 
       - uses: actions/upload-artifact@v1
         if: failure()
         with:
-          name: cypress-videos
+          name: cypress-videos-unit
           path: cypress/videos
 
       - name: Render failure comment
@@ -49,6 +49,7 @@ jobs:
             job: ${{ github.job }}
             run_id: ${{ github.run_id }}
             run_number: ${{ github.run_number }}
+            source: unit
 
       - name: Publish failure comment
         if: failure()
@@ -57,21 +58,21 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: ${{ steps.template-failure.outputs.result }}
           edit-mode: replace
-
-      - name: Render success comment
-        id: template-success
-        uses: chuhlomin/render-template@v1.2
-        with:
-          template: .github/comment/pr-cypress-success.md
-          vars: |
-            today: ${{ steps.vars.outputs.today }}
-            job: ${{ github.job }}
-            run_id: ${{ github.run_id }}
-            run_number: ${{ github.run_number }}
-
-      - name: Publish success comment
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.template-success.outputs.result }}
-          edit-mode: replace
+#      - name: Render success comment
+#        id: template-success
+#        uses: chuhlomin/render-template@v1.2
+#        with:
+#          template: .github/comment/pr-cypress-success.md
+#          vars: |
+#            today: ${{ steps.vars.outputs.today }}
+#            job: ${{ github.job }}
+#            run_id: ${{ github.run_id }}
+#            run_number: ${{ github.run_number }}
+#            source: unit
+#
+#      - name: Publish success comment
+#        uses: peter-evans/create-or-update-comment@v1
+#        with:
+#          issue-number: ${{ github.event.pull_request.number }}
+#          body: ${{ steps.template-success.outputs.result }}
+#          edit-mode: replace
