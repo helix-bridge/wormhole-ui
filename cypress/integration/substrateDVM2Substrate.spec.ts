@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+const TOKEN_NAME = 'xRING';
+
 describe('Substrate DVM to Substrate', () => {
   before(() => {
     cy.activeMetamask();
@@ -25,7 +27,7 @@ describe('Substrate DVM to Substrate', () => {
       .find('input')
       .click()
       .then(() => {
-        cy.get('.ant-select-item-option-content').contains('xORING').click();
+        cy.get('.ant-select-item-option-content').contains(TOKEN_NAME).click();
       });
     cy.react('Balance').type('3');
 
@@ -46,7 +48,7 @@ describe('Substrate DVM to Substrate', () => {
       .find('input')
       .click()
       .then(() => {
-        cy.get('.ant-select-item-option-content').contains('xORING').click();
+        cy.get('.ant-select-item-option-content').contains(TOKEN_NAME).click();
       });
 
     /**
@@ -54,7 +56,7 @@ describe('Substrate DVM to Substrate', () => {
      */
     cy.wait(3000);
 
-    cy.react('Balance').type('3');
+    cy.react('Balance').type('0.1');
     cy.react('SubmitButton').click();
 
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin-Smart');

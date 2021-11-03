@@ -1,5 +1,6 @@
 import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { web3FromAddress } from '@polkadot/extension-dapp';
+import BN from 'bn.js';
 import { from, Observable, Observer, switchMap, switchMapTo, tap } from 'rxjs';
 import { abi } from '../../config';
 import { IssuingDarwiniaToken, IssuingDVMToken, IssuingSubstrateToken, Tx } from '../../model';
@@ -65,16 +66,10 @@ export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromi
   );
 }
 
-export const ISSUING_SUBSTRATE_FEE = '50000000000';
-
 /**
  * @description substrate -> substrate dvm
  */
-export function issuingSubstrateToken(
-  value: IssuingSubstrateToken,
-  api: ApiPromise,
-  fee = ISSUING_SUBSTRATE_FEE
-): Observable<Tx> {
+export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiPromise, fee: BN): Observable<Tx> {
   const { sender, recipient, amount } = value;
   const WEIGHT = '40544000';
   const obs = new Observable((observer: Observer<Tx>) => {

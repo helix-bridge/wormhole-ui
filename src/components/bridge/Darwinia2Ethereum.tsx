@@ -4,7 +4,7 @@ import { Button, Descriptions, Form, Tooltip } from 'antd';
 import BN from 'bn.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { from, Observable } from 'rxjs';
+import { EMPTY, from } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../config';
 import { getChainInfo, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
@@ -17,17 +17,8 @@ import {
   Token,
   TokenChainInfo,
   TransferFormValues,
-  Tx,
 } from '../../model';
-import {
-  AfterTxCreator,
-  applyModalObs,
-  createTxWorkflow,
-  fromWei,
-  isRing,
-  issuingDarwiniaTokens,
-  toWei,
-} from '../../utils';
+import { applyModalObs, createTxWorkflow, fromWei, isRing, issuingDarwiniaTokens, toWei } from '../../utils';
 import { AssetGroup, AssetGroupValue } from '../controls/AssetGroup';
 import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
 import { RecipientItem } from '../controls/RecipientItem';
@@ -173,21 +164,6 @@ function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
   );
 }
 
-/* ----------------------------------------------Tx section-------------------------------------------------- */
-
-function ethereumBackingLockDarwinia(
-  value: IssuingDarwiniaToken,
-  after: AfterTxCreator,
-  api: ApiPromise
-): Observable<Tx> {
-  const beforeTx = applyModalObs({
-    content: <TransferConfirm value={value} />,
-  });
-  const obs = issuingDarwiniaTokens(value, api);
-
-  return createTxWorkflow(beforeTx, obs, after);
-}
-
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
 /**
@@ -212,35 +188,46 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
 
   useEffect(() => {
     const fn = () => (data: IssuingDarwiniaToken) => {
+      if (!api || !fee) {
+        return EMPTY.subscribe();
+      }
+
       const { assets, sender } = data;
       const assetsToSend = assets?.map((item) => {
-        const { asset, amount, checked } = item as Required<Darwinia2EthereumTransfer['assets'][0]>;
+        const { asset, amount, checked } = item as Required<Darwinia2EthereumTransfer['assets'][number]>;
         const { decimal = 'gwei', symbol = asset } = getChainInfo(chain.tokens, asset as string) as TokenChainInfo;
+        const amountWei = checked ? toWei({ value: amount, unit: decimal }) : '0';
 
-        return { asset: symbol, unit: decimal, amount: checked ? toWei({ value: amount, unit: decimal }) : '0' };
+        return {
+          asset: symbol,
+          unit: decimal,
+          amount: isRing(symbol) ? new BN(amountWei).sub(fee).toString() : amountWei,
+        };
       });
+      const value = { ...data, assets: assetsToSend };
+      const beforeTransfer = applyModalObs({
+        content: <TransferConfirm value={value} />,
+      });
+      const obs = issuingDarwiniaTokens(value, api);
+      const afterTransfer = afterTx(TransferSuccess, {
+        hashType: 'block',
+        onDisappear: () => {
+          form.setFieldsValue({
+            [FORM_CONTROL.sender]: sender,
+            [FORM_CONTROL.assets]: [
+              { asset: 'ring', amount: '', checked: true },
+              { asset: 'kton', amount: '' },
+            ],
+          });
+          getBalances(sender).then(setAvailableBalances);
+        },
+      })(value);
 
-      return ethereumBackingLockDarwinia(
-        { ...data, assets: assetsToSend },
-        afterTx(TransferSuccess, {
-          hashType: 'block',
-          onDisappear: () => {
-            form.setFieldsValue({
-              [FORM_CONTROL.sender]: sender,
-              [FORM_CONTROL.assets]: [
-                { asset: 'ring', amount: '', checked: true },
-                { asset: 'kton', amount: '' },
-              ],
-            });
-            getBalances(sender).then(setAvailableBalances);
-          },
-        })({ ...data, assets: assetsToSend }),
-        api!
-      ).subscribe(observer);
+      return createTxWorkflow(beforeTransfer, obs, afterTransfer).subscribe(observer);
     };
 
     setSubmit(fn);
-  }, [afterTx, api, chain.tokens, form, getBalances, observer, setSubmit]);
+  }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setSubmit]);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
