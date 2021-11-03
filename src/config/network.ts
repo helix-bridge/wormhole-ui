@@ -67,7 +67,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: false,
     name: 'crab',
     provider: {
-      rpc: 'wss://crab-rpc.darwinia.network',
+      rpc: 'ws://hel.xavier.zone:30000',
       etherscan: '',
     },
     ss58Prefix: 42,
