@@ -72,6 +72,6 @@ describe('Substrate DVM to Substrate', () => {
 
     cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
       .find('a')
-      .should('have.text', 'View in Etherscan explorer');
+      .should('have.text', 'View in Subscan explorer');
   });
 });

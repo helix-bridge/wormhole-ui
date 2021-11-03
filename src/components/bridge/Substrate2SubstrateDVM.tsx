@@ -127,11 +127,11 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
         ...data,
         amount: fromWei({ value: new BN(toWei({ value: amount, unit })).sub(fee).toString(), unit }),
       };
-      const beforeTx = applyModalObs({
+      const beforeTransfer = applyModalObs({
         content: <TransferConfirm value={value} />,
       });
       const obs = issuingSubstrateToken(value, api, fee);
-      const after = afterTx(TransferSuccess, {
+      const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'block',
         onDisappear: () => {
           form.setFieldsValue({
@@ -141,7 +141,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
         },
       })(value);
 
-      return createTxWorkflow(beforeTx, obs, after).subscribe(observer);
+      return createTxWorkflow(beforeTransfer, obs, afterTransfer).subscribe(observer);
     };
 
     setSubmit(fn);
