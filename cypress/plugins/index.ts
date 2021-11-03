@@ -40,10 +40,13 @@ module.exports = (on, config) => {
       );
     }
 
-    // NOTE: extensions cannot be loaded in headless Chrome
-    const metamaskPath = await helpers.prepareMetamask(process.env.METAMASK_VERSION || '9.7.1');
-    launchOptions.extensions.push(metamaskPath);
-    await Timeout.set(2000);
+    if (process.env.TEST_TYPE === 'e2e') {
+      // NOTE: extensions cannot be loaded in headless Chrome
+      const metamaskPath = await helpers.prepareMetamask(process.env.METAMASK_VERSION || '9.7.1');
+      launchOptions.extensions.push(metamaskPath);
+      await Timeout.set(2000);
+    }
+    
     return launchOptions;
   });
   on('task', {
