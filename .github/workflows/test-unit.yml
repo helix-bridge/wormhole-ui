@@ -16,10 +16,10 @@ jobs:
       - name: Run Unit tests 🧪
         uses: cypress-io/github-action@v2
         with:
-          # start: yarn start
+          start: yarn test:unit:ci
           # wait-on: 'http://localhost:3007'
-          # wait-on-timeout: 300
-          command: yarn test:unit:ci
+          wait-on-timeout: 300
+          # command: yarn test:unit:ci
           record: true
           browser: chrome
           group: 'Actions example'
