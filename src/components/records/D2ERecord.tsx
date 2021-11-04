@@ -97,6 +97,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
       Icon: iconsMap[arrival?.name ?? 'ropsten'],
       network: arrival,
     };
+
     return [transactionSend, originLocked, relayerConfirmed, targetConfirmed];
   }, [arrival, claim, departure, extrinsic_index, hash, signatures, t, tx]);
 
@@ -105,8 +106,8 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
       departure={departure}
       arrival={arrival}
       assets={[
-        { amount: ring_value, unit: 'gwei', currency: 'RING' },
-        { amount: kton_value, unit: 'gwei', currency: 'KTON' },
+        { amount: ring_value, unit: 'gwei', currency: departure?.isTest ? 'PRING' : 'RING' },
+        { amount: kton_value, unit: 'gwei', currency: departure?.isTest ? 'PKTON' : 'KTON' },
       ]}
       recipient={target}
       blockTimestamp={block_timestamp}
