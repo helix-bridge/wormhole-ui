@@ -119,7 +119,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ],
     name: 'darwinia',
     provider: {
-      rpc: 'wss://rpc-alt.darwinia.network',
+      rpc: 'ws://hel.xavier.zone:30000',
       etherscan: '',
     },
     ss58Prefix: 18,
