@@ -73,7 +73,7 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
       // @see https://github.com/darwinia-network/wormhole-ui/issues/139
       return contract.methods
         .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
-        .send({ from: sender, gas: '250000', gasPrice: '50000000000', value: val });
+        .send({ from: sender, gasLimit: '1000000', gasPrice: '50000000000', value: val });
     },
     abi.S2SMappingTokenABI
   );

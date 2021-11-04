@@ -51,9 +51,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     ethereumChain: {
       chainId: '44',
-      chainName: '',
+      chainName: 'crab',
       nativeCurrency: {
         decimals: 18,
+        symbol: 'CRAB',
       },
       rpcUrls: ['https://crab-rpc.darwinia.network/'],
       blockExplorerUrls: ['https://crab.subscan.io/'],
@@ -92,9 +93,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     ethereumChain: {
       chainId: '',
-      chainName: '',
+      chainName: 'darwinia',
       nativeCurrency: {
         decimals: 18,
+        symbol: 'RING',
       },
       rpcUrls: [],
     },
@@ -151,8 +153,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpcUrls: [],
     },
     facade: {
-      logo: 'image/eth-logo.svg',
-      logoMinor: 'image/eth.svg',
+      logo: '/image/eth-logo.svg',
+      logoMinor: '/image/eth.svg',
       logoWithText: '',
     },
     fullName: 'Ethereum',
@@ -187,14 +189,14 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     erc20Token: {
       bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
-      // erc20MappingAddress: '',
       proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
     },
     ethereumChain: {
       chainId: '43',
-      chainName: '',
+      chainName: 'pangolin',
       nativeCurrency: {
         decimals: 18,
+        symbol: 'PRING',
       },
       rpcUrls: ['https://pangolin-rpc.darwinia.network/'],
       blockExplorerUrls: ['https://pangolin.subscan.io/'],

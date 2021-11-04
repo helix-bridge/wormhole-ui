@@ -17,6 +17,7 @@ const puppeteer = require('./puppeteer');
 const metamask = require('./metamask');
 const synthetix = require('./synthetix');
 const etherscan = require('./etherscan');
+const Timeout = require('await-timeout');
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -28,7 +29,6 @@ const etherscan = require('./etherscan');
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
-  // require('@carlos0202/cypress-metamask/plugins')(on);
   cracoPlugin(on, config, cracoConf);
   on('before:browser:launch', async (browser, launchOptions) => {
     // metamask welcome screen blocks cypress from loading
@@ -40,9 +40,13 @@ module.exports = (on, config) => {
       );
     }
 
-    // NOTE: extensions cannot be loaded in headless Chrome
-    const metamaskPath = await helpers.prepareMetamask(process.env.METAMASK_VERSION || '9.7.1');
-    launchOptions.extensions.push(metamaskPath);
+    if (process.env.TEST_TYPE === 'e2e') {
+      // NOTE: extensions cannot be loaded in headless Chrome
+      const metamaskPath = await helpers.prepareMetamask(process.env.METAMASK_VERSION || '9.7.1');
+      launchOptions.extensions.push(metamaskPath);
+      await Timeout.set(2000);
+    }
+    
     return launchOptions;
   });
   on('task', {
@@ -102,11 +106,7 @@ module.exports = (on, config) => {
       return networkAdded;
     },
     changeMetamaskNetwork: async (network) => {
-      if (process.env.NETWORK_NAME) {
-        network = process.env.NETWORK_NAME;
-      } else {
-        network = 'kovan';
-      }
+      network = network ?? process.env.NETWORK_NAME ?? 'ropsten';
       const networkChanged = await metamask.changeNetwork(network);
       return networkChanged;
     },
@@ -144,6 +144,10 @@ module.exports = (on, config) => {
     },
     acceptMetamaskAccess: async () => {
       const accepted = await metamask.acceptAccess();
+      return accepted;
+    },
+    acceptMetamaskSwitch: async (config: { networkName: string; networkId: number; isTestnet: boolean}) => {
+      const accepted = await metamask.acceptSwitch(config);
       return accepted;
     },
     confirmMetamaskTransaction: async () => {
