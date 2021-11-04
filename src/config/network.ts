@@ -121,7 +121,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     ],
     name: 'darwinia',
     provider: {
-      rpc: 'wss://rpc.darwinia.network',
+      rpc: 'wss://rpc-alt.darwinia.network',
       etherscan: '',
     },
     ss58Prefix: 18,
