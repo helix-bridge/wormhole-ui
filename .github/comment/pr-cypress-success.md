@@ -1,6 +1,6 @@
 Test success :shipit:.
 
-Congratulate! All e2e tests passed. Keep going.
+Congratulate! All {{ .source }} tests passed. Keep going.
 
 ---
 

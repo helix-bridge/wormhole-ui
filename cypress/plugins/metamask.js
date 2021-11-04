@@ -232,6 +232,13 @@ module.exports = {
     await puppeteer.metamaskWindow().waitForTimeout(3000);
     return true;
   },
+  acceptSwitch: async (config) => { 
+    const notificationPage = await puppeteer.switchToMetamaskNotification();
+    await puppeteer.waitAndClick(notificationPageElements.switchNetworkButton, notificationPage);
+    await puppeteer.metamaskWindow().waitForTimeout(3000);
+    setNetwork(config);
+    return true;
+  },
   confirmTransaction: async () => {
     const isKovanTestnet = getNetwork().networkName === 'kovan';
     const notificationPage = await puppeteer.switchToMetamaskNotification();
@@ -271,19 +278,18 @@ module.exports = {
         await module.exports.createWallet(password);
         await module.exports.importFromPrivateKey(secretWordsOrPrivateKey);
       }
+
       if (isCustomNetwork) {
         await module.exports.addNetwork(network);
-      } else {
-        await module.exports.changeNetwork(network);
-      }
-      walletAddress = await module.exports.getWalletAddress();
-      await puppeteer.switchToCypressWindow();
-      return true;
+      } 
     } else {
       await module.exports.unlock(password);
-      walletAddress = await module.exports.getWalletAddress();
-      await puppeteer.switchToCypressWindow();
-      return true;
     }
+
+    walletAddress = await module.exports.getWalletAddress();
+    await puppeteer.switchToCypressWindow();
+    await module.exports.changeNetwork(network);
+    setNetwork(network);
+    return true;
   },
 };

@@ -7,8 +7,8 @@ import { NETWORK_DARK_THEME, THEME } from '../config';
 
 describe('render', () => {
   before(() => {
+    // @ts-ignore
     window.less = {
-      // @ts-ignore
       modifyVars: () => {
         return Promise.resolve();
       },

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RecordComponentProps } from '../../config';
 import { S2SHistoryRecord } from '../../model';
-import { convertToSS58, getNetworkMode } from '../../utils';
+import { convertToSS58, getNetworkMode, toWei } from '../../utils';
 import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
 import { Record } from './Record';
 
@@ -48,7 +48,9 @@ export function S2SRecord({ record, departure, arrival }: RecordComponentProps<S
       arrival={arrival}
       blockTimestamp={+(endTimestamp || startTimestamp || Date.now())}
       recipient={isRedeem ? convertToSS58(recipient, arrival?.ss58Prefix ?? null) : recipient}
-      assets={[{ amount, currency: isRedeem ? 'xORING' : 'ORING', unit: 'gwei' }]}
+      assets={[
+        { amount: toWei({ value: amount, unit: 'gwei' }), currency: isRedeem ? 'xORING' : 'ORING', unit: 'gwei' },
+      ]}
       items={progresses}
     >
       <Progresses items={progresses} />

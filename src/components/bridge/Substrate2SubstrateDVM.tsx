@@ -4,6 +4,7 @@ import BN from 'bn.js';
 import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { EMPTY } from 'rxjs';
 import { FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
 import {
@@ -23,7 +24,6 @@ import {
   fromWei,
   insufficientBalanceRule,
   issuingSubstrateToken,
-  ISSUING_SUBSTRATE_FEE,
   prettyNumber,
   toWei,
   zeroAmountRule,
@@ -117,13 +117,21 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
   useEffect(() => {
     const fn = () => (data: IssuingSubstrateToken) => {
+      if (!api || !fee) {
+        return EMPTY.subscribe();
+      }
+
       const { sender, amount, asset } = data;
       const unit = chain.tokens.find((item) => item.symbol === asset)?.decimal || 'gwei';
-      const beforeTx = applyModalObs({
-        content: <TransferConfirm value={data} />,
+      const value = {
+        ...data,
+        amount: fromWei({ value: new BN(toWei({ value: amount, unit })).sub(fee).toString(), unit }),
+      };
+      const beforeTransfer = applyModalObs({
+        content: <TransferConfirm value={value} />,
       });
-      const obs = issuingSubstrateToken({ ...data, amount: toWei({ value: amount, unit }) }, api!);
-      const after = afterTx(TransferSuccess, {
+      const obs = issuingSubstrateToken(value, api, fee);
+      const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'block',
         onDisappear: () => {
           form.setFieldsValue({
@@ -131,13 +139,13 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
           });
           getBalances(sender).then(setAvailableBalances);
         },
-      })(data);
+      })(value);
 
-      return createTxWorkflow(beforeTx, obs, after).subscribe(observer);
+      return createTxWorkflow(beforeTransfer, obs, afterTransfer).subscribe(observer);
     };
 
     setSubmit(fn);
-  }, [afterTx, api, chain.tokens, form, getBalances, observer, setSubmit]);
+  }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setSubmit]);
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
@@ -156,7 +164,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
     (api.rpc as any).fee.marketFee().then((res: any) => {
       const marketFee = res.amount.toString();
 
-      setFee(new BN(marketFee || ISSUING_SUBSTRATE_FEE));
+      setFee(new BN(marketFee || '50000000000'));
     });
   }, [api]);
 

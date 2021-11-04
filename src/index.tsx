@@ -3,16 +3,22 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
 import { BallScalePulse } from './components/BallScalePulse';
+import { THEME } from './config';
 import './index.scss';
 import { ApiProvider, GqlProvider, TxProvider } from './providers';
 import { AccountProvider } from './providers/account-provider';
 import reportWebVitals from './reportWebVitals';
 import './theme/antd/index.less';
+import { readStorage } from './utils/helper/storage';
 
 ReactDOM.render(
   <Suspense
     fallback={
-      <div className="flex justify-center items-center w-screen h-screen">
+      <div
+        className={`flex justify-center items-center w-screen h-screen ${
+          readStorage().theme === THEME.DARK ? 'bg-black' : 'bg-white'
+        }`}
+      >
         <BallScalePulse />
       </div>
     }

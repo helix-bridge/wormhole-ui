@@ -60,7 +60,7 @@ declare namespace Cypress {
      * cy.changeMetamaskNetwork('kovan')
      * cy.changeMetamaskNetwork('networkName')
      */
-    changeMetamaskNetwork(network: string): Chainable<Subject>;
+    changeMetamaskNetwork(network: string | object): Chainable<Subject>;
     /**
      * Get current wallet address of metamask wallet
      * @example
@@ -110,7 +110,13 @@ declare namespace Cypress {
      */
     acceptMetamaskAccess(): Chainable<Subject>;
     /**
-     * Confirm metamask atransaction
+     * Accept metamask switch network
+     * @example
+     * cy.acceptMetamaskSwitch()
+     */
+    acceptMetamaskSwitch(config: { networkName: string; networkId: number; isTestnet: boolean }): Chainable<Subject>;
+    /**
+     * Confirm metamask transaction
      * @example
      * cy.confirmMetamaskTransaction()
      */
@@ -146,6 +152,11 @@ declare namespace Cypress {
      * cy.setupMetamask('secret, words, ...', {networkName: 'name', rpcUrl: 'https://url', chainId: 1, symbol: 'ETH', blockExplorer: 'https://url', isTestnet: true}, 'password for metamask')
      */
     setupMetamask(secretWords: string, network: string | object, password: string): Chainable<Subject>;
+    /**
+     * Active the prepared metamask
+     * @example
+     */
+    activeMetamask(): Chainable<Subject>;
     /**
      * Execute settle on Exchanger contract
      * @example
