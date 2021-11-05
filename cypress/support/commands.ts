@@ -268,3 +268,8 @@ Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
   // @ts-ignore
   return cy.waitForResources();
 });
+
+// for unit tests
+Cypress.Commands.add('waitForReactComponent', () => {
+  return cy.waitForReact(3000, '#__cy_root');
+});

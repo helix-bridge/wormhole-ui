@@ -30,7 +30,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
   } = record;
   const [hash, setHash] = useState('');
   const claim = useCallback(() => {
-    setTx({ status: 'queued' });
+    setTx({ status: 'sending' });
     claimToken({
       networkPrefix: upperFirst(departure?.name) as ClaimNetworkPrefix,
       mmrIndex: mmr_index,

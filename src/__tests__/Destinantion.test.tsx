@@ -51,8 +51,8 @@ context('Destination component', () => {
           <Destination networks={patchedNetworks} value={target} title="from" />
         </Suspense>
       );
-      cy.get(`img[src="${target.facade.logo}"]`).should('be.visible');
-      cy.contains(getDisplayName(target));
+      cy.get(`img[src="${target!.facade.logo}"]`).should('be.visible');
+      cy.contains(getDisplayName(target!));
       cy.get('.ant-tag').contains('Test');
     });
 
@@ -66,9 +66,9 @@ context('Destination component', () => {
       );
 
       cy.get('.ant-select').click();
-      cy.get('.ant-select-item').contains(getDisplayName(target)).click();
-      cy.get(`img[src="${target.facade.logo}"]`).should('be.visible');
-      cy.contains(getDisplayName(target));
+      cy.get('.ant-select-item').contains(getDisplayName(target!)).click();
+      cy.get(`img[src="${target!.facade.logo}"]`).should('be.visible');
+      cy.contains(getDisplayName(target!));
       cy.get('.ant-tag').contains('Test');
     });
   });

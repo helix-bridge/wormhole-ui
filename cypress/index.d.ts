@@ -187,5 +187,7 @@ declare namespace Cypress {
     acceptMetamaskAccess(): Chainable<Subject>;
 
     confirmMetamaskTransaction(): Chainable<Subject>;
+
+    waitForReactComponent(): Chainable<Subject>;
   }
 }
