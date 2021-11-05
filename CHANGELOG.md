@@ -1,3 +1,11 @@
+## [2.1.3](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.2...v2.1.3) (2021-11-05)
+
+### Bug Fixes
+
+- switch darwinia rpc ([#177](https://github.com/darwinia-network/wormhole-pro/issues/177)) ([d76ff78](https://github.com/darwinia-network/wormhole-pro/commit/d76ff785d209e646d0a8b5bc0f21b083b687d298))
+- **#103:** fall back loading, etc ([#175](https://github.com/darwinia-network/wormhole-pro/issues/175)) ([7858667](https://github.com/darwinia-network/wormhole-pro/commit/785866751823929a2c6045cd304e47bf5b93c5e9)), closes [#103](https://github.com/darwinia-network/wormhole-pro/issues/103)
+- **#173:** token name ([#178](https://github.com/darwinia-network/wormhole-pro/issues/178)) ([45cfe6d](https://github.com/darwinia-network/wormhole-pro/commit/45cfe6d6361285e52e67355607556ed70819e21a)), closes [#173](https://github.com/darwinia-network/wormhole-pro/issues/173)
+
 ## [2.1.2](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.1...v2.1.2) (2021-10-27)
 
 ### Bug Fixes
