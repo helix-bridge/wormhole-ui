@@ -1,8 +1,14 @@
 {
   "extends": "@darwinia/lints/tsconfig",
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "types": [
+      "cypress",
+      "@types/puppeteer-core",
+      "cypress-wait-until",
+      "@testing-library/cypress",
+      "cypress-react-selector"
+    ]
   },
-  "include": ["src", "src/global.d.ts"],
-  "exclude": ["src/__tests__/*"]
+  "include": ["src", "src/global.d.ts", "cypress"]
 }
