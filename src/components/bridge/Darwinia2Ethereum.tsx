@@ -201,7 +201,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
         return {
           asset: symbol,
           unit: decimal,
-          amount: isRing(symbol) ? new BN(amountWei).sub(fee).toString() : amountWei,
+          amount: isRing(symbol) && new BN(amountWei).gte(fee) ? new BN(amountWei).sub(fee).toString() : amountWei,
         };
       });
       const value = { ...data, assets: assetsToSend };
