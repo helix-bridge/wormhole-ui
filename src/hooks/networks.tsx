@@ -1,7 +1,7 @@
 import { chain } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
 import { AIRDROP_GRAPH, AIRPORTS, NETWORKS } from '../config';
-import { Arrival, Departure, NetConfig, NetworkFilter } from '../model';
+import { Arrival, Departure, ChainConfig, NetworkFilter } from '../model';
 import { useApi } from './api';
 
 const omitTestChain: NetworkFilter = (net) => !net.isTest;
@@ -29,9 +29,9 @@ export const airportsArrivalFilter = arrivalFilterCreator(AIRDROP_GRAPH);
 export function useNetworks(isCross: boolean) {
   const { enableTestNetworks } = useApi();
   const [fromFilters, setFromFilters] = useState<NetworkFilter[]>([]);
-  const [fromNetworks, setFromNetworks] = useState<NetConfig[]>(NETWORKS);
+  const [fromNetworks, setFromNetworks] = useState<ChainConfig[]>(NETWORKS);
   const [toFilters, setToFilters] = useState<NetworkFilter[]>([]);
-  const [toNetworks, setToNetworks] = useState<NetConfig[]>(NETWORKS);
+  const [toNetworks, setToNetworks] = useState<ChainConfig[]>(NETWORKS);
   const getNetworks = useCallback(
     (filters: NetworkFilter[]) => {
       return [...getGlobalFilters(enableTestNetworks), ...filters].reduce(

@@ -5,12 +5,12 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EvoApiPath, FORM_CONTROL } from '../../config';
 import { useRecordsQuery } from '../../hooks';
-import { CustomFormControlProps, Deposit, DepositResponse, NetConfig } from '../../model';
+import { CustomFormControlProps, Deposit, DepositResponse, ChainConfig } from '../../model';
 import { apiUrl, empty } from '../../utils';
 
 interface DepositItemProps {
   address: string;
-  config: NetConfig;
+  config: ChainConfig;
   removedIds: number[];
   rules?: Rule[];
 }

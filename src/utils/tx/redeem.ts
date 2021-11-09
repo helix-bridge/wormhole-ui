@@ -10,17 +10,16 @@ import { buf2hex, getContractTxObs } from './common';
 
 /**
  * @description darwinia <- ethereum
+ * Because of the ring was released in advance on ethereum, so the action is issuing, but follow the Protocol Overview, it should be redeem.
  */
 export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, transfer, asset, amount, recipient }) => {
-  const contractAddress = transfer.from.tokenContract[asset as 'ring' | 'kton'] as string;
+  const contractAddress = transfer.from.contracts.e2d[asset as 'ring' | 'kton'] as string;
 
   recipient = buf2hex(decodeAddress(recipient, false, transfer.to.ss58Prefix!).buffer);
   amount = toWei({ value: amount });
 
   return getContractTxObs(contractAddress, (contract) =>
-    contract.methods
-      .transferFrom(sender, transfer.from.tokenContract.issuingDarwinia, amount, recipient)
-      .send({ from: sender })
+    contract.methods.transferFrom(sender, transfer.from.contracts.e2d.issuing, amount, recipient).send({ from: sender })
   );
 };
 
@@ -31,7 +30,7 @@ export const redeemDeposit: TxFn<RedeemDeposit> = ({ transfer: { to, from }, rec
   recipient = buf2hex(decodeAddress(recipient, false, to.ss58Prefix!).buffer);
 
   return getContractTxObs(
-    from?.tokenContract.bankDarwinia as string,
+    from?.contracts.e2d.redeemDeposit as string,
     (contract) => contract.methods.burnAdnRedeem(deposit, recipient).send({ from: sender }),
     abi.bankABI
   );
@@ -51,7 +50,7 @@ export const redeemErc20: TxFn<RedeemDVMToken> = (value) => {
   const { address } = asset;
 
   return getContractTxObs(
-    from.erc20Token.bankingAddress,
+    from.contracts.e2dvm.redeem,
     (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
     abi.bankErc20ABI
   );

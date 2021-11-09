@@ -14,7 +14,6 @@ import {
   Darwinia2EthereumTransfer,
   IssuingDarwiniaToken,
   NoNullTransferNetwork,
-  Token,
   TokenChainInfo,
   TransferFormValues,
 } from '../../model';
@@ -76,7 +75,7 @@ function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
     );
   }, [assets, fee]);
   const chainSymbol = useCallback(
-    (token: Token) => {
+    (token: 'ring' | 'kton') => {
       const info = getChainInfo(chain.tokens, token);
 
       return info?.symbol || token.toUpperCase();

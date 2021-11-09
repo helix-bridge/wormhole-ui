@@ -1,8 +1,8 @@
 import { createContext, useState } from 'react';
-import { NetConfig } from '../model';
+import { ChainConfig } from '../model';
 
 export interface DepartureState {
-  from?: NetConfig;
+  from?: ChainConfig;
   sender?: string;
 }
 

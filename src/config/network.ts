@@ -1,5 +1,5 @@
 import { chain, omit } from 'lodash';
-import { Arrival, Departure, NetConfig, NetworkConfig } from '../model';
+import { Arrival, Departure, ChainConfig, NetworkConfig } from '../model';
 
 const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
@@ -35,21 +35,25 @@ const EVOLUTION_DOMAIN = {
 export const NETWORK_CONFIG: NetworkConfig = {
   crab: {
     api: {
-      subql: 'https://api.subquery.network/sq/darwinia-network/crab',
-      evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
-      subscan: 'https://crab.subscan.io',
+      evolution: EVOLUTION_DOMAIN.product,
       subGraph: '',
+      subql: 'https://api.subquery.network/sq/darwinia-network/crab',
+      subscan: 'https://crab.subscan.io',
+    },
+    contracts: {
+      e2dvm: {
+        proof: '',
+        redeem: '',
+        issuing: '',
+      },
     },
     dvm: {
-      ring: '0x588abe3F7EE935137102C5e2B8042788935f4CB0',
       kton: '0xbfE9E136270cE46A2A6a8E8D54718BdAEBEbaA3D',
-    },
-    erc20Token: {
-      proofAddress: '',
-      bankingAddress: '', // erc20 banking address
+      ring: '0x588abe3F7EE935137102C5e2B8042788935f4CB0',
     },
     ethereumChain: {
+      blockExplorerUrls: ['https://crab.subscan.io/'],
       chainId: '44',
       chainName: 'crab',
       nativeCurrency: {
@@ -57,7 +61,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
         symbol: 'CRAB',
       },
       rpcUrls: ['https://crab-rpc.darwinia.network/'],
-      blockExplorerUrls: ['https://crab.subscan.io/'],
     },
     facade: {
       logo: '/image/crab-button-mobile.png',
@@ -68,37 +71,29 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: false,
     name: 'crab',
     provider: {
-      rpc: 'wss://crab-rpc.darwinia.network',
       etherscan: '',
+      rpc: 'wss://crab-rpc.darwinia.network',
     },
     ss58Prefix: 42,
-    tokenContract: {},
     type: ['polkadot', 'darwinia'],
   },
   darwinia: {
     api: {
-      subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
-      evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
-      subscan: '',
+      evolution: EVOLUTION_DOMAIN.product,
       subGraph: '',
+      subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
+      subscan: '',
     },
-    dvm: {
-      ring: '',
-      kton: '',
-    },
-    erc20Token: {
-      bankingAddress: '',
-      proofAddress: '',
-    },
-    ethereumChain: {
-      chainId: '',
-      chainName: 'darwinia',
-      nativeCurrency: {
-        decimals: 18,
-        symbol: 'RING',
+    contracts: {
+      e2d: {
+        fee: '0x6B0940772516B69088904564A56d09CFe6Bb3D85',
+        issuing: '0xea7938985898af7fd945b03b7bc2e405e744e913',
+        kton: '0x9f284e1337a815fe77d2ff4ae46544645b20c5ff',
+        redeem: '0x5f44dd8e59f56aa04fe54e95cc690560ae706b18',
+        redeemDeposit: '0x649fdf6ee483a96e020b889571e93700fbd82d88',
+        ring: '0x9469d013805bffb7d3debe5e7839237e535ec483',
       },
-      rpcUrls: [],
     },
     facade: {
       logo: '/image/darwinia-button-mobile.png',
@@ -109,40 +104,47 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: false,
     lockEvents: [
       {
-        min: 0,
-        max: 4344274,
         key: '0xf8860dda3d08046cf2706b92bf7202eaae7a79191c90e76297e0895605b8b457',
+        max: 4344274,
+        min: 0,
       },
       {
-        min: 4344275,
-        max: null,
         key: '0x50ea63d9616704561328b9e0febe21cfae7a79191c90e76297e0895605b8b457',
+        max: null,
+        min: 4344275,
       },
     ],
     name: 'darwinia',
     provider: {
-      rpc: 'wss://rpc-alt.darwinia.network',
       etherscan: '',
+      rpc: 'wss://rpc-alt.darwinia.network',
     },
     ss58Prefix: 18,
-    tokenContract: {
-      issuingDarwinia: '0xea7938985898af7fd945b03b7bc2e405e744e913',
-      bankEthereum: '0x5f44dd8e59f56aa04fe54e95cc690560ae706b18',
-      bankDarwinia: '0x649fdf6ee483a96e020b889571e93700fbd82d88',
-    },
     type: ['polkadot', 'darwinia'],
   },
   ethereum: {
     api: {
-      subql: '',
-      evolution: EVOLUTION_DOMAIN.product,
       dapp: 'https://api.darwinia.network',
-      subscan: '',
+      evolution: EVOLUTION_DOMAIN.product,
       subGraph: '',
+      subql: '',
+      subscan: '',
     },
-    erc20Token: {
-      bankingAddress: '',
-      proofAddress: '',
+    contracts: {
+      e2d: {
+        fee: '0x6B0940772516B69088904564A56d09CFe6Bb3D85',
+        issuing: '0xea7938985898af7fd945b03b7bc2e405e744e913',
+        kton: '0x9f284e1337a815fe77d2ff4ae46544645b20c5ff',
+        redeem: '0x5f44dd8e59f56aa04fe54e95cc690560ae706b18',
+        redeemDeposit: '0x649fdf6ee483a96e020b889571e93700fbd82d88',
+        ring: '0x9469d013805bffb7d3debe5e7839237e535ec483',
+      },
+      // unimplemented
+      e2dvm: {
+        proof: '',
+        redeem: '',
+        issuing: '',
+      },
     },
     ethereumChain: {
       chainId: '1',
@@ -161,37 +163,40 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: false,
     name: 'ethereum',
     provider: {
-      rpc: '',
       etherscan: 'wss://mainnet.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
-    },
-    ss58Prefix: 18,
-    tokenContract: {
-      ring: '0x9469d013805bffb7d3debe5e7839237e535ec483',
-      kton: '0x9f284e1337a815fe77d2ff4ae46544645b20c5ff',
-      registryEth: '0x6B0940772516B69088904564A56d09CFe6Bb3D85',
-      issuingDarwinia: '0xea7938985898af7fd945b03b7bc2e405e744e913',
-      bankEthereum: '0x5f44dd8e59f56aa04fe54e95cc690560ae706b18',
-      bankDarwinia: '0x649fdf6ee483a96e020b889571e93700fbd82d88',
+      rpc: '',
     },
     type: ['ethereum'],
   },
   pangolin: {
     api: {
-      subql: 'https://api.subquery.network/sq/darwinia-network/pangolin',
-      evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
-      subscan: '',
+      evolution: EVOLUTION_DOMAIN.dev,
       subGraph: 'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory',
+      subql: 'https://api.subquery.network/sq/darwinia-network/pangolin',
+      subscan: '',
+    },
+    contracts: {
+      e2d: {
+        fee: '0x6982702995b053A21389219c1BFc0b188eB5a372',
+        issuing: '0x49262B932E439271d05634c32978294C7Ea15d0C',
+        kton: '0x1994100c58753793D52c6f457f189aa3ce9cEe94',
+        redeem: '0x98fAE9274562FE131e2CF5771ebFB0bB232aFd25',
+        redeemDeposit: '0x6EF538314829EfA8386Fc43386cB13B4e0A67D1e',
+        ring: '0xb52FBE2B925ab79a821b261C82c5Ba0814AAA5e0',
+      },
+      e2dvm: {
+        proof: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
+        redeem: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
+        issuing: '0x49262B932E439271d05634c32978294C7Ea15d0C',
+      },
     },
     dvm: {
-      ring: '0xbBD91aD844557ADCbb97296216b3B3c977FCC4F2',
       kton: '0xc8C1680B18D432732D07c044669915726fAF67D0',
-    },
-    erc20Token: {
-      bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
-      proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
+      ring: '0xbBD91aD844557ADCbb97296216b3B3c977FCC4F2',
     },
     ethereumChain: {
+      blockExplorerUrls: ['https://pangolin.subscan.io/'],
       chainId: '43',
       chainName: 'pangolin',
       nativeCurrency: {
@@ -199,7 +204,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
         symbol: 'PRING',
       },
       rpcUrls: ['https://pangolin-rpc.darwinia.network/'],
-      blockExplorerUrls: ['https://pangolin.subscan.io/'],
     },
     facade: {
       logo: '/image/pangolin-button-mobile.png',
@@ -210,48 +214,26 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: true,
     lockEvents: [
       {
-        min: 0,
-        max: null,
         key: '0x50ea63d9616704561328b9e0febe21cfae7a79191c90e76297e0895605b8b457',
+        max: null,
+        min: 0,
       },
     ],
     name: 'pangolin',
     provider: {
-      rpc: 'wss://pangolin-rpc.darwinia.network',
       etherscan: 'wss://ropsten.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
+      rpc: 'wss://pangolin-rpc.darwinia.network',
     },
     ss58Prefix: 18,
-    tokenContract: {
-      issuingDarwinia: '0x49262B932E439271d05634c32978294C7Ea15d0C', // e2d redeem address
-      bankEthereum: '0x98fAE9274562FE131e2CF5771ebFB0bB232aFd25', // d2e claim address
-      bankDarwinia: '0x6EF538314829EfA8386Fc43386cB13B4e0A67D1e', // e2d redeem deposit address
-    },
     type: ['polkadot', 'darwinia'],
   },
   pangoro: {
     api: {
-      subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
-      evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
-      subscan: '',
+      evolution: EVOLUTION_DOMAIN.dev,
       subGraph: '',
-    },
-    dvm: {
-      ring: '',
-      kton: '',
-    },
-    erc20Token: {
-      bankingAddress: '',
-      proofAddress: '',
-    },
-    ethereumChain: {
-      chainId: '',
-      chainName: '',
-      nativeCurrency: {
-        decimals: 18,
-      },
-      rpcUrls: ['https://pangoro-rpc.darwinia.network/'],
-      blockExplorerUrls: ['https://pangoro.subscan.io/'],
+      subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
+      subscan: '',
     },
     facade: {
       logo: '/image/pangoro-button-mobile.png',
@@ -260,37 +242,36 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     fullName: 'Pangoro',
     isTest: true,
-    lockEvents: [
-      {
-        min: 0,
-        max: null,
-        key: '',
-      },
-    ],
     name: 'pangoro',
     provider: {
-      rpc: 'wss://pangoro-rpc.darwinia.network',
       etherscan: '',
+      rpc: 'wss://pangoro-rpc.darwinia.network',
     },
     ss58Prefix: 42,
-    tokenContract: {
-      issuingDarwinia: '', // e2d redeem address
-      bankEthereum: '', // d2e claim address
-      bankDarwinia: '', // e2d redeem deposit address
-    },
     type: ['polkadot', 'darwinia'],
   },
   ropsten: {
     api: {
-      subql: '',
-      evolution: EVOLUTION_DOMAIN.dev,
       dapp: 'https://api.darwinia.network.l2me.com',
-      subscan: '',
+      evolution: EVOLUTION_DOMAIN.dev,
       subGraph: '',
+      subql: '',
+      subscan: '',
     },
-    erc20Token: {
-      bankingAddress: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
-      proofAddress: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
+    contracts: {
+      e2d: {
+        fee: '0x6982702995b053A21389219c1BFc0b188eB5a372',
+        issuing: '0x49262B932E439271d05634c32978294C7Ea15d0C',
+        kton: '0x1994100c58753793D52c6f457f189aa3ce9cEe94',
+        redeem: '0x98fAE9274562FE131e2CF5771ebFB0bB232aFd25',
+        redeemDeposit: '0x6EF538314829EfA8386Fc43386cB13B4e0A67D1e',
+        ring: '0xb52FBE2B925ab79a821b261C82c5Ba0814AAA5e0',
+      },
+      e2dvm: {
+        proof: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',
+        redeem: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
+        issuing: '0x49262B932E439271d05634c32978294C7Ea15d0C',
+      },
     },
     ethereumChain: {
       chainId: '3',
@@ -309,39 +290,18 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: true,
     name: 'ropsten',
     provider: {
-      rpc: '',
       etherscan: 'wss://ropsten.infura.io/ws/v3/5350449ccd2349afa007061e62ee1409',
-    },
-    ss58Prefix: 18,
-    tokenContract: {
-      ring: '0xb52FBE2B925ab79a821b261C82c5Ba0814AAA5e0', // e2d ring balance address
-      kton: '0x1994100c58753793D52c6f457f189aa3ce9cEe94', // e2d kton balance address
-      registryEth: '0x6982702995b053A21389219c1BFc0b188eB5a372', // e2d cross chain fee querying address
-      issuingDarwinia: '0x49262B932E439271d05634c32978294C7Ea15d0C', // e2d issuing address
-      bankEthereum: '0x98fAE9274562FE131e2CF5771ebFB0bB232aFd25', // d2e redeem address
-      bankDarwinia: '0x6EF538314829EfA8386Fc43386cB13B4e0A67D1e', // e2d redeem deposit address
+      rpc: '',
     },
     type: ['ethereum'],
   },
   tron: {
     api: {
-      subql: '',
-      evolution: '',
       dapp: 'https://api.darwinia.network',
-      subscan: '',
+      evolution: '',
       subGraph: '',
-    },
-    erc20Token: {
-      bankingAddress: '',
-      proofAddress: '',
-    },
-    ethereumChain: {
-      chainId: '',
-      chainName: '',
-      nativeCurrency: {
-        decimals: NaN,
-      },
-      rpcUrls: [],
+      subql: '',
+      subscan: '',
     },
     facade: {
       logo: '/image/tron-button-mobile.png',
@@ -352,17 +312,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
     isTest: false,
     name: 'tron',
     provider: {
-      rpc: '',
       etherscan: '',
-    },
-    ss58Prefix: 18,
-    tokenContract: {
-      ring: '', // e2d ring balance address
-      kton: '', // e2d kton balance address
-      registryEth: '', // e2d cross chain fee querying address
-      issuingDarwinia: '', // e2d issuing address
-      bankEthereum: '', // d2e redeem address
-      bankDarwinia: '', // e2d redeem deposit address
+      rpc: '',
     },
     type: ['tron'],
   },
@@ -422,7 +373,7 @@ export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
 /**
  * generate network configs, use dvm field to distinct whether the config is dvm config.
  */
-export const NETWORKS: NetConfig[] = chain([...NETWORK_GRAPH])
+export const NETWORKS: ChainConfig[] = chain([...NETWORK_GRAPH])
   .map(
     ([departure, arrivals]) =>
       isDev ? [departure, ...arrivals] : [departure, ...arrivals.filter((item) => item.stable)] // only display stable bridge in prod
@@ -431,10 +382,10 @@ export const NETWORKS: NetConfig[] = chain([...NETWORK_GRAPH])
   .flatten()
   .unionWith((cur, pre) => cur.mode === pre.mode && cur.network === pre.network)
   .map(({ network, mode }) => {
-    const config: NetConfig = NETWORK_CONFIG[network];
+    const config: ChainConfig = NETWORK_CONFIG[network];
 
     return config.type.includes('polkadot') && mode === 'native'
-      ? (omit(config, 'dvm') as Omit<NetConfig, 'dvm'>)
+      ? (omit(config, 'dvm') as Omit<ChainConfig, 'dvm'>)
       : config;
   })
   .sortBy((item) => item.name)
@@ -445,7 +396,7 @@ export const AIRDROP_GRAPH = new Map<Departure, Arrival[]>([
   [{ network: Graph.tron, mode: 'native' }, [{ network: Graph.crab, status: 'available', mode: 'native' }]],
 ]);
 
-export const AIRPORTS: NetConfig[] = Object.values(NETWORK_CONFIG)
+export const AIRPORTS: ChainConfig[] = Object.values(NETWORK_CONFIG)
   .filter((item) => ['ethereum', 'crab', 'tron'].includes(item.name))
   .map((item) => omit(item, 'dvm'));
 

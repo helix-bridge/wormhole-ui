@@ -18,7 +18,7 @@ type BridgeComponents = [
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   FunctionComponent<BridgeFormProps<any>>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  FunctionComponent<RecordComponentProps<any>>
+  FunctionComponent<RecordComponentProps<any, any, any>>
 ];
 
 enum ComponentIndex {
