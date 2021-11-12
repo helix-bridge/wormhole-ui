@@ -45,6 +45,13 @@ export function S2SRecord({
 
     return [transactionSend, originLocked, originConfirmed];
   }, [departure, requestTxHash, responseTxHash, result, t]);
+  const { count, currency } = useMemo<{ count: string; currency: string }>(
+    () =>
+      isRedeem
+        ? { count: amount, currency: 'xORING' }
+        : { count: toWei({ value: amount, unit: 'gwei' }), currency: 'ORING' },
+    [amount, isRedeem]
+  );
 
   return (
     <Record
@@ -52,9 +59,7 @@ export function S2SRecord({
       arrival={arrival}
       blockTimestamp={+(endTimestamp || startTimestamp || Date.now())}
       recipient={isRedeem ? convertToSS58(recipient, arrival?.ss58Prefix ?? null) : recipient}
-      assets={[
-        { amount: toWei({ value: amount, unit: 'gwei' }), currency: isRedeem ? 'xORING' : 'ORING', unit: 'gwei' },
-      ]}
+      assets={[{ amount: count, currency, unit: 'gwei' }]}
       items={progresses}
     >
       <Progresses items={progresses} />
