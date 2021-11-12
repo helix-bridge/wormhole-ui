@@ -65,7 +65,7 @@ function getMappedTokensFromDvm(
       switchMap((address) => {
         const tokenObs = from(getErc20Meta(address));
         const infoObs = from(
-          mappingContract.methods[s2s ? 'mappingToken2Info' : 'tokenToInfo'](address).call() as Promise<{
+          mappingContract.methods[s2s ? 'mappingToken2OriginalInfo' : 'tokenToInfo'](address).call() as Promise<{
             source: string;
             backing: string;
           }>
