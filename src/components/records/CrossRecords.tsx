@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { useNetworks } from '../../hooks';
-import { HistoryRouteParam, NetConfig, Vertices } from '../../model';
+import { HistoryRouteParam, ChainConfig, Vertices } from '../../model';
 import {
   getCrossChainArrivals,
   getDisplayName,
@@ -62,8 +62,8 @@ export function CrossRecords() {
   useEffect(() => {
     const target = fromNetworks.find(
       (item) => item.name.toLowerCase() === departure.network.toLowerCase()
-    ) as NetConfig;
-    const isSameEnv = (net: NetConfig) =>
+    ) as ChainConfig;
+    const isSameEnv = (net: ChainConfig) =>
       isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
     setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
@@ -96,8 +96,8 @@ export function CrossRecords() {
             onSelect={(name: string) => {
               const target = fromNetworks.find(
                 (item) => getDisplayName(item).toLowerCase() === name.toLowerCase()
-              ) as NetConfig;
-              const isSameEnv = (net: NetConfig) =>
+              ) as ChainConfig;
+              const isSameEnv = (net: ChainConfig) =>
                 isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
               setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
@@ -124,7 +124,7 @@ export function CrossRecords() {
               onSelect={(name: string) => {
                 const target = toNetworks.find(
                   (item) => getDisplayName(item).toLowerCase() === name.toLowerCase()
-                ) as NetConfig;
+                ) as ChainConfig;
 
                 setArrival({ network: target.name, mode: getNetworkMode(target) });
               }}

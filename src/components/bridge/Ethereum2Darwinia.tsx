@@ -14,13 +14,16 @@ import {
   BridgeFormProps,
   Erc20Token,
   Ethereum2DarwiniaTransfer,
-  NetConfig,
   Network,
   NoNullTransferNetwork,
   RedeemDarwiniaToken,
   RedeemDeposit,
   TransferFormValues,
   Tx,
+  RopstenConfig,
+  PangolinConfig,
+  DarwiniaConfig,
+  EthereumConfig,
 } from '../../model';
 import {
   AfterTxCreator,
@@ -64,25 +67,25 @@ const BN_ZERO = new BN(0);
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
-async function queryTokenMeta(config: NetConfig) {
-  const { ring, kton } = config.tokenContract;
+async function queryTokenMeta(config: EthereumConfig) {
+  const { ring, kton } = config.contracts.e2d;
   const ringMeta = await getMappedTokenMeta(ring as string);
   const ktonMeta = await getMappedTokenMeta(kton as string);
 
   return [ringMeta, ktonMeta];
 }
 
-async function getIssuingAllowance(from: string, config: NetConfig): Promise<BN> {
+async function getIssuingAllowance(from: string, config: EthereumConfig): Promise<BN> {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const contract = new web3.eth.Contract(abi.tokenABI, config.tokenContract.ring);
-  const allowanceAmount = await contract.methods.allowance(from, config.tokenContract.issuingDarwinia).call();
+  const contract = new web3.eth.Contract(abi.tokenABI, config.contracts.e2d.ring);
+  const allowanceAmount = await contract.methods.allowance(from, config.contracts.e2d.issuing).call();
 
   return Web3.utils.toBN(allowanceAmount || 0);
 }
 
-async function getFee(config: NetConfig): Promise<BN> {
+async function getFee(config: EthereumConfig): Promise<BN> {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const contract = new web3.eth.Contract(abi.registryABI, config.tokenContract.registryEth);
+  const contract = new web3.eth.Contract(abi.registryABI, config.contracts.e2d.fee);
   const fee: number = await contract.methods
     .uintOf('0x55494e545f4252494447455f4645450000000000000000000000000000000000')
     .call();
@@ -180,7 +183,10 @@ function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountChe
 
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
-type ApproveValue = TransferFormValues<Ethereum2DarwiniaTransfer, NoNullTransferNetwork>;
+type ApproveValue = TransferFormValues<
+  Ethereum2DarwiniaTransfer,
+  NoNullTransferNetwork<RopstenConfig | EthereumConfig, PangolinConfig | DarwiniaConfig>
+>;
 
 function createApproveRingTx(value: Pick<ApproveValue, 'transfer' | 'sender'>, after: AfterTxCreator): Observable<Tx> {
   const beforeTx = applyModalObs({
@@ -192,8 +198,8 @@ function createApproveRingTx(value: Pick<ApproveValue, 'transfer' | 'sender'>, a
   } = value;
   const txObs = approveToken({
     sender,
-    spender: from.tokenContract.issuingDarwinia,
-    tokenAddress: from.tokenContract.ring,
+    spender: from.contracts.e2d.issuing,
+    tokenAddress: from.contracts.e2d.ring,
   });
 
   return createTxWorkflow(beforeTx, txObs, after);
@@ -281,13 +287,13 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
   const refreshBalance = useCallback(
     (value: RedeemDarwiniaToken | ApproveValue) => {
       if (isKton(value.asset)) {
-        getTokenBalance(value.transfer.from.tokenContract.kton as string, account, false).then((balance) =>
+        getTokenBalance(value.transfer.from.contracts.e2d.kton as string, account, false).then((balance) =>
           setMax(balance)
         );
       }
 
       // always need to refresh ring balance, because of it is a fee token
-      getTokenBalance(value.transfer.from.tokenContract.ring as string, account, false).then((balance) => {
+      getTokenBalance(value.transfer.from.contracts.e2d.ring as string, account, false).then((balance) => {
         if (isRing(value.asset)) {
           setMax(balance);
         }
@@ -302,7 +308,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
   const refreshDeposit = useCallback(
     (value: RedeemDeposit) => {
       setRemovedDepositIds(() => [...removedDepositIds, value.deposit.deposit_id]);
-      getTokenBalance(value.transfer.from.tokenContract.ring as string, account, false).then((balance) =>
+      getTokenBalance(value.transfer.from.contracts.e2d.ring as string, account, false).then((balance) =>
         setRingBalance(balance)
       );
     },
@@ -354,7 +360,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
       return;
     }
 
-    const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
+    const netConfig: RopstenConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
     const { recipient } = getInfoFromHash();
 
     form.setFieldsValue({
@@ -363,7 +369,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
     });
 
     Promise.all([
-      getTokenBalance(netConfig.tokenContract.ring as string, account, false),
+      getTokenBalance(netConfig.contracts.e2d.ring as string, account, false),
       getFee(netConfig),
       getIssuingAllowance(account, netConfig),
       queryTokenMeta(netConfig),
@@ -407,18 +413,18 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
             form.setFieldsValue({ amount: '' });
 
             let balance: BN | null = null;
-            const netConfig: NetConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
+            const netConfig: EthereumConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
 
             setIsBalanceQuerying(true);
 
             if (isRing(value)) {
-              balance = await getTokenBalance(netConfig.tokenContract.ring as string, account, false);
+              balance = await getTokenBalance(netConfig.contracts.e2d.ring as string, account, false);
 
               setRingBalance(balance);
             }
 
             if (isKton(value)) {
-              balance = await getTokenBalance(netConfig.tokenContract.kton as string, account, false);
+              balance = await getTokenBalance(netConfig.contracts.e2d.kton as string, account, false);
             }
 
             setAsset(value);

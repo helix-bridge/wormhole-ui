@@ -279,19 +279,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "admin",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -511,7 +498,7 @@
         "type": "address"
       }
     ],
-    "name": "mappingToken2Info",
+    "name": "mappingToken2OriginalInfo",
     "outputs": [
       {
         "internalType": "uint32",
@@ -632,19 +619,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_admin",
-        "type": "address"
-      }
-    ],
-    "name": "setAdmin",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "mapping_token",
         "type": "address"
       },
@@ -758,6 +732,24 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "mapping_token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "new_owner",
+        "type": "address"
+      }
+    ],
+    "name": "transferMappingTokenOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "newOwner",
         "type": "address"
       }
@@ -810,7 +802,7 @@
       },
       {
         "internalType": "address",
-        "name": "mapping_token",
+        "name": "new_mapping_token",
         "type": "address"
       },
       {

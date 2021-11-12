@@ -2,12 +2,12 @@ import { Button, ButtonProps, Form } from 'antd';
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi, useTx } from '../hooks';
-import { ConnectionStatus, NetConfig } from '../model';
+import { ConnectionStatus, ChainConfig } from '../model';
 import { getDisplayName, hasBridge, isBridgeAvailable, isSameNetConfig } from '../utils';
 
 interface SubmitButtonProps extends ButtonProps {
-  from: NetConfig | null;
-  to: NetConfig | null;
+  from: ChainConfig | null;
+  to: ChainConfig | null;
   requireTo?: boolean;
   hideSubmit?: boolean;
   launch?: () => void;

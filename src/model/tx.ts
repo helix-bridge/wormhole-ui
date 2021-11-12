@@ -1,4 +1,5 @@
 import { Observable } from 'rxjs';
+import { DarwiniaConfig, EthereumConfig, PangolinConfig, RopstenConfig, CrabConfig } from './network';
 import {
   Darwinia2EthereumTransfer,
   DVMTransfer,
@@ -53,7 +54,7 @@ export type TxSuccessComponentProps<T> = {
 
 export type DVMToken = TransferFormValues<
   DeepRequired<DVMTransfer, ['sender' | 'recipient' | 'amount' | 'asset']>,
-  NoNullTransferNetwork
+  NoNullTransferNetwork<PangolinConfig | CrabConfig, RopstenConfig | EthereumConfig>
 >;
 
 export type RedeemDVMToken = DVMToken;
@@ -61,12 +62,12 @@ export type IssuingDVMToken = DVMToken;
 
 export type RedeemDarwiniaToken = TransferFormValues<
   DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
-  NoNullTransferNetwork
+  NoNullTransferNetwork<RopstenConfig | EthereumConfig, PangolinConfig | DarwiniaConfig>
 >;
 
 export type RedeemDeposit = TransferFormValues<
   DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'deposit' | 'recipient']>,
-  NoNullTransferNetwork
+  NoNullTransferNetwork<RopstenConfig | EthereumConfig, PangolinConfig | DarwiniaConfig>
 >;
 
 export type IssuingDarwiniaToken = TransferFormValues<

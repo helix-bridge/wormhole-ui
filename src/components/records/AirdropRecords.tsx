@@ -8,7 +8,7 @@ import { map } from 'rxjs';
 import Web3 from 'web3';
 import { DATE_TIME_FORMATE, FORM_CONTROL, NETWORK_CONFIG, NETWORK_LIGHT_THEME, SubscanApiPath } from '../../config';
 import { airportsDepartureFilter, useApi, useNetworks } from '../../hooks';
-import { ClaimsRes, NetConfig, Network, SubscanResponse } from '../../model';
+import { ClaimsRes, ChainConfig, Network, SubscanResponse } from '../../model';
 import { apiUrl, fromWei, getAirdropData, getInitialSetting, isSameNetConfig, rxGet } from '../../utils';
 import { Destination } from '../controls/Destination';
 import { LinkIndicator } from '../LinkIndicator';
@@ -26,7 +26,7 @@ export function AirdropRecords() {
   const [claimAmount, setClaimAmount] = useState(new BN(0));
   const [target, setTarget] = useState('');
   const { fromNetworks, setFromFilters } = useNetworks(false);
-  const [fromNetwork, setFromNetwork] = useState<NetConfig | null>(() => {
+  const [fromNetwork, setFromNetwork] = useState<ChainConfig | null>(() => {
     const from = getInitialSetting('from', null);
     return fromNetworks.find((item) => item.name === from) ?? null;
   });

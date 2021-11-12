@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RecordComponentProps } from '../../config';
-import { S2SHistoryRecord } from '../../model';
+import { PolkadotConfig, S2SHistoryRecord } from '../../model';
 import { convertToSS58, getNetworkMode, toWei } from '../../utils';
 import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
 import { Record } from './Record';
@@ -15,7 +15,11 @@ import { Record } from './Record';
  * FIXME: Can not find the corresponding event on target chain, because the message_id is missing;
  */
 // eslint-disable-next-line complexity
-export function S2SRecord({ record, departure, arrival }: RecordComponentProps<S2SHistoryRecord>) {
+export function S2SRecord({
+  record,
+  departure,
+  arrival,
+}: RecordComponentProps<S2SHistoryRecord, PolkadotConfig, PolkadotConfig>) {
   const { t } = useTranslation();
   const { requestTxHash, responseTxHash, amount, result, endTimestamp, startTimestamp, recipient } = record;
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
@@ -41,6 +45,13 @@ export function S2SRecord({ record, departure, arrival }: RecordComponentProps<S
 
     return [transactionSend, originLocked, originConfirmed];
   }, [departure, requestTxHash, responseTxHash, result, t]);
+  const { count, currency } = useMemo<{ count: string; currency: string }>(
+    () =>
+      isRedeem
+        ? { count: amount, currency: 'xORING' }
+        : { count: toWei({ value: amount, unit: 'gwei' }), currency: 'ORING' },
+    [amount, isRedeem]
+  );
 
   return (
     <Record
@@ -48,9 +59,7 @@ export function S2SRecord({ record, departure, arrival }: RecordComponentProps<S
       arrival={arrival}
       blockTimestamp={+(endTimestamp || startTimestamp || Date.now())}
       recipient={isRedeem ? convertToSS58(recipient, arrival?.ss58Prefix ?? null) : recipient}
-      assets={[
-        { amount: toWei({ value: amount, unit: 'gwei' }), currency: isRedeem ? 'xORING' : 'ORING', unit: 'gwei' },
-      ]}
+      assets={[{ amount: count, currency, unit: 'gwei' }]}
       items={progresses}
     >
       <Progresses items={progresses} />

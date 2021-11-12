@@ -8,7 +8,7 @@ import Web3 from 'web3';
 import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useLocalSearch, useMappedTokens, useTx } from '../../hooks';
-import { Erc20Token, NetConfig } from '../../model';
+import { Erc20Token, EthereumConfig, RopstenConfig } from '../../model';
 import { isSameNetConfig, isValidAddress } from '../../utils';
 import { getErc20Meta } from '../../utils/erc20/meta';
 import {
@@ -47,7 +47,7 @@ function tokenSearchFactory<T extends Pick<Erc20Token, 'address' | 'symbol'>>(to
 export function Register() {
   const { t } = useTranslation();
   const [form] = useForm();
-  const [net, setNet] = useState<NetConfig>(DEFAULT_REGISTER_NETWORK);
+  const [net, setNet] = useState<EthereumConfig | RopstenConfig>(DEFAULT_REGISTER_NETWORK);
   const {
     connection: { status },
     network,
@@ -58,7 +58,10 @@ export function Register() {
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { tokens, updateTokens } = useMappedTokens({ from: network, to: null }, RegisterStatus.registering);
+  const { tokens, updateTokens } = useMappedTokens(
+    { from: network as EthereumConfig, to: null },
+    RegisterStatus.registering
+  );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(tokens), [tokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
@@ -68,7 +71,7 @@ export function Register() {
     () =>
       status === 'success' &&
       isSameNetConfig(network, net) &&
-      !!net.erc20Token.bankingAddress &&
+      !!net.contracts.e2dvm.redeem &&
       isValidAddress(inputValue, 'ethereum'),
     [inputValue, net, network, status]
   );
@@ -123,7 +126,7 @@ export function Register() {
           extra={<LinkIndicator config={net} />}
           onChange={(value) => {
             if (value) {
-              setNet(value);
+              setNet(value as EthereumConfig | RopstenConfig);
             }
           }}
         />
@@ -148,7 +151,7 @@ export function Register() {
             <Input.Search
               placeholder={t('Token Contract Address')}
               size="large"
-              disabled={!net.erc20Token.bankingAddress}
+              disabled={!net.contracts.e2dvm.redeem}
               onChange={(event) => {
                 setInputValue(event.target.value);
               }}
@@ -197,7 +200,7 @@ export function Register() {
 }
 
 interface UpcomingProps {
-  departure: NetConfig;
+  departure: EthereumConfig;
 }
 
 function Upcoming({ departure }: UpcomingProps) {

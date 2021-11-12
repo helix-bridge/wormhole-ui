@@ -4,7 +4,7 @@ import { isBoolean, isNull, negate } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { airportsArrivalFilter, airportsDepartureFilter, useNetworks } from '../../hooks';
-import { Arrival, CustomFormControlProps, NetConfig, TransferNetwork } from '../../model';
+import { Arrival, CustomFormControlProps, ChainConfig, TransferNetwork } from '../../model';
 import {
   getNetworkMode,
   getArrival,
@@ -65,9 +65,9 @@ export function Nets({
     const isSameEnv =
       from?.isTest === to?.isTest
         ? isBoolean(from?.isTest) && isBoolean(to?.isTest)
-          ? (net: NetConfig) => net.isTest === from?.isTest
+          ? (net: ChainConfig) => net.isTest === from?.isTest
           : truth
-        : (net: NetConfig) => (isBoolean(from?.isTest) && isBoolean(to?.isTest) ? net.isTest === from?.isTest : true);
+        : (net: ChainConfig) => (isBoolean(from?.isTest) && isBoolean(to?.isTest) ? net.isTest === from?.isTest : true);
     const departureFilter = isCross ? [] : [airportsDepartureFilter];
     const arrivalFilter = isCross ? [] : [airportsArrivalFilter];
 

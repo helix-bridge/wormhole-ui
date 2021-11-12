@@ -2,7 +2,7 @@ import { encodeAddress } from '@polkadot//util-crypto';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RecordComponentProps } from '../../config';
-import { Network } from '../../model';
+import { EthereumConfig, Network, PolkadotConfig } from '../../model';
 import { E2DHistory as E2DRecordType, RedeemHistory, RingBurnHistory } from '../../model/darwinia';
 import { getLegalName, verticesToNetConfig } from '../../utils';
 import { RelayerIcon } from '../icons';
@@ -14,10 +14,14 @@ export function E2DRecord({
   record,
   departure,
   arrival,
-}: RecordComponentProps<E2DRecordType & Partial<RingBurnHistory & RedeemHistory> & { isGenesis?: boolean }>) {
+}: RecordComponentProps<
+  E2DRecordType & Partial<RingBurnHistory & RedeemHistory> & { isGenesis?: boolean },
+  EthereumConfig,
+  PolkadotConfig
+>) {
   const { chain, amount, currency, target, block_timestamp, is_relayed, tx, darwinia_tx, isGenesis } = record;
   const { t } = useTranslation();
-  const decimal = departure?.ss58Prefix ?? 0;
+  const decimal = arrival?.ss58Prefix ?? 0;
 
   // eslint-disable-next-line complexity
   const progresses = useMemo(() => {

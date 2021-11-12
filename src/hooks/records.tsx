@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { catchError, EMPTY, from, map, Observable, of, Subscription } from 'rxjs';
 import { S2S_ISSUING_RECORDS_QUERY, S2S_REDEEM_RECORDS_QUERY } from '../config';
-import { Departure, HistoryReq, NetConfig, S2SBurnRecordsRes, S2SHistoryRecord, S2SLockedRecordRes } from '../model';
+import { Departure, HistoryReq, ChainConfig, S2SBurnRecordsRes, S2SHistoryRecord, S2SLockedRecordRes } from '../model';
 import {
   verticesToNetConfig,
   getNetworkMode,
@@ -160,7 +160,7 @@ const S2S_REDEEM_DEFAULT =
 const S2S_ISSUING_DEFAULT = 'https://api.subquery.network/sq/darwinia-network/pangolin';
 
 export function useS2SRecords(
-  departure: NetConfig
+  departure: ChainConfig
 ): (req: HistoryReq) => Observable<{ count: number; list: S2SHistoryRecord[] }> {
   const issuingClient = useMemo(
     () => new GraphQLClient({ url: departure.api.subql || S2S_ISSUING_DEFAULT }),

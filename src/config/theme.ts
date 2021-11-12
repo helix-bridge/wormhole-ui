@@ -1,4 +1,4 @@
-import { NetworkConfig } from '../model';
+import { NetworkThemeConfig } from '../model';
 import dark from '../theme/antd/dark.json';
 import light from '../theme/antd/light.json';
 import vars from '../theme/antd/vars.json';
@@ -11,7 +11,7 @@ import darwinia from '../theme/network/darwinia.json';
 import pangolin from '../theme/network/pangolin.json';
 import pangoro from '../theme/network/pangoro.json';
 
-export const NETWORK_LIGHT_THEME: NetworkConfig<{ [key in keyof typeof darwinia]: string }> = {
+export const NETWORK_LIGHT_THEME: NetworkThemeConfig<{ [key in keyof typeof darwinia]: string }> = {
   crab,
   darwinia,
   pangolin,
@@ -27,7 +27,7 @@ export const SKIN_THEME = {
   vars,
 };
 
-export const NETWORK_DARK_THEME: NetworkConfig<{ [key in keyof typeof darwiniaDark]: string }> = {
+export const NETWORK_DARK_THEME: NetworkThemeConfig<{ [key in keyof typeof darwiniaDark]: string }> = {
   crab: crabDark,
   darwinia: darwiniaDark,
   pangolin: pangolinDark,

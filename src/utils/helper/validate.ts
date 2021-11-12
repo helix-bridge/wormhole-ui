@@ -5,7 +5,7 @@ import type { ValidatorRule } from 'rc-field-form/lib/interface';
 import { TFunction } from 'react-i18next';
 import Web3 from 'web3';
 import { NETWORK_CONFIG } from '../../config';
-import { Network, NetworkCategory, SS58Prefix, TokenChainInfo } from '../../model';
+import { Network, NetworkCategory, PolkadotTypeNetwork, SS58Prefix, TokenChainInfo } from '../../model';
 import { isPolkadotNetwork } from '../network';
 import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
 import { toWei } from './balance';
@@ -23,8 +23,10 @@ export const isValidAddress = (address: string, network: Network | NetworkCatego
     return strict ? isSS58Address(address, 0) : isSS58Address(address);
   }
 
-  if (isPolkadotNetwork(network as Network)) {
-    return strict ? isSS58Address(address, NETWORK_CONFIG[network as Network].ss58Prefix) : isSS58Address(address);
+  if (isPolkadotNetwork(network as PolkadotTypeNetwork)) {
+    return strict
+      ? isSS58Address(address, NETWORK_CONFIG[network as PolkadotTypeNetwork].ss58Prefix)
+      : isSS58Address(address);
   }
 
   if (network === 'tron') {

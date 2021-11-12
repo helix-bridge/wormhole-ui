@@ -1,7 +1,7 @@
-import { NetConfig } from '../model';
+import { ChainConfig } from '../model';
 
-export interface RecordComponentProps<T> {
+export interface RecordComponentProps<T, D = ChainConfig, A = ChainConfig> {
   record: T;
-  departure: NetConfig | null;
-  arrival: NetConfig | null;
+  departure: D | null;
+  arrival: A | null;
 }
