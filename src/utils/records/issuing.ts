@@ -2,7 +2,17 @@ import { decodeAddress } from '@polkadot/util-crypto';
 import { catchError, filter, from, map, Observable, of, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
-import { D2EHistoryRes, D2EMeta, HistoryReq, LockEventsStorage, Network, Tx } from '../../model';
+import {
+  D2EHistoryRes,
+  D2EMeta,
+  DarwiniaConfig,
+  EthereumConfig,
+  HistoryReq,
+  LockEventsStorage,
+  Network,
+  PangolinConfig,
+  Tx,
+} from '../../model';
 import {
   apiUrl,
   ClaimNetworkPrefix,
@@ -102,9 +112,9 @@ export function claimToken({
   const network = networkPrefix.toLowerCase() as Network;
   const config = NETWORK_CONFIG[network];
   const apiObs = from(entrance.polkadot.getInstance(config.provider.rpc).isReady);
-  const toNetworkConfig = getAvailableNetwork(network)!;
+  const toNetworkConfig = getAvailableNetwork(network)! as EthereumConfig;
   const header = encodeBlockHeader(blockHeaderStr);
-  const storageKey = getD2ELockEventsStorageKey(blockNumber, config.lockEvents);
+  const storageKey = getD2ELockEventsStorageKey(blockNumber, (config as PangolinConfig | DarwiniaConfig).lockEvents);
   // TODO: check connection
   const accountObs = getEthConnection().pipe(
     filter(({ status }) => status === 'success'),
@@ -158,6 +168,6 @@ export function claimToken({
             })
           );
     }),
-    switchMap((txFn) => getContractTxObs(toNetworkConfig.tokenContract.bankEthereum || '', txFn, abi.tokenIssuingABI))
+    switchMap((txFn) => getContractTxObs(toNetworkConfig.contracts.e2d.redeem || '', txFn, abi.tokenIssuingABI))
   );
 }

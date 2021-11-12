@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { Unit } from 'web3-utils';
 import { Erc20Token } from './erc20';
 import { Deposit } from './evolution';
-import { NetConfig, Vertices } from './network';
+import { ChainConfig, Vertices } from './network';
 import { DeepRequired } from './util';
 
 /* ---------------------------------------------------Components props--------------------------------------------------- */
@@ -27,12 +27,15 @@ export type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => bool
 
 /* ---------------------------------------------------Bridge elements--------------------------------------------------- */
 
-export interface TransferNetwork {
-  from: NetConfig | null;
-  to: NetConfig | null;
+export interface TransferNetwork<F = ChainConfig, T = ChainConfig> {
+  from: F | null;
+  to: T | null;
 }
 
-export type NoNullTransferNetwork = DeepRequired<TransferNetwork, ['from' | 'to']>;
+export type NoNullTransferNetwork<F = ChainConfig, T = ChainConfig> = DeepRequired<
+  TransferNetwork<F, T>,
+  ['from' | 'to']
+>;
 
 export interface TransferParty {
   recipient: string;

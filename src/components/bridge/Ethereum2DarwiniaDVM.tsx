@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { RegisterStatus } from '../../config';
-import { BridgeFormProps, DVMTransfer, NetConfig } from '../../model';
+import { BridgeFormProps, DVMTransfer, ChainConfig, RopstenConfig } from '../../model';
 import { redeemErc20 } from '../../utils';
 import { DVM } from './DVM';
 
@@ -15,7 +15,7 @@ import { DVM } from './DVM';
  */
 export function Ethereum2DarwiniaDVM({ form, setSubmit }: BridgeFormProps<DVMTransfer>) {
   const spenderResolver = useCallback(
-    (config: NetConfig) => Promise.resolve(config.tokenContract.issuingDarwinia ?? ''),
+    (config: ChainConfig) => Promise.resolve((config as RopstenConfig).contracts.e2dvm.issuing ?? ''),
     []
   );
 

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { from, switchMap } from 'rxjs';
 import { RegisterStatus } from '../../config';
-import { BridgeFormProps, DVMToken, DVMTransfer, NetConfig } from '../../model';
+import { BridgeFormProps, DVMToken, DVMTransfer, ChainConfig } from '../../model';
 import { getS2SMappingParams, getUnit, redeemSubstrate, toWei } from '../../utils';
 import { DVM } from './DVM';
 
@@ -31,7 +31,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
     );
   }, []);
 
-  const getSpender = useCallback(async (config: NetConfig) => {
+  const getSpender = useCallback(async (config: ChainConfig) => {
     const { mappingAddress } = await getS2SMappingParams(config.provider.rpc);
 
     return mappingAddress;

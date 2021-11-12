@@ -3,18 +3,19 @@ import { Button, Popover, Tooltip } from 'antd';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../hooks';
-import { EthereumConnection, NetConfig } from '../model';
+import { EthereumConnection, ChainConfig, EthereumChainConfig } from '../model';
 import {
   getConfigByConnection,
   getDisplayName,
   isChainIdEqual,
+  isDVM,
   isEthereumNetwork,
   isPolkadotNetwork,
   isSameNetConfig,
 } from '../utils';
 
 interface LinkIndicatorProps {
-  config: NetConfig | null;
+  config: ChainConfig | null;
   showSwitch?: boolean;
 }
 
@@ -23,7 +24,7 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
   const { t } = useTranslation();
   const { connection, network, connectNetwork } = useApi();
   const [isConsistent, setIsConsistent] = useState(false);
-  const [connectionConfig, setConnectionConfig] = useState<NetConfig | null>(null);
+  const [connectionConfig, setConnectionConfig] = useState<ChainConfig | null>(null);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -34,10 +35,13 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
       return;
     }
 
-    if (config?.dvm || isEthereumNetwork(config?.name)) {
+    if ((config && isDVM(config)) || isEthereumNetwork(config?.name)) {
       is =
         connection.type === 'metamask' &&
-        isChainIdEqual((connection as EthereumConnection).chainId, config!.ethereumChain.chainId);
+        isChainIdEqual(
+          (connection as EthereumConnection).chainId,
+          (config! as unknown as EthereumChainConfig).ethereumChain?.chainId
+        );
 
       setIsConsistent(is);
     } else if (isPolkadotNetwork(config?.name)) {

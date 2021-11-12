@@ -5,15 +5,13 @@ import { AddEthereumChainParameter } from './metamask';
 
 export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia' | 'pangoro';
 
-export type EthereumTypeNetwork = 'ethereum' | 'ropsten';
+type EthereumTypeNetwork = 'ethereum' | 'ropsten';
 
-export type TronTypeNetwork = 'tron';
+type TronTypeNetwork = 'tron';
 
 export type Network = PolkadotTypeNetwork | EthereumTypeNetwork | TronTypeNetwork;
 
 export type NetworkCategory = 'polkadot' | 'ethereum' | 'darwinia' | 'dvm' | 'tron';
-
-export type Token = 'ring' | 'kton' | 'native';
 
 // eslint-disable-next-line no-magic-numbers
 export type SS58Prefix = 0 | 2 | 18 | 42 | null;
@@ -30,7 +28,6 @@ type Api = {
   dapp: string;
   subscan: string;
   subGraph: string;
-  [key: string]: string;
 };
 
 export interface LockEventsStorage {
@@ -39,47 +36,109 @@ export interface LockEventsStorage {
   key: string;
 }
 
-export interface Erc20TokenConfig {
-  proofAddress: string;
-  bankingAddress: string;
-}
-
-export interface DVMConfig {
+interface DVMTokenConfig {
   ring: string;
   kton: string;
 }
 
-export interface Provider {
+interface Provider {
   rpc: string;
   etherscan: string;
 }
 
-export interface NetConfig {
-  api: Api;
-  dvm?: DVMConfig;
-  erc20Token: Erc20TokenConfig;
+interface ContractConfig {
+  issuing: string;
+  redeem: string;
+}
+
+interface E2DContractConfig extends ContractConfig {
+  ring: string; // e2d ring balance address
+  kton: string; // e2d kton balance address
+  fee: string; // e2d cross chain fee querying address
+  redeemDeposit: string; // e2d redeem deposit address
+}
+
+interface E2DVMContractConfig extends ContractConfig {
+  proof: string;
+}
+
+export interface EthereumChainConfig {
   ethereumChain: AddEthereumChainParameter;
+}
+
+export interface EthereumChainDVMConfig extends EthereumChainConfig, ChainConfig {
+  dvm: DVMTokenConfig;
+}
+
+export interface ChainConfig {
+  api: Api;
   facade: Facade;
   fullName: string;
   isTest: boolean;
-  lockEvents?: LockEventsStorage[];
   name: Network;
   provider: Provider;
-  ss58Prefix: SS58Prefix;
-  tokenContract: {
-    ring?: string;
-    kton?: string;
-    registryEth?: string;
-    issuingDarwinia?: string;
-    bankEthereum?: string;
-    bankDarwinia?: string;
-  };
   type: NetworkCategory[];
 }
 
-export type NetworkConfig<T = NetConfig> = Config<PolkadotTypeNetwork, T> &
-  Config<EthereumTypeNetwork, Omit<T, 'dvm'>> &
-  Config<TronTypeNetwork, T>;
+/* ----------------------------------------Polkadot network config-------------------------------------------------- */
+
+export interface PolkadotConfig extends ChainConfig {
+  ss58Prefix: SS58Prefix;
+}
+
+export interface PangolinConfig extends PolkadotConfig, EthereumChainDVMConfig {
+  contracts: {
+    e2d: E2DContractConfig;
+    e2dvm: E2DVMContractConfig;
+  };
+  lockEvents: LockEventsStorage[];
+}
+
+export type PangoroConfig = PolkadotConfig;
+
+export interface CrabConfig extends PolkadotConfig, EthereumChainDVMConfig {
+  contracts: {
+    e2dvm: E2DVMContractConfig;
+  };
+}
+
+export interface DarwiniaConfig extends PolkadotConfig {
+  contracts: {
+    e2d: E2DContractConfig;
+  };
+  lockEvents: LockEventsStorage[];
+}
+
+/* ----------------------------------------Ethereum network config-------------------------------------------------- */
+
+export interface EthereumConfig extends ChainConfig, EthereumChainConfig {
+  contracts: {
+    e2d: E2DContractConfig;
+    e2dvm: E2DVMContractConfig;
+  };
+}
+
+export type RopstenConfig = EthereumConfig;
+
+/* ----------------------------------------Tron network config-------------------------------------------------- */
+
+type TronConfig = ChainConfig;
+
+type NetworkMetaConfig<T extends Network, C extends ChainConfig> = Config<T, C>;
+
+export type NetworkConfig = NetworkMetaConfig<'pangolin', PangolinConfig> &
+  NetworkMetaConfig<'pangoro', PangoroConfig> &
+  NetworkMetaConfig<'crab', CrabConfig> &
+  NetworkMetaConfig<'darwinia', DarwiniaConfig> &
+  NetworkMetaConfig<'ethereum', EthereumConfig> &
+  NetworkMetaConfig<'ropsten', RopstenConfig> &
+  NetworkMetaConfig<'tron', TronConfig>;
+
+/* ----------------------------------------Network Theme config-------------------------------------------------- */
+
+export type NetworkThemeConfig<T> = Config<Network, T>;
+
+/* ----------------------------------------Connection config-------------------------------------------------- */
 
 /**
  * pending: initial state, indicate that the connection never launched.
@@ -104,7 +163,7 @@ export interface EthereumConnection extends Connection {
 
 export type TronConnection = Connection;
 
-export type NetworkFilter = (network: NetConfig) => boolean;
+export type NetworkFilter = (network: ChainConfig) => boolean;
 
 export type NetworkMode = 'native' | 'dvm';
 

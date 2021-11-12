@@ -1,4 +1,4 @@
-import { BridgePredicateFn, NetConfig } from '../../model';
+import { BridgePredicateFn, ChainConfig } from '../../model';
 import { getArrival, isEthereumNetwork, isPolkadotNetwork } from '../network';
 
 export const isSubstrate2SubstrateDVM: BridgePredicateFn = (departure, arrival) => {
@@ -32,11 +32,11 @@ export const isS2S: BridgePredicateFn = (departure, arrival) => {
   return [isSubstrate2SubstrateDVM, isSubstrateDVM2Substrate].some((fn) => fn(departure, arrival));
 };
 
-export function hasBridge(from: NetConfig, to: NetConfig): boolean {
+export function hasBridge(from: ChainConfig, to: ChainConfig): boolean {
   return !!getArrival(from, to);
 }
 
-export function isBridgeAvailable(from: NetConfig, to: NetConfig): boolean {
+export function isBridgeAvailable(from: ChainConfig, to: ChainConfig): boolean {
   const bridge = getArrival(from, to);
 
   return !!bridge && bridge.status === 'available';

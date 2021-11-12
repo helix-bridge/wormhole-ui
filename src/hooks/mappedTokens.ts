@@ -4,9 +4,12 @@ import { from as fromPromise, map, of, switchMap, tap } from 'rxjs';
 import { RegisterStatus } from '../config';
 import {
   Action,
+  CrabConfig,
   Erc20RegisterStatus,
   Erc20Token,
+  EthereumConfig,
   EthereumConnection,
+  PangolinConfig,
   RequiredPartial,
   TransferNetwork,
 } from '../model';
@@ -61,7 +64,10 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
  * @params {number} status - token register status 1:registered 2:registering
  */
 export const useMappedTokens = (
-  { from, to }: TransferNetwork,
+  {
+    from,
+    to,
+  }: TransferNetwork<PangolinConfig | CrabConfig | EthereumConfig, PangolinConfig | CrabConfig | EthereumConfig>,
   status: Erc20RegisterStatus = RegisterStatus.unregister
 ) => {
   const [loading, setLoading] = useState(false);

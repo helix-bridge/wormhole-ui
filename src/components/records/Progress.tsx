@@ -3,7 +3,7 @@ import { Button, Row, Tooltip } from 'antd';
 import { last } from 'lodash';
 import React, { useMemo } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { NetConfig, Network } from '../../model';
+import { ChainConfig, Network } from '../../model';
 import { CrabIcon, DarwiniaIcon, EthereumIcon, PangolinIcon, PangoroIcon, RopstentIcon, TxSendIcon } from '../icons';
 import { TronIcon } from '../icons/tron';
 import { SubscanLink } from '../SubscanLink';
@@ -30,7 +30,7 @@ export interface ProgressProps {
   Icon: IconComponent;
   title: React.ReactNode;
   className?: string;
-  network: NetConfig | null;
+  network: ChainConfig | null;
 }
 
 export interface ProgressesProps {

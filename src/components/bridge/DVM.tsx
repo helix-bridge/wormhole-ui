@@ -14,7 +14,7 @@ import {
   DVMTransfer,
   Erc20Token,
   IssuingDVMToken,
-  NetConfig,
+  ChainConfig,
   Network,
   NoNullTransferNetwork,
   RedeemDVMToken,
@@ -55,13 +55,13 @@ interface DVMProps {
   approveOptions?: Record<string, string>;
   isDVM?: boolean;
   transform: (value: DVMToken) => Observable<Tx>;
-  spenderResolver: (config: NetConfig) => Promise<string>;
+  spenderResolver: (config: ChainConfig) => Promise<string>;
 }
 
 interface TransferInfoProps {
   amount: string;
   tokenInfo: MemoedTokenInfo;
-  arrival: NetConfig;
+  arrival: ChainConfig;
 }
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
@@ -130,7 +130,7 @@ export function DVM({
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess();
   const refreshAllowance = useCallback(
-    async (config: NetConfig) => {
+    async (config: ChainConfig) => {
       const spender = await spenderResolver(config);
 
       return getAllowance(account, spender, selectedErc20).then((num) => {

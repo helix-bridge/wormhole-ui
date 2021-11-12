@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { fromUnixTime } from 'date-fns/esm';
 import { PropsWithChildren, useMemo } from 'react';
 import { DATE_TIME_FORMATE } from '../../config';
-import { NetConfig } from '../../model';
+import { ChainConfig } from '../../model';
 import { EllipsisMiddle } from '../EllipsisMiddle';
 import { AssetOverview, AssetOverviewProps } from './AssetOverview';
 import { ProgressesProps, State } from './Progress';
@@ -15,8 +15,8 @@ export interface RecordProps extends ProgressesProps {
   blockTimestamp: number;
   recipient: string;
   assets: AssetOverviewProps[];
-  departure: NetConfig | null;
-  arrival: NetConfig | null;
+  departure: ChainConfig | null;
+  arrival: ChainConfig | null;
 }
 
 const PERCENT_HUNDRED = 100;

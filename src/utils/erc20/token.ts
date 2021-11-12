@@ -4,7 +4,17 @@ import { catchError, delay, map, mergeMap, retry, retryWhen, scan, startWith, sw
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus } from '../../config';
-import { Erc20RegisterProof, Erc20RegisterProofRes, Erc20Token, MappedToken, NetConfig, Tx } from '../../model';
+import {
+  CrabConfig,
+  Erc20RegisterProof,
+  Erc20RegisterProofRes,
+  Erc20Token,
+  EthereumConfig,
+  MappedToken,
+  PangolinConfig,
+  RopstenConfig,
+  Tx,
+} from '../../model';
 import {
   apiUrl,
   ClaimNetworkPrefix,
@@ -38,8 +48,8 @@ const proofMemo: StoredProof[] = [];
  */
 function getMappedTokensFromDvm(
   currentAccount: string,
-  departure: NetConfig,
-  arrival: NetConfig,
+  departure: PangolinConfig | CrabConfig,
+  arrival: EthereumConfig,
   mappingAddress: string
 ) {
   const web3 = entrance.web3.getInstance(departure.provider.rpc);
@@ -55,7 +65,7 @@ function getMappedTokensFromDvm(
       switchMap((address) => {
         const tokenObs = from(getErc20Meta(address));
         const infoObs = from(
-          mappingContract.methods[s2s ? 'mappingToken2Info' : 'tokenToInfo'](address).call() as Promise<{
+          mappingContract.methods[s2s ? 'mappingToken2OriginalInfo' : 'tokenToInfo'](address).call() as Promise<{
             source: string;
             backing: string;
           }>
@@ -88,9 +98,9 @@ function getMappedTokensFromDvm(
  * @description get all tokens at ethereum side
  * @returns tokens that status maybe registered or registering
  */
-function getMappedTokensFromEthereum(currentAccount: string, config: NetConfig) {
+function getMappedTokensFromEthereum(currentAccount: string, config: EthereumConfig) {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const backingContract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
+  const backingContract = new web3.eth.Contract(abi.bankErc20ABI, config.contracts.e2dvm.redeem);
   const countObs = from(backingContract.methods.assetLength().call() as Promise<number>);
   const getToken = (index: number) =>
     from(backingContract.methods.allAssets(index).call() as Promise<string>).pipe(
@@ -160,8 +170,8 @@ const getSymbolType: (address: string) => Promise<{ symbol: string; isString: bo
 // eslint-disable-next-line complexity
 export const getKnownMappedTokens = (
   currentAccount: string,
-  departure: NetConfig,
-  arrival: NetConfig
+  departure: PangolinConfig | CrabConfig | EthereumConfig,
+  arrival: PangolinConfig | CrabConfig | EthereumConfig
 ): Observable<{ total: number; tokens: Erc20Token[] }> => {
   if (!currentAccount) {
     return of({ total: 0, tokens: [] });
@@ -174,9 +184,16 @@ export const getKnownMappedTokens = (
   );
 
   return departure.type.includes('ethereum')
-    ? getMappedTokensFromEthereum(currentAccount, departure)
+    ? getMappedTokensFromEthereum(currentAccount, departure as EthereumConfig)
     : mappingAddressObs.pipe(
-        switchMap(({ mappingAddress }) => getMappedTokensFromDvm(currentAccount, departure, arrival, mappingAddress))
+        switchMap(({ mappingAddress }) =>
+          getMappedTokensFromDvm(
+            currentAccount,
+            departure as PangolinConfig | CrabConfig,
+            arrival as EthereumConfig,
+            mappingAddress
+          )
+        )
       );
 };
 
@@ -184,7 +201,7 @@ export const getKnownMappedTokens = (
  * @description test address 0x1F4E71cA23f2390669207a06dDDef70BDE75b679;
  * @params { Address } address - erc20 token address
  */
-export function launchRegister(address: string, config: NetConfig): Observable<Tx> {
+export function launchRegister(address: string, config: RopstenConfig | EthereumConfig): Observable<Tx> {
   const senderObs = from(getMetamaskActiveAccount());
   const symbolObs = from(getSymbolType(address));
   const hasRegisteredObs = from(getTokenRegisterStatus(address, config)).pipe(map((status) => !!status));
@@ -194,7 +211,7 @@ export function launchRegister(address: string, config: NetConfig): Observable<T
       return has
         ? EMPTY
         : getContractTxObs(
-            config.erc20Token.bankingAddress,
+            config.contracts.e2dvm.redeem,
             (contract) => {
               const register = isString ? contract.methods.registerToken : contract.methods.registerTokenBytes32;
 
@@ -211,9 +228,9 @@ export function launchRegister(address: string, config: NetConfig): Observable<T
  * 2. calculate mpt proof and mmr proof then combine them together
  * 3. cache the result and emit it to proof subject.
  */
-export const getRegisterProof: (address: string, config: NetConfig) => Observable<StoredProof> = (
+export const getRegisterProof: (address: string, config: EthereumConfig) => Observable<StoredProof> = (
   address: string,
-  config: NetConfig
+  config: EthereumConfig
 ) => {
   const proofMemoItem = proofMemo.find((item) => item.registerProof.source === address);
 
@@ -241,7 +258,7 @@ export const getRegisterProof: (address: string, config: NetConfig) => Observabl
     switchMap((registerProof) => {
       const { block_hash, block_num, mmr_index } = registerProof;
       const mptProof = apiObs.pipe(
-        switchMap((api) => getMPTProof(api, block_hash, config.erc20Token.proofAddress)),
+        switchMap((api) => getMPTProof(api, block_hash, config.contracts.e2dvm.proof)),
         map((proof) => proof.toHex()),
         catchError((err) => {
           console.warn(
@@ -286,7 +303,7 @@ export const getRegisterProof: (address: string, config: NetConfig) => Observabl
  */
 export const getTokenRegisterStatus: (
   address: string,
-  config: NetConfig,
+  config: PangolinConfig | CrabConfig | EthereumConfig,
   isEth?: boolean
 ) => Promise<RegisterStatus | null> =
   // eslint-disable-next-line complexity
@@ -302,11 +319,11 @@ export const getTokenRegisterStatus: (
     if (isEth) {
       web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
 
-      contract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
+      contract = new web3.eth.Contract(abi.bankErc20ABI, config.contracts.e2dvm.redeem);
     } else {
       web3 = entrance.web3.getInstance(config.provider.etherscan);
 
-      contract = new web3.eth.Contract(abi.bankErc20ABI, config.erc20Token.bankingAddress);
+      contract = new web3.eth.Contract(abi.bankErc20ABI, config.contracts.e2dvm.redeem);
     }
 
     const { target, timestamp } = await contract.methods.assets(address).call();
@@ -331,7 +348,7 @@ export const getTokenRegisterStatus: (
     return RegisterStatus.unregister;
   };
 
-export function confirmRegister(proof: StoredProof, config: NetConfig): Observable<Tx> {
+export function confirmRegister(proof: StoredProof, config: EthereumConfig): Observable<Tx> {
   const { eventsProof, mmrProof, registerProof } = proof;
   const { signatures, mmr_root, mmr_index, block_header } = registerProof;
   const { peaks, siblings } = mmrProof;
@@ -348,7 +365,7 @@ export function confirmRegister(proof: StoredProof, config: NetConfig): Observab
   return senderObs.pipe(
     switchMap((sender) =>
       getContractTxObs(
-        config.erc20Token.bankingAddress,
+        config.contracts.e2dvm.redeem,
         (contract) =>
           contract.methods
             .crossChainSync(

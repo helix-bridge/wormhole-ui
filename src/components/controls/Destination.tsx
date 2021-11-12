@@ -1,7 +1,7 @@
 import { Dropdown, Form, Menu, Select, Tag } from 'antd';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NetConfig } from '../../model';
+import { ChainConfig } from '../../model';
 import { getDisplayName } from '../../utils';
 import { DownIcon } from '../icons';
 
@@ -13,10 +13,10 @@ interface DestinationProps {
   defaultLogo?: string;
   extra?: string | JSX.Element;
   mode?: DestinationMode;
-  networks: NetConfig[];
-  onChange?: (net: NetConfig | null) => void;
+  networks: ChainConfig[];
+  onChange?: (net: ChainConfig | null) => void;
   title?: string;
-  value?: NetConfig | null;
+  value?: ChainConfig | null;
 }
 
 export function Destination({ mode = 'default', ...rest }: DestinationProps) {

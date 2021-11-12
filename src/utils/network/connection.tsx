@@ -21,7 +21,7 @@ import { SHORT_DURATION } from '../../config';
 import {
   Connection,
   EthereumConnection,
-  NetConfig,
+  ChainConfig,
   NetworkCategory,
   PolkadotConnection,
   TronConnection,
@@ -30,7 +30,7 @@ import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLin
 import { entrance } from './entrance';
 import { switchMetamaskNetwork } from './switch';
 
-type ConnectFn<T extends Connection> = (network: NetConfig, chainId?: string) => Observable<T>;
+type ConnectFn<T extends Connection> = (network: ChainConfig, chainId?: string) => Observable<T>;
 
 type ConnectConfig = {
   [key in NetworkCategory]: ConnectFn<Connection>;
@@ -42,7 +42,7 @@ interface TronAddress {
   name?: string;
 }
 
-export const getPolkadotConnection: (network: NetConfig) => Observable<PolkadotConnection> = (network) =>
+export const getPolkadotConnection: (network: ChainConfig) => Observable<PolkadotConnection> = (network) =>
   from(web3Enable('polkadot-js/apps')).pipe(
     concatMap((extensions) => from(web3Accounts()).pipe(map((accounts) => ({ accounts, extensions })))),
     switchMap(({ accounts, extensions }) => {
