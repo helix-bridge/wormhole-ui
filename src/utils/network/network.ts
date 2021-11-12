@@ -289,12 +289,11 @@ export function getVerticesFromDisplayName(name: string): Vertices {
 // eslint-disable-next-line complexity
 export async function getConfigByConnection(connection: Connection): Promise<ChainConfig | null> {
   if (connection.type === 'metamask') {
-    const targets = NETWORKS.filter((item) =>
-      isChainIdEqual(
-        (item as unknown as EthereumChainConfig).ethereumChain.chainId,
-        (connection as EthereumConnection).chainId
-      )
-    );
+    const targets = NETWORKS.filter((item) => {
+      const chain = (item as unknown as EthereumChainConfig).ethereumChain;
+
+      return chain && isChainIdEqual(chain.chainId, (connection as EthereumConnection).chainId);
+    });
 
     return (
       (targets.length > 1 ? targets.find((item) => (item as unknown as EthereumChainDVMConfig).dvm) : targets[0]) ??

@@ -40,7 +40,7 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
         connection.type === 'metamask' &&
         isChainIdEqual(
           (connection as EthereumConnection).chainId,
-          (config! as unknown as EthereumChainConfig).ethereumChain.chainId
+          (config! as unknown as EthereumChainConfig).ethereumChain?.chainId
         );
 
       setIsConsistent(is);
