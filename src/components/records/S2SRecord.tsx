@@ -11,10 +11,7 @@ import { Record } from './Record';
  * origin chain:  result 0 -> unconfirmed ->  step 1
  * -             1: querying in target -> step 2
  * target chain:  some event by message_id from origin chain -> found -> step 4
- *
- * FIXME: Can not find the corresponding event on target chain, because the message_id is missing;
  */
-// eslint-disable-next-line complexity
 export function S2SRecord({
   record,
   departure,
