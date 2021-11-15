@@ -127,7 +127,10 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
       className={`step flex flex-col justify-around items-center h-36 text-center text-xs md:text-base after:bg-white dark:after:bg-gray-800 dark:after:bg-opacity-20 ${className}`}
     >
       <Row className="flex flex-col justify-center items-center">
-        <Icon className="w-4 md:w-10 rounded-full overflow-hidden" style={{ color: stateColors[progressItemState] }} />
+        <Icon
+          className="w-4 md:w-10 rounded-full overflow-hidden dark:bg-white"
+          style={{ color: stateColors[progressItemState] }}
+        />
         <span className="capitalize mt-4 dark:text-gray-200 text-gray-900">{title}</span>
       </Row>
       <Row style={{ minHeight: 24 }}>{finish || action}</Row>
