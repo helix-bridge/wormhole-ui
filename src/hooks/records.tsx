@@ -4,9 +4,24 @@ import { GraphQLClient, useManualQuery } from 'graphql-hooks';
 import { isBoolean, isNull, omitBy } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { catchError, EMPTY, from, map, Observable, of, Subscription } from 'rxjs';
-import { S2S_ISSUING_RECORDS_QUERY, S2S_REDEEM_RECORDS_QUERY } from '../config';
-import { Departure, HistoryReq, ChainConfig, S2SBurnRecordsRes, S2SHistoryRecord, S2SLockedRecordRes } from '../model';
+import { catchError, EMPTY, from, map, Observable, of, retryWhen, Subscription, delay } from 'rxjs';
+import {
+  S2S_ISSUING_MAPPING_RECORD_QUERY,
+  S2S_ISSUING_RECORDS_QUERY,
+  S2S_REDEEM_RECORDS_QUERY,
+  S2S_UNLOCK_RECORD_QUERY,
+  SHORT_DURATION,
+} from '../config';
+import {
+  Departure,
+  HistoryReq,
+  ChainConfig,
+  S2SBurnRecordsRes,
+  S2SHistoryRecord,
+  S2SLockedRecordRes,
+  S2SIssuingRecord,
+  s2sUnlockRecord,
+} from '../model';
 import {
   verticesToNetConfig,
   getNetworkMode,
@@ -74,7 +89,7 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 }
 
 export function useRecords(departure: Departure, arrival: Departure) {
-  const queryS2SRecords = useS2SRecords(verticesToNetConfig(departure)!);
+  const { queryS2SRecords } = useS2SRecords(verticesToNetConfig(departure)!, verticesToNetConfig(arrival)!);
   const genParams = useCallback(
     (params: HistoryReq) => {
       const req = omitBy<HistoryReq>(params, isNull) as HistoryReq;
@@ -155,31 +170,35 @@ enum S2SRecordResult {
   lockConfirmedFail,
 }
 
-const S2S_REDEEM_DEFAULT =
-  'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/DarwiniaMappingTokenFactory';
-const S2S_ISSUING_DEFAULT = 'https://api.subquery.network/sq/darwinia-network/pangolin';
-
 export function useS2SRecords(
-  departure: ChainConfig
-): (req: HistoryReq) => Observable<{ count: number; list: S2SHistoryRecord[] }> {
-  const issuingClient = useMemo(
-    () => new GraphQLClient({ url: departure.api.subql || S2S_ISSUING_DEFAULT }),
-    [departure.api.subql]
-  );
-  const redeemClient = useMemo(
-    () => new GraphQLClient({ url: departure.api.subGraph || S2S_REDEEM_DEFAULT }),
-    [departure.api.subGraph]
-  );
+  departure: ChainConfig,
+  arrival: ChainConfig
+): {
+  queryS2SRecords: (req: HistoryReq) => Observable<{ count: number; list: S2SHistoryRecord[] }>;
+  queryS2SRecord: (id: string) => Observable<S2SHistoryRecord>;
+} {
+  const issuingClient = useMemo(() => new GraphQLClient({ url: departure.api.subql }), [departure.api.subql]);
+  const issuingTargetClient = useMemo(() => new GraphQLClient({ url: arrival.api.subql }), [arrival.api.subql]);
+  const redeemClient = useMemo(() => new GraphQLClient({ url: departure.api.subGraph }), [departure.api.subGraph]);
+  const redeemTargetClient = useMemo(() => new GraphQLClient({ url: arrival.api.subGraph }), [arrival.api.subGraph]);
   const { t } = useTranslation();
   // s2s issuing
   const [fetchLockedRecords] = useManualQuery<S2SLockedRecordRes>(S2S_ISSUING_RECORDS_QUERY, {
     skipCache: true,
     client: issuingClient,
   });
+  const [fetchUnlockRecord] = useManualQuery<s2sUnlockRecord>(S2S_UNLOCK_RECORD_QUERY, {
+    skipCache: true,
+    client: issuingTargetClient,
+  });
   // s2s redeem, departure pangolin-smart
   const [fetchBurnRecords] = useManualQuery<S2SBurnRecordsRes>(S2S_REDEEM_RECORDS_QUERY, {
     skipCache: true,
     client: redeemClient,
+  });
+  const [fetchIssuingMappingRecord] = useManualQuery<S2SIssuingRecord>(S2S_ISSUING_MAPPING_RECORD_QUERY, {
+    skipCache: true,
+    client: redeemTargetClient,
   });
 
   const toQueryVariables = useCallback((req: HistoryReq) => {
@@ -251,5 +270,58 @@ export function useS2SRecords(
     [fetchBurnRecords, t, toQueryVariables]
   );
 
-  return getNetworkMode(departure) === 'dvm' ? fetchS2SRedeemRecords : fetchS2SIssuingRecords;
+  const queryS2SLockedRecord = useCallback(
+    (id: string) => {
+      return from(fetchUnlockRecord({ variables: { id } })).pipe(
+        map((res) => {
+          if (res.data?.s2sEvent && !!res.data.s2sEvent) {
+            return res.data.s2sEvent;
+          } else {
+            throw new Error();
+          }
+        }),
+        retryWhen((_) => {
+          return from(fetchUnlockRecord({ variables: { id } })).pipe(delay(SHORT_DURATION));
+        })
+      );
+    },
+    [fetchUnlockRecord]
+  );
+
+  const queryS2SIssuingMappingRecord = useCallback(
+    (id: string) => {
+      return from(fetchIssuingMappingRecord({ variables: { id } })).pipe(
+        map((res) => {
+          if (res.data?.lockRecordEntity && !!res.data?.lockRecordEntity) {
+            const { transaction, recipient, amount, mapping_token, message_id } = res.data.lockRecordEntity;
+
+            return {
+              responseTxHash: transaction,
+              requestTxHash: transaction,
+              amount,
+              token: mapping_token,
+              messageId: message_id,
+              recipient,
+            } as S2SHistoryRecord;
+          } else {
+            throw new Error();
+          }
+        }),
+        retryWhen((_) => {
+          return from(fetchIssuingMappingRecord({ variables: { id } })).pipe(delay(SHORT_DURATION));
+        })
+      );
+    },
+    [fetchIssuingMappingRecord]
+  );
+
+  return getNetworkMode(departure) === 'dvm'
+    ? {
+        queryS2SRecords: fetchS2SRedeemRecords,
+        queryS2SRecord: queryS2SLockedRecord,
+      }
+    : {
+        queryS2SRecords: fetchS2SIssuingRecords,
+        queryS2SRecord: queryS2SIssuingMappingRecord,
+      };
 }

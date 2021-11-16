@@ -78,3 +78,28 @@ export const S2S_ISSUING_RECORDS_QUERY = `
     }
   }
 `;
+
+export const S2S_UNLOCK_RECORD_QUERY = `
+  query s2sEvent($id: String!) {
+    s2sEvent(id: $id) {
+      recipient
+      startTimestamp
+      requestTxHash
+      endTimestamp
+      result
+      amount
+      token
+    }
+  }
+`;
+
+export const S2S_ISSUING_MAPPING_RECORD_QUERY = `
+  query lockRecordEntity($id: String!) {
+    lockRecordEntity(id: $id) {
+      amount
+      mapping_token
+      recipient
+      transaction
+    }
+  }
+`;

@@ -231,7 +231,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network.l2me.com',
       evolution: EVOLUTION_DOMAIN.dev,
-      subGraph: '',
+      subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
       subscan: '',
     },

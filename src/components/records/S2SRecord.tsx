@@ -1,23 +1,20 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Subscription } from 'rxjs';
 import { RecordComponentProps } from '../../config';
+import { useS2SRecords } from '../../hooks';
 import { PolkadotConfig, S2SHistoryRecord } from '../../model';
 import { convertToSS58, getNetworkMode, toWei } from '../../utils';
 import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
 import { Record } from './Record';
 
-/**
- * Completed step should be:
- * origin chain:  result 0 -> unconfirmed ->  step 1
- * -             1: querying in target -> step 2
- * target chain:  some event by message_id from origin chain -> found -> step 4
- */
 export function S2SRecord({
   record,
   departure,
   arrival,
 }: RecordComponentProps<S2SHistoryRecord, PolkadotConfig, PolkadotConfig>) {
   const { t } = useTranslation();
+  const { queryS2SRecord } = useS2SRecords(departure!, arrival!);
   const { requestTxHash, responseTxHash, amount, result, endTimestamp, startTimestamp, recipient } = record;
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
   const progresses = useMemo<ProgressProps[]>(() => {
@@ -49,6 +46,32 @@ export function S2SRecord({
         : { count: toWei({ value: amount, unit: 'gwei' }), currency: 'ORING' },
     [amount, isRedeem]
   );
+  const [targetProgresses, setTargetProgress] = useState<ProgressProps[]>([]);
+
+  useEffect(() => {
+    const { messageId } = record;
+    let subscription: Subscription | null = null;
+
+    if (result === State.completed) {
+      subscription = queryS2SRecord(messageId).subscribe((res) => {
+        const { requestTxHash: tx } = res;
+        const progress: ProgressProps = {
+          title: t('{{chain}} Confirmed', { chain: arrival?.name }),
+          Icon: iconsMap[arrival?.name ?? 'pangoro'],
+          steps: [{ name: 'confirmed', state: State.completed, tx }],
+          network: arrival,
+        };
+
+        setTargetProgress([progress]);
+      });
+    }
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, [arrival, departure, queryS2SRecord, record, result, t]);
 
   return (
     <Record
@@ -59,7 +82,7 @@ export function S2SRecord({
       assets={[{ amount: count, currency, unit: 'gwei' }]}
       items={progresses}
     >
-      <Progresses items={progresses} />
+      <Progresses items={[...progresses, ...targetProgresses]} />
     </Record>
   );
 }

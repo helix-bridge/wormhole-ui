@@ -142,7 +142,10 @@ export function DVM({
   );
 
   useEffect(() => {
-    const fn = () => (value: RedeemDVMToken | IssuingDVMToken) => {
+    const fn = () => (data: RedeemDVMToken | IssuingDVMToken) => {
+      const { amount } = data;
+      const value = { ...data, amount: toWei({ value: data.amount, unit }) };
+
       const beforeTx = applyModalObs({
         content: (
           <TransferConfirm value={value}>
@@ -150,7 +153,7 @@ export function DVM({
               title={<Trans>Amount</Trans>}
               content={
                 <span>
-                  {value.amount} {value.asset.symbol}
+                  {amount} {value.asset.symbol}
                 </span>
               }
             ></Des>
@@ -167,12 +170,13 @@ export function DVM({
             refreshTokenBalance(value.asset.address);
             refreshAllowance(value.transfer.from);
           },
+          unit,
         })(value)
       ).subscribe(observer);
     };
 
     setSubmit(fn);
-  }, [afterTx, observer, refreshAllowance, refreshTokenBalance, setSubmit, transform]);
+  }, [afterTx, observer, refreshAllowance, refreshTokenBalance, selectedErc20, setSubmit, transform, unit]);
 
   return (
     <>

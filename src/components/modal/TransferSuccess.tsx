@@ -36,6 +36,7 @@ export function TransferSuccess({
   tx,
   value,
   hashType = 'txHash',
+  unit = 'ether',
 }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
 TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
   const { t } = useTranslation();
@@ -74,7 +75,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
       <Des
         title={t('Details')}
         content={
-          (value.asset && value.amount && <Detail {...value} />) ||
+          (value.asset && value.amount && <Detail {...value} amount={fromWei({ value: value.amount, unit })} />) ||
           (value.assets &&
             value.assets.map((item: Darwinia2EthereumTransfer['assets'][0]) => (
               <Detail

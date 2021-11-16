@@ -125,10 +125,10 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       const unit = chain.tokens.find((item) => item.symbol === asset)?.decimal || 'gwei';
       const value = {
         ...data,
-        amount: fromWei({ value: new BN(toWei({ value: amount, unit })).sub(fee).toString(), unit }),
+        amount: new BN(toWei({ value: amount, unit })).sub(fee).toString(),
       };
       const beforeTransfer = applyModalObs({
-        content: <TransferConfirm value={value} />,
+        content: <TransferConfirm value={value} unit={unit} />,
       });
       const obs = issuingSubstrateToken(value, api, fee);
       const afterTransfer = afterTx(TransferSuccess, {
@@ -139,6 +139,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
           });
           getBalances(sender).then(setAvailableBalances);
         },
+        unit,
       })(value);
 
       return createTxWorkflow(beforeTransfer, obs, afterTransfer).subscribe(observer);
