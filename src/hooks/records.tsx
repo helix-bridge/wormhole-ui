@@ -170,6 +170,8 @@ enum S2SRecordResult {
   lockConfirmedFail,
 }
 
+const UNKNOWN_CLIENT = 'unknown';
+
 export function useS2SRecords(
   departure: ChainConfig,
   arrival: ChainConfig
@@ -177,10 +179,22 @@ export function useS2SRecords(
   queryS2SRecords: (req: HistoryReq) => Observable<{ count: number; list: S2SHistoryRecord[] }>;
   queryS2SRecord: (id: string) => Observable<S2SHistoryRecord>;
 } {
-  const issuingClient = useMemo(() => new GraphQLClient({ url: departure.api.subql }), [departure.api.subql]);
-  const issuingTargetClient = useMemo(() => new GraphQLClient({ url: arrival.api.subql }), [arrival.api.subql]);
-  const redeemClient = useMemo(() => new GraphQLClient({ url: departure.api.subGraph }), [departure.api.subGraph]);
-  const redeemTargetClient = useMemo(() => new GraphQLClient({ url: arrival.api.subGraph }), [arrival.api.subGraph]);
+  const issuingClient = useMemo(
+    () => new GraphQLClient({ url: departure.api.subql || UNKNOWN_CLIENT }),
+    [departure.api.subql]
+  );
+  const issuingTargetClient = useMemo(
+    () => new GraphQLClient({ url: arrival.api.subql || UNKNOWN_CLIENT }),
+    [arrival.api.subql]
+  );
+  const redeemClient = useMemo(
+    () => new GraphQLClient({ url: departure.api.subGraph || UNKNOWN_CLIENT }),
+    [departure.api.subGraph]
+  );
+  const redeemTargetClient = useMemo(
+    () => new GraphQLClient({ url: arrival.api.subGraph || UNKNOWN_CLIENT }),
+    [arrival.api.subGraph]
+  );
   const { t } = useTranslation();
   // s2s issuing
   const [fetchLockedRecords] = useManualQuery<S2SLockedRecordRes>(S2S_ISSUING_RECORDS_QUERY, {
@@ -213,7 +227,7 @@ export function useS2SRecords(
         : [S2SRecordResult.locked]
       : [S2SRecordResult.locked, S2SRecordResult.lockConfirmedSuccess, S2SRecordResult.lockConfirmedFail];
 
-    return { account, limit, offset, result };
+    return { account, limit, offset: offset * limit, result };
   }, []);
 
   const fetchS2SIssuingRecords = useCallback(

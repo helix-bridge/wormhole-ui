@@ -9,7 +9,6 @@ import { AccountData } from '@darwinia/types';
 export type WeiValue = string | BN | number | null | undefined;
 export interface PrettyNumberOptions {
   withThousandSplit?: boolean;
-  noDecimal?: boolean;
   decimal?: number;
 }
 
@@ -75,7 +74,7 @@ const isDecimal = (value: number | string) => {
 // eslint-disable-next-line complexity
 export function prettyNumber(
   value: string | number | BN | null | undefined,
-  { decimal, noDecimal }: PrettyNumberOptions = { decimal: 3, noDecimal: false }
+  { decimal }: PrettyNumberOptions = { decimal: 3 }
 ): string {
   if (value === null || typeof value === 'undefined') {
     return '-';
@@ -93,7 +92,7 @@ export function prettyNumber(
 
   prefix = prefix.replace(/\d{1,3}(?=(\d{3})+(\.\d*)?$)/g, '$&,');
 
-  const result = !noDecimal && +suffix !== 0 ? `${prefix}.${suffix}` : prefix;
+  const result = +suffix !== 0 ? `${prefix}.${suffix}` : prefix;
 
   return +result === 0 ? '0' : result;
 }
@@ -121,13 +120,7 @@ export function toWei(
 const completeDecimal = (value: string, bits: number): string => {
   const length = value.length;
 
-  if (length > bits) {
-    return value.substr(0, bits);
-  } else if (length < bits) {
-    return value + new Array(bits - length).fill('0').join('');
-  } else {
-    return value;
-  }
+  return length > bits ? value.substr(0, bits) : value;
 };
 
 /**

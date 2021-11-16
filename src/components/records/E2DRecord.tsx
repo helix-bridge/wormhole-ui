@@ -60,7 +60,7 @@ export function E2DRecord({
       departure={departure}
       arrival={arrival}
       blockTimestamp={block_timestamp}
-      recipient={target.startsWith('0x') ? target : encodeAddress('0x' + target, decimal)}
+      recipient={!target || target.startsWith('0x') ? target : encodeAddress('0x' + target, decimal)}
       assets={[{ amount, deposit: JSON.parse((record as RedeemHistory).deposit || '{}'), currency }]}
       items={progresses}
     >

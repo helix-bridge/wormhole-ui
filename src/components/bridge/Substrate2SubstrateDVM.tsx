@@ -23,6 +23,7 @@ import {
   createTxWorkflow,
   fromWei,
   insufficientBalanceRule,
+  invalidFeeRule,
   issuingSubstrateToken,
   prettyNumber,
   toWei,
@@ -56,10 +57,10 @@ function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
     return null;
   }
 
-  if (fee.isZero()) {
+  if (fee.lt(new BN(0))) {
     return (
       <p className="text-red-400 animate-pulse" style={{ animationIterationCount: iterationCount }}>
-        <Trans>The fee query failed, please refresh page or try it again later</Trans>
+        <Trans>Bridge is not healthy, try it again later</Trans>
       </p>
     );
   }
@@ -163,9 +164,9 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (api.rpc as any).fee.marketFee().then((res: any) => {
-      const marketFee = res.amount.toString();
+      const marketFee = res.amount?.toString();
 
-      setFee(new BN(marketFee || '50000000000'));
+      setFee(new BN(marketFee ?? -1)); // -1: fee market does not available
     });
   }, [api]);
 
@@ -235,6 +236,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
         label={t('Amount')}
         rules={[
           { required: true },
+          invalidFeeRule({ t, compared: fee }),
           zeroAmountRule({ t }),
           amountLessThanFeeRule({
             t,

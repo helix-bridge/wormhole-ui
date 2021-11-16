@@ -37,7 +37,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network',
       evolution: EVOLUTION_DOMAIN.product,
-      subGraph: '',
+      subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/crab',
       subscan: 'https://crab.subscan.io',
     },
@@ -81,7 +81,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network',
       evolution: EVOLUTION_DOMAIN.product,
-      subGraph: '',
+      subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
       subscan: '',
     },

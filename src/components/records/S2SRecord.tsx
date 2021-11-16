@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 import { RecordComponentProps } from '../../config';
 import { useS2SRecords } from '../../hooks';
 import { PolkadotConfig, S2SHistoryRecord } from '../../model';
-import { convertToSS58, getNetworkMode, toWei } from '../../utils';
+import { convertToSS58, fromWei, getNetworkMode, toWei } from '../../utils';
 import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
 import { Record } from './Record';
 
@@ -79,7 +79,7 @@ export function S2SRecord({
       arrival={arrival}
       blockTimestamp={+(endTimestamp || startTimestamp || Date.now())}
       recipient={isRedeem ? convertToSS58(recipient, arrival?.ss58Prefix ?? null) : recipient}
-      assets={[{ amount: count, currency, unit: 'gwei' }]}
+      assets={[{ amount: fromWei({ value: count, unit: 'gwei' }), currency, unit: 'gwei' }]}
       items={progresses}
     >
       <Progresses items={[...progresses, ...targetProgresses]} />
