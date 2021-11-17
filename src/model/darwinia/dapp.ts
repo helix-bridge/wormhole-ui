@@ -120,9 +120,14 @@ export interface S2SBurnRecordsRes {
   burnRecordEntities: S2SBurnRecord[];
 }
 
-export interface S2SIssuingRecord {
+export interface S2SBurnRecordRes {
+  burnRecordEntity: S2SBurnRecord;
+}
+
+export interface S2SIssuingMappingRecordRes {
   lockRecordEntity: {
     message_id: string;
+    id: string;
     mapping_token: string;
     recipient: string;
     transaction: string;
@@ -137,6 +142,8 @@ export interface S2SLockedRecordRes {
   };
 }
 
-export interface s2sUnlockRecord {
+export interface S2SIssuingRecordRes {
   s2sEvent: S2SHistoryRecord;
 }
+
+export type S2SUnlockRecordRes = S2SIssuingRecordRes;

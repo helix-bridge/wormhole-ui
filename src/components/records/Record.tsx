@@ -29,6 +29,12 @@ export function Record(props: PropsWithChildren<RecordProps>) {
 
     return (finished.length / total) * PERCENT_HUNDRED;
   }, [items]);
+  const strokeColor = useMemo(() => {
+    if (percent === PERCENT_HUNDRED) {
+      return '#10b981';
+    }
+    return items.find((item) => item.steps.find((step) => step.state === State.error)) ? '#ef4444' : 'normal';
+  }, [items, percent]);
 
   if (!blockTimestamp) {
     return null;
@@ -63,7 +69,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
                   percent={percent}
                   steps={items.length}
                   showInfo={false}
-                  strokeColor={percent === PERCENT_HUNDRED ? 'green' : 'normal'}
+                  strokeColor={strokeColor}
                   className="w-full absolute bottom-0 records-progress"
                   style={{ width: 'calc(100% - 3rem)' }}
                 />
