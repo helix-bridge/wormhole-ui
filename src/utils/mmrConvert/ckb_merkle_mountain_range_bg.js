@@ -52,7 +52,7 @@ function getStringFromWasm0(ptr, len) {
 }
 /**
  * @param {number} block_num
- * @param {BigInt} mmr_size
+ * @param {number} mmr_size
  * @param {Uint8Array} mmr_proof
  * @param {Uint8Array} leaf
  * @returns {string}

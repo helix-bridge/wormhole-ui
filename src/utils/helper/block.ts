@@ -1,7 +1,10 @@
 import { ApiPromise } from '@polkadot/api';
 import { TypeRegistry } from '@polkadot/types';
 import { hexToU8a } from '@polkadot/util';
-import { remove0x } from '../helper';
+import { lastValueFrom, map } from 'rxjs';
+import { ajax } from 'rxjs/ajax';
+import { MMR_QUERY } from '../../config';
+import { genProof } from '../mmr';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
 
 export type ClaimNetworkPrefix = 'Darwinia' | 'Pangolin';
@@ -54,12 +57,17 @@ export async function getMMRProof(
   await api.isReady;
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  const proof = await api.rpc.headerMMR.genProof(blockNumber, mmrBlockNumber);
-  const proofStr = proof.proof.substring(1, proof.proof.length - 1);
-  const proofHexStr = proofStr.split(',').map((item: string) => {
-    return remove0x(item.replace(/(^\s*)|(\s*$)/g, ''));
-  });
-  const encodeProof = proofHexStr.join('');
+  // const proof = await api.rpc.headerMMR.genProof(blockNumber, mmrBlockNumber);
+  // const proofStr = proof.proof.substring(1, proof.proof.length - 1);
+  // const proofHexStr = proofStr.split(',').map((item: string) => {
+  //   return remove0x(item.replace(/(^\s*)|(\s*$)/g, ''));
+  // });
+  // const encodeProof = proofHexStr.join('');
+
+  // !FIXME: hardcoded url
+  const fetchProofs = proofsFactory('https://api.subquery.network/sq/darwinia-network/darwinia-mmr');
+  const proof = await genProof(blockNumber, mmrBlockNumber, fetchProofs);
+  const encodeProof = proof.proof.join('');
   const mmrProofConverted: string = convert(
     blockNumber,
     proof.mmrSize,
@@ -89,4 +97,18 @@ export async function getMPTProof(
   const registry = new TypeRegistry();
 
   return registry.createType('Vec<Bytes>', proof.proof.toJSON());
+}
+
+function proofsFactory(url: string) {
+  return (peak_pos: number[]): Promise<string[]> => {
+    const obs = ajax
+      .post<{ data: { nodeEntities: { nodes: { hash: string }[] } } }>(
+        url,
+        { query: MMR_QUERY, variables: peak_pos },
+        { 'Content-type': 'application/json' }
+      )
+      .pipe(map((res) => res.response.data.nodeEntities.nodes.map(({ hash }) => hash)));
+
+    return lastValueFrom(obs);
+  };
 }
