@@ -25,6 +25,7 @@ import {
   S2SLockedRecordRes,
   S2SIssuingRecordRes,
   S2SUnlockRecordRes,
+  ApiKeys,
 } from '../model';
 import {
   isDarwinia2Ethereum,
@@ -94,8 +95,8 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 
 export function useRecords(departure: Departure, arrival: Departure) {
   const { fetchS2SIssuingRecords, fetchS2SRedeemRecords } = useS2SRecords(
-    verticesToNetConfig(departure)!,
-    verticesToNetConfig(arrival)!
+    verticesToNetConfig(departure)! as ChainConfig<ApiKeys>,
+    verticesToNetConfig(arrival)! as ChainConfig<ApiKeys>
   );
   const genParams = useCallback(
     (params: HistoryReq) => {
@@ -237,8 +238,8 @@ type FetchS2SRecords = (req: HistoryReq) => Observable<{ count: number; list: S2
 type FetchS2SRecord<T> = (id: string, options: FetchRecordOptions<T>) => Observable<S2SHistoryRecord>;
 
 export function useS2SRecords(
-  departure: ChainConfig,
-  arrival: ChainConfig
+  departure: ChainConfig<ApiKeys>,
+  arrival: ChainConfig<ApiKeys>
 ): {
   fetchS2SIssuingRecords: FetchS2SRecords;
   fetchS2SRedeemRecords: FetchS2SRecords;

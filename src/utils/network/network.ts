@@ -15,6 +15,7 @@ import {
   Vertices,
   EthereumChainConfig,
   EthereumChainDVMConfig,
+  NetworkConfig,
 } from '../../model';
 import { entrance } from './entrance';
 
@@ -168,7 +169,7 @@ export function isSameNetConfig(config1: ChainConfig | null, config2: ChainConfi
   );
 }
 
-export function getNetworkByName(name: Network | null | undefined) {
+export function getNetworkByName(name: Network | null | undefined): NetworkConfig[Network] | null {
   if (name) {
     return NETWORK_CONFIG[name];
   }

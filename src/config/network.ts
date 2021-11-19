@@ -83,7 +83,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
-      subscan: '',
+      subqlMMr: 'https://api.subquery.network/sq/darwinia-network/darwinia-mmr',
     },
     contracts: {
       e2d: {
@@ -126,9 +126,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network',
       evolution: EVOLUTION_DOMAIN.product,
-      subGraph: '',
-      subql: '',
-      subscan: '',
     },
     contracts: {
       e2d: {
@@ -174,7 +171,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/pangolin',
-      subscan: '',
+      subqlMMr: 'https://api.subquery.network/sq/darwinia-network/pangolin-mmr',
     },
     contracts: {
       e2d: {
@@ -233,7 +230,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
-      subscan: '',
     },
     facade: {
       logo: '/image/pangoro-button-mobile.png',
@@ -254,9 +250,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network.l2me.com',
       evolution: EVOLUTION_DOMAIN.dev,
-      subGraph: '',
-      subql: '',
-      subscan: '',
     },
     contracts: {
       e2d: {
@@ -298,10 +291,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
   tron: {
     api: {
       dapp: 'https://api.darwinia.network',
-      evolution: '',
-      subGraph: '',
-      subql: '',
-      subscan: '',
     },
     facade: {
       logo: '/image/tron-button-mobile.png',

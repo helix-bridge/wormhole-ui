@@ -6,7 +6,9 @@ import { ajax } from 'rxjs/ajax';
 import { MMR_QUERY } from '../../config';
 import { genProof } from '../mmr';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
-import { remove0x } from '.';
+import { DarwiniaConfig, Network, PangolinConfig } from '../../model';
+import { getNetworkByName } from '../network';
+import { remove0x } from './address';
 
 export type ClaimNetworkPrefix = 'Darwinia' | 'Pangolin';
 
@@ -57,8 +59,9 @@ export async function getMMRProof(
 ): Promise<MMRProof> {
   await api.isReady;
 
-  // !FIXME: hardcoded url
-  const fetchProofs = proofsFactory('https://api.subquery.network/sq/darwinia-network/darwinia-mmr');
+  const chain = (await api.rpc.system.chain()).toString().toLowerCase() as Extract<Network, 'pangolin' | 'darwinia'>;
+  const config = getNetworkByName(chain) as PangolinConfig | DarwiniaConfig;
+  const fetchProofs = proofsFactory(config.api.subqlMMr);
   const proof = await genProof(blockNumber, mmrBlockNumber, fetchProofs);
   const encodeProof = proof.proof.map((item) => remove0x(item.replace(/(^\s*)|(\s*$)/g, ''))).join('');
   const size = new TypeRegistry().createType('u64', proof.mmrSize.toString());

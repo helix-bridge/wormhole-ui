@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Subscription, switchMapTo, tap } from 'rxjs';
 import { RecordComponentProps } from '../../config';
 import { useS2SRecords } from '../../hooks';
-import { PolkadotConfig, S2SBurnRecordRes, S2SHistoryRecord, S2SIssuingRecordRes } from '../../model';
+import { ApiKeys, PolkadotConfig, S2SBurnRecordRes, S2SHistoryRecord, S2SIssuingRecordRes } from '../../model';
 import {
   convertToSS58,
   fromWei,
@@ -27,7 +27,7 @@ export function S2SRecord({
   record,
   departure,
   arrival,
-}: RecordComponentProps<S2SHistoryRecord, PolkadotConfig, PolkadotConfig>) {
+}: RecordComponentProps<S2SHistoryRecord, PolkadotConfig<ApiKeys>, PolkadotConfig<ApiKeys>>) {
   const { t } = useTranslation();
   const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchS2SIssuingMappingRecord, fetchS2SUnlockRecord } =
     useS2SRecords(departure!, arrival!);
