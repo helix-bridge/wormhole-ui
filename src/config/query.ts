@@ -80,9 +80,10 @@ export const S2S_ISSUING_RECORDS_QUERY = `
 `;
 
 export const MMR_QUERY = `
-  query nodeEntities($positions: [Int!]) {
-    nodeEntities(filter: { position: { in: $positions } }) {
+  query nodeEntities($ids: [String!]) {
+    nodeEntities(filter: { id: { in: $ids } }) {
       nodes {
+        position
         hash
       }
     }

@@ -94,14 +94,24 @@ export async function getMPTProof(
 }
 
 function proofsFactory(url: string) {
-  return (positions: number[]): Promise<string[]> => {
+  return (ids: number[]): Promise<string[]> => {
     const obs = ajax
-      .post<{ data: { nodeEntities: { nodes: { hash: string }[] } } }>(
+      .post<{ data: { nodeEntities: { nodes: { hash: string; position: number }[] } } }>(
         url,
-        { query: MMR_QUERY, variables: { positions } },
+        { query: MMR_QUERY, variables: { ids: ids.map((item) => item.toString()) } },
         { 'Content-Type': 'application/json', accept: 'application/json' }
       )
-      .pipe(map((res) => res.response.data.nodeEntities.nodes.map(({ hash }) => hash)));
+      .pipe(
+        map((res) => {
+          const nodes = res.response.data.nodeEntities.nodes;
+
+          return ids.reduce((acc: string[], id: number) => {
+            const target = nodes.find((node) => node.position === id);
+
+            return target ? [...acc, target.hash] : acc;
+          }, []);
+        })
+      );
 
     return lastValueFrom(obs);
   };
