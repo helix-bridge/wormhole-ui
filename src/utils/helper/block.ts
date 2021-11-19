@@ -6,6 +6,7 @@ import { ajax } from 'rxjs/ajax';
 import { MMR_QUERY } from '../../config';
 import { genProof } from '../mmr';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
+import { remove0x } from '.';
 
 export type ClaimNetworkPrefix = 'Darwinia' | 'Pangolin';
 
@@ -55,22 +56,15 @@ export async function getMMRProof(
   blockHash: string
 ): Promise<MMRProof> {
   await api.isReady;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  // const proof = await api.rpc.headerMMR.genProof(blockNumber, mmrBlockNumber);
-  // const proofStr = proof.proof.substring(1, proof.proof.length - 1);
-  // const proofHexStr = proofStr.split(',').map((item: string) => {
-  //   return remove0x(item.replace(/(^\s*)|(\s*$)/g, ''));
-  // });
-  // const encodeProof = proofHexStr.join('');
 
   // !FIXME: hardcoded url
   const fetchProofs = proofsFactory('https://api.subquery.network/sq/darwinia-network/darwinia-mmr');
   const proof = await genProof(blockNumber, mmrBlockNumber, fetchProofs);
-  const encodeProof = proof.proof.join('');
+  const encodeProof = proof.proof.map((item) => remove0x(item.replace(/(^\s*)|(\s*$)/g, ''))).join('');
+  const size = new TypeRegistry().createType('u64', proof.mmrSize.toString());
   const mmrProofConverted: string = convert(
     blockNumber,
-    proof.mmrSize,
+    size as unknown as BigInt,
     hexToU8a('0x' + encodeProof),
     hexToU8a(blockHash)
   );

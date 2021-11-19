@@ -124,7 +124,7 @@ export function gen_proof_for_peak(leaf_pos: number, peak_pos: number): number[]
   // Generate sub-tree merkle proof for positions
   // eslint-disable-next-line no-constant-condition
   for (let [pos, height] = [leaf_pos, 0]; true; [pos, height] = queue.shift() ?? [NaN, NaN]) {
-    if (pos === peak_pos) {
+    if (pos === peak_pos || isNaN(pos)) {
       break;
     }
 
