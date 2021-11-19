@@ -4,6 +4,7 @@ export * from './darwinia';
 export * from './erc20';
 export * from './evolution';
 export * from './metamask';
+export * from './mmr';
 export * from './modal';
 export * from './network';
 export * from './route';
