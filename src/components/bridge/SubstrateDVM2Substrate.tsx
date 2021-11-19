@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { from, switchMap } from 'rxjs';
 import { RegisterStatus } from '../../config';
-import { BridgeFormProps, DVMToken, DVMTransfer, ChainConfig } from '../../model';
-import { getS2SMappingParams, getUnit, redeemSubstrate, toWei } from '../../utils';
+import { BridgeFormProps, ChainConfig, DVMToken, DVMTransfer } from '../../model';
+import { getS2SMappingParams, redeemSubstrate } from '../../utils';
 import { DVM } from './DVM';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
@@ -15,19 +15,7 @@ import { DVM } from './DVM';
 export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMTransfer>) {
   const transform = useCallback((value: DVMToken) => {
     return from(getS2SMappingParams(value.transfer.from.provider.rpc)).pipe(
-      switchMap(({ mappingAddress, specVersion }) =>
-        redeemSubstrate(
-          {
-            ...value,
-            amount: toWei({
-              value: value.amount,
-              unit: getUnit(+value.asset.decimals) || 'gwei',
-            }),
-          },
-          mappingAddress,
-          specVersion
-        )
-      )
+      switchMap(({ mappingAddress, specVersion }) => redeemSubstrate(value, mappingAddress, specVersion))
     );
   }, []);
 

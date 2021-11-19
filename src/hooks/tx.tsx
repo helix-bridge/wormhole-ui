@@ -1,6 +1,7 @@
 import { ModalProps } from 'antd';
 import { FunctionComponent, useCallback, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Unit } from 'web3-utils';
 import { useHistory } from 'react-router-dom';
 import { Path } from '../config/routes';
 import {
@@ -30,17 +31,19 @@ export function useAfterSuccess<
         Comp: FunctionComponent<TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>>,
         {
           onDisappear,
+          unit,
           hashType = 'txHash',
         }: Exclude<ModalProps, 'onCancel'> & {
           onDisappear: (value: T, tx: Tx) => void;
           hashType?: TxHashType;
+          unit?: Unit;
         }
       ) =>
       (value: T) =>
       (tx: Tx) =>
       () => {
         const { destroy } = applyModal({
-          content: <Comp tx={tx} value={value} hashType={hashType} />,
+          content: <Comp tx={tx} value={value} hashType={hashType} unit={unit} />,
           okText: t('Cross-chain history'),
           okButtonProps: {
             size: 'large',

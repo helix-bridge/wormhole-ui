@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs';
-import { DarwiniaConfig, EthereumConfig, PangolinConfig, RopstenConfig, CrabConfig } from './network';
+import { Unit } from 'web3-utils';
+import { CrabConfig, DarwiniaConfig, EthereumConfig, PangolinConfig, RopstenConfig } from './network';
 import {
   Darwinia2EthereumTransfer,
   DVMTransfer,
@@ -40,7 +41,7 @@ export interface Tx {
 
 export type TxFn<T> = (value: T) => Observable<Tx>;
 
-export type TxConfirmComponentProps<T> = { value: TransferFormValues<T, NoNullTransferNetwork> };
+export type TxConfirmComponentProps<T> = { value: TransferFormValues<T, NoNullTransferNetwork>; unit?: Unit };
 
 export type TxHashType = 'block' | 'extrinsic' | 'address' | 'txHash'; // consistent with the SubscanLink component props;
 
@@ -48,6 +49,7 @@ export type TxSuccessComponentProps<T> = {
   tx: Tx;
   value: TransferFormValues<T, NoNullTransferNetwork>;
   hashType?: TxHashType;
+  unit?: Unit;
 };
 
 /* -----------------------------------issuing and redeem----------------------------------------------*/
