@@ -54,6 +54,7 @@ module.exports = {
         pangolin: '#5745DE',
         polkadot: '#e6007a',
         kusama: '#000',
+        antDark: '#151e33',
       }),
       borderRadius: {
         xl: '10px',

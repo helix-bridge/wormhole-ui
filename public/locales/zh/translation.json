@@ -127,6 +127,7 @@
   "User Guide": "使用指引",
   "View in {{scan}} explorer": "在 {{scan}} 浏览器中查看",
   "Waiting for approve, you need to approve this transaction in your wallet": "等待授权，您需要在钱包中授权此操作",
+  "When the process is aborted or an error occurs, the token will be revert to the original account": "流程中止或发生错误时，token 将会退回到原账户中",
   "Wormhole is in beta. Please use at your own risk level": "虫洞当前处于 beta 版本阶段，请确保可能发生的交易风险在自己可承受的范围内",
   "You maybe forgot to select receive or sending network": "不要忘记选择发送或接收网络",
   "You must select at least one of these assets": "请至少选择一种资产",

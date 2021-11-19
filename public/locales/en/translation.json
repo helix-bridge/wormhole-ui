@@ -127,6 +127,7 @@
   "User Guide": "User Guide",
   "View in {{scan}} explorer": "View in {{scan}} explorer",
   "Waiting for approve, you need to approve this transaction in your wallet": "Waiting for approve, you need to approve this transaction in your wallet",
+  "When the process is aborted or an error occurs, the token will be revert to the original account": "When the process is aborted or an error occurs, the token will be revert to the original account",
   "Wormhole is in beta. Please use at your own risk level": "Wormhole is in beta. Please use at your own risk level",
   "You maybe forgot to select receive or sending network": "You maybe forgot to select receive or sending network",
   "You must select at least one of these assets": "You must select at least one of these assets",

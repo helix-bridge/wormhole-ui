@@ -1,4 +1,5 @@
-import { Affix, Input, message, Select, Spin, Tabs } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import { Affix, Input, message, Select, Spin, Tabs, Tooltip } from 'antd';
 import { isBoolean, negate, upperFirst } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -190,11 +191,25 @@ export function CrossRecords() {
       >
         <Tabs.TabPane tab={t('All')} key="-1"></Tabs.TabPane>
         <Tabs.TabPane tab={t('In Progress')} key="0"></Tabs.TabPane>
-        <Tabs.TabPane tab={t('Confirmed Extrinsic')} key="1"></Tabs.TabPane>
+        <Tabs.TabPane
+          tab={
+            <span className="flex items-center">
+              {t('Confirmed Extrinsic')}
+              <Tooltip
+                title={t(
+                  'When the process is aborted or an error occurs, the token will be revert to the original account'
+                )}
+              >
+                <InfoCircleOutlined className="ml-2" />
+              </Tooltip>
+            </span>
+          }
+          key="1"
+        ></Tabs.TabPane>
       </Tabs>
 
       <Spin spinning={loading} size="large">
-        <div className="bg-gray-200 dark:bg-gray-900 p-4 -mt-4">
+        <div className="bg-gray-200 dark:bg-antDark p-4 -mt-4">
           <RecordList
             departure={departure}
             arrival={arrival}
