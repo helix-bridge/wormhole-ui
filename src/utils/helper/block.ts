@@ -100,12 +100,12 @@ export async function getMPTProof(
 }
 
 function proofsFactory(url: string) {
-  return (peak_pos: number[]): Promise<string[]> => {
+  return (positions: number[]): Promise<string[]> => {
     const obs = ajax
       .post<{ data: { nodeEntities: { nodes: { hash: string }[] } } }>(
         url,
-        { query: MMR_QUERY, variables: peak_pos },
-        { 'Content-type': 'application/json' }
+        { query: MMR_QUERY, variables: { positions } },
+        { 'Content-Type': 'application/json', accept: 'application/json' }
       )
       .pipe(map((res) => res.response.data.nodeEntities.nodes.map(({ hash }) => hash)));
 
