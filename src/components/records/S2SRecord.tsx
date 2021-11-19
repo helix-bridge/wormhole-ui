@@ -47,7 +47,7 @@ export function S2SRecord({
         {
           name: 'locked',
           state: requestTxHash ? State.completed : State.pending,
-          tx: requestTxHash,
+          txHash: requestTxHash,
         },
       ],
       network: departure,
@@ -56,13 +56,13 @@ export function S2SRecord({
 
     const targetDelivered: ProgressProps = {
       title: t('{{chain}} Delivered', { chain: arrival?.name }),
-      steps: [{ name: 'confirmed', state: State.pending, tx: undefined }],
+      steps: [{ name: 'confirmed', state: State.pending, txHash: undefined }],
       network: arrival,
     };
 
     const originConfirmed: ProgressProps = {
       title: t(result === State.error ? '{{chain}} Confirm Failed' : '{{chain}} Confirmed', { chain: departure?.name }),
-      steps: [{ name: 'confirmed', state: result, tx: responseTxHash }],
+      steps: [{ name: 'confirmed', state: result, txHash: responseTxHash }],
       network: departure,
     };
 
@@ -81,7 +81,7 @@ export function S2SRecord({
 
     data[idx] = {
       ...data[idx],
-      steps: [{ name: 'confirmed', state: originConfirmResult, tx: originResponseTx }],
+      steps: [{ name: 'confirmed', state: originConfirmResult, txHash: originResponseTx }],
     };
 
     setProgresses(data);

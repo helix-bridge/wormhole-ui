@@ -3,6 +3,7 @@ import { Button, Row, Tooltip } from 'antd';
 import { last } from 'lodash';
 import React, { useMemo } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { useTx } from '../../hooks';
 import { ChainConfig } from '../../model';
 import { isEthereumNetwork, isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
@@ -18,7 +19,7 @@ export enum State {
 interface Step {
   name: string;
   state: State;
-  tx?: string;
+  txHash?: string;
   mutateState?: () => void;
 }
 
@@ -50,8 +51,9 @@ export const transactionSend: ProgressProps = {
 // eslint-disable-next-line complexity
 function Progress({ steps, title, icon, className = '', network }: ProgressProps) {
   const { t } = useTranslation();
+  const { tx } = useTx();
   const {
-    tx,
+    txHash,
     mutateState,
     state: lastState,
   } = useMemo<Step>(() => last(steps) ?? { name: '', state: State.completed }, [steps]);
@@ -65,9 +67,9 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
     }
   }, [steps]);
   const finish = useMemo(() => {
-    if (progressItemState !== State.pending && tx && network) {
+    if (progressItemState !== State.pending && txHash && network) {
       return (
-        <SubscanLink txHash={tx} network={network.name}>
+        <SubscanLink txHash={txHash} network={network.name}>
           <Button size="small" className="text-xs" icon={<CheckOutlined />}>
             {t('Txhash')}
           </Button>
@@ -76,7 +78,7 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
     }
 
     return null;
-  }, [network, progressItemState, t, tx]);
+  }, [network, progressItemState, t, txHash]);
 
   const action = useMemo(() => {
     if (mutateState) {
@@ -126,7 +128,7 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
     >
       <Row
         className={`flex flex-col justify-center items-center ${
-          progressItemState === State.pending && !isEthereumNetwork(network?.name) ? 'opacity-30' : 'opacity-100'
+          progressItemState === State.pending ? 'opacity-30' : 'opacity-100'
         }`}
       >
         <div className="relative">

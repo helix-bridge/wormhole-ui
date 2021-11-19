@@ -38,7 +38,7 @@ export function E2DRecord({
 
     const originLocked: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: from?.name }),
-      steps: [{ name: 'confirm', state: tx ? State.completed : State.pending, tx }],
+      steps: [{ name: 'confirm', state: tx ? State.completed : State.pending, txHash: tx }],
       network: from,
     };
 
@@ -51,7 +51,9 @@ export function E2DRecord({
 
     const targetConfirmed: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: arrival?.name }),
-      steps: [{ name: 'confirm', state: darwinia_tx || isGenesis ? State.completed : State.pending, tx: darwinia_tx }],
+      steps: [
+        { name: 'confirm', state: darwinia_tx || isGenesis ? State.completed : State.pending, txHash: darwinia_tx },
+      ],
       network: arrival,
     };
 

@@ -75,7 +75,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
         {
           name: 'confirm',
           state: extrinsic_index ? State.completed : State.pending,
-          tx: extrinsic_index,
+          txHash: extrinsic_index,
         },
       ],
       network: departure,
@@ -96,7 +96,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
     const targetConfirmedState = targetConfirmedHash ? State.completed : State.pending;
     const targetConfirmed: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: arrival?.name }),
-      steps: [{ name: 'confirm', state: targetConfirmedState, tx: targetConfirmedHash }],
+      steps: [{ name: 'confirm', state: targetConfirmedState, txHash: targetConfirmedHash }],
       network: arrival,
     };
 
