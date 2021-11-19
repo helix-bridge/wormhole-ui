@@ -1,4 +1,4 @@
-import { CheckCircleOutlined, CheckOutlined, LoadingOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CheckOutlined, ExclamationCircleFilled, LoadingOutlined } from '@ant-design/icons';
 import { Button, Row, Tooltip } from 'antd';
 import { last } from 'lodash';
 import React, { useMemo } from 'react';
@@ -14,7 +14,7 @@ export enum State {
   error,
 }
 
-const stateColors: string[] = ['#4b5563', '#5745de', '#da1737'];
+// const stateColors: string[] = ['#4b5563', '#5745de', '#da1737'];
 
 interface Step {
   name: string;
@@ -23,7 +23,7 @@ interface Step {
   mutateState?: () => void;
 }
 
-type IconComponent = (props: { className: string; style: React.CSSProperties }) => JSX.Element;
+type IconComponent = (props: { className?: string; style?: React.CSSProperties }) => JSX.Element;
 
 export interface ProgressProps {
   steps: Step[];
@@ -38,7 +38,7 @@ export interface ProgressesProps {
 }
 
 export const transactionSend: ProgressProps = {
-  title: <Trans>Transaction Send</Trans>,
+  title: <Trans>Source-chain Sent</Trans>,
   Icon: TxSendIcon,
   steps: [{ name: '', state: State.completed }],
   network: null,
@@ -124,13 +124,21 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
 
   return (
     <Row
-      className={`step flex flex-col justify-around items-center h-36 text-center text-xs md:text-base after:bg-white dark:after:bg-gray-800 dark:after:bg-opacity-20 ${className}`}
+      className={`step flex flex-col justify-around items-center h-36 text-center text-xs md:text-base after:bg-pangolin ${className}`}
     >
-      <Row className="flex flex-col justify-center items-center">
-        <Icon
-          className="w-4 md:w-10 rounded-full overflow-hidden dark:bg-white"
-          style={{ color: stateColors[progressItemState] }}
-        />
+      <Row
+        className={`flex flex-col justify-center items-center ${
+          progressItemState === State.pending ? 'opacity-30' : 'opacity-100'
+        }`}
+      >
+        <div className="relative">
+          <Icon
+            className={`w-4 md:w-10 rounded-full overflow-hidden dark:bg-white text-${network?.name.toLowerCase()}-main`}
+          />
+          {progressItemState === State.error && (
+            <ExclamationCircleFilled className="absolute -top-1 -right-1 text-red-500 text-xs" />
+          )}
+        </div>
         <span className="capitalize mt-4 dark:text-gray-200 text-gray-900">{title}</span>
       </Row>
       <Row style={{ minHeight: 24 }}>{finish || action}</Row>
@@ -142,7 +150,7 @@ export function Progresses({ items }: ProgressesProps) {
   const cols = useMemo(() => items.length, [items.length]);
 
   return (
-    <div className={`grid bg-gray-800 bg-opacity-20 progress-steps grid-cols-${cols}`}>
+    <div className={`grid bg-gray-300 dark:bg-gray-800 bg-opacity-20 progress-steps grid-cols-${cols}`}>
       {items.map((item, index) => (
         <Progress {...item} key={index} />
       ))}

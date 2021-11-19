@@ -12,14 +12,15 @@ import {
   netConfigToVertices,
   toWei,
 } from '../../utils';
-import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
+import { LockIcon } from '../icons';
+import { iconsMap, Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
 enum ProgressPosition {
   send,
   originLocked,
+  targetDelivered,
   originConfirmed,
-  targetResponded,
 }
 
 export function S2SRecord({
@@ -34,9 +35,17 @@ export function S2SRecord({
   // eslint-disable-next-line complexity
   const [progresses, setProgresses] = useState<ProgressProps[]>(() => {
     const { requestTxHash, responseTxHash, result } = record;
+
+    const transactionSend: ProgressProps = {
+      title: t('{{chain}} Sent', { chain: departure?.name }),
+      Icon: iconsMap[departure?.name ?? 'pangoro'],
+      steps: [{ name: '', state: State.completed }],
+      network: departure,
+    };
+
     const originLocked: ProgressProps = {
       title: t('{{chain}} Locked', { chain: departure?.name }),
-      Icon: iconsMap[departure?.name ?? 'pangoro'],
+      Icon: LockIcon,
       steps: [
         {
           name: 'locked',
@@ -46,21 +55,22 @@ export function S2SRecord({
       ],
       network: departure,
     };
-    const originConfirmed: ProgressProps = {
-      title: t('{{chain}} Confirmed', { chain: departure?.name }),
-      Icon: iconsMap[departure?.name ?? 'pangoro'],
-      steps: [{ name: 'confirmed', state: result, tx: responseTxHash }],
-      network: departure,
-    };
 
-    const targetResponded: ProgressProps = {
-      title: t('{{chain}} Confirmed', { chain: arrival?.name }),
+    const targetDelivered: ProgressProps = {
+      title: t('{{chain}} Delivered', { chain: arrival?.name }),
       Icon: iconsMap[arrival?.name ?? 'pangoro'],
       steps: [{ name: 'confirmed', state: State.pending, tx: undefined }],
       network: arrival,
     };
 
-    return [transactionSend, originLocked, originConfirmed, targetResponded]; // make sure the order is consist with position defined in ProgressPosition
+    const originConfirmed: ProgressProps = {
+      title: t(result === State.error ? '{{chain}} Confirm Failed' : '{{chain}} Confirmed', { chain: departure?.name }),
+      Icon: iconsMap[departure?.name ?? 'pangoro'],
+      steps: [{ name: 'confirmed', state: result, tx: responseTxHash }],
+      network: departure,
+    };
+
+    return [transactionSend, originLocked, targetDelivered, originConfirmed]; // make sure the order is consist with position defined in ProgressPosition
   });
   const { count, currency } = useMemo<{ count: string; currency: string }>(
     () =>
@@ -92,7 +102,7 @@ export function S2SRecord({
 
     if (record.result === State.completed) {
       subscription = queryTargetRecord(messageId, { attemptsCount }).subscribe((res) => {
-        updateProgresses(ProgressPosition.targetResponded, res);
+        updateProgresses(ProgressPosition.targetDelivered, res);
       });
     }
 
@@ -112,7 +122,7 @@ export function S2SRecord({
           switchMapTo(queryTargetRecord(messageId, { attemptsCount: 200 }))
         )
         .subscribe((res) => {
-          updateProgresses(ProgressPosition.targetResponded, res);
+          updateProgresses(ProgressPosition.targetDelivered, res);
         });
     }
 

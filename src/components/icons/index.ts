@@ -8,6 +8,7 @@ export * from './earth';
 export * from './email';
 export * from './ethereum';
 export * from './jazzicon';
+export * from './lock';
 export * from './moon';
 export * from './pangolin';
 export * from './pangoro';

@@ -23,6 +23,7 @@ const PERCENT_HUNDRED = 100;
 
 export function Record(props: PropsWithChildren<RecordProps>) {
   const { assets, recipient, blockTimestamp, departure, arrival, items, children } = props;
+  const hasError = useMemo(() => items.find((item) => item.steps.find((step) => step.state === State.error)), [items]);
   const percent = useMemo(() => {
     const total = items.length;
     const finished = items.filter((item) => item.steps.every((step) => step.state !== State.pending));
@@ -33,8 +34,8 @@ export function Record(props: PropsWithChildren<RecordProps>) {
     if (percent === PERCENT_HUNDRED) {
       return '#10b981';
     }
-    return items.find((item) => item.steps.find((step) => step.state === State.error)) ? '#ef4444' : 'normal';
-  }, [items, percent]);
+    return hasError ? '#ef4444' : 'normal';
+  }, [hasError, percent]);
 
   if (!blockTimestamp) {
     return null;
@@ -66,7 +67,8 @@ export function Record(props: PropsWithChildren<RecordProps>) {
                 </div>
 
                 <Progress
-                  percent={percent}
+                  // eslint-disable-next-line no-magic-numbers
+                  percent={hasError ? 100 : percent}
                   steps={items.length}
                   showInfo={false}
                   strokeColor={strokeColor}

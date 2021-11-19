@@ -1,6 +1,6 @@
 import { decodeAddress } from '@polkadot/util-crypto';
 import { memoize } from 'lodash';
-import { Observable } from 'rxjs';
+import { from as fromObs, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../config';
 import { RedeemDarwiniaToken, RedeemDeposit, RedeemDVMToken, Tx, TxFn } from '../../model';
@@ -62,18 +62,33 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
   const { asset, amount, sender, recipient } = value;
   const receiver = Web3.utils.hexToBytes(convertToDvm(recipient));
   const weight = '690133000';
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+  const contractInner = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
+  const gasObs = fromObs(
+    contractInner.methods
+      .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
+      .estimateGas({ from: sender })
+  );
 
-  return getContractTxObs(
-    mappingAddress,
-    (contract) => {
-      const val = Web3.utils.toHex('50000000000000000000');
+  return gasObs.pipe(
+    switchMap((gas) =>
+      getContractTxObs(
+        mappingAddress,
+        (contract) => {
+          const val = Web3.utils.toHex('50000000000000000000');
 
-      // @see https://github.com/darwinia-network/wormhole-ui/issues/139
-      return contract.methods
-        .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
-        .send({ from: sender, gasLimit: '1000000', gasPrice: '50000000000', value: val });
-    },
-    abi.S2SMappingTokenABI
+          console.info('----->', gas);
+          // @see https://github.com/darwinia-network/wormhole-ui/issues/139
+          return (
+            contract.methods
+              .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
+              // .send({ from: sender, gas });
+              .send({ from: sender, gasLimit: '2000000', gasPrice: '50000000000', value: val })
+          );
+        },
+        abi.S2SMappingTokenABI
+      )
+    )
   );
 }
 

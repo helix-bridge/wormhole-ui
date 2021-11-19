@@ -64,20 +64,23 @@ module.exports = {
         'mock-bottom-border-light': '0px 10px 1px -8px rgba(255,255,255,.85)',
       },
       colors: (_) => ({
-        pangolin: {
-          main: '#5745DE',
-        },
         crab: {
           main: '#EC3783',
         },
         darwinia: {
           main: '#3a30dd',
         },
-        ropsten: {
-          main: '#e6007a',
-        },
         kusama: {
           main: '#000',
+        },
+        pangolin: {
+          main: '#5745DE',
+        },
+        pangoro: {
+          main: '#5745DE',
+        },
+        ropsten: {
+          main: '#e6007a',
         },
       }),
     },
