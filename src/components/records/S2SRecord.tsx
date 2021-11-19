@@ -1,32 +1,51 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Subscription, switchMapTo, tap } from 'rxjs';
 import { RecordComponentProps } from '../../config';
-import { PolkadotConfig, S2SHistoryRecord } from '../../model';
-import { convertToSS58, getNetworkMode, toWei } from '../../utils';
-import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
+import { useS2SRecords } from '../../hooks';
+import { PolkadotConfig, S2SBurnRecordRes, S2SHistoryRecord, S2SIssuingRecordRes } from '../../model';
+import {
+  convertToSS58,
+  fromWei,
+  getNetworkMode,
+  isSubstrate2SubstrateDVM,
+  netConfigToVertices,
+  toWei,
+} from '../../utils';
+import { LockIcon } from '../icons';
+import { iconsMap, Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
-/**
- * Completed step should be:
- * origin chain:  result 0 -> unconfirmed ->  step 1
- * -             1: querying in target -> step 2
- * target chain:  some event by message_id from origin chain -> found -> step 4
- *
- * FIXME: Can not find the corresponding event on target chain, because the message_id is missing;
- */
-// eslint-disable-next-line complexity
+enum ProgressPosition {
+  send,
+  originLocked,
+  targetDelivered,
+  originConfirmed,
+}
+
 export function S2SRecord({
   record,
   departure,
   arrival,
 }: RecordComponentProps<S2SHistoryRecord, PolkadotConfig, PolkadotConfig>) {
   const { t } = useTranslation();
-  const { requestTxHash, responseTxHash, amount, result, endTimestamp, startTimestamp, recipient } = record;
+  const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchS2SIssuingMappingRecord, fetchS2SUnlockRecord } =
+    useS2SRecords(departure!, arrival!);
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
-  const progresses = useMemo<ProgressProps[]>(() => {
+  // eslint-disable-next-line complexity
+  const [progresses, setProgresses] = useState<ProgressProps[]>(() => {
+    const { requestTxHash, responseTxHash, result } = record;
+
+    const transactionSend: ProgressProps = {
+      title: t('{{chain}} Sent', { chain: departure?.name }),
+      Icon: iconsMap[departure?.name ?? 'pangoro'],
+      steps: [{ name: '', state: State.completed }],
+      network: departure,
+    };
+
     const originLocked: ProgressProps = {
       title: t('{{chain}} Locked', { chain: departure?.name }),
-      Icon: iconsMap[departure?.name ?? 'pangoro'],
+      Icon: LockIcon,
       steps: [
         {
           name: 'locked',
@@ -36,30 +55,92 @@ export function S2SRecord({
       ],
       network: departure,
     };
+
+    const targetDelivered: ProgressProps = {
+      title: t('{{chain}} Delivered', { chain: arrival?.name }),
+      Icon: iconsMap[arrival?.name ?? 'pangoro'],
+      steps: [{ name: 'confirmed', state: State.pending, tx: undefined }],
+      network: arrival,
+    };
+
     const originConfirmed: ProgressProps = {
-      title: t('{{chain}} Confirmed', { chain: departure?.name }),
+      title: t(result === State.error ? '{{chain}} Confirm Failed' : '{{chain}} Confirmed', { chain: departure?.name }),
       Icon: iconsMap[departure?.name ?? 'pangoro'],
       steps: [{ name: 'confirmed', state: result, tx: responseTxHash }],
       network: departure,
     };
 
-    return [transactionSend, originLocked, originConfirmed];
-  }, [departure, requestTxHash, responseTxHash, result, t]);
+    return [transactionSend, originLocked, targetDelivered, originConfirmed]; // make sure the order is consist with position defined in ProgressPosition
+  });
   const { count, currency } = useMemo<{ count: string; currency: string }>(
     () =>
       isRedeem
-        ? { count: amount, currency: 'xORING' }
-        : { count: toWei({ value: amount, unit: 'gwei' }), currency: 'ORING' },
-    [amount, isRedeem]
+        ? { count: record.amount, currency: 'xORING' }
+        : { count: toWei({ value: record.amount, unit: 'gwei' }), currency: 'ORING' },
+    [record.amount, isRedeem]
   );
+  const updateProgresses = useCallback((idx: number, res: S2SHistoryRecord) => {
+    const { result: originConfirmResult, responseTxHash: originResponseTx } = res;
+    const data = [...progresses];
+
+    data[idx] = {
+      ...data[idx],
+      steps: [{ name: 'confirmed', state: originConfirmResult, tx: originResponseTx }],
+    };
+
+    setProgresses(data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const { messageId, result } = record;
+    const attemptsCount = 100;
+    const isS2DVM = isSubstrate2SubstrateDVM(netConfigToVertices(departure!), netConfigToVertices(arrival!));
+    const queryTargetRecord = isS2DVM ? fetchS2SIssuingMappingRecord : fetchS2SUnlockRecord;
+    const queryOriginRecord = isS2DVM ? fetchS2SIssuingRecord : fetchS2SRedeemRecord;
+    let subscription: Subscription | null = null;
+
+    if (record.result === State.completed) {
+      subscription = queryTargetRecord(messageId, { attemptsCount }).subscribe((res) => {
+        updateProgresses(ProgressPosition.targetDelivered, res);
+      });
+    }
+
+    // If start from pending start, polling until origin chain state change, then polling until the event emit on the target chain.
+    if (record.result === State.pending) {
+      subscription = queryOriginRecord(messageId, {
+        attemptsCount,
+        keepActive: (res) => {
+          const event = (res as S2SBurnRecordRes).burnRecordEntity || (res as S2SIssuingRecordRes).s2sEvent;
+
+          return event.result === result;
+        },
+        skipCache: true,
+      })
+        .pipe(
+          tap((res) => updateProgresses(ProgressPosition.originConfirmed, res)),
+          switchMapTo(queryTargetRecord(messageId, { attemptsCount: 200 }))
+        )
+        .subscribe((res) => {
+          updateProgresses(ProgressPosition.targetDelivered, res);
+        });
+    }
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Record
       departure={departure}
       arrival={arrival}
-      blockTimestamp={+(endTimestamp || startTimestamp || Date.now())}
-      recipient={isRedeem ? convertToSS58(recipient, arrival?.ss58Prefix ?? null) : recipient}
-      assets={[{ amount: count, currency, unit: 'gwei' }]}
+      blockTimestamp={+(record.endTimestamp || record.startTimestamp || Date.now())}
+      recipient={isRedeem ? convertToSS58(record.recipient, arrival?.ss58Prefix ?? null) : record.recipient}
+      assets={[{ amount: fromWei({ value: count, unit: 'gwei' }), currency, unit: 'gwei' }]}
       items={progresses}
     >
       <Progresses items={progresses} />

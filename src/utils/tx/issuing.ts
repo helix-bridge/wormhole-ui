@@ -71,7 +71,7 @@ export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromi
  */
 export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiPromise, fee: BN): Observable<Tx> {
   const { sender, recipient, amount } = value;
-  const WEIGHT = '40544000';
+  const WEIGHT = '1509000000';
   const obs = new Observable((observer: Observer<Tx>) => {
     try {
       const specVersion = api.runtimeVersion.specVersion.toString();

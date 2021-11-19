@@ -333,12 +333,10 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
             ...rest,
             asset: iAsset,
             amount: isRing(iAsset)
-              ? fromWei({
-                  value: Web3.utils
-                    .toBN(toWei({ value: amount }))
-                    .sub(fee!)
-                    .toString(),
-                })
+              ? Web3.utils
+                  .toBN(toWei({ value: amount }))
+                  .sub(fee!)
+                  .toString()
               : amount,
           };
 

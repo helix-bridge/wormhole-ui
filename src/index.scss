@@ -105,11 +105,10 @@
 @media (min-width: 768px) {
   .progress-steps .step:not(:last-child)::after {
     position: absolute;
-    top: 0;
-    right: -15%;
-    left: 0;
-    bottom: 0;
-    clip-path: polygon(80% 0, 100% 50%, 80% 100%, 65% 100%, 85% 50%, 65% 0);
+    top: 30px;
+    right: -25%;
+    height: 1px;
+    width: 50%;
   }
 }
 

@@ -23,6 +23,7 @@ import {
   createTxWorkflow,
   fromWei,
   insufficientBalanceRule,
+  invalidFeeRule,
   issuingSubstrateToken,
   prettyNumber,
   toWei,
@@ -56,10 +57,10 @@ function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
     return null;
   }
 
-  if (fee.isZero()) {
+  if (fee.lt(new BN(0))) {
     return (
       <p className="text-red-400 animate-pulse" style={{ animationIterationCount: iterationCount }}>
-        <Trans>The fee query failed, please refresh page or try it again later</Trans>
+        <Trans>Bridge is not healthy, try it again later</Trans>
       </p>
     );
   }
@@ -125,10 +126,10 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       const unit = chain.tokens.find((item) => item.symbol === asset)?.decimal || 'gwei';
       const value = {
         ...data,
-        amount: fromWei({ value: new BN(toWei({ value: amount, unit })).sub(fee).toString(), unit }),
+        amount: new BN(toWei({ value: amount, unit })).sub(fee).toString(),
       };
       const beforeTransfer = applyModalObs({
-        content: <TransferConfirm value={value} />,
+        content: <TransferConfirm value={value} unit={unit} />,
       });
       const obs = issuingSubstrateToken(value, api, fee);
       const afterTransfer = afterTx(TransferSuccess, {
@@ -139,6 +140,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
           });
           getBalances(sender).then(setAvailableBalances);
         },
+        unit,
       })(value);
 
       return createTxWorkflow(beforeTransfer, obs, afterTransfer).subscribe(observer);
@@ -162,9 +164,9 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (api.rpc as any).fee.marketFee().then((res: any) => {
-      const marketFee = res.amount.toString();
+      const marketFee = res.amount?.toString();
 
-      setFee(new BN(marketFee || '50000000000'));
+      setFee(new BN(marketFee ?? -1)); // -1: fee market does not available
     });
   }, [api]);
 
@@ -234,6 +236,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
         label={t('Amount')}
         rules={[
           { required: true },
+          invalidFeeRule({ t, compared: fee }),
           zeroAmountRule({ t }),
           amountLessThanFeeRule({
             t,

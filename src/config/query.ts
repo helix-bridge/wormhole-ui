@@ -45,16 +45,33 @@ export const S2S_REDEEM_RECORDS_QUERY = `
       orderBy: start_timestamp,
       orderDirection: desc
     ){
+      amount
+      end_timestamp
       message_id
+      recipient
       request_transaction
       response_transaction
-      sender
       result
-      recipient
-      token
-      amount
+      sender
       start_timestamp
-      end_timestamp
+      token
+    }
+  }
+`;
+
+export const S2S_REDEEM_RECORD_QUERY = `
+  query burnRecordEntity($id: String!) {
+    burnRecordEntity(id: $id) {
+      amount
+      end_timestamp     
+      message_id
+      recipient
+      request_transaction
+      response_transaction
+      result
+      sender
+      start_timestamp
+      token
     }
   }
 `;
@@ -64,17 +81,45 @@ export const S2S_ISSUING_RECORDS_QUERY = `
     s2sEvents(offset: $offset, first: $limit, filter: { sender: { equalTo: $account }, result: { in: $result } }, orderBy: START_TIMESTAMP_DESC) {
       totalCount
       nodes {
-        id
-        sender
-        recipient
-        result
-        startTimestamp
-        endTimestamp
-        requestTxHash
-        token
-        responseTxHash
         amount
+        endTimestamp
+        id
+        recipient
+        requestTxHash
+        responseTxHash
+        result
+        sender
+        startTimestamp
+        token
       }
+    }
+  }
+`;
+
+export const S2S_UNLOCK_RECORD_QUERY = `
+  query s2sEvent($id: String!) {
+    s2sEvent(id: $id) {
+      amount
+      endTimestamp
+      id
+      recipient
+      requestTxHash
+      responseTxHash
+      result
+      sender
+      startTimestamp
+      token
+    }
+  }
+`;
+
+export const S2S_ISSUING_MAPPING_RECORD_QUERY = `
+  query lockRecordEntity($id: String!) {
+    lockRecordEntity(id: $id) {
+      amount
+      mapping_token
+      recipient
+      transaction
     }
   }
 `;

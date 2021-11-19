@@ -157,3 +157,14 @@ export const insufficientBalanceRule: ValidatorRuleFactory = (options) => {
 
   return { validator, message: t('Insufficient balance') };
 };
+
+export const invalidFeeRule: ValidatorRuleFactory = (options) => {
+  const { t, compared } = options;
+
+  return {
+    validator: () => {
+      return new BN(compared ?? '0').lt(new BN(0)) ? Promise.reject() : Promise.resolve();
+    },
+    message: t('Can not verify amount because of a invalid fee'),
+  };
+};
