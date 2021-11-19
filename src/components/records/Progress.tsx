@@ -3,9 +3,8 @@ import { Button, Row, Tooltip } from 'antd';
 import { last } from 'lodash';
 import React, { useMemo } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { ChainConfig, Network } from '../../model';
-import { CrabIcon, DarwiniaIcon, EthereumIcon, PangolinIcon, PangoroIcon, RopstentIcon, TxSendIcon } from '../icons';
-import { TronIcon } from '../icons/tron';
+import { ChainConfig } from '../../model';
+import { isEthereumNetwork, isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 
 export enum State {
@@ -23,14 +22,12 @@ interface Step {
   mutateState?: () => void;
 }
 
-type IconComponent = (props: { className?: string; style?: React.CSSProperties }) => JSX.Element;
-
 export interface ProgressProps {
-  steps: Step[];
-  Icon: IconComponent;
-  title: React.ReactNode;
   className?: string;
+  icon?: string; // svg image
   network: ChainConfig | null;
+  steps: Step[];
+  title: React.ReactNode;
 }
 
 export interface ProgressesProps {
@@ -39,19 +36,8 @@ export interface ProgressesProps {
 
 export const transactionSend: ProgressProps = {
   title: <Trans>Source-chain Sent</Trans>,
-  Icon: TxSendIcon,
   steps: [{ name: '', state: State.completed }],
   network: null,
-};
-
-export const iconsMap: Record<Network, IconComponent> = {
-  pangoro: PangoroIcon,
-  pangolin: PangolinIcon,
-  darwinia: DarwiniaIcon,
-  ropsten: RopstentIcon,
-  ethereum: EthereumIcon,
-  crab: CrabIcon,
-  tron: TronIcon,
 };
 
 /**
@@ -61,7 +47,8 @@ export const iconsMap: Record<Network, IconComponent> = {
  * - if one of the steps error, progress  error
  * - if no error and the last step is no completed, progress pending
  */
-function Progress({ steps, Icon, title, className = '', network }: ProgressProps) {
+// eslint-disable-next-line complexity
+function Progress({ steps, title, icon, className = '', network }: ProgressProps) {
   const { t } = useTranslation();
   const {
     tx,
@@ -121,6 +108,17 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
 
     return null;
   }, [mutateState, lastState, t, tx]);
+  const iconColorCls = useMemo(() => {
+    if (isEthereumNetwork(network?.name)) {
+      return 'text-gray-700';
+    }
+
+    if (isPolkadotNetwork(network?.name)) {
+      return `bg-${network?.name}`;
+    }
+
+    return `bg-pangolin`;
+  }, [network]);
 
   return (
     <Row
@@ -128,12 +126,14 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
     >
       <Row
         className={`flex flex-col justify-center items-center ${
-          progressItemState === State.pending ? 'opacity-30' : 'opacity-100'
+          progressItemState === State.pending && !isEthereumNetwork(network?.name) ? 'opacity-30' : 'opacity-100'
         }`}
       >
         <div className="relative">
-          <Icon
-            className={`w-4 md:w-10 rounded-full overflow-hidden dark:bg-white text-${network?.name.toLowerCase()}-main`}
+          {/* Jagged when adding backgrounds to svg containers, so use image here */}
+          <img
+            src={`/image/${icon ?? network?.name + '.png'}`}
+            className={` w-4 md:w-10 rounded-full overflow-hidden ${iconColorCls} `}
           />
           {progressItemState === State.error && (
             <ExclamationCircleFilled className="absolute -top-1 -right-1 text-red-500 text-xs" />

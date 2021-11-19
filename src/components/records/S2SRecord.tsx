@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Subscription, switchMapTo, tap } from 'rxjs';
 import { RecordComponentProps } from '../../config';
@@ -12,8 +12,7 @@ import {
   netConfigToVertices,
   toWei,
 } from '../../utils';
-import { LockIcon } from '../icons';
-import { iconsMap, Progresses, ProgressProps, State } from './Progress';
+import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
 enum ProgressPosition {
@@ -32,20 +31,18 @@ export function S2SRecord({
   const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchS2SIssuingMappingRecord, fetchS2SUnlockRecord } =
     useS2SRecords(departure!, arrival!);
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
-  // eslint-disable-next-line complexity
+
   const [progresses, setProgresses] = useState<ProgressProps[]>(() => {
     const { requestTxHash, responseTxHash, result } = record;
 
     const transactionSend: ProgressProps = {
       title: t('{{chain}} Sent', { chain: departure?.name }),
-      Icon: iconsMap[departure?.name ?? 'pangoro'],
       steps: [{ name: '', state: State.completed }],
       network: departure,
     };
 
     const originLocked: ProgressProps = {
       title: t('{{chain}} Locked', { chain: departure?.name }),
-      Icon: LockIcon,
       steps: [
         {
           name: 'locked',
@@ -54,18 +51,17 @@ export function S2SRecord({
         },
       ],
       network: departure,
+      icon: 'lock.svg',
     };
 
     const targetDelivered: ProgressProps = {
       title: t('{{chain}} Delivered', { chain: arrival?.name }),
-      Icon: iconsMap[arrival?.name ?? 'pangoro'],
       steps: [{ name: 'confirmed', state: State.pending, tx: undefined }],
       network: arrival,
     };
 
     const originConfirmed: ProgressProps = {
       title: t(result === State.error ? '{{chain}} Confirm Failed' : '{{chain}} Confirmed', { chain: departure?.name }),
-      Icon: iconsMap[departure?.name ?? 'pangoro'],
       steps: [{ name: 'confirmed', state: result, tx: responseTxHash }],
       network: departure,
     };

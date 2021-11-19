@@ -5,8 +5,7 @@ import { RecordComponentProps } from '../../config';
 import { useTx } from '../../hooks';
 import { D2EHistory as D2ERecordType, D2EMeta } from '../../model';
 import { ClaimNetworkPrefix, claimToken } from '../../utils';
-import { RelayerIcon } from '../icons';
-import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
+import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
 // eslint-disable-next-line complexity
@@ -65,6 +64,11 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
 
   // eslint-disable-next-line complexity
   const progresses = useMemo<ProgressProps[]>(() => {
+    const transactionSend: ProgressProps = {
+      title: t('{{chain}} Sent', { chain: departure?.name }),
+      steps: [{ name: '', state: State.completed }],
+      network: departure,
+    };
     const originLocked: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: departure?.name }),
       steps: [
@@ -74,7 +78,6 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
           tx: extrinsic_index,
         },
       ],
-      Icon: iconsMap[departure?.name ?? 'pangolin'],
       network: departure,
     };
     const relayerConfirmed: ProgressProps = {
@@ -86,7 +89,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
           mutateState: signatures && !tx ? claim : undefined,
         },
       ],
-      Icon: RelayerIcon,
+      icon: 'relayer.svg',
       network: null,
     };
     const targetConfirmedHash = tx || hash;
@@ -94,7 +97,6 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
     const targetConfirmed: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: arrival?.name }),
       steps: [{ name: 'confirm', state: targetConfirmedState, tx: targetConfirmedHash }],
-      Icon: iconsMap[arrival?.name ?? 'ropsten'],
       network: arrival,
     };
 
