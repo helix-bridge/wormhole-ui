@@ -6,7 +6,7 @@ import { convertToSS58, fromWei, getDisplayName, getNetworkMode, isPolkadotNetwo
 import { Des } from './Des';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirmComponentProps<any>>) {
+export function TransferConfirm({ value, children, unit = 'ether' }: PropsWithChildren<TxConfirmComponentProps<any>>) {
   const { t } = useTranslation();
   const amountDes = useMemo(() => {
     if (children) {
@@ -17,7 +17,7 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
           title={t('Amount')}
           content={value.assets.map((bill: Darwinia2EthereumTransfer['assets'][0]) => (
             <span key={bill.asset} className="mr-6">
-              {fromWei({ value: bill.amount, unit: bill.unit ?? 'ether' })}
+              {fromWei({ value: bill.amount, unit: bill.unit ?? unit })}
               <span className="ml-2">{bill.asset}</span>
             </span>
           ))}
@@ -29,14 +29,14 @@ export function TransferConfirm({ value, children }: PropsWithChildren<TxConfirm
           title={t('Amount')}
           content={
             <span>
-              {value.amount}
+              {fromWei({ value: value.amount, unit })}
               <span className="uppercase ml-2">{value.asset}</span>
             </span>
           }
         />
       );
     }
-  }, [children, t, value.amount, value.asset, value.assets]);
+  }, [children, t, unit, value.amount, value.asset, value.assets]);
   const sender = useMemo(
     () =>
       isPolkadotNetwork(value.transfer.from.name) && getNetworkMode(value.transfer.from) === 'native'

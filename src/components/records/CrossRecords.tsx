@@ -1,22 +1,23 @@
-import { Affix, Input, message, Radio, Select, Spin } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import { Affix, Input, message, Select, Spin, Tabs, Tooltip } from 'antd';
 import { isBoolean, negate, upperFirst } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { useNetworks } from '../../hooks';
-import { HistoryRouteParam, ChainConfig, Vertices } from '../../model';
+import { ChainConfig, HistoryRouteParam, Vertices } from '../../model';
 import {
   getCrossChainArrivals,
   getDisplayName,
   getHistoryRouteParams,
-  verticesToNetConfig,
   getNetworkMode,
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
   isSameNetworkCurry,
+  verticesToNetConfig,
 } from '../../utils';
-import { RecordList, isAddressValid } from './RecordList';
+import { isAddressValid, RecordList } from './RecordList';
 
 // eslint-disable-next-line complexity
 export function CrossRecords() {
@@ -30,7 +31,6 @@ export function CrossRecords() {
     mode: searchParams.fMode || getNetworkMode(fromNetworks[0]),
   });
   const [loading, setLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [confirmed, setConfirmed] = useState<boolean | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [arrival, setArrival] = useState<Vertices>({
@@ -179,28 +179,46 @@ export function CrossRecords() {
         </Input.Group>
       </Affix>
 
-      <Radio.Group
+      <Tabs
+        type="card"
         onChange={(event) => {
-          setConfirmed(event.target.value < 0 ? null : !!event.target.value);
+          const num = Number(event);
+
+          setConfirmed(num < 0 ? null : !!num);
         }}
-        defaultValue={-1}
         size="large"
-        className="my-4"
+        className="mt-4"
       >
-        <Radio.Button value={-1}>{t('All')}</Radio.Button>
-        <Radio.Button value={0}>{t('In Progress')}</Radio.Button>
-        <Radio.Button value={1}>{t('Confirmed Extrinsic')}</Radio.Button>
-      </Radio.Group>
+        <Tabs.TabPane tab={t('All')} key="-1"></Tabs.TabPane>
+        <Tabs.TabPane tab={t('In Progress')} key="0"></Tabs.TabPane>
+        <Tabs.TabPane
+          tab={
+            <span className="flex items-center">
+              {t('Confirmed Extrinsic')}
+              <Tooltip
+                title={t(
+                  'When the process is aborted or an error occurs, the token will be revert to the original account'
+                )}
+              >
+                <InfoCircleOutlined className="ml-2" />
+              </Tooltip>
+            </span>
+          }
+          key="1"
+        ></Tabs.TabPane>
+      </Tabs>
 
       <Spin spinning={loading} size="large">
-        <RecordList
-          departure={departure}
-          arrival={arrival}
-          isGenesis={isGenesis}
-          confirmed={confirmed}
-          address={address}
-          onLoading={setLoading}
-        />
+        <div className="bg-gray-200 dark:bg-antDark p-4 -mt-4">
+          <RecordList
+            departure={departure}
+            arrival={arrival}
+            isGenesis={isGenesis}
+            confirmed={confirmed}
+            address={address}
+            onLoading={setLoading}
+          />
+        </div>
       </Spin>
     </>
   );

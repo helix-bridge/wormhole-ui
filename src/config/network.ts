@@ -37,7 +37,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network',
       evolution: EVOLUTION_DOMAIN.product,
-      subGraph: '',
+      subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/crab',
       subscan: 'https://crab.subscan.io',
     },
@@ -81,7 +81,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network',
       evolution: EVOLUTION_DOMAIN.product,
-      subGraph: '',
+      subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
       subscan: '',
     },
@@ -231,7 +231,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network.l2me.com',
       evolution: EVOLUTION_DOMAIN.dev,
-      subGraph: '',
+      subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
       subscan: '',
     },
@@ -320,30 +320,23 @@ export const NETWORK_CONFIG: NetworkConfig = {
 };
 
 export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
-  [
-    { network: Graph.crab, mode: 'native' },
-    [
-      { network: Graph.darwinia, status: 'pending', mode: 'native' },
-      { network: Graph.darwinia, status: 'pending', mode: 'dvm' },
-    ],
-  ],
+  [{ network: Graph.crab, mode: 'native' }, [{ network: Graph.darwinia, status: 'pending', mode: 'native' }]],
   [
     { network: Graph.crab, mode: 'dvm' },
     [
       { network: Graph.darwinia, status: 'pending', mode: 'native' },
-      { network: Graph.darwinia, status: 'pending', mode: 'dvm' },
+      { network: Graph.ethereum, status: 'available', mode: 'native' },
     ],
   ],
   [
     { network: Graph.darwinia, mode: 'native' },
     [{ network: Graph.ethereum, status: 'available', mode: 'native', stable: true }],
   ],
-  [{ network: Graph.darwinia, mode: 'dvm' }, [{ network: Graph.ethereum, status: 'available', mode: 'native' }]],
   [
     { network: Graph.ethereum, mode: 'native' },
     [
       { network: Graph.darwinia, status: 'available', mode: 'native' },
-      { network: Graph.darwinia, status: 'available', mode: 'dvm' },
+      { network: Graph.crab, status: 'available', mode: 'dvm' },
     ],
   ],
   [
