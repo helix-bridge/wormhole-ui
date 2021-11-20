@@ -1,6 +1,6 @@
 {
   "name": "wormhole",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "private": true,
   "scripts": {
     "start": "cross-env CHOKIDAR_USEPOLLING=1 PORT=3007 craco start",
@@ -28,7 +28,7 @@
   "dependencies": {
     "@ant-design/icons": "^4.6.2",
     "@craco/craco": "^6.1.2",
-    "@darwinia/types": "^2.6.9",
+    "@darwinia/types": "^2.6.10",
     "@metamask/contract-metadata": "^1.28.0",
     "@metamask/jazzicon": "^2.0.0",
     "@polkadot/api": "^6.0.5",

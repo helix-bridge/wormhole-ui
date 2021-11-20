@@ -1,10 +1,16 @@
+## [2.1.4](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.3...v2.1.4) (2021-11-20)
+
+### Bug Fixes
+
+- **#184:** d2e transfer with only kton ([#185](https://github.com/darwinia-network/wormhole-pro/issues/185)) ([954c1bd](https://github.com/darwinia-network/wormhole-pro/commit/954c1bd12e19a94e4ae540ec7d75c56f40fdbb64)), closes [#184](https://github.com/darwinia-network/wormhole-pro/issues/184)
+
 ## [2.1.3](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.2...v2.1.3) (2021-11-05)
 
 ### Bug Fixes
 
-- switch darwinia rpc ([#177](https://github.com/darwinia-network/wormhole-pro/issues/177)) ([d76ff78](https://github.com/darwinia-network/wormhole-pro/commit/d76ff785d209e646d0a8b5bc0f21b083b687d298))
-- **#103:** fall back loading, etc ([#175](https://github.com/darwinia-network/wormhole-pro/issues/175)) ([7858667](https://github.com/darwinia-network/wormhole-pro/commit/785866751823929a2c6045cd304e47bf5b93c5e9)), closes [#103](https://github.com/darwinia-network/wormhole-pro/issues/103)
-- **#173:** token name ([#178](https://github.com/darwinia-network/wormhole-pro/issues/178)) ([45cfe6d](https://github.com/darwinia-network/wormhole-pro/commit/45cfe6d6361285e52e67355607556ed70819e21a)), closes [#173](https://github.com/darwinia-network/wormhole-pro/issues/173)
+- switch darwinia rpc ([#177](https://github.com/darwinia-network/wormhole-pro/issues/177)) ([29ae512](https://github.com/darwinia-network/wormhole-pro/commit/29ae512823a5faa8347804a1a2b1b88e840097a2))
+- **#103:** fall back loading, etc ([#175](https://github.com/darwinia-network/wormhole-pro/issues/175)) ([54367cb](https://github.com/darwinia-network/wormhole-pro/commit/54367cb39d90944c8c0a2b8a699b3e71273a8f3d)), closes [#103](https://github.com/darwinia-network/wormhole-pro/issues/103)
+- **#173:** token name ([#178](https://github.com/darwinia-network/wormhole-pro/issues/178)) ([7baab9a](https://github.com/darwinia-network/wormhole-pro/commit/7baab9a27c6837d31ca5ad540dbdf2989c95860c)), closes [#173](https://github.com/darwinia-network/wormhole-pro/issues/173)
 
 ## [2.1.2](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.1...v2.1.2) (2021-10-27)
 
