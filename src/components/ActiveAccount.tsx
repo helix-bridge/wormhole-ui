@@ -46,7 +46,7 @@ export function ActiveAccount({
     }
 
     if (isTronNetwork(network?.name)) {
-      return 'image/tron-button-mobile.png';
+      return 'image/tron.png';
     }
 
     return '';

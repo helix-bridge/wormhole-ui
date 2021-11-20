@@ -2,11 +2,10 @@ import { encodeAddress } from '@polkadot//util-crypto';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RecordComponentProps } from '../../config';
-import { EthereumConfig, Network, PolkadotConfig } from '../../model';
+import { ApiKeys, EthereumConfig, Network, PolkadotConfig } from '../../model';
 import { E2DHistory as E2DRecordType, RedeemHistory, RingBurnHistory } from '../../model/darwinia';
 import { getLegalName, verticesToNetConfig } from '../../utils';
-import { RelayerIcon } from '../icons';
-import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
+import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
 // eslint-disable-next-line complexity
@@ -17,7 +16,7 @@ export function E2DRecord({
 }: RecordComponentProps<
   E2DRecordType & Partial<RingBurnHistory & RedeemHistory> & { isGenesis?: boolean },
   EthereumConfig,
-  PolkadotConfig
+  PolkadotConfig<ApiKeys>
 >) {
   const { chain, amount, currency, target, block_timestamp, is_relayed, tx, darwinia_tx, isGenesis } = record;
   const { t } = useTranslation();
@@ -31,22 +30,30 @@ export function E2DRecord({
           mode: 'native',
         })
       : departure;
-    const originLocked: ProgressProps = {
-      title: t('{{chain}} Confirmed', { chain: from?.name }),
-      steps: [{ name: 'confirm', state: tx ? State.completed : State.pending, tx }],
-      Icon: iconsMap[from?.name ?? 'ropsten'],
+    const transactionSend: ProgressProps = {
+      title: t('{{chain}} Sent', { chain: from?.name }),
+      steps: [{ name: '', state: State.completed }],
       network: from,
     };
+
+    const originLocked: ProgressProps = {
+      title: t('{{chain}} Confirmed', { chain: from?.name }),
+      steps: [{ name: 'confirm', state: tx ? State.completed : State.pending, txHash: tx }],
+      network: from,
+    };
+
     const relayerConfirmed: ProgressProps = {
       title: t('ChainRelay Confirmed'),
       steps: [{ name: 'confirm', state: is_relayed ? State.completed : State.pending }],
-      Icon: RelayerIcon,
+      icon: 'relayer.svg',
       network: null,
     };
+
     const targetConfirmed: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: arrival?.name }),
-      steps: [{ name: 'confirm', state: darwinia_tx || isGenesis ? State.completed : State.pending, tx: darwinia_tx }],
-      Icon: iconsMap[arrival?.name ?? 'pangolin'],
+      steps: [
+        { name: 'confirm', state: darwinia_tx || isGenesis ? State.completed : State.pending, txHash: darwinia_tx },
+      ],
       network: arrival,
     };
 

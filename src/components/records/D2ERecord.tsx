@@ -5,8 +5,7 @@ import { RecordComponentProps } from '../../config';
 import { useTx } from '../../hooks';
 import { D2EHistory as D2ERecordType, D2EMeta } from '../../model';
 import { ClaimNetworkPrefix, claimToken } from '../../utils';
-import { RelayerIcon } from '../icons';
-import { iconsMap, Progresses, ProgressProps, State, transactionSend } from './Progress';
+import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
 // eslint-disable-next-line complexity
@@ -29,52 +28,57 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
     meta,
   } = record;
   const [hash, setHash] = useState('');
-  const claim = useCallback(() => {
-    setTx({ status: 'sending' });
-    claimToken({
-      networkPrefix: upperFirst(departure?.name) as ClaimNetworkPrefix,
-      mmrIndex: mmr_index,
-      mmrRoot: mmr_root,
-      mmrSignatures: signatures,
-      blockNumber: block_num,
-      blockHeaderStr: block_header,
-      blockHash: block_hash,
-      meta,
-    }).subscribe({
-      ...observer,
-      next: (state) => {
-        if (state.status === 'finalized' && state.hash) {
-          setHash(hash);
-        }
-        observer.next(state);
-      },
-    });
-  }, [
-    block_hash,
-    block_header,
-    block_num,
-    departure?.name,
-    hash,
-    meta,
-    mmr_index,
-    mmr_root,
-    observer,
-    setTx,
-    signatures,
-  ]);
+  const claim = useCallback(
+    (monitor) => {
+      setTx({ status: 'sending' });
+      monitor(true);
+
+      return claimToken({
+        networkPrefix: upperFirst(departure?.name) as ClaimNetworkPrefix,
+        mmrIndex: mmr_index,
+        mmrRoot: mmr_root,
+        mmrSignatures: signatures,
+        blockNumber: block_num,
+        blockHeaderStr: block_header,
+        blockHash: block_hash,
+        meta,
+      }).subscribe({
+        ...observer,
+        next: (state) => {
+          if (state.status === 'finalized' && state.hash) {
+            setHash(hash);
+          }
+          observer.next(state);
+        },
+        error: (err) => {
+          observer.next(err);
+          monitor(false);
+        },
+        complete: () => {
+          observer.complete();
+          monitor(false);
+        },
+      });
+    },
+    [block_hash, block_header, block_num, departure?.name, hash, meta, mmr_index, mmr_root, observer, setTx, signatures]
+  );
 
   // eslint-disable-next-line complexity
   const progresses = useMemo<ProgressProps[]>(() => {
+    const transactionSend: ProgressProps = {
+      title: t('{{chain}} Sent', { chain: departure?.name }),
+      steps: [{ name: '', state: State.completed }],
+      network: departure,
+    };
     const originLocked: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: departure?.name }),
       steps: [
         {
           name: 'confirm',
           state: extrinsic_index ? State.completed : State.pending,
-          tx: extrinsic_index,
+          txHash: extrinsic_index,
         },
       ],
-      Icon: iconsMap[departure?.name ?? 'pangolin'],
       network: departure,
     };
     const relayerConfirmed: ProgressProps = {
@@ -86,15 +90,14 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
           mutateState: signatures && !tx ? claim : undefined,
         },
       ],
-      Icon: RelayerIcon,
+      icon: 'relayer.svg',
       network: null,
     };
     const targetConfirmedHash = tx || hash;
     const targetConfirmedState = targetConfirmedHash ? State.completed : State.pending;
     const targetConfirmed: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: arrival?.name }),
-      steps: [{ name: 'confirm', state: targetConfirmedState, tx: targetConfirmedHash }],
-      Icon: iconsMap[arrival?.name ?? 'ropsten'],
+      steps: [{ name: 'confirm', state: targetConfirmedState, txHash: targetConfirmedHash }],
       network: arrival,
     };
 

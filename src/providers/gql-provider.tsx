@@ -1,6 +1,7 @@
 import { ClientContext, GraphQLClient } from 'graphql-hooks';
 import { createContext, useMemo } from 'react';
 import { useApi } from '../hooks';
+import { Api, ApiKeys } from '../model';
 
 export const GqlContext = createContext<null>(null);
 
@@ -11,7 +12,7 @@ export const GqlProvider = ({ children }: React.PropsWithChildren<unknown>) => {
 
   const value = useMemo(() => {
     const client = new GraphQLClient({
-      url: network?.api.subql || subqlDev,
+      url: (network?.api as Api<ApiKeys>)?.subql || subqlDev,
     });
 
     return client;

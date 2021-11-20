@@ -16,12 +16,8 @@ describe('Networks Panel', () => {
     cy.get('img[src="/image/eth-logo.svg"]').next('span').find('.ant-tag').prev().should('have.text', 'Ropsten');
     cy.get('img[src="/image/eth-logo.svg"]').next('span').find('.ant-tag').should('have.text', 'Test');
 
-    cy.get('img[src="/image/pangolin-button-mobile.png"]').should('be.visible');
-    cy.get('img[src="/image/pangolin-button-mobile.png"]')
-      .next('span')
-      .find('.ant-tag')
-      .prev()
-      .should('have.text', 'Pangolin');
-    cy.get('img[src="/image/pangolin-button-mobile.png"]').next('span').find('.ant-tag').should('have.text', 'Test');
+    cy.get('img[src="/image/pangolin.png"]').should('be.visible');
+    cy.get('img[src="/image/pangolin.png"]').next('span').find('.ant-tag').prev().should('have.text', 'Pangolin');
+    cy.get('img[src="/image/pangolin.png"]').next('span').find('.ant-tag').should('have.text', 'Test');
   });
 });

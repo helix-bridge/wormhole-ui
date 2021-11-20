@@ -51,7 +51,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
         header={
           <div className="grid grid-cols-3 gap-0 lg:gap-16">
             <div className="flex gap-4 items-center col-span-3 md:col-span-2 md:mr-8">
-              <img className="w-6 md:w-12 mx-auto" src={`/image/${departure?.name}-button-mobile.png`} />
+              <img className="w-6 md:w-12 mx-auto" src={`/image/${departure?.name}.png`} />
 
               <div className="relative flex items-center justify-around flex-1 col-span-2 h-12 bg-gray-200 dark:bg-gray-900 bg-opacity-50 record-overview">
                 <span>
@@ -77,7 +77,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
                 />
               </div>
 
-              <img className="w-6 md:w-12 mx-auto" src={`/image/${arrival?.name}-button-mobile.png`} />
+              <img className="w-6 md:w-12 mx-auto" src={`/image/${arrival?.name}.png`} />
             </div>
 
             <div className="flex flex-col justify-between ml-0 md:ml-4 mt-2 md:mt-0 col-span-3 md:col-span-1">
