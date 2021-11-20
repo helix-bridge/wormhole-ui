@@ -1,8 +1,9 @@
 import { CheckCircleOutlined, CheckOutlined, ExclamationCircleFilled, LoadingOutlined } from '@ant-design/icons';
 import { Button, Row, Tooltip } from 'antd';
 import { last } from 'lodash';
-import React, { useMemo } from 'react';
+import React, { SetStateAction, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { Subscription } from 'rxjs';
 import { useTx } from '../../hooks';
 import { ChainConfig } from '../../model';
 import { isEthereumNetwork, isPolkadotNetwork } from '../../utils';
@@ -20,7 +21,7 @@ interface Step {
   name: string;
   state: State;
   txHash?: string;
-  mutateState?: () => void;
+  mutateState?: (monitor: React.Dispatch<SetStateAction<boolean>>) => Subscription;
 }
 
 export interface ProgressProps {
@@ -51,7 +52,8 @@ export const transactionSend: ProgressProps = {
 // eslint-disable-next-line complexity
 function Progress({ steps, title, icon, className = '', network }: ProgressProps) {
   const { t } = useTranslation();
-  const { tx } = useTx();
+  const { setCanceler } = useTx();
+  const [isClaiming, setIsClaiming] = useState<boolean>(false);
   const {
     txHash,
     mutateState,
@@ -84,16 +86,21 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
     if (mutateState) {
       return (
         <Button
-          disabled={!!tx}
-          icon={tx ? <LoadingOutlined /> : null}
+          disabled={!!isClaiming}
+          icon={isClaiming ? <LoadingOutlined /> : null}
           onClick={() => {
             if (mutateState) {
-              mutateState();
+              const subscription = mutateState(setIsClaiming);
+
+              setCanceler(() => () => {
+                subscription.unsubscribe();
+                setIsClaiming(false);
+              });
             }
           }}
           size="small"
         >
-          {tx ? (
+          {isClaiming ? (
             t('Claiming')
           ) : (
             <Tooltip title={t('Each claim transaction of Ethereum is estimated to use 600,000 Gas.')}>
@@ -109,7 +116,7 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
     }
 
     return null;
-  }, [mutateState, lastState, t, tx]);
+  }, [mutateState, lastState, isClaiming, t, setCanceler]);
   const iconColorCls = useMemo(() => {
     if (isEthereumNetwork(network?.name)) {
       return 'text-gray-700';

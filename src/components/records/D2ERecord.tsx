@@ -28,39 +28,40 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
     meta,
   } = record;
   const [hash, setHash] = useState('');
-  const claim = useCallback(() => {
-    setTx({ status: 'sending' });
-    claimToken({
-      networkPrefix: upperFirst(departure?.name) as ClaimNetworkPrefix,
-      mmrIndex: mmr_index,
-      mmrRoot: mmr_root,
-      mmrSignatures: signatures,
-      blockNumber: block_num,
-      blockHeaderStr: block_header,
-      blockHash: block_hash,
-      meta,
-    }).subscribe({
-      ...observer,
-      next: (state) => {
-        if (state.status === 'finalized' && state.hash) {
-          setHash(hash);
-        }
-        observer.next(state);
-      },
-    });
-  }, [
-    block_hash,
-    block_header,
-    block_num,
-    departure?.name,
-    hash,
-    meta,
-    mmr_index,
-    mmr_root,
-    observer,
-    setTx,
-    signatures,
-  ]);
+  const claim = useCallback(
+    (monitor) => {
+      setTx({ status: 'sending' });
+      monitor(true);
+
+      return claimToken({
+        networkPrefix: upperFirst(departure?.name) as ClaimNetworkPrefix,
+        mmrIndex: mmr_index,
+        mmrRoot: mmr_root,
+        mmrSignatures: signatures,
+        blockNumber: block_num,
+        blockHeaderStr: block_header,
+        blockHash: block_hash,
+        meta,
+      }).subscribe({
+        ...observer,
+        next: (state) => {
+          if (state.status === 'finalized' && state.hash) {
+            setHash(hash);
+          }
+          observer.next(state);
+        },
+        error: (err) => {
+          observer.next(err);
+          monitor(false);
+        },
+        complete: () => {
+          observer.complete();
+          monitor(false);
+        },
+      });
+    },
+    [block_hash, block_header, block_num, departure?.name, hash, meta, mmr_index, mmr_root, observer, setTx, signatures]
+  );
 
   // eslint-disable-next-line complexity
   const progresses = useMemo<ProgressProps[]>(() => {
