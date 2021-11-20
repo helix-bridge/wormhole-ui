@@ -50,11 +50,12 @@ module.exports = {
         darwinia: 'linear-gradient(-45deg, #fe3876 0%, #7c30dd 71%, #3a30dd 100%)',
       }),
       backgroundColor: (_) => ({
-        crab: '#EC3783',
-        pangolin: '#5745DE',
-        polkadot: '#e6007a',
-        kusama: '#000',
         antDark: '#151e33',
+        crab: '#EC3783',
+        kusama: '#000',
+        pangolin: '#5745DE',
+        pangoro: '#5745DE',
+        polkadot: '#e6007a',
       }),
       borderRadius: {
         xl: '10px',

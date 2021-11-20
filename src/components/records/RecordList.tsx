@@ -107,7 +107,7 @@ export function RecordList({ departure, arrival, address, confirmed, onLoading, 
           record={{ ...item, meta: omit(sourceData, ['list', 'count']) }}
           departure={verticesToNetConfig(departure)}
           arrival={verticesToNetConfig(arrival)}
-          key={item.block_timestamp || item.messageId || index}
+          key={item.tx || item.messageId || index}
         />
       ))}
       {!sourceData.count && !loading && <Empty description={t('No Data')} />}

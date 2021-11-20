@@ -1,15 +1,16 @@
 import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, SyncOutlined } from '@ant-design/icons';
-import { Alert, AlertProps, Typography } from 'antd';
+import { Alert, AlertProps, Button, Typography } from 'antd';
 import React from 'react';
 import { Trans } from 'react-i18next';
 import { Tx } from '../model';
 
 interface TxStatusProps extends Partial<AlertProps> {
   tx: Tx | null;
+  cancel: () => void;
 }
 
 // eslint-disable-next-line complexity
-const getAlertProps = (tx: Tx): AlertProps => {
+const getAlertProps = (tx: Tx, cancel: () => void): AlertProps => {
   if (tx.status === 'signing') {
     return {
       type: 'info',
@@ -61,17 +62,26 @@ const getAlertProps = (tx: Tx): AlertProps => {
 
   return {
     type: 'info',
-    message: 'Processing',
+    message: (
+      <span className="flex items-center justify-between">
+        <Trans>Processing</Trans>
+        {cancel && (
+          <Button size="small" type="link" onClick={cancel}>
+            <Trans>Cancel</Trans>
+          </Button>
+        )}
+      </span>
+    ),
     icon: <InfoCircleOutlined />,
   };
 };
 
-export function TxStatus({ tx, ...others }: TxStatusProps) {
+export function TxStatus({ tx, cancel, ...others }: TxStatusProps) {
   if (!tx) {
     return null;
   }
 
-  const { type, message, icon } = getAlertProps(tx);
+  const { type, message, icon } = getAlertProps(tx, cancel);
 
   return (
     <Alert

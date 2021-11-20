@@ -1,11 +1,12 @@
 import { CheckCircleOutlined, CheckOutlined, ExclamationCircleFilled, LoadingOutlined } from '@ant-design/icons';
 import { Button, Row, Tooltip } from 'antd';
 import { last } from 'lodash';
-import React, { useMemo } from 'react';
+import React, { SetStateAction, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { ChainConfig, Network } from '../../model';
-import { CrabIcon, DarwiniaIcon, EthereumIcon, PangolinIcon, PangoroIcon, RopstentIcon, TxSendIcon } from '../icons';
-import { TronIcon } from '../icons/tron';
+import { Subscription } from 'rxjs';
+import { useTx } from '../../hooks';
+import { ChainConfig } from '../../model';
+import { isEthereumNetwork, isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 
 export enum State {
@@ -19,18 +20,16 @@ export enum State {
 interface Step {
   name: string;
   state: State;
-  tx?: string;
-  mutateState?: () => void;
+  txHash?: string;
+  mutateState?: (monitor: React.Dispatch<SetStateAction<boolean>>) => Subscription;
 }
 
-type IconComponent = (props: { className?: string; style?: React.CSSProperties }) => JSX.Element;
-
 export interface ProgressProps {
-  steps: Step[];
-  Icon: IconComponent;
-  title: React.ReactNode;
   className?: string;
+  icon?: string; // svg image
   network: ChainConfig | null;
+  steps: Step[];
+  title: React.ReactNode;
 }
 
 export interface ProgressesProps {
@@ -39,19 +38,8 @@ export interface ProgressesProps {
 
 export const transactionSend: ProgressProps = {
   title: <Trans>Source-chain Sent</Trans>,
-  Icon: TxSendIcon,
   steps: [{ name: '', state: State.completed }],
   network: null,
-};
-
-export const iconsMap: Record<Network, IconComponent> = {
-  pangoro: PangoroIcon,
-  pangolin: PangolinIcon,
-  darwinia: DarwiniaIcon,
-  ropsten: RopstentIcon,
-  ethereum: EthereumIcon,
-  crab: CrabIcon,
-  tron: TronIcon,
 };
 
 /**
@@ -61,10 +49,13 @@ export const iconsMap: Record<Network, IconComponent> = {
  * - if one of the steps error, progress  error
  * - if no error and the last step is no completed, progress pending
  */
-function Progress({ steps, Icon, title, className = '', network }: ProgressProps) {
+// eslint-disable-next-line complexity
+function Progress({ steps, title, icon, className = '', network }: ProgressProps) {
   const { t } = useTranslation();
+  const { setCanceler } = useTx();
+  const [isClaiming, setIsClaiming] = useState<boolean>(false);
   const {
-    tx,
+    txHash,
     mutateState,
     state: lastState,
   } = useMemo<Step>(() => last(steps) ?? { name: '', state: State.completed }, [steps]);
@@ -78,9 +69,9 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
     }
   }, [steps]);
   const finish = useMemo(() => {
-    if (progressItemState !== State.pending && tx && network) {
+    if (progressItemState !== State.pending && txHash && network) {
       return (
-        <SubscanLink txHash={tx} network={network.name}>
+        <SubscanLink txHash={txHash} network={network.name}>
           <Button size="small" className="text-xs" icon={<CheckOutlined />}>
             {t('Txhash')}
           </Button>
@@ -89,22 +80,27 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
     }
 
     return null;
-  }, [network, progressItemState, t, tx]);
+  }, [network, progressItemState, t, txHash]);
 
   const action = useMemo(() => {
     if (mutateState) {
       return (
         <Button
-          disabled={!!tx}
-          icon={tx ? <LoadingOutlined /> : null}
+          disabled={!!isClaiming}
+          icon={isClaiming ? <LoadingOutlined /> : null}
           onClick={() => {
             if (mutateState) {
-              mutateState();
+              const subscription = mutateState(setIsClaiming);
+
+              setCanceler(() => () => {
+                subscription.unsubscribe();
+                setIsClaiming(false);
+              });
             }
           }}
           size="small"
         >
-          {tx ? (
+          {isClaiming ? (
             t('Claiming')
           ) : (
             <Tooltip title={t('Each claim transaction of Ethereum is estimated to use 600,000 Gas.')}>
@@ -120,7 +116,18 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
     }
 
     return null;
-  }, [mutateState, lastState, t, tx]);
+  }, [mutateState, lastState, isClaiming, t, setCanceler]);
+  const iconColorCls = useMemo(() => {
+    if (isEthereumNetwork(network?.name)) {
+      return 'text-gray-700';
+    }
+
+    if (isPolkadotNetwork(network?.name)) {
+      return `bg-${network?.name}`;
+    }
+
+    return `bg-pangolin`;
+  }, [network]);
 
   return (
     <Row
@@ -132,8 +139,10 @@ function Progress({ steps, Icon, title, className = '', network }: ProgressProps
         }`}
       >
         <div className="relative">
-          <Icon
-            className={`w-4 md:w-10 rounded-full overflow-hidden dark:bg-white text-${network?.name.toLowerCase()}-main`}
+          {/* Jagged when adding backgrounds to svg containers, so use image here */}
+          <img
+            src={`/image/${icon ?? network?.name + '.png'}`}
+            className={` w-4 md:w-10 rounded-full overflow-hidden ${iconColorCls} `}
           />
           {progressItemState === State.error && (
             <ExclamationCircleFilled className="absolute -top-1 -right-1 text-red-500 text-xs" />

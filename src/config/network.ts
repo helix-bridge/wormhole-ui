@@ -63,7 +63,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpcUrls: ['https://crab-rpc.darwinia.network/'],
     },
     facade: {
-      logo: '/image/crab-button-mobile.png',
+      logo: '/image/crab.png',
       logoMinor: '/image/crab.svg',
       logoWithText: '/image/crab-logo.svg',
     },
@@ -83,7 +83,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.product,
       subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
-      subscan: '',
+      subqlMMr: 'https://api.subquery.network/sq/darwinia-network/darwinia-mmr',
     },
     contracts: {
       e2d: {
@@ -96,7 +96,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       },
     },
     facade: {
-      logo: '/image/darwinia-button-mobile.png',
+      logo: '/image/darwinia.png',
       logoMinor: '/image/darwinia.svg',
       logoWithText: '/image/darwinia-logo.svg',
     },
@@ -126,9 +126,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network',
       evolution: EVOLUTION_DOMAIN.product,
-      subGraph: '',
-      subql: '',
-      subscan: '',
     },
     contracts: {
       e2d: {
@@ -156,7 +153,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/eth-logo.svg',
-      logoMinor: '/image/eth.svg',
+      logoMinor: '/image/ethereum.svg',
       logoWithText: '',
     },
     fullName: 'Ethereum',
@@ -174,7 +171,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/pangolin',
-      subscan: '',
+      subqlMMr: 'https://api.subquery.network/sq/darwinia-network/pangolin-mmr',
     },
     contracts: {
       e2d: {
@@ -206,7 +203,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
       rpcUrls: ['https://pangolin-rpc.darwinia.network/'],
     },
     facade: {
-      logo: '/image/pangolin-button-mobile.png',
+      logo: '/image/pangolin.png',
       logoMinor: '/image/pangolin.svg',
       logoWithText: '/image/pangolin-logo.svg',
     },
@@ -233,11 +230,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
       evolution: EVOLUTION_DOMAIN.dev,
       subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
       subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
-      subscan: '',
     },
     facade: {
-      logo: '/image/pangoro-button-mobile.png',
-      logoMinor: '/image/pangoro-button-mobile.png',
+      logo: '/image/pangoro.png',
+      logoMinor: '/image/pangoro.png',
       logoWithText: '',
     },
     fullName: 'Pangoro',
@@ -254,9 +250,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
     api: {
       dapp: 'https://api.darwinia.network.l2me.com',
       evolution: EVOLUTION_DOMAIN.dev,
-      subGraph: '',
-      subql: '',
-      subscan: '',
     },
     contracts: {
       e2d: {
@@ -283,7 +276,7 @@ export const NETWORK_CONFIG: NetworkConfig = {
     },
     facade: {
       logo: '/image/eth-logo.svg',
-      logoMinor: '/image/eth.svg',
+      logoMinor: '/image/ropsten.svg',
       logoWithText: '',
     },
     fullName: 'Ropsten',
@@ -298,14 +291,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
   tron: {
     api: {
       dapp: 'https://api.darwinia.network',
-      evolution: '',
-      subGraph: '',
-      subql: '',
-      subscan: '',
     },
     facade: {
-      logo: '/image/tron-button-mobile.png',
-      logoMinor: '/image/tron-button-mobile.png',
+      logo: '/image/tron.png',
+      logoMinor: '/image/tron.png',
       logoWithText: '',
     },
     fullName: 'Tron',

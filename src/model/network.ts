@@ -22,13 +22,9 @@ interface Facade {
   logoWithText: string;
 }
 
-type Api = {
-  subql: string;
-  evolution: string;
-  dapp: string;
-  subscan: string;
-  subGraph: string;
-};
+export type ApiKeys = 'subql' | 'subqlMMr' | 'evolution' | 'dapp' | 'subscan' | 'subGraph';
+
+export type Api<T extends ApiKeys> = { [key in T]: string };
 
 export interface LockEventsStorage {
   min: number;
@@ -66,12 +62,12 @@ export interface EthereumChainConfig {
   ethereumChain: AddEthereumChainParameter;
 }
 
-export interface EthereumChainDVMConfig extends EthereumChainConfig, ChainConfig {
+export interface EthereumChainDVMConfig<T extends ApiKeys = ApiKeys> extends EthereumChainConfig, ChainConfig<T> {
   dvm: DVMTokenConfig;
 }
 
-export interface ChainConfig {
-  api: Api;
+export interface ChainConfig<A extends ApiKeys = never> {
+  api: Api<A>;
   facade: Facade;
   fullName: string;
   isTest: boolean;
@@ -82,11 +78,13 @@ export interface ChainConfig {
 
 /* ----------------------------------------Polkadot network config-------------------------------------------------- */
 
-export interface PolkadotConfig extends ChainConfig {
+export interface PolkadotConfig<T extends ApiKeys> extends ChainConfig<T> {
   ss58Prefix: SS58Prefix;
 }
 
-export interface PangolinConfig extends PolkadotConfig, EthereumChainDVMConfig {
+export interface PangolinConfig
+  extends PolkadotConfig<Exclude<ApiKeys, 'subscan'>>,
+    EthereumChainDVMConfig<Exclude<ApiKeys, 'subscan'>> {
   contracts: {
     e2d: E2DContractConfig;
     e2dvm: E2DVMContractConfig;
@@ -94,15 +92,17 @@ export interface PangolinConfig extends PolkadotConfig, EthereumChainDVMConfig {
   lockEvents: LockEventsStorage[];
 }
 
-export type PangoroConfig = PolkadotConfig;
+export type PangoroConfig = PolkadotConfig<Exclude<ApiKeys, 'subscan' | 'subqlMMr'>>;
 
-export interface CrabConfig extends PolkadotConfig, EthereumChainDVMConfig {
+export interface CrabConfig
+  extends PolkadotConfig<Exclude<ApiKeys, 'subqlMMr'>>,
+    EthereumChainDVMConfig<Exclude<ApiKeys, 'subqlMMr'>> {
   contracts: {
     e2dvm: E2DVMContractConfig;
   };
 }
 
-export interface DarwiniaConfig extends PolkadotConfig {
+export interface DarwiniaConfig extends PolkadotConfig<Exclude<ApiKeys, 'subscan'>> {
   contracts: {
     e2d: E2DContractConfig;
   };
@@ -111,7 +111,7 @@ export interface DarwiniaConfig extends PolkadotConfig {
 
 /* ----------------------------------------Ethereum network config-------------------------------------------------- */
 
-export interface EthereumConfig extends ChainConfig, EthereumChainConfig {
+export interface EthereumConfig extends ChainConfig<Extract<ApiKeys, 'dapp' | 'evolution'>>, EthereumChainConfig {
   contracts: {
     e2d: E2DContractConfig;
     e2dvm: E2DVMContractConfig;
@@ -122,9 +122,9 @@ export type RopstenConfig = EthereumConfig;
 
 /* ----------------------------------------Tron network config-------------------------------------------------- */
 
-type TronConfig = ChainConfig;
+type TronConfig = ChainConfig<Extract<ApiKeys, 'dapp'>>;
 
-type NetworkMetaConfig<T extends Network, C extends ChainConfig> = Config<T, C>;
+type NetworkMetaConfig<T extends Network, C extends ChainConfig<never>> = Config<T, C>;
 
 export type NetworkConfig = NetworkMetaConfig<'pangolin', PangolinConfig> &
   NetworkMetaConfig<'pangoro', PangoroConfig> &
@@ -163,7 +163,7 @@ export interface EthereumConnection extends Connection {
 
 export type TronConnection = Connection;
 
-export type NetworkFilter = (network: ChainConfig) => boolean;
+export type NetworkFilter = (network: ChainConfig<never>) => boolean;
 
 export type NetworkMode = 'native' | 'dvm';
 
