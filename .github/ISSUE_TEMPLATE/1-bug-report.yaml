@@ -7,8 +7,6 @@ body:
     attributes:
       label: Prerequisites
       options:
-        - label: Can you reproduce the problem in safe mode?
-          required: false
         - label: Are you running the latest version?
           required: true
 

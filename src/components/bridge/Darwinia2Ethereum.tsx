@@ -17,7 +17,15 @@ import {
   TokenChainInfo,
   TransferFormValues,
 } from '../../model';
-import { applyModalObs, createTxWorkflow, fromWei, isRing, issuingDarwiniaTokens, toWei } from '../../utils';
+import {
+  applyModalObs,
+  createTxWorkflow,
+  fromWei,
+  getInfoFromHash,
+  isRing,
+  issuingDarwiniaTokens,
+  toWei,
+} from '../../utils';
 import { AssetGroup, AssetGroupValue } from '../controls/AssetGroup';
 import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
 import { RecipientItem } from '../controls/RecipientItem';
@@ -26,11 +34,16 @@ import { TransferSuccess } from '../modal/TransferSuccess';
 
 interface AmountCheckInfo {
   fee: BN | null;
-  ringBalance?: BN | null;
   assets: AssetGroupValue;
+  availableBalance: AvailableBalance[];
 }
 
 const BN_ZERO = new BN(0);
+
+const INITIAL_ASSETS: AssetGroupValue = [
+  { asset: 'ring', amount: '', checked: true },
+  { asset: 'kton', amount: '' },
+];
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
@@ -49,11 +62,16 @@ async function getFee(api: ApiPromise | null): Promise<BN | null> {
 }
 
 // eslint-disable-next-line complexity
-function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
+function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
   const { chain } = useApi();
+  const ringBalance = useMemo(() => {
+    const ring = availableBalance.find((item) => isRing(item.asset));
+
+    return new BN(ring?.max ?? 0);
+  }, [availableBalance]);
   // eslint-disable-next-line complexity
   const isRingBalanceEnough = useMemo(() => {
-    if (!fee || !ringBalance) {
+    if (!fee || ringBalance.eq(BN_ZERO)) {
       return false;
     }
 
@@ -63,15 +81,7 @@ function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
     return ring ? ringAmount.gte(fee) && ringAmount.lte(ringBalance) : ringBalance.gte(fee);
   }, [assets, fee, ringBalance]);
 
-  const hasAssetSet = useMemo(() => {
-    const target = assets.find((item) => isRing(item.asset));
-    const origin = new BN(toWei({ value: target?.amount ?? '0', unit: 'gwei' }));
-
-    return (
-      origin.gte(fee || BN_ZERO) &&
-      !!assets.filter((item) => !!item.checked && new BN(item?.amount || '0').gt(BN_ZERO)).length
-    );
-  }, [assets, fee]);
+  const hasAssetSet = useMemo(() => !!assets.filter((item) => item.checked && item?.amount).length, [assets]);
   const chainSymbol = useCallback(
     (token: 'ring' | 'kton') => {
       const info = getChainInfo(chain.tokens, token);
@@ -82,12 +92,8 @@ function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
   );
   const animationCount = 5;
 
-  if (!fee || !ringBalance) {
-    return (
-      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : animationCount }}>
-        <Trans>Transfer information querying</Trans>
-      </p>
-    );
+  if (!fee || ringBalance.eq(BN_ZERO)) {
+    return null;
   }
 
   return (
@@ -117,7 +123,7 @@ function TransferInfo({ fee, ringBalance, assets }: AmountCheckInfo) {
                     })} ${chainSymbol('ring')}`}</span>
                   );
                 } else {
-                  return <span className="mr-2" key={asset}>{`${amount ?? 0} ${chainSymbol('kton')}`}</span>;
+                  return <span className="mr-2" key={asset}>{`${amount || 0} ${chainSymbol('kton')}`}</span>;
                 }
               }
             })}
@@ -182,7 +188,6 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<TransferFormValues<Darwinia2EthereumTransfer, NoNullTransferNetwork>>();
-  const ringBalance = useMemo(() => (availableBalances || []).find((item) => isRing(item.asset)), [availableBalances]);
   const getBalances = useDarwiniaAvailableBalances();
   const observe = useCallback(
     (updateFee: React.Dispatch<React.SetStateAction<BN | null>>, source: Observable<BN | null>) => {
@@ -228,10 +233,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
         onDisappear: () => {
           form.setFieldsValue({
             [FORM_CONTROL.sender]: sender,
-            [FORM_CONTROL.assets]: [
-              { asset: 'ring', amount: '', checked: true },
-              { asset: 'kton', amount: '' },
-            ],
+            [FORM_CONTROL.assets]: INITIAL_ASSETS,
           });
           getBalances(sender).then(setAvailableBalances);
         },
@@ -245,28 +247,31 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
 
   // eslint-disable-next-line complexity
   useEffect(() => {
-    const sender = (accounts && accounts[0] && accounts[0].address) || '';
+    const defaultSender = (accounts && accounts[0] && accounts[0].address) || '';
+    const { recipient: defaultRecipient } = getInfoFromHash();
+    const { sender, recipient, assets } = form.getFieldsValue();
+    const sendAccount = sender || defaultSender;
 
     form.setFieldsValue({
-      [FORM_CONTROL.sender]: sender,
-      [FORM_CONTROL.assets]: [
-        { asset: 'ring', amount: '', checked: true },
-        { asset: 'kton', amount: '' },
-      ],
+      [FORM_CONTROL.sender]: sendAccount,
+      [FORM_CONTROL.assets]: assets || INITIAL_ASSETS,
+      [FORM_CONTROL.recipient]: (recipient || defaultRecipient) ?? void 0,
     });
 
     const sub$$ = observe(setCrossChainFee, from(getFee(api)));
+    const balance$$ = from(getBalances(sendAccount)).subscribe(setAvailableBalances);
+
+    if (assets) {
+      setCurAssets(assets);
+    }
 
     updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
 
-    return () => sub$$.unsubscribe();
-  }, [form, api, accounts, updateDeparture, observe]);
-
-  useEffect(() => {
-    const sender = (accounts && accounts[0] && accounts[0].address) || '';
-
-    getBalances(sender).then(setAvailableBalances);
-  }, [accounts, getBalances]);
+    return () => {
+      sub$$.unsubscribe();
+      balance$$.unsubscribe();
+    };
+  }, [form, api, accounts, updateDeparture, observe, getBalances]);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -328,6 +333,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
           </span>
         }
         rules={[{ required: true }]}
+        className="mb-0"
       >
         <AssetGroup
           network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
@@ -339,7 +345,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
       </Form.Item>
 
       <Spin spinning={isFeeCalculating} size="small">
-        <TransferInfo fee={fee} ringBalance={new BN(ringBalance?.max || '0')} assets={currentAssets} />
+        <TransferInfo fee={fee} availableBalance={availableBalances} assets={currentAssets} />
       </Spin>
     </>
   );

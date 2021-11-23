@@ -5,7 +5,14 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
 import { AvailableBalance, CustomFormControlProps, Darwinia2EthereumTransfer, Network } from '../../model';
-import { amountLessThanFeeRule, fromWei, getPrecisionByUnit, insufficientBalanceRule, isRing } from '../../utils';
+import {
+  amountLessThanFeeRule,
+  fromWei,
+  getPrecisionByUnit,
+  insufficientBalanceRule,
+  invalidFeeRule,
+  isRing,
+} from '../../utils';
 import { Balance } from './Balance';
 import { MaxBalance } from './MaxBalance';
 
@@ -83,8 +90,14 @@ export function AssetGroup({
                   <Checkbox
                     disabled={insufficient}
                     checked={!insufficient && target.checked}
-                    onChange={() => {
-                      triggerChange({ ...target, checked: !target.checked }, index, value);
+                    onChange={(event) => {
+                      const checked = event.target.checked;
+
+                      if (!checked) {
+                        form.resetFields([FORM_CONTROL.assets, field.name, 'asset']);
+                      }
+
+                      triggerChange({ ...target, checked }, index, value);
                     }}
                     className="uppercase flex flex-row-reverse"
                   >
@@ -98,6 +111,7 @@ export function AssetGroup({
                   fieldKey={[field.fieldKey, 'amount']}
                   className="flex-1 ml-4"
                   rules={[
+                    invalidFeeRule({ t, compared: fee }),
                     { required: !!target.checked, message: t('Transfer amount is required') },
                     !target.checked
                       ? {}

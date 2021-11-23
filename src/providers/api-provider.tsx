@@ -1,15 +1,24 @@
 import { ApiPromise } from '@polkadot/api';
 import { createContext, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { EMPTY, Subscription } from 'rxjs';
-import { Action, Chain, Connection, ChainConfig, Network, NetworkMode, PolkadotConnection } from '../model';
+import {
+  Action,
+  Chain,
+  ChainConfig,
+  Connection,
+  ConnectionStatus,
+  Network,
+  NetworkMode,
+  PolkadotConnection,
+} from '../model';
 import {
   connect,
   getInitialSetting,
-  verticesToNetConfig,
   getUnit,
+  isDVM,
   isEthereumNetwork,
   isPolkadotNetwork,
-  isDVM,
+  verticesToNetConfig,
 } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 
@@ -32,7 +41,7 @@ const initialNetworkConfig = () => {
 };
 
 const initialConnection: Connection = {
-  status: 'pending',
+  status: ConnectionStatus.pending,
   type: 'unknown',
   accounts: [],
   chainId: '',
@@ -103,7 +112,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
         }
       },
       error: (err: unknown) => {
-        setConnection({ status: 'error', accounts: [], type: 'unknown', api: null });
+        setConnection({ status: ConnectionStatus.error, accounts: [], type: 'unknown', api: null });
         console.error('%c connection error ', 'font-size:13px; background:pink; color:#bf2c9f;', err);
       },
       complete: () => {
@@ -129,11 +138,11 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
 
     if (isPolkadot && api && api.isConnected) {
       subscription.unsubscribe();
-      api.disconnect().then(() => {
-        setConnection(initialConnection);
-        setApi(null);
-        setNetwork(null);
-      });
+
+      setConnection(initialConnection);
+      setApi(null);
+      setNetwork(null);
+
       return;
     }
 

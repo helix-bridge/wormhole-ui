@@ -7,7 +7,7 @@ import { MMR_QUERY } from '../../config';
 import { genProof } from '../mmr';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
 import { DarwiniaConfig, Network, PangolinConfig } from '../../model';
-import { getNetworkByName } from '../network';
+import { getNetworkByName, waitUntilConnected } from '../network';
 import { remove0x } from './address';
 
 export type ClaimNetworkPrefix = 'Darwinia' | 'Pangolin';
@@ -57,7 +57,7 @@ export async function getMMRProof(
   mmrBlockNumber: number,
   blockHash: string
 ): Promise<MMRProof> {
-  await api.isReady;
+  await waitUntilConnected(api);
 
   const chain = (await api.rpc.system.chain()).toString().toLowerCase() as Extract<Network, 'pangolin' | 'darwinia'>;
   const config = getNetworkByName(chain) as PangolinConfig | DarwiniaConfig;
@@ -88,7 +88,7 @@ export async function getMPTProof(
   hash = '',
   proofAddress = '0xf8860dda3d08046cf2706b92bf7202eaae7a79191c90e76297e0895605b8b457'
 ) {
-  await api.isReady;
+  await waitUntilConnected(api);
 
   const proof = await api.rpc.state.getReadProof([proofAddress], hash);
   const registry = new TypeRegistry();
