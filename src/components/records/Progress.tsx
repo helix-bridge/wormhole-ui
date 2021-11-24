@@ -96,9 +96,11 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
 
     if (indexing === IndexingState.indexing) {
       return (
-        <Tooltip title={t('Querying transaction hash')}>
+        <Tooltip
+          title={t(progressItemState === State.pending ? 'Waiting for bridge response' : 'Querying transaction hash')}
+        >
           <Button size="small" className="text-xs" icon={<SyncOutlined spin style={{ verticalAlign: 0 }} />} disabled>
-            {t('Querying')}
+            {t(progressItemState === State.pending ? 'Waiting Deliver' : 'Querying')}
           </Button>
         </Tooltip>
       );

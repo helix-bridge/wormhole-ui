@@ -29,8 +29,13 @@ export function S2SRecord({
   arrival,
 }: RecordComponentProps<S2SHistoryRecord, PolkadotConfig<ApiKeys>, PolkadotConfig<ApiKeys>>) {
   const { t } = useTranslation();
-  const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchS2SIssuingMappingRecord, fetchS2SUnlockRecord } =
-    useS2SRecords(departure!, arrival!);
+  const {
+    fetchS2SIssuingRecord,
+    fetchS2SRedeemRecord,
+    fetchS2SIssuingMappingRecord,
+    fetchS2SUnlockRecord,
+    fetchMessageEvent,
+  } = useS2SRecords(departure!, arrival!);
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
 
   const [progresses, setProgresses] = useState<ProgressProps[]>(() => {
@@ -56,8 +61,8 @@ export function S2SRecord({
     };
 
     const targetDelivered: ProgressProps = {
-      title: t('{{chain}} Delivered', { chain: arrival?.name }),
-      steps: [{ name: 'confirmed', state: State.pending, txHash: undefined, indexing: IndexingState.indexing }],
+      title: t(result === State.error ? '{{chain}} Deliver Failed' : '{{chain}} Delivered', { chain: arrival?.name }),
+      steps: [{ name: 'confirmed', state: result, txHash: undefined, indexing: IndexingState.indexing }],
       network: arrival,
     };
 
@@ -125,20 +130,32 @@ export function S2SRecord({
       subscription = queryTargetRecord(messageId, { attemptsCount }).subscribe(observer);
     }
 
-    // If start from pending start, polling until origin chain state change, then polling until the event emit on the target chain.
+    /**
+     * Polling events of `bridgeDispatch` section, if MessageDispatched event occurred and it's result is ok, deliver success
+     * other events represents failed.
+     */
     if (record.result === State.pending) {
-      subscription = queryOriginRecord(messageId, {
-        attemptsCount,
-        keepActive: (res) => {
-          const event = (res as S2SBurnRecordRes).burnRecordEntity || (res as S2SIssuingRecordRes).s2sEvent;
-
-          return event.result === result;
-        },
-        skipCache: true,
-      })
+      subscription = fetchMessageEvent(messageId, { attemptsCount })
         .pipe(
-          tap((res) => setConfirmedRecord(res)),
-          switchMapTo(queryTargetRecord(messageId, { attemptsCount: 200 }))
+          tap((res) => {
+            const { isSuccess } = res;
+            return setDeliveredRecord({
+              ...record,
+              result: isSuccess ? State.completed : State.error,
+            } as S2SHistoryRecord);
+          }),
+          switchMapTo(
+            queryOriginRecord(messageId, {
+              attemptsCount,
+              keepActive: (res) => {
+                const event = (res as S2SBurnRecordRes).burnRecordEntity || (res as S2SIssuingRecordRes).s2sEvent;
+
+                return event.result === result;
+              },
+              skipCache: true,
+            }).pipe(tap((res) => setConfirmedRecord(res)))
+          ),
+          switchMapTo(queryTargetRecord(messageId, { attemptsCount }))
         )
         .subscribe(observer);
     }

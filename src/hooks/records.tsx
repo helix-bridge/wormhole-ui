@@ -6,6 +6,7 @@ import React, { Dispatch, useCallback, useEffect, useMemo, useState } from 'reac
 import { useTranslation } from 'react-i18next';
 import { catchError, EMPTY, from, map, Observable, of, Subscription, switchMap, tap } from 'rxjs';
 import {
+  BRIDGE_DISPATCH_EVENTS,
   S2S_ISSUING_MAPPING_RECORD_QUERY,
   S2S_ISSUING_RECORDS_QUERY,
   S2S_REDEEM_RECORDS_QUERY,
@@ -14,6 +15,9 @@ import {
   SHORT_DURATION,
 } from '../config';
 import {
+  ApiKeys,
+  BridgeDispatchEvent,
+  BridgeDispatchEventRes,
   ChainConfig,
   Departure,
   HistoryReq,
@@ -22,10 +26,9 @@ import {
   S2SBurnRecordsRes,
   S2SHistoryRecord,
   S2SIssuingMappingRecordRes,
-  S2SLockedRecordRes,
   S2SIssuingRecordRes,
+  S2SLockedRecordRes,
   S2SUnlockRecordRes,
-  ApiKeys,
 } from '../model';
 import {
   isDarwinia2Ethereum,
@@ -236,6 +239,7 @@ interface FetchRecordOptions<T> {
 
 type FetchS2SRecords = (req: HistoryReq) => Observable<{ count: number; list: S2SHistoryRecord[] }>;
 type FetchS2SRecord<T> = (id: string, options: FetchRecordOptions<T>) => Observable<S2SHistoryRecord>;
+type FetchDispatchEvents<T> = (id: string, options: FetchRecordOptions<T>) => Observable<BridgeDispatchEvent>;
 
 export function useS2SRecords(
   departure: ChainConfig<ApiKeys>,
@@ -247,6 +251,7 @@ export function useS2SRecords(
   fetchS2SUnlockRecord: FetchS2SRecord<S2SUnlockRecordRes>;
   fetchS2SRedeemRecord: FetchS2SRecord<S2SBurnRecordRes>;
   fetchS2SIssuingMappingRecord: FetchS2SRecord<S2SIssuingMappingRecordRes>;
+  fetchMessageEvent: FetchDispatchEvents<BridgeDispatchEventRes>;
 } {
   const issuingClient = useMemo(
     () => new GraphQLClient({ url: departure.api.subql || UNKNOWN_CLIENT }),
@@ -290,6 +295,10 @@ export function useS2SRecords(
   const [fetchBurnRecord] = useManualQuery<S2SBurnRecordRes>(S2S_REDEEM_RECORD_QUERY, {
     skipCache: true,
     client: redeemClient,
+  });
+  const [fetchDispatchEvent] = useManualQuery<BridgeDispatchEventRes>(BRIDGE_DISPATCH_EVENTS, {
+    skipCache: true,
+    client: issuingTargetClient,
   });
   const [issuingMappingMemo, setIssuingMappingMemo] = useState<Record<string, S2SHistoryRecord>>({});
   const [unlockedMemo, setUnlockedMemo] = useState<Record<string, S2SHistoryRecord>>({});
@@ -446,6 +455,35 @@ export function useS2SRecords(
     [burnMemo, fetchBurnRecord, fetchRecord]
   );
 
+  const fetchMessageEvent = useCallback<FetchDispatchEvents<BridgeDispatchEventRes>>(
+    (id: string, { attemptsCount = Infinity }) => {
+      const startIndex = 2; // skip 0x
+      const len = 16; // laneId(16 bit)  messageNonce(16 bit);
+      const laneId = id.substr(startIndex, len).replace(/^0+/, '');
+      const nonce = id.substr(-len).replace(/^0+/, '');
+      const messageIdInfo = `\\"0x${laneId}\\",${nonce}`;
+
+      return of(null).pipe(
+        switchMap(() => from(fetchDispatchEvent({ variables: { messageIdInfo } }))),
+        pollWhile(SHORT_DURATION, (res) => !res.data?.events?.nodes[0], attemptsCount, true),
+        map((res) => {
+          const { nodes } = res.data!.events;
+          const { method, data } = nodes[0];
+
+          if (method === 'MessageDispatched') {
+            const detail = JSON.parse(data || '[]');
+            const resultPosition = 2;
+
+            return { method, data, isSuccess: !(detail[resultPosition] as Record<string, string[]>).ok.length };
+          }
+
+          return { method, data, isSuccess: false };
+        })
+      );
+    },
+    [fetchDispatchEvent]
+  );
+
   return {
     fetchS2SIssuingMappingRecord,
     fetchS2SUnlockRecord,
@@ -453,5 +491,6 @@ export function useS2SRecords(
     fetchS2SRedeemRecords,
     fetchS2SRedeemRecord,
     fetchS2SIssuingRecord,
+    fetchMessageEvent,
   };
 }
