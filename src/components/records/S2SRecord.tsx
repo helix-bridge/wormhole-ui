@@ -1,3 +1,4 @@
+import { omit } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Subscription, switchMapTo, tap } from 'rxjs';
@@ -12,7 +13,7 @@ import {
   netConfigToVertices,
   toWei,
 } from '../../utils';
-import { Progresses, ProgressProps, State } from './Progress';
+import { IndexingState, Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
 enum ProgressPosition {
@@ -56,7 +57,7 @@ export function S2SRecord({
 
     const targetDelivered: ProgressProps = {
       title: t('{{chain}} Delivered', { chain: arrival?.name }),
-      steps: [{ name: 'confirmed', state: State.pending, txHash: undefined }],
+      steps: [{ name: 'confirmed', state: State.pending, txHash: undefined, indexing: IndexingState.indexing }],
       network: arrival,
     };
 
@@ -75,17 +76,33 @@ export function S2SRecord({
         : { count: toWei({ value: record.amount, unit: 'gwei' }), currency: 'ORING' },
     [record.amount, isRedeem]
   );
-  const updateProgresses = useCallback((idx: number, res: S2SHistoryRecord) => {
-    const { result: originConfirmResult, responseTxHash: originResponseTx } = res;
-    const data = [...progresses];
+  /**
+   * undefined: no query result;
+   * null: no result until polling finished.
+   */
+  const [deliveredRecord, setDeliveredRecord] = useState<S2SHistoryRecord | null | undefined>();
+  const [confirmedRecord, setConfirmedRecord] = useState<S2SHistoryRecord | null | undefined>();
 
-    data[idx] = {
-      ...data[idx],
-      steps: [{ name: 'confirmed', state: originConfirmResult, txHash: originResponseTx }],
-    };
+  const updateProgresses = useCallback((idx: number, res: S2SHistoryRecord | null, source: ProgressProps[]) => {
+    const data = [...source];
 
-    setProgresses(data);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!res) {
+      data[idx] = {
+        ...data[idx],
+        steps: data[idx].steps.map((step) =>
+          step.txHash ? omit(step, 'indexing') : { ...step, indexing: IndexingState.indexingCompleted }
+        ),
+      };
+    } else {
+      const { result: originConfirmResult, responseTxHash: originResponseTx } = res;
+
+      data[idx] = {
+        ...data[idx],
+        steps: [{ name: 'confirmed', state: originConfirmResult, txHash: originResponseTx }],
+      };
+    }
+
+    return data;
   }, []);
 
   useEffect(() => {
@@ -94,12 +111,18 @@ export function S2SRecord({
     const isS2DVM = isSubstrate2SubstrateDVM(netConfigToVertices(departure!), netConfigToVertices(arrival!));
     const queryTargetRecord = isS2DVM ? fetchS2SIssuingMappingRecord : fetchS2SUnlockRecord;
     const queryOriginRecord = isS2DVM ? fetchS2SIssuingRecord : fetchS2SRedeemRecord;
+    const observer = {
+      next: (res: S2SHistoryRecord) => {
+        setDeliveredRecord(res);
+      },
+      complete: () => {
+        setDeliveredRecord(null);
+      },
+    };
     let subscription: Subscription | null = null;
 
     if (record.result === State.completed) {
-      subscription = queryTargetRecord(messageId, { attemptsCount }).subscribe((res) => {
-        updateProgresses(ProgressPosition.targetDelivered, res);
-      });
+      subscription = queryTargetRecord(messageId, { attemptsCount }).subscribe(observer);
     }
 
     // If start from pending start, polling until origin chain state change, then polling until the event emit on the target chain.
@@ -114,12 +137,10 @@ export function S2SRecord({
         skipCache: true,
       })
         .pipe(
-          tap((res) => updateProgresses(ProgressPosition.originConfirmed, res)),
+          tap((res) => setConfirmedRecord(res)),
           switchMapTo(queryTargetRecord(messageId, { attemptsCount: 200 }))
         )
-        .subscribe((res) => {
-          updateProgresses(ProgressPosition.targetDelivered, res);
-        });
+        .subscribe(observer);
     }
 
     return () => {
@@ -129,6 +150,25 @@ export function S2SRecord({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (deliveredRecord !== undefined) {
+      const current = updateProgresses(ProgressPosition.targetDelivered, deliveredRecord, progresses);
+
+      setProgresses(current);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deliveredRecord]);
+
+  useEffect(() => {
+    if (confirmedRecord !== undefined) {
+      const current = updateProgresses(ProgressPosition.targetDelivered, confirmedRecord, progresses);
+
+      setProgresses(current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmedRecord]);
 
   return (
     <Record
