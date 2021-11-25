@@ -69,7 +69,6 @@ export interface EthereumChainDVMConfig<T extends ApiKeys = ApiKeys> extends Eth
 export interface ChainConfig<A extends ApiKeys = never> {
   api: Api<A>;
   facade: Facade;
-  fullName: string;
   isTest: boolean;
   name: Network;
   provider: Provider;
