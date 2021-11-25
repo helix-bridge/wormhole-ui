@@ -1,5 +1,5 @@
 import { ApiPromise } from '@polkadot/api';
-import { curry, curryRight, has, isEqual, isNull, omit } from 'lodash';
+import { curry, curryRight, has, isEqual, isNull, omit, upperFirst } from 'lodash';
 import Web3 from 'web3';
 import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
 import {
@@ -279,8 +279,9 @@ export function getAvailableNetwork(net: Network): ChainConfig | null {
 
 export function getDisplayName(config: ChainConfig): string {
   const mode = getNetworkMode(config);
+  const name = upperFirst(config.name);
 
-  return mode === 'dvm' ? `${config.name}-Smart` : config?.name;
+  return mode === 'dvm' ? `${name}-Smart` : name;
 }
 
 export function getVerticesFromDisplayName(name: string): Vertices {
