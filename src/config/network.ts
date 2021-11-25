@@ -14,11 +14,11 @@ export enum Graph {
 }
 
 // eslint-disable-next-line no-magic-numbers
-const allowAlias: (full: string, at?: number) => string[] = (fullName, startAt = 3) => {
-  const len = fullName.length;
-  const shortestName = fullName.substr(0, startAt);
+const allowAlias: (full: string, at?: number) => string[] = (name, startAt = 3) => {
+  const len = name.length;
+  const shortestName = name.substr(0, startAt);
 
-  return new Array(len - startAt).fill('').map((_, index) => shortestName + fullName.substr(startAt, index));
+  return new Array(len - startAt).fill('').map((_, index) => shortestName + name.substr(startAt, index));
 };
 
 export const NETWORK_ALIAS = new Map([[Graph.ethereum, [...allowAlias(Graph.ethereum)]]]);
@@ -67,7 +67,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logoMinor: '/image/crab.svg',
       logoWithText: '/image/crab-logo.svg',
     },
-    fullName: 'Darwinia Crab',
     isTest: false,
     name: 'crab',
     provider: {
@@ -100,7 +99,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logoMinor: '/image/darwinia.svg',
       logoWithText: '/image/darwinia-logo.svg',
     },
-    fullName: 'Darwinia',
     isTest: false,
     lockEvents: [
       {
@@ -156,7 +154,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logoMinor: '/image/ethereum.svg',
       logoWithText: '',
     },
-    fullName: 'Ethereum',
     isTest: false,
     name: 'ethereum',
     provider: {
@@ -207,7 +204,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logoMinor: '/image/pangolin.svg',
       logoWithText: '/image/pangolin-logo.svg',
     },
-    fullName: 'Pangolin',
     isTest: true,
     lockEvents: [
       {
@@ -236,7 +232,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logoMinor: '/image/pangoro.png',
       logoWithText: '',
     },
-    fullName: 'Pangoro',
     isTest: true,
     name: 'pangoro',
     provider: {
@@ -279,7 +274,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logoMinor: '/image/ropsten.svg',
       logoWithText: '',
     },
-    fullName: 'Ropsten',
     isTest: true,
     name: 'ropsten',
     provider: {
@@ -297,7 +291,6 @@ export const NETWORK_CONFIG: NetworkConfig = {
       logoMinor: '/image/tron.png',
       logoWithText: '',
     },
-    fullName: 'Tron',
     isTest: false,
     name: 'tron',
     provider: {

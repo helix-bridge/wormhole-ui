@@ -1,5 +1,5 @@
 import { ApiPromise } from '@polkadot/api';
-import { curry, curryRight, has, isEqual, isNull, omit } from 'lodash';
+import { curry, curryRight, has, isEqual, isNull, omit, upperFirst } from 'lodash';
 import Web3 from 'web3';
 import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
 import {
@@ -73,7 +73,7 @@ const isSameNetwork = (net1: ChainConfig | null, net2: ChainConfig | null) => {
     return false;
   }
 
-  return typeof net1 === typeof net2 && net1?.fullName === net2?.fullName;
+  return typeof net1 === typeof net2 && net1?.name === net2?.name;
 };
 
 const getArrivals = (source: Map<Departure, Arrival[]>, departure: ChainConfig) => {
@@ -279,8 +279,9 @@ export function getAvailableNetwork(net: Network): ChainConfig | null {
 
 export function getDisplayName(config: ChainConfig): string {
   const mode = getNetworkMode(config);
+  const name = upperFirst(config.name);
 
-  return mode === 'dvm' ? `${config.fullName}-Smart` : config?.fullName;
+  return mode === 'dvm' ? `${name}-Smart` : name;
 }
 
 export function getVerticesFromDisplayName(name: string): Vertices {
