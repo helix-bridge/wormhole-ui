@@ -1,3 +1,4 @@
+import { ApiPromise } from '@polkadot/api';
 import { curry, curryRight, has, isEqual, isNull, omit } from 'lodash';
 import Web3 from 'web3';
 import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
@@ -16,6 +17,7 @@ import {
   EthereumChainConfig,
   EthereumChainDVMConfig,
   NetworkConfig,
+  NoNullFields,
 } from '../../model';
 import { entrance } from './entrance';
 
@@ -302,21 +304,14 @@ export async function getConfigByConnection(connection: Connection): Promise<Cha
     );
   }
 
-  if (connection.type === 'polkadot') {
-    const { api } = connection as PolkadotConnection;
+  if (connection.type === 'polkadot' && connection.api) {
+    const { api } = connection as NoNullFields<PolkadotConnection>;
 
-    try {
-      // TODO: WebSocket is not connected error;
-      const chain = await api?.rpc.system.chain();
+    await waitUntilConnected(api);
 
-      return chain ? omit(NETWORK_CONFIG[chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;
-    } catch (err) {
-      console.error(
-        '%c [ err ]-263',
-        'font-size:13px; background:pink; color:#bf2c9f;',
-        (err as unknown as Record<string, string>).message
-      );
-    }
+    const chain = await api?.rpc.system.chain();
+
+    return chain ? omit(NETWORK_CONFIG[chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;
   }
 
   if (connection.type === 'tron') {
@@ -324,6 +319,18 @@ export async function getConfigByConnection(connection: Connection): Promise<Cha
   }
 
   return null;
+}
+
+export async function waitUntilConnected(api: ApiPromise): Promise<null> {
+  await api.isReady;
+
+  return new Promise((resolve) => {
+    if (!api.isConnected) {
+      api.on('connected', () => resolve(null));
+    } else {
+      resolve(null);
+    }
+  });
 }
 
 export function isChainIdEqual(id1: string | number, id2: string | number): boolean {

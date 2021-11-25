@@ -321,23 +321,18 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
         const fn = () => (value: RedeemDeposit) =>
           createCrossDepositTx(
             value,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as any })(value)
+            afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as never })(value)
           ).subscribe(observer);
 
         setSubmit(fn);
       } else {
         const fn = () => (value: RedeemDarwiniaToken) => {
           const { amount, asset: iAsset, ...rest } = value;
+          const sum = Web3.utils.toBN(toWei({ value: amount }));
           const actual = {
             ...rest,
             asset: iAsset,
-            amount: isRing(iAsset)
-              ? Web3.utils
-                  .toBN(toWei({ value: amount }))
-                  .sub(fee!)
-                  .toString()
-              : amount,
+            amount: isRing(iAsset) ? sum.sub(fee!).toString() : sum.toString(),
           };
 
           return createCrossTokenTx(
@@ -407,6 +402,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
       <Form.Item name={FORM_CONTROL.asset} initialValue="ring" label={t('Asset')}>
         <Select
           size="large"
+          placeholder="Select Assets"
           onChange={async (value: string) => {
             form.setFieldsValue({ amount: '' });
 

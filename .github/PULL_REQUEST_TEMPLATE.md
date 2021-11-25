@@ -21,11 +21,9 @@ What kind of change does this PR introduce?
 
 - [ ] Bugfix
 - [ ] Feature
-- [ ] Code style update (formatting, local variables)
-- [ ] Refactoring (no functional changes, no api changes)
-- [ ] Build related changes
+- [ ] Code style update
+- [ ] Refactoring
 - [ ] CI related changes
-- [ ] Documentation content changes
 - [ ] Other... Please describe:
 
 ## Does this PR introduce a breaking change?

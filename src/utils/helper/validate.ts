@@ -163,7 +163,7 @@ export const invalidFeeRule: ValidatorRuleFactory = (options) => {
 
   return {
     validator: () => {
-      return new BN(compared ?? '0').lt(new BN(0)) ? Promise.reject() : Promise.resolve();
+      return !compared || new BN(compared).lt(new BN(0)) ? Promise.reject() : Promise.resolve();
     },
     message: t('Can not verify amount because of a invalid fee'),
   };

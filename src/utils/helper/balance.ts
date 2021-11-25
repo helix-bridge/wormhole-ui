@@ -5,6 +5,7 @@ import { isNull, isNumber, isString, isUndefined } from 'lodash';
 import Web3 from 'web3';
 import { ApiPromise } from '@polkadot/api';
 import { AccountData } from '@darwinia/types';
+import { waitUntilConnected } from '../network';
 
 export type WeiValue = string | BN | number | null | undefined;
 export interface PrettyNumberOptions {
@@ -129,7 +130,7 @@ const completeDecimal = (value: string, bits: number): string => {
  */
 export async function getDarwiniaAvailableBalances(api: ApiPromise, account = ''): Promise<[string, string]> {
   try {
-    await api.isReady;
+    await waitUntilConnected(api);
     // type = 0 query ring balance.  type = 1 query kton balance.
     /* eslint-disable */
     const ringUsableBalance = await (api.rpc as any).balances.usableBalance(0, account);

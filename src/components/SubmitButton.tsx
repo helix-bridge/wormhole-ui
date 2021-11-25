@@ -15,7 +15,7 @@ interface SubmitButtonProps extends ButtonProps {
 
 export function FromItemButton({ children, className, ...others }: ButtonProps) {
   return (
-    <Form.Item className="mt-8">
+    <Form.Item className="my-4">
       <Button
         type="primary"
         size="large"
@@ -46,7 +46,12 @@ export function SubmitButton({
     connectNetwork,
   } = useApi();
   const { tx } = useTx();
-  const errorConnections: ConnectionStatus[] = ['pending', 'disconnected', 'fail', 'error'];
+  const errorConnections: ConnectionStatus[] = [
+    ConnectionStatus.pending,
+    ConnectionStatus.disconnected,
+    ConnectionStatus.fail,
+    ConnectionStatus.error,
+  ];
 
   if (tx) {
     return <FromItemButton disabled>{t(tx.status)}</FromItemButton>;
