@@ -143,7 +143,14 @@ export type NetworkThemeConfig<T> = Config<Network, T>;
 /**
  * pending: initial state, indicate that the connection never launched.
  */
-export type ConnectionStatus = 'pending' | 'connecting' | 'success' | 'fail' | 'disconnected' | 'error';
+export enum ConnectionStatus {
+  pending = 'pending',
+  connecting = 'connecting',
+  success = 'success',
+  fail = 'fail',
+  disconnected = 'disconnected',
+  error = 'error',
+}
 export type ConnectionType = 'polkadot' | 'metamask' | 'tron' | 'unknown';
 
 export interface Connection {

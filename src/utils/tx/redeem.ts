@@ -5,7 +5,7 @@ import Web3 from 'web3';
 import { abi } from '../../config';
 import { RedeemDarwiniaToken, RedeemDeposit, RedeemDVMToken, Tx, TxFn } from '../../model';
 import { convertToDvm } from '../helper';
-import { entrance } from '../network';
+import { entrance, waitUntilConnected } from '../network';
 import { buf2hex, getContractTxObs } from './common';
 
 /**
@@ -102,7 +102,7 @@ type S2SInfo = Required<MappingInfo>;
 const s2sMappingParams: (rpc: string) => Promise<S2SInfo> = async (rpc: string) => {
   const api = entrance.polkadot.getInstance(rpc);
 
-  await api.isReady;
+  await waitUntilConnected(api);
 
   const mappingAddress = (await api.query.substrate2SubstrateIssuing.mappingFactoryAddress()).toString();
   const specVersion = api.runtimeVersion.specVersion.toString();

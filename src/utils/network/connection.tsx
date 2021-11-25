@@ -3,9 +3,11 @@ import { Modal } from 'antd';
 import Link from 'antd/lib/typography/Link';
 import { Trans } from 'react-i18next';
 import {
+  BehaviorSubject,
   catchError,
   combineLatest,
   concatMap,
+  distinctUntilKeyChanged,
   EMPTY,
   from,
   map,
@@ -16,18 +18,20 @@ import {
   startWith,
   switchMap,
   switchMapTo,
+  tap,
 } from 'rxjs';
 import { SHORT_DURATION } from '../../config';
 import {
-  Connection,
-  EthereumConnection,
   ChainConfig,
+  Connection,
+  ConnectionStatus,
+  EthereumConnection,
   NetworkCategory,
   PolkadotConnection,
   TronConnection,
 } from '../../model';
-import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkReady } from './network';
 import { entrance } from './entrance';
+import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkReady } from './network';
 import { switchMetamaskNetwork } from './switch';
 
 type ConnectFn<T extends Connection> = (network: ChainConfig, chainId?: string) => Observable<T>;
@@ -44,64 +48,58 @@ interface TronAddress {
 
 export const getPolkadotConnection: (network: ChainConfig) => Observable<PolkadotConnection> = (network) =>
   from(web3Enable('polkadot-js/apps')).pipe(
-    concatMap((extensions) => from(web3Accounts()).pipe(map((accounts) => ({ accounts, extensions })))),
-    switchMap(({ accounts, extensions }) => {
-      let counter = 1;
-      let reconnecting = false;
+    concatMap((extensions) =>
+      from(web3Accounts()).pipe(
+        map(
+          (accounts) =>
+            ({
+              accounts: !extensions.length && !accounts.length ? [] : accounts,
+              type: 'polkadot',
+              status: 'pending',
+            } as Exclude<PolkadotConnection, 'api'>)
+        )
+      )
+    ),
+    switchMap((envelop: Exclude<PolkadotConnection, 'api'>) => {
+      const subject = new BehaviorSubject<PolkadotConnection>(envelop);
+      const url = network.provider.rpc;
+      const api = entrance.polkadot.getInstance(url);
+      const source = subject.asObservable().pipe(
+        distinctUntilKeyChanged('status'),
+        tap((env) => {
+          const { status } = env;
 
-      return new Observable((observer: Observer<PolkadotConnection>) => {
-        const url = network.provider.rpc;
-        const api = entrance.polkadot.getInstance(url);
-        const envelop: PolkadotConnection = {
-          status: 'success',
-          accounts: !extensions.length && !accounts.length ? [] : accounts,
-          api,
-          type: 'polkadot',
-        };
+          if (status !== 'success' && status !== 'connecting') {
+            api.connect();
+          }
+        })
+      );
 
-        const reconnect = () => {
-          // eslint-disable-next-line no-magic-numbers
-          console.info(`Reconnect after ${(counter * SHORT_DURATION) / 1000} seconds`);
+      if (api.isConnected) {
+        subject.next({ ...envelop, status: ConnectionStatus.success, api });
+      }
 
-          setTimeout(() => {
-            try {
-              if (!api.isConnected && !reconnecting) {
-                console.info(`Reconnect Start: Attempting to reconnect for the ${counter}th times`);
-                counter += 1;
-                reconnecting = true;
-                observer.next({ ...envelop, status: 'connecting' });
-                api.connect().finally(() => {
-                  reconnecting = false;
-                });
-              } else {
-                console.info(`Reconnect launch failed, because of the ${counter}th reconnection still in process`);
-              }
-            } catch (error: unknown) {
-              console.warn(`Reconnect Error: The ${counter - 1}th reconnecting failed`, error);
-            }
-          }, SHORT_DURATION * counter);
-        };
-
-        if (api.isConnected) {
-          observer.next(envelop);
-        }
-
-        api.on('connected', () => {
-          observer.next(envelop);
-        });
-
-        api.on('disconnected', () => {
-          observer.next({ ...envelop, status: 'disconnected' });
-          reconnect();
-        });
-
-        api.on('error', (_) => {
-          observer.next({ ...envelop, status: 'error' });
-          reconnect();
-        });
+      api.on('connected', () => {
+        subject.next({ ...envelop, status: ConnectionStatus.success, api });
       });
+
+      api.on('disconnected', () => {
+        subject.next({ ...envelop, status: ConnectionStatus.disconnected, api });
+        setTimeout(() => {
+          subject.next({ ...envelop, status: ConnectionStatus.connecting, api });
+        }, SHORT_DURATION / 10);
+      });
+
+      api.on('error', (_) => {
+        subject.next({ ...envelop, status: ConnectionStatus.error, api });
+        setTimeout(() => {
+          subject.next({ ...envelop, status: ConnectionStatus.connecting, api });
+        }, SHORT_DURATION / 10);
+      });
+
+      return from(api.isReady).pipe(switchMapTo(source));
     }),
-    startWith<PolkadotConnection>({ status: 'connecting', accounts: [], api: null, type: 'polkadot' })
+    startWith<PolkadotConnection>({ status: ConnectionStatus.connecting, accounts: [], api: null, type: 'polkadot' })
   );
 
 export const getEthConnection: () => Observable<EthereumConnection> = () => {
@@ -116,7 +114,7 @@ export const getEthConnection: () => Observable<EthereumConnection> = () => {
       ]).pipe(
         map(([addresses, chainId]) => ({
           accounts: addressToAccounts(addresses),
-          status: 'success',
+          status: ConnectionStatus.success,
           chainId,
           type: 'metamask',
         }))
@@ -126,7 +124,7 @@ export const getEthConnection: () => Observable<EthereumConnection> = () => {
         window.ethereum.on('accountsChanged', (accounts: string[]) =>
           from<string>(window.ethereum.request({ method: 'eth_chainId' })).subscribe((chainId) => {
             observer.next({
-              status: 'success',
+              status: ConnectionStatus.success,
               accounts: addressToAccounts(accounts),
               type: 'metamask',
               chainId,
@@ -136,7 +134,7 @@ export const getEthConnection: () => Observable<EthereumConnection> = () => {
         window.ethereum.on('chainChanged', (chainId: string) => {
           from<string[][]>(window.ethereum.request({ method: 'eth_accounts' })).subscribe((accounts) => {
             observer.next({
-              status: 'success',
+              status: ConnectionStatus.success,
               accounts: addressToAccounts(accounts),
               type: 'metamask',
               chainId,
@@ -148,16 +146,16 @@ export const getEthConnection: () => Observable<EthereumConnection> = () => {
       return merge(request, obs);
     }),
     catchError((_) => {
-      return of<EthereumConnection>({ status: 'error', accounts: [], type: 'metamask', chainId: '' });
+      return of<EthereumConnection>({ status: ConnectionStatus.error, accounts: [], type: 'metamask', chainId: '' });
     }),
-    startWith<EthereumConnection>({ status: 'connecting', accounts: [], type: 'metamask', chainId: '' })
+    startWith<EthereumConnection>({ status: ConnectionStatus.connecting, accounts: [], type: 'metamask', chainId: '' })
   );
 };
 
 export const getTronConnection: () => Observable<TronConnection> = () => {
   const wallet = window.tronWeb.defaultAddress;
   const mapData: (data: TronAddress) => TronConnection = (data) => ({
-    status: 'success',
+    status: ConnectionStatus.success,
     accounts: [{ address: data.base58, meta: { name: data?.name ?? '', source: '', genesisHash: '' } }],
     type: 'tron',
   });
