@@ -4,7 +4,8 @@ import { flow, isBoolean, negate, upperFirst } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { useNetworks, useRecords } from '../../hooks';
+import { EMPTY, takeWhile } from 'rxjs';
+import { useIsMounted, useNetworks, useRecords } from '../../hooks';
 import { ChainConfig, HistoryRouteParam, Paginator, Vertices } from '../../model';
 import {
   getCrossChainArrivals,
@@ -80,28 +81,32 @@ export function CrossRecords() {
     useState<{ count: number; list: Record<string, string | number | null | undefined>[] }>(SOURCE_DATA_DEFAULT);
   const { queryRecords } = useRecords(departure, arrival);
   const [paginator, setPaginator] = useState<Paginator>(PAGINATOR_DEFAULT);
+  const isMounted = useIsMounted();
 
   const loadData = useCallback(
     (addr: string | null, confirm: boolean | null, dep: Vertices, arr: Vertices, isGen: boolean, pag: Paginator) => {
       if (!addr || !isAddressValid(addr, dep) || !isReachable(verticesToNetConfig(dep))(verticesToNetConfig(arr))) {
         setSourceData(SOURCE_DATA_DEFAULT);
         setPaginator(PAGINATOR_DEFAULT);
-        return;
+
+        return EMPTY.subscribe();
       }
 
       setLoading(true);
 
-      queryRecords({ network: dep.network, address: addr, paginator: pag, confirmed: confirm }, isGen).subscribe({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        next: (res: any) => {
-          res = Array.isArray(res) ? { count: res.length, list: res } : res;
-          setSourceData(res ?? SOURCE_DATA_DEFAULT);
-        },
-        error: () => setLoading(false),
-        complete: () => setLoading(false),
-      });
+      return queryRecords({ network: dep.network, address: addr, paginator: pag, confirmed: confirm }, isGen)
+        .pipe(takeWhile(() => isMounted))
+        .subscribe({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          next: (res: any) => {
+            res = Array.isArray(res) ? { count: res.length, list: res } : res;
+            setSourceData(res ?? SOURCE_DATA_DEFAULT);
+          },
+          error: () => setLoading(false),
+          complete: () => setLoading(false),
+        });
     },
-    [queryRecords]
+    [isMounted, queryRecords]
   );
 
   useEffect(() => {
@@ -137,7 +142,9 @@ export function CrossRecords() {
   }, []);
 
   useEffect(() => {
-    loadData(address, confirmed, departure, arrival, isGenesis, paginator);
+    const sub$$ = loadData(address, confirmed, departure, arrival, isGenesis, paginator);
+
+    return () => sub$$.unsubscribe();
   }, [address, arrival, confirmed, departure, isGenesis, loadData, paginator]);
 
   return (
