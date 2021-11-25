@@ -109,12 +109,12 @@ context('Destination component', () => {
 
           // all networks should be rendered
           NETWORKS.forEach((network) => {
-            cy.get('.ant-dropdown-menu-item').contains(network.fullName);
+            cy.get('.ant-dropdown-menu-item').contains(network.name);
           });
 
           // test networks should have tag sibling
           NETWORKS.filter((item) => item.isTest).forEach((network) => {
-            cy.get('.ant-dropdown-menu-item').contains(network.fullName).next().contains('Test');
+            cy.get('.ant-dropdown-menu-item').contains(network.name).next().contains('Test');
           });
         });
     });
@@ -135,7 +135,7 @@ context('Destination component', () => {
           />
         </Suspense>
       );
-      cy.get('.ant-dropdown-trigger').contains(NETWORKS[2].fullName);
+      cy.get('.ant-dropdown-trigger').contains(NETWORKS[2].name);
       cy.get(`img[src="${logo}"]`).should('be.visible');
     });
 

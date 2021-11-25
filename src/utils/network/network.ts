@@ -73,7 +73,7 @@ const isSameNetwork = (net1: ChainConfig | null, net2: ChainConfig | null) => {
     return false;
   }
 
-  return typeof net1 === typeof net2 && net1?.fullName === net2?.fullName;
+  return typeof net1 === typeof net2 && net1?.name === net2?.name;
 };
 
 const getArrivals = (source: Map<Departure, Arrival[]>, departure: ChainConfig) => {
@@ -280,7 +280,7 @@ export function getAvailableNetwork(net: Network): ChainConfig | null {
 export function getDisplayName(config: ChainConfig): string {
   const mode = getNetworkMode(config);
 
-  return mode === 'dvm' ? `${config.fullName}-Smart` : config?.fullName;
+  return mode === 'dvm' ? `${config.name}-Smart` : config?.name;
 }
 
 export function getVerticesFromDisplayName(name: string): Vertices {

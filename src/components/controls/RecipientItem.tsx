@@ -1,5 +1,6 @@
 import { LockOutlined } from '@ant-design/icons';
 import { Form, FormInstance, Input } from 'antd';
+import { upperFirst } from 'lodash';
 import { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
@@ -41,8 +42,8 @@ export function RecipientItem({
               return isValidAddress(value, !isDvm ? type : 'ethereum', true) ? Promise.resolve() : Promise.reject();
             },
             message: !isDvm
-              ? t('Please enter a valid {{network}} address', { network: to?.fullName })
-              : t('Please fill in a {{network}} smart address which start with 0x', { network: to?.fullName }),
+              ? t('Please enter a valid {{network}} address', { network: upperFirst(to?.name) })
+              : t('Please fill in a {{network}} smart address which start with 0x', { network: upperFirst(to?.name) }),
           },
         ]}
         extra={to ? extraTip : ''}
