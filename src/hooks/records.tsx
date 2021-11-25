@@ -478,6 +478,14 @@ export function useS2SRecords(
           }
 
           return { method, data, isSuccess: false };
+        }),
+        catchError((error) => {
+          console.info(
+            `%c [ query record failed with message id: ${id} ]`,
+            'font-size:13px; background:pink; color:#bf2c9f;',
+            error.message
+          );
+          return EMPTY;
         })
       );
     },

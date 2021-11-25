@@ -1,23 +1,48 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { Affix, Input, message, Select, Spin, Tabs, Tooltip } from 'antd';
-import { isBoolean, negate, upperFirst } from 'lodash';
-import { useEffect, useMemo, useState } from 'react';
+import { Affix, Input, message, Pagination, Select, Spin, Tabs, Tooltip } from 'antd';
+import { flow, isBoolean, negate, upperFirst } from 'lodash';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { useNetworks } from '../../hooks';
-import { ChainConfig, HistoryRouteParam, Vertices } from '../../model';
+import { useNetworks, useRecords } from '../../hooks';
+import { ChainConfig, HistoryRouteParam, Paginator, Vertices } from '../../model';
 import {
   getCrossChainArrivals,
   getDisplayName,
   getHistoryRouteParams,
+  getNetworkCategory,
   getNetworkMode,
+  getVerticesFromDisplayName,
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
   isSameNetworkCurry,
+  isValidAddress,
   verticesToNetConfig,
 } from '../../utils';
-import { isAddressValid, RecordList } from './RecordList';
+import { RecordList } from './RecordList';
+
+const SOURCE_DATA_DEFAULT = { count: 0, list: [] };
+const PAGINATOR_DEFAULT = { row: 10, page: 0 };
+
+// eslint-disable-next-line complexity
+const isAddressValid = (addr: string | null, departure: Vertices) => {
+  const { network, mode } = departure;
+
+  let addressValid = false;
+
+  if (addr && network) {
+    if (mode === 'dvm' || isEthereumNetwork(departure.network)) {
+      addressValid = isValidAddress(addr, 'ethereum');
+    } else {
+      const category = flow([getVerticesFromDisplayName, verticesToNetConfig, getNetworkCategory])(network);
+
+      addressValid = category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
+    }
+  }
+
+  return addressValid;
+};
 
 // eslint-disable-next-line complexity
 export function CrossRecords() {
@@ -51,6 +76,33 @@ export function CrossRecords() {
 
     return t('Please enter a valid {{network}} address', { network: upperFirst(network) });
   }, [departure, arrival, t]);
+  const [sourceData, setSourceData] =
+    useState<{ count: number; list: Record<string, string | number | null | undefined>[] }>(SOURCE_DATA_DEFAULT);
+  const { queryRecords } = useRecords(departure, arrival);
+  const [paginator, setPaginator] = useState<Paginator>(PAGINATOR_DEFAULT);
+
+  const loadData = useCallback(
+    (addr: string | null, confirm: boolean | null, dep: Vertices, arr: Vertices, isGen: boolean, pag: Paginator) => {
+      if (!addr || !isAddressValid(addr, dep) || !isReachable(verticesToNetConfig(dep))(verticesToNetConfig(arr))) {
+        setSourceData(SOURCE_DATA_DEFAULT);
+        setPaginator(PAGINATOR_DEFAULT);
+        return;
+      }
+
+      setLoading(true);
+
+      queryRecords({ network: dep.network, address: addr, paginator: pag, confirmed: confirm }, isGen).subscribe({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        next: (res: any) => {
+          res = Array.isArray(res) ? { count: res.length, list: res } : res;
+          setSourceData(res ?? SOURCE_DATA_DEFAULT);
+        },
+        error: () => setLoading(false),
+        complete: () => setLoading(false),
+      });
+    },
+    [queryRecords]
+  );
 
   useEffect(() => {
     const config = verticesToNetConfig(departure);
@@ -83,6 +135,10 @@ export function CrossRecords() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    loadData(address, confirmed, departure, arrival, isGenesis, paginator);
+  }, [address, arrival, confirmed, departure, isGenesis, loadData, paginator]);
 
   return (
     <>
@@ -163,14 +219,26 @@ export function CrossRecords() {
             defaultValue={searchParams?.sender || ''}
             loading={loading}
             placeholder={searchPlaceholder}
-            onChange={(event) => setAddress(event.target.value)}
+            onChange={(event) => {
+              const addr = event.target.value;
+
+              if (addr === address) {
+                loadData(address, confirmed, departure, arrival, isGenesis, paginator);
+              } else {
+                setAddress(addr);
+              }
+            }}
             onSearch={(value) => {
               if (!isAddressValid(value, departure)) {
                 message.error(t(searchPlaceholder));
               } else if (!isReachable(verticesToNetConfig(departure))(verticesToNetConfig(arrival))) {
                 message.error(t('Origin network is not matched to the target network'));
               } else {
-                setAddress(value);
+                if (value === address) {
+                  loadData(address, confirmed, departure, arrival, isGenesis, paginator);
+                } else {
+                  setAddress(value);
+                }
               }
             }}
             enterButton={t('Search')}
@@ -210,14 +278,21 @@ export function CrossRecords() {
 
       <Spin spinning={loading} size="large">
         <div className="bg-gray-200 dark:bg-antDark p-4 -mt-4">
-          <RecordList
-            departure={departure}
-            arrival={arrival}
-            isGenesis={isGenesis}
-            confirmed={confirmed}
-            address={address}
-            onLoading={setLoading}
-          />
+          <RecordList departure={departure} arrival={arrival} sourceData={sourceData} />
+
+          <div className="w-full max-w-6xl flex justify-center items-center mx-auto mt-4">
+            {!!sourceData.count && (
+              <Pagination
+                onChange={(page: number) => {
+                  setPaginator({ ...paginator, page: page - 1 });
+                }}
+                current={paginator.page + 1}
+                pageSize={paginator.row}
+                total={sourceData.count ?? 0}
+                showTotal={() => t('Total {{total}}', { total: sourceData.count })}
+              />
+            )}
+          </div>
         </div>
       </Spin>
     </>
