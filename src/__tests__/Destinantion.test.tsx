@@ -10,6 +10,7 @@ import '../theme/antd/index.less';
 import i18n from '../config/i18n';
 import { img } from './utils';
 import { getDisplayName } from '../utils';
+import { upperFirst } from 'lodash';
 
 i18n.init({
   lng: 'en',
@@ -109,12 +110,12 @@ context('Destination component', () => {
 
           // all networks should be rendered
           NETWORKS.forEach((network) => {
-            cy.get('.ant-dropdown-menu-item').contains(network.name);
+            cy.get('.ant-dropdown-menu-item').contains(upperFirst(network.name));
           });
 
           // test networks should have tag sibling
           NETWORKS.filter((item) => item.isTest).forEach((network) => {
-            cy.get('.ant-dropdown-menu-item').contains(network.name).next().contains('Test');
+            cy.get('.ant-dropdown-menu-item').contains(upperFirst(network.name)).next().contains('Test');
           });
         });
     });
@@ -135,7 +136,7 @@ context('Destination component', () => {
           />
         </Suspense>
       );
-      cy.get('.ant-dropdown-trigger').contains(NETWORKS[2].name);
+      cy.get('.ant-dropdown-trigger').contains(upperFirst(NETWORKS[2].name));
       cy.get(`img[src="${logo}"]`).should('be.visible');
     });
 
