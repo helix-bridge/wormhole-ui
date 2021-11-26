@@ -3,6 +3,7 @@ import { catchError, filter, from, map, Observable, of, switchMap, take, zip } f
 import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
 import {
+  ChainConfig,
   D2EHistoryRes,
   D2EMeta,
   DarwiniaConfig,
@@ -21,7 +22,7 @@ import {
   getMMRProof,
   getMPTProof,
 } from '../helper';
-import { entrance, getAvailableNetwork, getEthConnection } from '../network';
+import { connect, entrance, getAvailableNetwork } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
 
@@ -99,24 +100,26 @@ interface ClaimInfo {
 /**
  * @description darwinia -> ethereum & darwinia DVM -> ethereum  needs claim action
  */
-export function claimToken({
-  networkPrefix,
-  mmrIndex,
-  mmrRoot,
-  mmrSignatures,
-  blockNumber,
-  blockHeaderStr,
-  blockHash,
-  meta: { MMRRoot, best },
-}: ClaimInfo): Observable<Tx> {
+export function claimToken(
+  {
+    networkPrefix,
+    mmrIndex,
+    mmrRoot,
+    mmrSignatures,
+    blockNumber,
+    blockHeaderStr,
+    blockHash,
+    meta: { MMRRoot, best },
+  }: ClaimInfo,
+  arrival: ChainConfig
+): Observable<Tx> {
   const network = networkPrefix.toLowerCase() as Network;
   const config = NETWORK_CONFIG[network];
   const apiObs = from(entrance.polkadot.getInstance(config.provider.rpc).isReady);
   const toNetworkConfig = getAvailableNetwork(network)! as EthereumConfig;
   const header = encodeBlockHeader(blockHeaderStr);
   const storageKey = getD2ELockEventsStorageKey(blockNumber, (config as PangolinConfig | DarwiniaConfig).lockEvents);
-  // TODO: check connection
-  const accountObs = getEthConnection().pipe(
+  const accountObs = connect(arrival).pipe(
     filter(({ status }) => status === 'success'),
     map(({ accounts }) => accounts[0].address),
     take(1)
