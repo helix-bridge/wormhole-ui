@@ -1,14 +1,15 @@
-import { Button, Checkbox, Form, Input, InputNumber, Tooltip } from 'antd';
+import { ImportOutlined } from '@ant-design/icons';
+import { Alert, Button, Checkbox, Col, Form, Input, InputNumber, message, Modal, Row, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { isArray, isBoolean, isEqual, isNumber, isObject, isString, last } from 'lodash';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { NETWORK_CONFIG_DESCRIPTIONS } from '../config';
-import { ChainConfig } from '../model';
-import { saveNetworkConfig } from '../utils/helper/storage';
+import { NETWORK_CONFIG, NETWORK_CONFIG_DESCRIPTIONS, SYSTEM_NETWORK_CONFIG } from '../config';
+import { Network } from '../model';
+import { addCustomChain, readStorage, removeCustomChain, saveNetworkConfig } from '../utils/helper/storage';
 
 interface ConfigurationProps {
-  config: ChainConfig;
+  network: Network;
 }
 
 // eslint-disable-next-line complexity
@@ -75,33 +76,104 @@ function getConfigControl(config: unknown, keys: (string | number)[]) {
   );
 }
 
-export function Configuration({ config }: ConfigurationProps) {
+export function Configuration({ network }: ConfigurationProps) {
   const { t } = useTranslation();
-  const controls = getConfigControl(config, []);
+  const controls = getConfigControl(NETWORK_CONFIG[network], []);
   const [form] = useForm();
+  const [isCustom, setIsCustom] = useState(false);
+  const tip = useCallback(() => {
+    message.success({
+      content: t('Operation success, you need to refresh the page to use the configuration to take effect'),
+      duration: 10,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    form.setFieldsValue(config);
-  }, [config, form]);
+    const { config = {}, custom = [] } = readStorage();
+
+    if (config[network]) {
+      form.setFieldsValue(config[network]);
+    } else {
+      form.resetFields();
+    }
+
+    setIsCustom(custom.includes(network));
+  }, [network, form]);
 
   return (
-    <Form
-      layout="inline"
-      form={form}
-      name="configuration"
-      initialValues={config}
-      onFinish={(values) => {
-        console.info('%c [ values ]-61', 'font-size:13px; background:pink; color:#bf2c9f;', values);
-        saveNetworkConfig(values);
-      }}
-    >
-      <div className="w-full configuration-control-container">{controls}</div>
+    <>
+      <Alert
+        message={t(
+          'Modifying the system configuration may lead to abnormal application functions, please be careful to modify'
+        )}
+        type="warning"
+        showIcon
+        closable
+      />
 
-      <Form.Item className="mt-4 ml-4">
-        <Button type="primary" htmlType="submit">
-          {t('Confirm')}
-        </Button>
-      </Form.Item>
-    </Form>
+      <Button
+        onClick={() => {
+          form.setFieldsValue(SYSTEM_NETWORK_CONFIG[network]);
+        }}
+        icon={<ImportOutlined style={{ verticalAlign: 0 }} className="transform rotate-180" />}
+        className="my-4"
+      >
+        {t('Import System Configuration')}
+      </Button>
+
+      <Form
+        layout="inline"
+        form={form}
+        name="configuration"
+        onFinish={(values) => {
+          saveNetworkConfig(values);
+          message.success(t('Save success'));
+        }}
+      >
+        <div className="w-full configuration-control-container">{controls}</div>
+
+        <Row className="w-full px-4 my-4">
+          <Col span={10}>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" className="w-full">
+                {t('Save')}
+              </Button>
+            </Form.Item>
+          </Col>
+
+          <Col span={10} offset={4}>
+            <Form.Item>
+              <Button
+                onClick={() => {
+                  if (!isCustom) {
+                    Modal.warning({
+                      title: 'Replace Configuration',
+                      content: t(`Are you sure to replace the configuration of ${network} ?`),
+                      okText: t('Confirm'),
+                      closable: true,
+                      onOk: () => {
+                        addCustomChain(network);
+                        setIsCustom(true);
+                        tip();
+                      },
+                    });
+                  } else {
+                    removeCustomChain(network);
+                    setIsCustom(false);
+                    tip();
+                  }
+                }}
+                type="primary"
+                danger={!isCustom}
+                className="w-full"
+              >
+                {t(isCustom ? 'Restore System Configuration' : 'Replace System Configuration')}
+              </Button>
+            </Form.Item>
+          </Col>
+        </Row>
+      </Form>
+    </>
   );
 }

@@ -39,7 +39,7 @@ function Config() {
         </Sider>
 
         <Content className="p-2 overflow-scroll bg-gray-200 dark:bg-gray-900">
-          <Configuration config={NETWORK_CONFIG[active]} />
+          <Configuration network={active} />
         </Content>
       </Layout>
     </Card>

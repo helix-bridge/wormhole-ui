@@ -1,5 +1,6 @@
 import { chain, omit } from 'lodash';
 import { Arrival, Departure, ChainConfig, NetworkConfig } from '../model';
+import { getCustomNetworkConfig } from '../utils/helper/storage';
 
 const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
@@ -28,11 +29,7 @@ const EVOLUTION_DOMAIN = {
   dev: 'https://www.evolution.land.l2me.com',
 };
 
-/**
- * TODO：need to implement some helper function to set the common configuration
- * example: api.dapp, api.evolution just depends on whether the chain is a test chain.
- */
-export const NETWORK_CONFIG: NetworkConfig = {
+export const SYSTEM_NETWORK_CONFIG: NetworkConfig = {
   crab: {
     api: {
       dapp: 'https://api.darwinia.network',
@@ -300,6 +297,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
     type: ['tron'],
   },
 };
+
+const CUSTOM_NETWORK_CONFIG = getCustomNetworkConfig();
+
+export const NETWORK_CONFIG = { ...SYSTEM_NETWORK_CONFIG, ...CUSTOM_NETWORK_CONFIG };
 
 export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
   [{ network: Graph.crab, mode: 'native' }, [{ network: Graph.darwinia, status: 'pending', mode: 'native' }]],

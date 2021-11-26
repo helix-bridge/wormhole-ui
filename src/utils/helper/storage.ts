@@ -1,4 +1,4 @@
-import { omit } from 'lodash';
+import { pickBy, uniq } from 'lodash';
 import store from 'store';
 import { ChainConfig, Network, StorageInfo } from '../../model';
 
@@ -21,9 +21,22 @@ export function saveNetworkConfig(config: ChainConfig) {
   updateStorage({ config: nConf });
 }
 
-export function removeNetworkConfig(name: Network) {
-  const { config } = readStorage();
-  const nConf = omit(config, name);
+export function removeCustomChain(name: Network) {
+  const { custom = [] } = readStorage();
+  const res = custom.filter((item) => item !== name);
 
-  updateStorage({ config: nConf });
+  updateStorage({ custom: res });
+}
+
+export function addCustomChain(name: Network) {
+  const { custom = [] } = readStorage();
+  custom.push(name);
+
+  updateStorage({ custom: uniq(custom) });
+}
+
+export function getCustomNetworkConfig() {
+  const { config = {}, custom = [] } = readStorage();
+
+  return pickBy(config, (item) => custom.includes(item.name));
 }
