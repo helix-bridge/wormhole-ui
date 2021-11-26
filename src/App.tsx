@@ -54,7 +54,7 @@ function NavLink({ nav, theme }: { nav: Nav; theme: THEME }) {
           // nothing
         }
       }}
-      className={`${active} ${textCls} transition-all duration-300 ease-in-out opacity-100 hover:opacity-80 cursor-pointer`}
+      className={`${active} ${textCls} transition-all duration-300 ease-in-out opacity-100 hover:opacity-80 cursor-pointer whitespace-nowrap`}
       key={nav.label}
     >
       {t(nav.label)}

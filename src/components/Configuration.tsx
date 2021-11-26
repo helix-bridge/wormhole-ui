@@ -1,27 +1,44 @@
-import { Button, Checkbox, Form, Input, InputNumber } from 'antd';
+import { Button, Checkbox, Form, Input, InputNumber, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { isArray, isBoolean, isNumber, isObject, last } from 'lodash';
-import { useTranslation } from 'react-i18next';
+import { isArray, isBoolean, isEqual, isNumber, isObject, isString, last } from 'lodash';
+import { useEffect } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
+import { NETWORK_CONFIG_DESCRIPTIONS } from '../config';
 import { ChainConfig } from '../model';
+import { saveNetworkConfig } from '../utils/helper/storage';
 
 interface ConfigurationProps {
   config: ChainConfig;
 }
 
 // eslint-disable-next-line complexity
-function getConfigControl(config: unknown, keys: string[]) {
-  const key = last(keys);
-  const label = /^\d+$/g.test(key + '') ? undefined : key;
+function getConfigControl(config: unknown, keys: (string | number)[]) {
+  const lastKey = last(keys);
+  const keysStr = keys.join('-');
+  const descriptor = NETWORK_CONFIG_DESCRIPTIONS.find((item) => isEqual(item.path, keys.filter(isString)));
+  const label =
+    !lastKey || isNumber(lastKey) ? null : descriptor?.comment ? (
+      <Tooltip title={<Trans>{descriptor?.comment}</Trans>}>{lastKey}</Tooltip>
+    ) : (
+      lastKey
+    );
+  const idx = keys.findIndex(isNumber);
+  const namePath = [...keys];
+
+  // remove parent path
+  if (idx >= 1) {
+    namePath.splice(idx - 1, 1);
+  }
 
   if (isArray(config)) {
     return (
-      <Form.Item label={label} key={keys.join('-')} className="px-4 py-2 items-center">
-        <Form.List name={keys} key={keys.join('-')}>
+      <Form.Item label={label} key={keysStr} className="px-4 py-2 items-center">
+        <Form.List name={namePath} key={keysStr}>
           {(_) => (
             <div className="list-container">
               {config.map((field, index) => (
                 <div key={[...keys, index].join('-')} className="border-b border-gray-600">
-                  {getConfigControl(field, [...keys.slice(0, -1), index.toString()])}
+                  {getConfigControl(field, [...keys, index])}
                 </div>
               ))}
             </div>
@@ -33,7 +50,7 @@ function getConfigControl(config: unknown, keys: string[]) {
 
   if (isObject(config)) {
     return (
-      <Form.Item key={[...keys].join('-')} label={label} className="px-4 py-2 items-center">
+      <Form.Item key={keysStr} label={label} className="px-4 py-2 items-center">
         {Object.entries(config).map(([k, value]) => getConfigControl(value, [...keys, k]))}
       </Form.Item>
     );
@@ -41,13 +58,19 @@ function getConfigControl(config: unknown, keys: string[]) {
 
   return (
     <Form.Item
-      key={keys.join('-')}
-      name={keys}
+      key={keysStr}
+      name={namePath}
       label={label}
       valuePropName={isBoolean(config) ? 'checked' : undefined}
       className="px-4 py-2"
     >
-      {isNumber(config) ? <InputNumber /> : isBoolean(config) ? <Checkbox /> : <Input />}
+      {isNumber(config) ? (
+        <InputNumber disabled={!descriptor?.editable} />
+      ) : isBoolean(config) ? (
+        <Checkbox disabled={!descriptor?.editable} />
+      ) : (
+        <Input disabled={!descriptor?.editable} />
+      )}
     </Form.Item>
   );
 }
@@ -57,6 +80,10 @@ export function Configuration({ config }: ConfigurationProps) {
   const controls = getConfigControl(config, []);
   const [form] = useForm();
 
+  useEffect(() => {
+    form.setFieldsValue(config);
+  }, [config, form]);
+
   return (
     <Form
       layout="inline"
@@ -65,6 +92,7 @@ export function Configuration({ config }: ConfigurationProps) {
       initialValues={config}
       onFinish={(values) => {
         console.info('%c [ values ]-61', 'font-size:13px; background:pink; color:#bf2c9f;', values);
+        saveNetworkConfig(values);
       }}
     >
       <div className="w-full configuration-control-container">{controls}</div>
