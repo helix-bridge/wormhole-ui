@@ -1,3 +1,14 @@
+## [2.1.5](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.4...v2.1.5) (2021-11-26)
+
+### Bug Fixes
+
+- **#194:** d2e fee ([#197](https://github.com/darwinia-network/wormhole-pro/issues/197)) ([6fc9d15](https://github.com/darwinia-network/wormhole-pro/commit/6fc9d15361a1f6b6b08aa79c7c4fd60a38fe8df5)), closes [#194](https://github.com/darwinia-network/wormhole-pro/issues/194)
+- **#199:** connection check before claim ([#204](https://github.com/darwinia-network/wormhole-pro/issues/204)) ([9634325](https://github.com/darwinia-network/wormhole-pro/commit/96343258632817021052dcb39b8406aa3d5e13e6)), closes [#199](https://github.com/darwinia-network/wormhole-pro/issues/199)
+
+### Features
+
+- s2s recoder deliver detail ([#202](https://github.com/darwinia-network/wormhole-pro/issues/202)) ([23093d1](https://github.com/darwinia-network/wormhole-pro/commit/23093d148a2986a5574c0b87940dd5717c8b8f49))
+
 ## [2.1.4](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.3...v2.1.4) (2021-11-20)
 
 ### Bug Fixes
