@@ -1,4 +1,11 @@
-import { CheckCircleOutlined, CheckOutlined, ExclamationCircleFilled, LoadingOutlined } from '@ant-design/icons';
+import {
+  CheckCircleOutlined,
+  CheckOutlined,
+  ExclamationCircleFilled,
+  LoadingOutlined,
+  SyncOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
 import { Button, Row, Tooltip } from 'antd';
 import { last } from 'lodash';
 import React, { SetStateAction, useMemo, useState } from 'react';
@@ -18,10 +25,11 @@ export enum State {
 // const stateColors: string[] = ['#4b5563', '#5745de', '#da1737'];
 
 interface Step {
+  indexing?: IndexingState;
+  mutateState?: (monitor: React.Dispatch<SetStateAction<boolean>>) => Subscription;
   name: string;
   state: State;
   txHash?: string;
-  mutateState?: (monitor: React.Dispatch<SetStateAction<boolean>>) => Subscription;
 }
 
 export interface ProgressProps {
@@ -34,6 +42,11 @@ export interface ProgressProps {
 
 export interface ProgressesProps {
   items: ProgressProps[];
+}
+
+export enum IndexingState {
+  indexing = 'indexing',
+  indexingCompleted = 'indexingCompleted',
 }
 
 export const transactionSend: ProgressProps = {
@@ -57,6 +70,7 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
   const {
     txHash,
     mutateState,
+    indexing,
     state: lastState,
   } = useMemo<Step>(() => last(steps) ?? { name: '', state: State.completed }, [steps]);
   const progressItemState = useMemo<State>(() => {
@@ -68,6 +82,7 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
       return State.pending;
     }
   }, [steps]);
+  // eslint-disable-next-line complexity
   const finish = useMemo(() => {
     if (progressItemState !== State.pending && txHash && network) {
       return (
@@ -79,8 +94,30 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
       );
     }
 
+    if (indexing === IndexingState.indexing) {
+      return (
+        <Tooltip
+          title={t(progressItemState === State.pending ? 'Waiting for bridge response' : 'Querying transaction hash')}
+        >
+          <Button size="small" className="text-xs" icon={<SyncOutlined spin style={{ verticalAlign: 0 }} />} disabled>
+            {t(progressItemState === State.pending ? 'Waiting Deliver' : 'Querying')}
+          </Button>
+        </Tooltip>
+      );
+    }
+
+    if (indexing === IndexingState.indexingCompleted) {
+      return (
+        <Tooltip title={t('Failed to query transaction hash')}>
+          <Button size="small" className="text-xs" icon={<WarningOutlined style={{ verticalAlign: 0 }} />} disabled>
+            {t('Querying Failed')}
+          </Button>
+        </Tooltip>
+      );
+    }
+
     return null;
-  }, [network, progressItemState, t, txHash]);
+  }, [indexing, network, progressItemState, t, txHash]);
 
   const action = useMemo(() => {
     if (mutateState) {
@@ -117,6 +154,7 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
 
     return null;
   }, [mutateState, lastState, isClaiming, t, setCanceler]);
+
   const iconColorCls = useMemo(() => {
     if (isEthereumNetwork(network?.name)) {
       return 'text-gray-700';
