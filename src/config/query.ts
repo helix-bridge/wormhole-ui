@@ -134,3 +134,19 @@ export const MMR_QUERY = `
     }
   }
 `;
+
+export const BRIDGE_DISPATCH_EVENTS = `
+  query bridge_dispatch_events($messageIdInfo: String!) {
+    events(
+      filter: {
+        section: { equalTo: "bridgeDispatch" }
+        and: { data: { includes: $messageIdInfo } }
+      }
+    ) {
+      nodes {
+        data
+        method
+      }
+    }
+  }
+`;

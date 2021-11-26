@@ -147,3 +147,23 @@ export interface S2SIssuingRecordRes {
 }
 
 export type S2SUnlockRecordRes = S2SIssuingRecordRes;
+
+export interface BridgeDispatchEvent {
+  data: string; // json string [ChainId, [LaneId, MessageNonce], DispatchResult]
+  isSuccess: boolean;
+  method:
+    | 'MessageRejected'
+    | 'MessageVersionSpecMismatch'
+    | 'MessageWeightMismatch'
+    | 'MessageSignatureMismatch'
+    | 'MessageCallDecodeFailed'
+    | 'MessageCallRejected'
+    | 'MessageDispatchPaymentFailed'
+    | 'MessageDispatched';
+}
+
+export interface BridgeDispatchEventRes {
+  events: {
+    nodes: BridgeDispatchEvent[];
+  };
+}
