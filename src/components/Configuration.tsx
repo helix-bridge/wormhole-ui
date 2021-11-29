@@ -153,6 +153,9 @@ export function Configuration({ network }: ConfigurationProps) {
                       okText: t('Confirm'),
                       closable: true,
                       onOk: () => {
+                        const values = form.getFieldsValue();
+
+                        saveNetworkConfig(values);
                         addCustomChain(network);
                         setIsCustom(true);
                         tip();

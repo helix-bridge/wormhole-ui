@@ -29,7 +29,6 @@ const navigators: Nav[] = [
   { label: 'Transfer Records', path: Path.history },
   { label: 'Token Manager', path: Path.register, hide: true },
   { label: 'Guide', path: 'https://docs.darwinia.network/tutorials/wiki-tut-wormhole', extra: true },
-  { label: 'Configure', path: Path.configure },
 ];
 
 function NavLink({ nav, theme }: { nav: Nav; theme: THEME }) {
