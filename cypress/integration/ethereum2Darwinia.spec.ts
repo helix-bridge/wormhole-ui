@@ -8,6 +8,8 @@ const {
 } = require('../pages/metamask/notification-page');
 
 describe('Ethereum to Darwinia', () => {
+  const { pangolin: recipient, ropsten: sender } = Cypress.env('accounts');
+
   before(() => {
     cy.activeMetamask();
   });
@@ -24,15 +26,16 @@ describe('Ethereum to Darwinia', () => {
   });
 
   it('should launch ring transfer properly', () => {
-    cy.react('RecipientItem').find('input').type('2pr19FiRxWEcerFt4tS3ZnJjhBXak69KNoJuGkaEY8ngBXEd');
+    cy.debug();
+    cy.react('RecipientItem').find('input').type(recipient);
     cy.react('Balance').type('3.14');
 
     cy.react('SubmitButton').click();
 
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Ropsten');
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('0x245b4775082c144c22a4874b0fba8c70c510c5ae');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('2pr19FiRxWEcerFt4tS3ZnJjhBXak69KNoJuGkaEY8ngBXEd');
+    cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
+    cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
     cy.get('.ant-modal-confirm-content .ant-typography').contains('1.14');
 
     cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
@@ -46,7 +49,7 @@ describe('Ethereum to Darwinia', () => {
   });
 
   it('should launch kton transfer properly', () => {
-    cy.react('RecipientItem').find('input').type('2pr19FiRxWEcerFt4tS3ZnJjhBXak69KNoJuGkaEY8ngBXEd');
+    cy.react('RecipientItem').find('input').type(recipient);
     cy.react('Select', { props: { placeholder: 'Select Assets' } })
       .click()
       .then(() => {
@@ -58,8 +61,8 @@ describe('Ethereum to Darwinia', () => {
 
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Ropsten');
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('0x245b4775082c144c22a4874b0fba8c70c510c5ae');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('2pr19FiRxWEcerFt4tS3ZnJjhBXak69KNoJuGkaEY8ngBXEd');
+    cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
+    cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
     cy.get('.ant-modal-confirm-content .ant-typography').contains('1.234');
 
     cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();

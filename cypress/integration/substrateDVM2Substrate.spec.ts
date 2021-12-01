@@ -3,6 +3,8 @@
 const TOKEN_NAME = 'xRING';
 
 describe('Substrate DVM to Substrate', () => {
+  const { pangolinDVM: sender, pangoro: recipient } = Cypress.env('accounts');
+
   before(() => {
     cy.activeMetamask();
   });
@@ -22,7 +24,7 @@ describe('Substrate DVM to Substrate', () => {
         cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
       });
 
-    cy.react('RecipientItem').find('input').type('5FA7CzAgT5fNDFRdb4UWSZX3b9HJsPuR7F5BF4YotSpKxAA2');
+    cy.react('RecipientItem').find('input').type(recipient);
     cy.react('Erc20Control')
       .find('input')
       .click()
@@ -43,7 +45,7 @@ describe('Substrate DVM to Substrate', () => {
   });
 
   it('should launch tx', () => {
-    cy.react('RecipientItem').find('input').type('5FA7CzAgT5fNDFRdb4UWSZX3b9HJsPuR7F5BF4YotSpKxAA2');
+    cy.react('RecipientItem').find('input').type(recipient);
     cy.react('Erc20Control')
       .find('input')
       .click()
@@ -61,8 +63,8 @@ describe('Substrate DVM to Substrate', () => {
 
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin-Smart');
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangoro');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('0x245b4775082c144c22a4874b0fba8c70c510c5ae');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('5FA7CzAgT5fNDFRdb4UWSZX3b9HJsPuR7F5BF4YotSpKxAA2');
+    cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
+    cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
     cy.get('.ant-modal-confirm-content .ant-typography').contains('3');
 
     cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
