@@ -11,14 +11,16 @@ import { ClaimNetworkPrefix, claimToken, entrance } from '../../utils';
 import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
-function isSufficient(config: EthereumConfig, tokenType: 'ring' | 'kton'): Observable<boolean> {
+const BN_ZERO = new BN(0);
+
+function isSufficient(config: EthereumConfig, tokenType: 'ring' | 'kton', amount: BN): Observable<boolean> {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const store = config.contracts.e2d;
   const contract = new web3.eth.Contract(abi.tokenIssuingABI, store.redeem);
   const limit = from(contract.methods.dailyLimit(store[tokenType]).call() as Promise<string>);
   const toadySpent = from(contract.methods.spentToday(store[tokenType]).call() as Promise<string>);
 
-  return zip([limit, toadySpent]).pipe(map(([total, spent]) => new BN(total).sub(new BN(spent)).gte(new BN(0))));
+  return zip([limit, toadySpent]).pipe(map(([total, spent]) => new BN(total).sub(new BN(spent)).gte(amount)));
 }
 
 // eslint-disable-next-line complexity
@@ -43,14 +45,16 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
       setTx({ status: 'sending' });
       monitor(true);
 
+      const ringBN = new BN(ring);
+      const ktonBN = new BN(kton);
       const isRingSufficient = iif(
-        () => new BN(ring).gt(new BN(0)),
-        isSufficient(arrival as EthereumConfig, 'ring'),
+        () => ringBN.gt(BN_ZERO),
+        isSufficient(arrival as EthereumConfig, 'ring', ringBN),
         of(true)
       );
       const isKtonSufficient = iif(
-        () => new BN(kton).gt(new BN(0)),
-        isSufficient(arrival as EthereumConfig, 'kton'),
+        () => ktonBN.gt(BN_ZERO),
+        isSufficient(arrival as EthereumConfig, 'kton', ktonBN),
         of(true)
       );
 
