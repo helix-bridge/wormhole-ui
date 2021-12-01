@@ -3,7 +3,7 @@ import BN from 'bn.js';
 import { upperFirst } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { from, lastValueFrom, map, Observable, zip, EMPTY, switchMap, tap, iif, of } from 'rxjs';
+import { from, map, Observable, zip, EMPTY, switchMap, tap, iif, of } from 'rxjs';
 import { abi, RecordComponentProps } from '../../config';
 import { useTx } from '../../hooks';
 import { D2EHistory as D2ERecordType, D2EMeta, EthereumConfig } from '../../model';
@@ -15,8 +15,8 @@ function isSufficient(config: EthereumConfig, tokenType: 'ring' | 'kton'): Obser
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const store = config.contracts.e2d;
   const contract = new web3.eth.Contract(abi.tokenIssuingABI, store.redeem);
-  const limit = lastValueFrom(from(contract.methods.dailyLimit(store[tokenType]).call() as Promise<string>));
-  const toadySpent = lastValueFrom(from(contract.methods.spentToday(store[tokenType]).call() as Promise<string>));
+  const limit = from(contract.methods.dailyLimit(store[tokenType]).call() as Promise<string>);
+  const toadySpent = from(contract.methods.spentToday(store[tokenType]).call() as Promise<string>);
 
   return zip([limit, toadySpent]).pipe(map(([total, spent]) => new BN(total).sub(new BN(spent)).gte(new BN(0))));
 }

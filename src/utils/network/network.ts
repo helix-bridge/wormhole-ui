@@ -327,6 +327,7 @@ export async function waitUntilConnected(api: ApiPromise): Promise<null> {
 
   return new Promise((resolve) => {
     if (!api.isConnected) {
+      api.connect();
       api.on('connected', () => resolve(null));
     } else {
       resolve(null);

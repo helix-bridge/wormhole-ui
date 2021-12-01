@@ -1,3 +1,4 @@
+import { isUndefined, negate } from 'lodash';
 import { RpcMMRProof } from '../../model';
 import { leaf_index_to_pos, leaf_index_to_mmr_size, get_peaks, gen_proof_for_peak, bag_rhs_peaks } from './util';
 
@@ -47,7 +48,7 @@ async function gen_proof(
     proof = [...proof.slice(0, index), bag_rhs_peaks(rhs_peaks)];
   }
 
-  return { mmrSize: mmr_size, proof };
+  return { mmrSize: mmr_size, proof: proof.filter(negate(isUndefined)) };
 }
 
 export const genProof = gen_proof;
