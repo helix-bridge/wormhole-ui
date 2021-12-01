@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-const TOKEN_NAME = 'xRING';
+const TOKEN_NAME = 'xORING';
 
 describe('Substrate DVM to Substrate', () => {
   const { pangolinDVM: sender, pangoro: recipient } = Cypress.env('accounts');
