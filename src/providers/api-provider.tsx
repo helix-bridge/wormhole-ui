@@ -19,6 +19,7 @@ import {
   isEthereumNetwork,
   isPolkadotNetwork,
   verticesToNetConfig,
+  waitUntilConnected,
 } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
 
@@ -174,9 +175,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     }
 
     (async () => {
-      if (!api.isConnected) {
-        await api.connect();
-      }
+      await waitUntilConnected(api);
 
       const chainState = await api?.rpc.system.properties();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
