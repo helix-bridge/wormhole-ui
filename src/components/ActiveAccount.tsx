@@ -64,7 +64,7 @@ export function ActiveAccount({
         className="hidden sm:inline-block"
         alt=""
       />
-      <span className="text-white mr-2 ml-1 hidden sm:inline">{getDisplayName(network)}</span>
+      <span className="text-white mr-2 ml-1 hidden sm:inline leading-none">{getDisplayName(network)}</span>
       {isPolkadotNetwork(network.name) && getNetworkMode(network) === 'native' ? null : (
         <div className="self-stretch flex items-center justify-between sm:px-1 bg-white dark:bg-gray-800 sm:my-px sm:mx-px rounded-lg sm:rounded-xl text-gray-800 dark:text-gray-200 w-36 sm:w-48 md:w-56 ">
           <img src={walletLogo} style={{ height: 18 }} className="mx-2" />

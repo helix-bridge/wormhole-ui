@@ -13,7 +13,7 @@ export function Home(props: RouteComponentProps) {
 
   return (
     <DepartureProvider>
-      <Card className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto dark:shadow-none dark:border-transparent">
+      <Card className="xl:w-1/3 lg:w-1/2 md:w-2/3 w-full mx-auto dark:shadow-none dark:border-transparent">
         <TransferForm isCross={isCross}></TransferForm>
       </Card>
 

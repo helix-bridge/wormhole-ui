@@ -1,4 +1,4 @@
-import { CopyrightOutlined, SendOutlined } from '@ant-design/icons';
+import { CopyrightOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
 import { Button, Layout } from 'antd';
 import { getYear } from 'date-fns';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +36,17 @@ export function Footer({ network, theme, className = '' }: FooterProps) {
         <Link to={Path.airdrop} className="mr-4">
           <Button type="ghost" icon={<SendOutlined />} className="flex items-center justify-center" style={{ color }}>
             {t('Airdrop')}
+          </Button>
+        </Link>
+
+        <Link to={Path.configure} className="mr-4">
+          <Button
+            type="ghost"
+            icon={<SettingOutlined />}
+            className="flex items-center justify-center"
+            style={{ color }}
+          >
+            {t('Custom Configuration')}
           </Button>
         </Link>
 
