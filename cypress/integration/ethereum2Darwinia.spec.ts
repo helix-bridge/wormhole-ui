@@ -19,14 +19,12 @@ describe('Ethereum to Darwinia', () => {
     cy.waitForReact();
   });
 
-  it('display action buttons', () => {
+  it('just to accept metamask access', () => {
     cy.acceptMetamaskAccess(); // allow metamask connect;
-    cy.react('SubmitButton').should('be.visible');
-    cy.react('FromItemButton').contains('Disconnect').should('exist');
+    expect(true).to.true;
   });
 
   it('should launch ring transfer properly', () => {
-    cy.debug();
     cy.react('RecipientItem').find('input').type(recipient);
     cy.react('Balance').type('3.14');
 
