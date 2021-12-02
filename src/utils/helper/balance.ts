@@ -142,7 +142,7 @@ export async function getDarwiniaAvailableBalances(api: ApiPromise, account = ''
     console.warn(
       '%c [ Failed to  querying balance through rpc ]',
       'font-size:13px; background:pink; color:#bf2c9f;',
-      error
+      (error as Record<string, string>).message
     );
   }
 
@@ -155,7 +155,7 @@ export async function getDarwiniaAvailableBalances(api: ApiPromise, account = ''
     console.warn(
       '%c [ Failed to  querying balance through account info ]',
       'font-size:13px; background:pink; color:#bf2c9f;',
-      error
+      (error as Record<string, string>).message
     );
 
     return ['0', '0'];

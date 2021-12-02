@@ -155,5 +155,6 @@
   "{{name}} query failed, please wait and try again": "{{name}} 查询失败，请稍候再试",
   "{{network}} Network Address": "{{network}} 网络地址",
   "{{network}} native token": "{{network}} 原生 Token",
+  "{{token}} daily limit reached!": "{{token}} 已达到当日领取上限",
   "{{year}} Darwinia": "{{year}} Darwinia"
 }
