@@ -155,5 +155,6 @@
   "{{name}} query failed, please wait and try again": "{{name}} query failed, please wait and try again",
   "{{network}} Network Address": "{{network}} Network Address",
   "{{network}} native token": "{{network}} native token",
+  "{{token}} daily limit reached!": "{{token}} daily limit reached!",
   "{{year}} Darwinia": "{{year}} Darwinia"
 }
