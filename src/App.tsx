@@ -21,20 +21,22 @@ interface Nav {
   label: string;
   path: Path | string;
   extra?: boolean;
-  pathGroup?: string[];
+  hide?: boolean;
 }
 
-const crossChain: Nav = { label: 'Cross-chain', path: Path.root };
-const erc20Manager: Nav = { label: 'Token Manager', path: Path.register };
-const transferRecords: Nav = { label: 'Transfer Records', path: Path.history };
-const guide: Nav = { label: 'Guide', path: 'https://docs.darwinia.network/tutorials/wiki-tut-wormhole', extra: true };
+const navigators: Nav[] = [
+  { label: 'Cross-chain', path: Path.root },
+  { label: 'Transfer Records', path: Path.history },
+  { label: 'Token Manager', path: Path.register, hide: true },
+  { label: 'Guide', path: 'https://docs.darwinia.network/tutorials/wiki-tut-wormhole', extra: true },
+];
 
 function NavLink({ nav, theme }: { nav: Nav; theme: THEME }) {
   const { t } = useTranslation();
   const history = useHistory();
   const textCls = useMemo(() => (theme === 'dark' ? '' : 'text-pangolin-main'), [theme]);
   const active =
-    nav.path === location.pathname || nav?.pathGroup?.includes(location.pathname)
+    nav.path === location.pathname
       ? theme === 'dark'
         ? 'shadow-mock-bottom-border-light'
         : 'shadow-mock-bottom-border'
@@ -51,7 +53,7 @@ function NavLink({ nav, theme }: { nav: Nav; theme: THEME }) {
           // nothing
         }
       }}
-      className={`${active} ${textCls} transition-all duration-300 ease-in-out opacity-100 hover:opacity-80 cursor-pointer`}
+      className={`${active} ${textCls} transition-all duration-300 ease-in-out opacity-100 hover:opacity-80 cursor-pointer whitespace-nowrap`}
       key={nav.label}
     >
       {t(nav.label)}
@@ -77,10 +79,7 @@ function App() {
   const { enableTestNetworks, setEnableTestNetworks, isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
-  const navMenus = useMemo(
-    () => (isDev ? [crossChain, transferRecords, erc20Manager, guide] : [crossChain, transferRecords, guide]),
-    [isDev]
-  );
+  const navMenus = useMemo(() => navigators.filter((item) => isDev || (!isDev && !item.hide)), [isDev]);
 
   return (
     <Layout className="min-h-screen overflow-scroll">

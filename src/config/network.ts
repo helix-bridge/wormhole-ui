@@ -1,5 +1,6 @@
 import { chain, omit } from 'lodash';
 import { Arrival, Departure, ChainConfig, NetworkConfig } from '../model';
+import { getCustomNetworkConfig } from '../utils/helper/storage';
 
 const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
@@ -28,11 +29,7 @@ const EVOLUTION_DOMAIN = {
   dev: 'https://www.evolution.land.l2me.com',
 };
 
-/**
- * TODO：need to implement some helper function to set the common configuration
- * example: api.dapp, api.evolution just depends on whether the chain is a test chain.
- */
-export const NETWORK_CONFIG: NetworkConfig = {
+export const SYSTEM_NETWORK_CONFIG: NetworkConfig = {
   crab: {
     api: {
       dapp: 'https://api.darwinia.network',
@@ -186,8 +183,8 @@ export const NETWORK_CONFIG: NetworkConfig = {
       },
     },
     dvm: {
-      kton: '0xc8C1680B18D432732D07c044669915726fAF67D0',
-      ring: '0xbBD91aD844557ADCbb97296216b3B3c977FCC4F2',
+      kton: '0xDCd3bC4138afE6F324eaA12C356A20cD576edF08',
+      ring: '0xcfDEb76be514c8B8DC8B509E63f95E34ebafD81e',
     },
     ethereumChain: {
       blockExplorerUrls: ['https://pangolin.subscan.io/'],
@@ -301,6 +298,10 @@ export const NETWORK_CONFIG: NetworkConfig = {
   },
 };
 
+const CUSTOM_NETWORK_CONFIG = getCustomNetworkConfig();
+
+export const NETWORK_CONFIG = { ...SYSTEM_NETWORK_CONFIG, ...CUSTOM_NETWORK_CONFIG };
+
 export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
   [{ network: Graph.crab, mode: 'native' }, [{ network: Graph.darwinia, status: 'pending', mode: 'native' }]],
   [
@@ -375,280 +376,74 @@ export const AIRPORTS: ChainConfig[] = Object.values(NETWORK_CONFIG)
   .filter((item) => ['ethereum', 'crab', 'tron'].includes(item.name))
   .map((item) => omit(item, 'dvm'));
 
-/* -------------------------------------------------Network Simple-------------------------------------------------------- */
+export const NETWORK_CONFIG_DESCRIPTIONS: {
+  path: string[];
+  editable: boolean;
+  comment: string;
+  type?: 'string' | 'boolean' | 'number' | 'array';
+}[] = [
+  { path: ['api'], editable: true, comment: 'Index service endpoints' },
+  {
+    path: ['api', 'dapp'],
+    editable: true,
+    comment: 'Endpoint of proof after registering Erc20 Token',
+    type: 'string',
+  },
+  { path: ['api', 'evolution'], editable: true, comment: 'Deposit querying endpoint', type: 'string' },
+  { path: ['api', 'subGraph'], editable: true, comment: 'The graph endpoint', type: 'string' },
+  { path: ['api', 'subql'], editable: true, comment: 'Subql endpoint', type: 'string' },
+  { path: ['api', 'subscan'], editable: true, comment: 'Airdrop endpoint', type: 'string' },
+  { path: ['api', 'subqlMMr'], editable: true, comment: 'MMR endpoint deployed on subql', type: 'string' },
 
-interface NetworkSimpleInfo {
-  prefix: number;
-  network?: string;
-  hasLink?: boolean;
-  name?: string;
-}
+  { path: ['contracts'], editable: true, comment: 'Contracts address in DVM or Ethereum' },
+  { path: ['contracts', 'e2d'], editable: true, comment: 'Ethereum to Darwinia' },
+  { path: ['contracts', 'e2d', 'fee'], editable: true, comment: '', type: 'string' },
+  { path: ['contracts', 'e2d', 'issuing'], editable: true, comment: '', type: 'string' },
+  { path: ['contracts', 'e2d', 'kton'], editable: true, comment: '', type: 'string' },
+  { path: ['contracts', 'e2d', 'redeem'], editable: true, comment: '', type: 'string' },
+  { path: ['contracts', 'e2d', 'redeemDeposit'], editable: true, comment: '', type: 'string' },
+  { path: ['contracts', 'e2d', 'ring'], editable: true, comment: '', type: 'string' },
+  { path: ['contracts', 'e2dvm'], editable: true, comment: 'Ethereum to DVM' },
+  { path: ['contracts', 'e2dvm', 'proof'], editable: true, comment: '', type: 'string' },
+  { path: ['contracts', 'e2dvm', 'redeem'], editable: true, comment: '', type: 'string' },
+  { path: ['contracts', 'e2dvm', 'issuing'], editable: true, comment: '', type: 'string' },
 
-const networkSimple: Record<string, NetworkSimpleInfo> = {
-  acala: {
-    hasLink: true,
-    name: 'Acala Mandala',
-    network: 'acala-testnet',
-    prefix: 42,
-  },
-  'acala mainnet': {
-    prefix: 10,
-  },
-  alphaville: {
-    prefix: 25,
-  },
-  ares: {
-    prefix: 34,
-  },
-  aventus: {
-    prefix: 65,
-  },
-  basilisk: {
-    prefix: 10041,
-  },
-  bifrost: {
-    hasLink: true,
-    network: 'bifrost',
-    prefix: 6,
-  },
-  calamari: {
-    prefix: 78,
-  },
-  chainx: {
-    hasLink: true,
-    network: 'chainx',
-    prefix: 44,
-  },
-  clover: {
-    hasLink: true,
-    network: 'clover',
-    prefix: 42,
-  },
-  'clover-testnet': {
-    hasLink: true,
-    network: 'clover-testnet',
-    prefix: 42,
-  },
-  cord: {
-    prefix: 29,
-  },
-  crab: {
-    hasLink: true,
-    network: 'crab',
-    prefix: 42,
-  },
-  crust: {
-    hasLink: true,
-    network: 'crust',
-    prefix: 42,
-  },
-  'crust mainnet': {
-    prefix: 66,
-  },
-  dark: {
-    prefix: 17,
-  },
-  darwinia: {
-    hasLink: true,
-    network: 'darwinia',
-    prefix: 18,
-  },
-  datahighway: {
-    hasLink: true,
-    network: 'datahighway',
-    prefix: 33,
-  },
-  'datahighway-harbour': {
-    hasLink: true,
-    network: 'datahighway-harbour',
-    prefix: 42,
-  },
-  dbc: {
-    hasLink: true,
-    network: 'dbc',
-    prefix: 42,
-  },
-  dock: {
-    hasLink: true,
-    network: 'dock',
-    prefix: 22,
-  },
-  'dock testnet': {
-    prefix: 21,
-  },
-  ed25519: {
-    prefix: 3,
-  },
-  edgeware: {
-    hasLink: true,
-    network: 'edgeware',
-    prefix: 7,
-  },
-  equilibrium: {
-    hasLink: true,
-    network: 'equilibrium',
-    prefix: 67,
-  },
-  gateway: {
-    hasLink: true,
-    network: 'gateway-testnet',
-    prefix: 42,
-  },
-  geek: {
-    prefix: 19,
-  },
-  hydradx: {
-    prefix: 63,
-  },
-  jupiter: {
-    prefix: 26,
-  },
-  karura: {
-    hasLink: true,
-    network: 'karura',
-    prefix: 8,
-  },
-  katalchain: {
-    prefix: 4,
-  },
-  kilt: {
-    hasLink: true,
-    name: 'kilt-testnet',
-    network: 'kilt-testnet',
-    prefix: 38,
-  },
-  kulupu: {
-    hasLink: true,
-    network: 'kulupu',
-    prefix: 16,
-  },
-  kusama: {
-    hasLink: true,
-    network: 'kusama',
-    prefix: 2,
-  },
-  laminar: {
-    hasLink: true,
-    network: 'laminar-testnet',
-    prefix: 42,
-  },
-  'laminar mainnet': {
-    prefix: 11,
-  },
-  litentry: {
-    network: 'litentry', // hasLink: true,
-    prefix: 31,
-  },
-  manta: {
-    hasLink: true,
-    network: 'manta-testnet',
-    prefix: 77,
-  },
-  moonbean: {
-    prefix: 1284,
-  },
-  moonriver: {
-    prefix: 1285,
-  },
-  neatcoin: {
-    prefix: 48,
-  },
-  nodle: {
-    prefix: 37,
-  },
-  pangolin: {
-    hasLink: true,
-    network: 'pangolin',
-    prefix: 18,
-  },
-  patract: {
-    prefix: 27,
-  },
-  phala: {
-    hasLink: true,
-    network: 'phala',
-    prefix: 42,
-  },
-  'phala mainnet': {
-    prefix: 30,
-  },
-  plasm: {
-    hasLink: true,
-    network: 'plasm',
-    prefix: 5,
-  },
-  poli: {
-    prefix: 41,
-  },
-  polkadot: {
-    hasLink: true,
-    network: 'polkadot',
-    prefix: 0,
-  },
-  polymath: {
-    prefix: 12,
-  },
-  reynolds: {
-    prefix: 9,
-  },
-  robonomics: {
-    prefix: 32,
-  },
-  rococo: {
-    hasLink: true,
-    network: 'rococo',
-    prefix: 42,
-  },
-  secp256k1: {
-    prefix: 43,
-  },
-  shift: {
-    prefix: 23,
-  },
-  'social-network': {
-    prefix: 252,
-  },
-  sora: {
-    network: 'sora', // hasLink: true,
-    prefix: 69,
-  },
-  sr25519: {
-    prefix: 1,
-  },
-  subsocial: {
-    prefix: 28,
-  },
-  substrate: {
-    prefix: 42,
-  },
-  substratee: {
-    prefix: 13,
-  },
-  synesthesia: {
-    prefix: 15,
-  },
-  totem: {
-    prefix: 14,
-  },
-  uniarts: {
-    prefix: 45,
-  },
-  vln: {
-    prefix: 35,
-  },
-  westend: {
-    hasLink: true,
-    network: 'westend',
-    prefix: 42,
-  },
-  zero: {
-    prefix: 24,
-  },
-};
+  { path: ['facade'], editable: true, comment: 'Appearance of the application' },
+  { path: ['facade', 'logo'], editable: true, comment: '', type: 'string' },
+  { path: ['facade', 'logoMinor'], editable: true, comment: '', type: 'string' },
+  { path: ['facade', 'logoWithText'], editable: true, comment: '', type: 'string' },
 
-export const NETWORK_SIMPLE: Required<NetworkSimpleInfo>[] = Object.entries(networkSimple).map(([key, value]) => ({
-  network: key,
-  name: value.name || value.network || key,
-  hasLink: !!value.hasLink,
-  prefix: value.prefix,
-}));
+  {
+    path: ['isTest'],
+    editable: false,
+    comment: 'Identifies whether the current network is a test network',
+    type: 'boolean',
+  },
+
+  { path: ['lockEvents'], editable: true, comment: '', type: 'array' },
+  { path: ['lockEvents', 'key'], editable: true, comment: '', type: 'string' },
+  { path: ['lockEvents', 'max'], editable: true, comment: '', type: 'number' },
+  { path: ['lockEvents', 'min'], editable: true, comment: '', type: 'number' },
+
+  { path: ['name'], editable: false, comment: '', type: 'string' },
+
+  { path: ['provider'], editable: true, comment: 'RPC providers' },
+  { path: ['provider', 'etherscan'], editable: true, comment: 'RPC provider in DVM or Ethereum', type: 'string' },
+  { path: ['provider', 'rpc'], editable: true, comment: 'RPC provider in Substrate', type: 'string' },
+
+  { path: ['ss58Prefix'], editable: false, comment: '', type: 'number' },
+
+  { path: ['type'], editable: true, comment: 'The network types', type: 'array' },
+
+  { path: ['dvm'], editable: true, comment: 'Network related information in DVM' },
+  { path: ['dvm', 'kton'], editable: true, comment: '', type: 'string' },
+  { path: ['dvm', 'ring'], editable: true, comment: '', type: 'string' },
+
+  { path: ['ethereumChain'], editable: true, comment: 'Ethereum related information' },
+  { path: ['ethereumChain', 'blockExplorerUrls'], editable: true, comment: '', type: 'array' },
+  { path: ['ethereumChain', 'chainId'], editable: false, comment: '', type: 'string' },
+  { path: ['ethereumChain', 'chainName'], editable: true, comment: '', type: 'string' },
+  { path: ['ethereumChain', 'nativeCurrency', 'decimals'], editable: false, comment: '', type: 'number' },
+  { path: ['ethereumChain', 'nativeCurrency', 'symbol'], editable: false, comment: '', type: 'string' },
+  { path: ['ethereumChain', 'rpcUrls'], editable: true, comment: '', type: 'array' },
+];
