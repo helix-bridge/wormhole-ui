@@ -1,5 +1,5 @@
 import { upperFirst } from 'lodash';
-import { combineLatest, EMPTY, forkJoin, from, iif, NEVER, Observable, of, take, timer, zip } from 'rxjs';
+import { combineLatest, EMPTY, forkJoin, from, NEVER, Observable, of, take, timer, zip } from 'rxjs';
 import { catchError, delay, map, mergeMap, retry, retryWhen, scan, startWith, switchMap, tap } from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
@@ -177,11 +177,9 @@ export const getKnownMappedTokens = (
     return of({ total: 0, tokens: [] });
   }
 
-  const mappingAddressObs = iif(
-    () => isSubstrateDVM2Substrate(netConfigToVertices(departure), netConfigToVertices(arrival)),
-    from(getS2SMappingParams(departure.provider.rpc)),
-    from(getErc20MappingPrams(departure.provider.rpc))
-  );
+  const mappingAddressObs = isSubstrateDVM2Substrate(netConfigToVertices(departure), netConfigToVertices(arrival))
+    ? from(getS2SMappingParams(departure.provider.rpc))
+    : from(getErc20MappingPrams(departure.provider.rpc));
 
   return departure.type.includes('ethereum')
     ? getMappedTokensFromEthereum(currentAccount, departure as EthereumConfig)
