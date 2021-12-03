@@ -4,9 +4,9 @@ import { hexToU8a } from '@polkadot/util';
 import { lastValueFrom, map } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
 import { MMR_QUERY } from '../../config';
+import { DarwiniaConfig, Network, PangolinConfig } from '../../model';
 import { genProof } from '../mmr';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
-import { DarwiniaConfig, Network, PangolinConfig } from '../../model';
 import { getNetworkByName, waitUntilConnected } from '../network';
 import { remove0x } from './address';
 
@@ -51,27 +51,18 @@ export function encodeMMRRootMessage(root: EncodeMMRoot) {
   );
 }
 
-export async function getMMRProof(
+export async function getMMR(
   api: ApiPromise,
   blockNumber: number,
   mmrBlockNumber: number,
-  blockHash: string
+  blockHash: string,
+  byRPC = false
 ): Promise<MMRProof> {
   await waitUntilConnected(api);
 
-  const chain = (await api.rpc.system.chain()).toString().toLowerCase() as Extract<Network, 'pangolin' | 'darwinia'>;
-  const config = getNetworkByName(chain) as PangolinConfig | DarwiniaConfig;
-  const fetchProofs = proofsFactory(config.api.subqlMMr);
-  const proof = await genProof(blockNumber, mmrBlockNumber, fetchProofs);
-  const encodeProof = proof.proof.map((item) => remove0x(item.replace(/(^\s*)|(\s*$)/g, ''))).join('');
-  const size = new TypeRegistry().createType('u64', proof.mmrSize.toString());
-  const mmrProofConverted: string = convert(
-    blockNumber,
-    size as unknown as BigInt,
-    hexToU8a('0x' + encodeProof),
-    hexToU8a(blockHash)
-  );
-
+  const getProof = byRPC ? getMMRProofByRPC : getMMRProofBySubql;
+  const { encodeProof, size } = await getProof(api, blockNumber, mmrBlockNumber);
+  const mmrProofConverted: string = convert(blockNumber, size, hexToU8a('0x' + encodeProof), hexToU8a(blockHash));
   const [mmrSize, peaksStr, siblingsStr] = mmrProofConverted.split('|');
   const peaks = peaksStr.split(',');
   const siblings = siblingsStr.split(',');
@@ -118,4 +109,27 @@ function proofsFactory(url: string) {
 
     return lastValueFrom(obs);
   };
+}
+
+async function getMMRProofByRPC(api: ApiPromise, blockNumber: number, mmrBlockNumber: number) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proof = await (api.rpc as any).headerMMR.genProof(blockNumber, mmrBlockNumber);
+  const proofStr = proof.proof.substring(1, proof.proof.length - 1); // remove '[' and ']'
+  const proofHexStr: string[] = proofStr.split(',').map((item: string) => {
+    return remove0x(item.replace(/(^\s*)|(\s*$)/g, ''));
+  });
+  const encodeProof = proofHexStr.join('');
+
+  return { encodeProof, size: proof.mmrSize as BigInt };
+}
+
+async function getMMRProofBySubql(api: ApiPromise, blockNumber: number, mmrBlockNumber: number) {
+  const chain = (await api.rpc.system.chain()).toString().toLowerCase() as Extract<Network, 'pangolin' | 'darwinia'>;
+  const config = getNetworkByName(chain) as PangolinConfig | DarwiniaConfig;
+  const fetchProofs = proofsFactory(config.api.subqlMMr);
+  const proof = await genProof(blockNumber, mmrBlockNumber, fetchProofs);
+  const encodeProof = proof.proof.map((item) => remove0x(item.replace(/(^\s*)|(\s*$)/g, ''))).join('');
+  const size = new TypeRegistry().createType('u64', proof.mmrSize.toString()) as unknown as BigInt;
+
+  return { encodeProof, size };
 }

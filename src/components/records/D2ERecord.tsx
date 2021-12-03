@@ -3,11 +3,11 @@ import BN from 'bn.js';
 import { upperFirst } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { from, map, Observable, zip, EMPTY, switchMap, tap, iif, of } from 'rxjs';
+import { EMPTY, filter, from, iif, map, Observable, of, switchMap, take, tap, zip } from 'rxjs';
 import { abi, RecordComponentProps } from '../../config';
 import { useTx } from '../../hooks';
-import { D2EHistory as D2ERecordType, D2EMeta, EthereumConfig } from '../../model';
-import { ClaimNetworkPrefix, claimToken, entrance } from '../../utils';
+import { ConnectionStatus, D2EHistory as D2ERecordType, D2EMeta, EthereumConfig } from '../../model';
+import { ClaimNetworkPrefix, claimToken, connect, entrance } from '../../utils';
 import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
@@ -45,21 +45,26 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
       setTx({ status: 'sending' });
       monitor(true);
 
-      const ringBN = new BN(ring);
-      const ktonBN = new BN(kton);
-      const isRingSufficient = iif(
-        () => ringBN.gt(BN_ZERO),
-        isSufficient(arrival as EthereumConfig, 'ring', ringBN),
-        of(true)
-      );
-      const isKtonSufficient = iif(
-        () => ktonBN.gt(BN_ZERO),
-        isSufficient(arrival as EthereumConfig, 'kton', ktonBN),
-        of(true)
-      );
-
-      return zip(isRingSufficient, isKtonSufficient)
+      return connect(arrival!)
         .pipe(
+          filter(({ status }) => status === ConnectionStatus.success),
+          take(1),
+          switchMap((_) => {
+            const ringBN = new BN(ring);
+            const ktonBN = new BN(kton);
+            const isRingSufficient = iif(
+              () => ringBN.gt(BN_ZERO),
+              isSufficient(arrival as EthereumConfig, 'ring', ringBN),
+              of(true)
+            );
+            const isKtonSufficient = iif(
+              () => ktonBN.gt(BN_ZERO),
+              isSufficient(arrival as EthereumConfig, 'kton', ktonBN),
+              of(true)
+            );
+
+            return zip(isRingSufficient, isKtonSufficient);
+          }),
           tap(([isRingSuf, isKtonSuf]) => {
             if (!isRingSuf) {
               message.warn(t('{{token}} daily limit reached!', { token: 'ring' }));

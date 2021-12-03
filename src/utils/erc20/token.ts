@@ -20,7 +20,7 @@ import {
   ClaimNetworkPrefix,
   encodeBlockHeader,
   encodeMMRRootMessage,
-  getMMRProof,
+  getMMR,
   getMPTProof,
   isS2S,
   isSubstrateDVM2Substrate,
@@ -271,7 +271,7 @@ export const getRegisterProof: (address: string, config: EthereumConfig) => Obse
           return NEVER;
         })
       );
-      const mmr = apiObs.pipe(switchMap((api) => getMMRProof(api, block_num, mmr_index, block_hash))).pipe(
+      const mmr = apiObs.pipe(switchMap((api) => getMMR(api, block_num, mmr_index, block_hash))).pipe(
         catchError((err) => {
           console.warn(
             '%c [ get MMR proof error ]-228',
