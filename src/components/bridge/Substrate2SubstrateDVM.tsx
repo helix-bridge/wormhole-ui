@@ -5,7 +5,7 @@ import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY } from 'rxjs';
-import { FORM_CONTROL } from '../../config';
+import { abi, FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
 import {
   AvailableBalance,
@@ -13,6 +13,7 @@ import {
   IssuingSubstrateToken,
   Network,
   NoNullTransferNetwork,
+  PangolinConfig,
   Substrate2SubstrateDVMTransfer,
   TokenChainInfo,
   TransferFormValues,
@@ -21,7 +22,9 @@ import {
   amountLessThanFeeRule,
   applyModalObs,
   createTxWorkflow,
+  entrance,
   fromWei,
+  getS2SMappingParams,
   insufficientBalanceRule,
   invalidFeeRule,
   issuingSubstrateToken,
@@ -79,6 +82,23 @@ function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
       </Descriptions.Item>
     </Descriptions>
   );
+}
+
+function DailyLimit({ transfer: { to }, token }: { transfer: NoNullTransferNetwork; token: string }) {
+  const [limit, setLimit] = useState('0');
+
+  useEffect(() => {
+    (async () => {
+      const web3 = entrance.web3.getInstance((to as PangolinConfig).ethereumChain.rpcUrls[0]);
+      const { mappingAddress } = await getS2SMappingParams(to.provider.rpc);
+      const contract = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
+      const result = await contract.methods.dailyLimit(token).call();
+
+      setLimit(result);
+    })();
+  }, [token, to]);
+
+  return <div>{limit}</div>;
 }
 
 /* ----------------------------------------------Main Section-------------------------------------------------- */
@@ -282,6 +302,11 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
             balance={availableBalances[0].max}
             amount={curAmount}
             tokenInfo={availableBalances[0].chainInfo}
+          />
+
+          <DailyLimit
+            transfer={form.getFieldValue(FORM_CONTROL.transfer)}
+            token={form.getFieldValue(FORM_CONTROL.asset)}
           />
         </ErrorBoundary>
       )}
