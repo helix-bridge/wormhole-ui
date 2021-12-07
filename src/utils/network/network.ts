@@ -1,5 +1,5 @@
 import { ApiPromise } from '@polkadot/api';
-import { curry, curryRight, has, isEqual, isNull, omit, upperFirst } from 'lodash';
+import { curry, curryRight, has, isEqual, isNull, omit, once, upperFirst } from 'lodash';
 import Web3 from 'web3';
 import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
 import {
@@ -327,8 +327,10 @@ export async function waitUntilConnected(api: ApiPromise): Promise<null> {
 
   return new Promise((resolve) => {
     if (!api.isConnected) {
-      api.connect();
-      api.on('connected', () => resolve(null));
+      api.on(
+        'connected',
+        once(() => resolve(null))
+      );
     } else {
       resolve(null);
     }

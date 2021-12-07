@@ -168,3 +168,10 @@ export const invalidFeeRule: ValidatorRuleFactory = (options) => {
     message: t('Can not verify amount because of a invalid fee'),
   };
 };
+
+export const insufficientDailyLimit: ValidatorRuleFactory = (options) => {
+  const { t } = options;
+  const validator = insufficientBalanceValidatorFactory(options);
+
+  return { validator, message: t('Insufficient transfer amount today') };
+};
