@@ -5,11 +5,13 @@ import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY } from 'rxjs';
-import { FORM_CONTROL } from '../../config';
+import { abi, FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
 import {
   AvailableBalance,
   BridgeFormProps,
+  DailyLimit,
+  EthereumChainDVMConfig,
   IssuingSubstrateToken,
   Network,
   NoNullTransferNetwork,
@@ -21,9 +23,13 @@ import {
   amountLessThanFeeRule,
   applyModalObs,
   createTxWorkflow,
+  entrance,
   fromWei,
+  getS2SMappingParams,
   insufficientBalanceRule,
+  insufficientDailyLimit,
   invalidFeeRule,
+  isRing,
   issuingSubstrateToken,
   prettyNumber,
   toWei,
@@ -45,10 +51,11 @@ interface TransferInfoProps {
   balance: BN | string | number;
   amount: string;
   tokenInfo: TokenChainInfo;
+  dailyLimit: DailyLimit | null;
 }
 
 // eslint-disable-next-line complexity
-function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
+function TransferInfo({ fee, balance, tokenInfo, amount, dailyLimit }: TransferInfoProps) {
   const unit = tokenInfo.decimal;
   const value = new BN(toWei({ value: amount || '0', unit }));
   const iterationCount = 5;
@@ -77,6 +84,14 @@ function TransferInfo({ fee, balance, tokenInfo, amount }: TransferInfoProps) {
           {fromWei({ value: fee, unit })} {tokenInfo.symbol}
         </span>
       </Descriptions.Item>
+
+      <Descriptions.Item label={<Trans>Daily Limit</Trans>} contentStyle={{ color: 'inherit' }}>
+        {dailyLimit ? (
+          fromWei({ value: new BN(dailyLimit.limit).sub(new BN(dailyLimit.spentToday)), unit: 'gwei' })
+        ) : (
+          <Trans>Querying</Trans>
+        )}
+      </Descriptions.Item>
     </Descriptions>
   );
 }
@@ -98,6 +113,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
   const availableBalance = useMemo(() => availableBalances[0] ?? null, [availableBalances]);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
   const [fee, setFee] = useState<BN | null>(null);
+  const [dailyLimit, setDailyLimit] = useState<DailyLimit | null>(null);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<TransferFormValues<Substrate2SubstrateDVMTransfer, NoNullTransferNetwork>>();
@@ -114,6 +130,21 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       return balances.filter((item) => asset.toLowerCase().includes(item.asset.toLowerCase()));
     },
     [api, chain.tokens.length, form, getAvailableBalances]
+  );
+  const getDailyLimit = useCallback<(symbol: string) => Promise<DailyLimit>>(
+    async (symbol: string) => {
+      const arrival = form.getFieldValue(FORM_CONTROL.transfer).to as EthereumChainDVMConfig;
+      const web3 = entrance.web3.getInstance(arrival.ethereumChain.rpcUrls[0]);
+      const { mappingAddress } = await getS2SMappingParams(arrival.provider.rpc);
+      const contract = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
+      const ringAddress = '0xb142658BD18c560D8ea74a31C07297CeCfeCF949';
+      const tokenAddress = isRing(symbol) ? ringAddress : '';
+      const limit = await contract.methods.dailyLimit(tokenAddress).call();
+      const spentToday = await contract.methods.spentToday(tokenAddress).call();
+
+      return { limit, spentToday };
+    },
+    [form]
   );
 
   useEffect(() => {
@@ -178,10 +209,13 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
   useEffect(() => {
     if (chain.tokens.length) {
-      form.setFieldsValue({ [FORM_CONTROL.asset]: chain.tokens[0].symbol });
+      const asset = chain.tokens[0].symbol;
+
+      form.setFieldsValue({ [FORM_CONTROL.asset]: asset });
       getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
+      getDailyLimit(asset).then(setDailyLimit);
     }
-  }, [chain.tokens, form, getBalances]);
+  }, [chain.tokens, form, getBalances, getDailyLimit]);
 
   return (
     <>
@@ -201,8 +235,9 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       <Form.Item name={FORM_CONTROL.asset} label={t('Asset')} rules={[{ required: true }]}>
         <Select
           size="large"
-          onChange={() => {
+          onChange={(value: string) => {
             getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
+            getDailyLimit(value).then(setDailyLimit);
           }}
           placeholder={t('Please select token to be transfer')}
         >
@@ -249,6 +284,11 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
             compared: availableBalance?.max,
             token: availableBalance?.chainInfo,
           }),
+          insufficientDailyLimit({
+            t,
+            compared: new BN(dailyLimit?.limit ?? '0').sub(new BN(dailyLimit?.spentToday ?? '0')).toString(),
+            token: availableBalance?.chainInfo,
+          }),
         ]}
       >
         <Balance
@@ -282,6 +322,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
             balance={availableBalances[0].max}
             amount={curAmount}
             tokenInfo={availableBalances[0].chainInfo}
+            dailyLimit={dailyLimit}
           />
         </ErrorBoundary>
       )}

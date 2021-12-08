@@ -137,7 +137,7 @@ export function Configuration({ network }: ConfigurationProps) {
           <Col span={10}>
             <Form.Item>
               <Button type="primary" htmlType="submit" className="w-full">
-                {t('Save')}
+                {t('Save Only')}
               </Button>
             </Form.Item>
           </Col>
@@ -171,7 +171,7 @@ export function Configuration({ network }: ConfigurationProps) {
                 danger={!isCustom}
                 className="w-full"
               >
-                {t(isCustom ? 'Restore System Configuration' : 'Replace System Configuration')}
+                {t(isCustom ? 'Restore System Configuration' : 'Store And Replace System Configuration')}
               </Button>
             </Form.Item>
           </Col>

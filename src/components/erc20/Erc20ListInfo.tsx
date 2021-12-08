@@ -11,7 +11,7 @@ interface Erc20SimpleProps {
 export function Erc20ListInfo({ token, className }: Erc20SimpleProps) {
   const { logo, source, address, name, symbol } = token;
   const displayName = useMemo(() => {
-    if (name.includes('[')) {
+    if (name?.includes('[')) {
       return name.replace(/\[.*/g, '');
     }
     return name;

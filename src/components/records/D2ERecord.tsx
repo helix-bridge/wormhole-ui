@@ -3,11 +3,11 @@ import BN from 'bn.js';
 import { upperFirst } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { from, map, Observable, zip, EMPTY, switchMap, tap, iif, of } from 'rxjs';
+import { EMPTY, filter, from, iif, map, Observable, of, switchMap, take, tap, zip } from 'rxjs';
 import { abi, RecordComponentProps } from '../../config';
 import { useTx } from '../../hooks';
-import { D2EHistory as D2ERecordType, D2EMeta, EthereumConfig } from '../../model';
-import { ClaimNetworkPrefix, claimToken, entrance } from '../../utils';
+import { ConnectionStatus, D2EHistory as D2ERecordType, D2EMeta, EthereumConfig } from '../../model';
+import { ClaimNetworkPrefix, claimToken, connect, entrance } from '../../utils';
 import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
@@ -28,7 +28,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
   const { t } = useTranslation();
   const { observer, setTx } = useTx();
   const { block_timestamp, signatures, target, ring_value, kton_value, extrinsic_index, tx } = record;
-  const [hash, setHash] = useState('');
+  const [hash, setHash] = useState(tx);
   const claim = useCallback(
     (monitor) => {
       const {
@@ -45,21 +45,26 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
       setTx({ status: 'sending' });
       monitor(true);
 
-      const ringBN = new BN(ring);
-      const ktonBN = new BN(kton);
-      const isRingSufficient = iif(
-        () => ringBN.gt(BN_ZERO),
-        isSufficient(arrival as EthereumConfig, 'ring', ringBN),
-        of(true)
-      );
-      const isKtonSufficient = iif(
-        () => ktonBN.gt(BN_ZERO),
-        isSufficient(arrival as EthereumConfig, 'kton', ktonBN),
-        of(true)
-      );
-
-      return zip(isRingSufficient, isKtonSufficient)
+      return connect(arrival!)
         .pipe(
+          filter(({ status }) => status === ConnectionStatus.success),
+          take(1),
+          switchMap((_) => {
+            const ringBN = new BN(ring);
+            const ktonBN = new BN(kton);
+            const isRingSufficient = iif(
+              () => ringBN.gt(BN_ZERO),
+              isSufficient(arrival as EthereumConfig, 'ring', ringBN),
+              of(true)
+            );
+            const isKtonSufficient = iif(
+              () => ktonBN.gt(BN_ZERO),
+              isSufficient(arrival as EthereumConfig, 'kton', ktonBN),
+              of(true)
+            );
+
+            return zip(isRingSufficient, isKtonSufficient);
+          }),
           tap(([isRingSuf, isKtonSuf]) => {
             if (!isRingSuf) {
               message.warn(t('{{token}} daily limit reached!', { token: 'ring' }));
@@ -91,7 +96,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
           ...observer,
           next: (state) => {
             if (state.status === 'finalized' && state.hash) {
-              setHash(hash);
+              setHash(state.hash);
             }
             observer.next(state);
           },
@@ -105,7 +110,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
           },
         });
     },
-    [arrival, departure, hash, observer, record, setTx, t]
+    [arrival, departure, observer, record, setTx, t]
   );
 
   // eslint-disable-next-line complexity
@@ -132,13 +137,13 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
         {
           name: 'confirm',
           state: signatures ? State.completed : State.pending,
-          mutateState: signatures && !tx ? claim : undefined,
+          mutateState: signatures && !hash ? claim : undefined,
         },
       ],
       icon: 'relayer.svg',
       network: null,
     };
-    const targetConfirmedHash = tx || hash;
+    const targetConfirmedHash = hash;
     const targetConfirmedState = targetConfirmedHash ? State.completed : State.pending;
     const targetConfirmed: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: arrival?.name }),
@@ -147,7 +152,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
     };
 
     return [transactionSend, originLocked, relayerConfirmed, targetConfirmed];
-  }, [arrival, claim, departure, extrinsic_index, hash, signatures, t, tx]);
+  }, [arrival, claim, departure, extrinsic_index, hash, signatures, t]);
 
   return (
     <Record

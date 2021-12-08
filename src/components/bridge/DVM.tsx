@@ -10,11 +10,13 @@ import { Path } from '../../config/routes';
 import { MemoedTokenInfo, useAfterSuccess, useApi, useMappedTokens, useTx } from '../../hooks';
 import {
   BridgeFormProps,
+  ChainConfig,
+  DailyLimit,
   DVMToken,
   DVMTransfer,
   Erc20Token,
   IssuingDVMToken,
-  ChainConfig,
+  MappedToken,
   Network,
   NoNullTransferNetwork,
   RedeemDVMToken,
@@ -31,6 +33,7 @@ import {
   getNetworkMode,
   getUnit,
   insufficientBalanceRule,
+  insufficientDailyLimit,
   isPolkadotNetwork,
   isValidAddress,
   prettyNumber,
@@ -56,25 +59,27 @@ interface DVMProps {
   isDVM?: boolean;
   transform: (value: DVMToken) => Observable<Tx>;
   spenderResolver: (config: ChainConfig) => Promise<string>;
+  getDailyLImit?: (token: MappedToken) => Promise<DailyLimit>;
 }
 
 interface TransferInfoProps {
   amount: string;
-  tokenInfo: MemoedTokenInfo;
+  tokenInfo: MemoedTokenInfo | null;
   arrival: ChainConfig;
+  dailyLimit: DailyLimit | null;
 }
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
-function TransferInfo({ tokenInfo, amount, arrival }: TransferInfoProps) {
+function TransferInfo({ tokenInfo, amount, arrival, dailyLimit }: TransferInfoProps) {
   const [symbol, setSymbol] = useState('');
-  const unit = getUnit(+tokenInfo.decimals);
+  const unit = tokenInfo ? getUnit(+tokenInfo.decimals) : 'ether';
   const value = new BN(toWei({ value: amount || '0', unit }));
 
   useEffect(() => {
     const mode = getNetworkMode(arrival);
     (async () => {
-      if (isPolkadotNetwork(arrival.name) && mode === 'native') {
+      if (tokenInfo && isPolkadotNetwork(arrival.name) && mode === 'native') {
         const result = tokenInfo.symbol.replace('x', '');
 
         setSymbol(result);
@@ -87,6 +92,12 @@ function TransferInfo({ tokenInfo, amount, arrival }: TransferInfoProps) {
       {!value.isZero() && (
         <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
           {fromWei({ value, unit })} {symbol}
+        </Descriptions.Item>
+      )}
+
+      {!!dailyLimit && (
+        <Descriptions.Item label={<Trans>Daily Limit</Trans>} contentStyle={{ color: 'inherit' }}>
+          {fromWei({ value: new BN(dailyLimit.limit).sub(new BN(dailyLimit.spentToday)), unit: 'gwei' }, prettyNumber)}
         </Descriptions.Item>
       )}
     </Descriptions>
@@ -103,6 +114,7 @@ export function DVM({
   spenderResolver,
   tokenRegisterStatus,
   canRegister,
+  getDailyLImit,
   isDVM = true,
 }: BridgeFormProps<DVMTransfer> & DVMProps) {
   const { t } = useTranslation();
@@ -114,7 +126,15 @@ export function DVM({
     tokenRegisterStatus
   );
   const [allowance, setAllowance] = useState(new BN(0));
+  const [dailyLimit, setDailyLimit] = useState<DailyLimit | null>(null);
   const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
+  const tokenInfo = useMemo(
+    () => ({
+      symbol: selectedErc20?.symbol ?? '',
+      decimal: getUnit(+(selectedErc20?.decimals ?? '9')),
+    }),
+    [selectedErc20]
+  );
   const availableBalance = useMemo(() => {
     return !selectedErc20
       ? null
@@ -217,6 +237,10 @@ export function DVM({
             const allow = await getAllowance(account, spender, erc20);
 
             setAllowance(allow);
+
+            if (getDailyLImit && erc20?.address) {
+              getDailyLImit(erc20).then(setDailyLimit);
+            }
           }}
         />
       </Form.Item>
@@ -230,10 +254,15 @@ export function DVM({
           insufficientBalanceRule({
             t,
             compared: selectedErc20?.balance,
-            token: {
-              symbol: selectedErc20?.symbol ?? '',
-              decimal: getUnit(+(selectedErc20?.decimals ?? '9')),
-            },
+            token: tokenInfo,
+          }),
+          insufficientDailyLimit({
+            t,
+            compared: dailyLimit
+              ? new BN(dailyLimit.limit).sub(new BN(dailyLimit.spentToday)).toString()
+              : // eslint-disable-next-line no-magic-numbers
+                Math.pow(10, 18).toString(),
+            token: tokenInfo,
           }),
           {
             validator: (_, value: string) => {
@@ -300,13 +329,12 @@ export function DVM({
         </Balance>
       </Form.Item>
 
-      {!!curAmount && selectedErc20 && (
-        <TransferInfo
-          amount={curAmount}
-          tokenInfo={selectedErc20}
-          arrival={form.getFieldValue(FORM_CONTROL.transfer).to}
-        />
-      )}
+      <TransferInfo
+        amount={curAmount}
+        tokenInfo={selectedErc20}
+        arrival={form.getFieldValue(FORM_CONTROL.transfer).to}
+        dailyLimit={dailyLimit}
+      />
     </>
   );
 }

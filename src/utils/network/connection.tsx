@@ -12,15 +12,16 @@ import {
   from,
   map,
   merge,
+  mergeWith,
   Observable,
   Observer,
   of,
   startWith,
+  Subject,
   switchMap,
   switchMapTo,
   tap,
 } from 'rxjs';
-import { SHORT_DURATION } from '../../config';
 import {
   ChainConfig,
   Connection,
@@ -62,6 +63,7 @@ export const getPolkadotConnection: (network: ChainConfig) => Observable<Polkado
     ),
     switchMap((envelop: Exclude<PolkadotConnection, 'api'>) => {
       const subject = new BehaviorSubject<PolkadotConnection>(envelop);
+      const connectingSubject = new Subject<PolkadotConnection>();
       const url = network.provider.rpc;
       const api = entrance.polkadot.getInstance(url);
       const source = subject.asObservable().pipe(
@@ -69,8 +71,9 @@ export const getPolkadotConnection: (network: ChainConfig) => Observable<Polkado
         tap((env) => {
           const { status } = env;
 
-          if (status !== 'success' && status !== 'connecting') {
+          if (status === ConnectionStatus.disconnected) {
             api.connect();
+            connectingSubject.next({ ...envelop, status: ConnectionStatus.connecting, api });
           }
         })
       );
@@ -85,19 +88,13 @@ export const getPolkadotConnection: (network: ChainConfig) => Observable<Polkado
 
       api.on('disconnected', () => {
         subject.next({ ...envelop, status: ConnectionStatus.disconnected, api });
-        setTimeout(() => {
-          subject.next({ ...envelop, status: ConnectionStatus.connecting, api });
-        }, SHORT_DURATION / 10);
       });
 
       api.on('error', (_) => {
         subject.next({ ...envelop, status: ConnectionStatus.error, api });
-        setTimeout(() => {
-          subject.next({ ...envelop, status: ConnectionStatus.connecting, api });
-        }, SHORT_DURATION / 10);
       });
 
-      return from(api.isReady).pipe(switchMapTo(source));
+      return from(api.isReady).pipe(switchMapTo(source), mergeWith(connectingSubject.asObservable()));
     }),
     startWith<PolkadotConnection>({ status: ConnectionStatus.connecting, accounts: [], api: null, type: 'polkadot' })
   );

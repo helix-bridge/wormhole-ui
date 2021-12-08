@@ -89,7 +89,8 @@ export type Erc20RegisterProofRes = Erc20RegisterProof | null;
 /* ------------------------------------S2S section-------------------------------------------- */
 
 export interface S2SBurnRecord {
-  message_id: string;
+  lane_id: string;
+  nonce: string;
   request_transaction: string;
   response_transaction: string;
   sender: string;
@@ -103,7 +104,8 @@ export interface S2SBurnRecord {
 }
 
 export interface S2SHistoryRecord {
-  messageId: string;
+  laneId: string;
+  nonce: string;
   requestTxHash: string;
   responseTxHash: string;
   sender: string;
@@ -126,8 +128,9 @@ export interface S2SBurnRecordRes {
 
 export interface S2SIssuingMappingRecordRes {
   lockRecordEntity: {
-    message_id: string;
     id: string;
+    lane_id: string;
+    nonce: string;
     mapping_token: string;
     recipient: string;
     transaction: string;
@@ -138,7 +141,7 @@ export interface S2SIssuingMappingRecordRes {
 export interface S2SLockedRecordRes {
   s2sEvents: {
     totalCount: number;
-    nodes: (Omit<S2SHistoryRecord, 'messageId'> & { id: string })[];
+    nodes: (S2SHistoryRecord & { id: string })[];
   };
 }
 
@@ -148,7 +151,7 @@ export interface S2SIssuingRecordRes {
 
 export type S2SUnlockRecordRes = S2SIssuingRecordRes;
 
-export interface BridgeDispatchEvent {
+export interface BridgeDispatchEventRecord {
   data: string; // json string [ChainId, [LaneId, MessageNonce], DispatchResult]
   isSuccess: boolean;
   method:
@@ -164,6 +167,6 @@ export interface BridgeDispatchEvent {
 
 export interface BridgeDispatchEventRes {
   events: {
-    nodes: BridgeDispatchEvent[];
+    nodes: BridgeDispatchEventRecord[];
   };
 }

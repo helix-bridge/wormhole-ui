@@ -5,14 +5,7 @@ import { Subscription, switchMapTo, tap } from 'rxjs';
 import { RecordComponentProps } from '../../config';
 import { useS2SRecords } from '../../hooks';
 import { ApiKeys, PolkadotConfig, S2SBurnRecordRes, S2SHistoryRecord, S2SIssuingRecordRes } from '../../model';
-import {
-  convertToSS58,
-  fromWei,
-  getNetworkMode,
-  isSubstrate2SubstrateDVM,
-  netConfigToVertices,
-  toWei,
-} from '../../utils';
+import { convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM, netConfigToVertices } from '../../utils';
 import { IndexingState, Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
@@ -75,10 +68,7 @@ export function S2SRecord({
     return [transactionSend, originLocked, targetDelivered, originConfirmed]; // make sure the order is consist with position defined in ProgressPosition
   });
   const { count, currency } = useMemo<{ count: string; currency: string }>(
-    () =>
-      isRedeem
-        ? { count: record.amount, currency: 'xORING' }
-        : { count: toWei({ value: record.amount, unit: 'gwei' }), currency: 'ORING' },
+    () => ({ count: record.amount, currency: isRedeem ? 'xORING' : 'ORING' }),
     [record.amount, isRedeem]
   );
   /**
@@ -111,7 +101,7 @@ export function S2SRecord({
   }, []);
 
   useEffect(() => {
-    const { messageId, result } = record;
+    const { laneId, nonce, result } = record;
     const attemptsCount = 100;
     const isS2DVM = isSubstrate2SubstrateDVM(netConfigToVertices(departure!), netConfigToVertices(arrival!));
     const queryTargetRecord = isS2DVM ? fetchS2SIssuingMappingRecord : fetchS2SUnlockRecord;
@@ -127,7 +117,7 @@ export function S2SRecord({
     let subscription: Subscription | null = null;
 
     if (record.result === State.completed) {
-      subscription = queryTargetRecord(messageId, { attemptsCount }).subscribe(observer);
+      subscription = queryTargetRecord(laneId, nonce, { attemptsCount }).subscribe(observer);
     }
 
     /**
@@ -135,7 +125,7 @@ export function S2SRecord({
      * other events represents failed.
      */
     if (record.result === State.pending) {
-      subscription = fetchMessageEvent(messageId, { attemptsCount })
+      subscription = fetchMessageEvent(laneId, nonce, { attemptsCount })
         .pipe(
           tap((res) => {
             const { isSuccess } = res;
@@ -145,7 +135,7 @@ export function S2SRecord({
             } as S2SHistoryRecord);
           }),
           switchMapTo(
-            queryOriginRecord(messageId, {
+            queryOriginRecord(laneId, nonce, {
               attemptsCount,
               keepActive: (res) => {
                 const event = (res as S2SBurnRecordRes).burnRecordEntity || (res as S2SIssuingRecordRes).s2sEvent;
@@ -155,7 +145,7 @@ export function S2SRecord({
               skipCache: true,
             }).pipe(tap((res) => setConfirmedRecord(res)))
           ),
-          switchMapTo(queryTargetRecord(messageId, { attemptsCount }))
+          switchMapTo(queryTargetRecord(laneId, nonce, { attemptsCount }))
         )
         .subscribe(observer);
     }
@@ -193,7 +183,7 @@ export function S2SRecord({
       arrival={arrival}
       blockTimestamp={+(record.endTimestamp || record.startTimestamp || Date.now())}
       recipient={isRedeem ? convertToSS58(record.recipient, arrival?.ss58Prefix ?? null) : record.recipient}
-      assets={[{ amount: fromWei({ value: count, unit: 'gwei' }), currency, unit: 'gwei' }]}
+      assets={[{ amount: count, currency, unit: 'gwei' }]}
       items={progresses}
     >
       <Progresses items={progresses} />
