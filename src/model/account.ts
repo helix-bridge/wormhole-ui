@@ -21,3 +21,8 @@ export interface AvailableBalance<T = string> {
   asset: T;
   chainInfo?: TokenChainInfo;
 }
+
+export interface DailyLimit {
+  limit: string | number;
+  spentToday: string | number;
+}

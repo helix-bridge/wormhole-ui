@@ -1,38 +1,3 @@
-export const TRANSFERS_COUNT_QUERY = `
-  query transfers($account: String!) {
-    transfers(filter: { fromId: { equalTo: $account } }) {
-      totalCount
-    }
-  }
-`;
-export const TRANSFERS_QUERY = `
-  query transfers($account: String!, $offset: Int, $limit: Int) {
-    transfers(offset: $offset, last: $limit, filter: { fromId: { equalTo: $account } }, orderBy: TIMESTAMP_DESC) {
-      totalCount
-      nodes {
-        toId
-        fromId
-        amount
-        timestamp
-
-        block {
-          id
-          extrinsics {
-            nodes {
-              id
-              method
-              section
-              args
-              signerId # 验证人account
-              isSuccess
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
 export const S2S_REDEEM_RECORDS_QUERY = `
   query burnRecordEntities($account: String!, $offset: Int, $limit: Int, $result: [Int!] ) {
     burnRecordEntities(
@@ -47,7 +12,8 @@ export const S2S_REDEEM_RECORDS_QUERY = `
     ){
       amount
       end_timestamp
-      message_id
+      lane_id
+      nonce
       recipient
       request_transaction
       response_transaction
@@ -64,7 +30,8 @@ export const S2S_REDEEM_RECORD_QUERY = `
     burnRecordEntity(id: $id) {
       amount
       end_timestamp     
-      message_id
+      lane_id
+      nonce
       recipient
       request_transaction
       response_transaction
@@ -84,6 +51,8 @@ export const S2S_ISSUING_RECORDS_QUERY = `
         amount
         endTimestamp
         id
+        laneId
+        nonce
         recipient
         requestTxHash
         responseTxHash
@@ -136,10 +105,10 @@ export const MMR_QUERY = `
 `;
 
 export const BRIDGE_DISPATCH_EVENTS = `
-  query bridge_dispatch_events($messageIdInfo: String!) {
+  query bridge_dispatch_events($messageIdInfo: String!, $section: String!) {
     events(
       filter: {
-        section: { equalTo: "bridgeDispatch" }
+        section: { equalTo: $section }
         and: { data: { includes: $messageIdInfo } }
       }
     ) {

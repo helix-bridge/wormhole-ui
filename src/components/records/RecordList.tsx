@@ -27,7 +27,7 @@ export function RecordList({ departure, arrival, sourceData }: RecordListProps) 
           record={{ ...item, meta: omit(sourceData, ['list', 'count']) }}
           departure={verticesToNetConfig(departure)}
           arrival={verticesToNetConfig(arrival)}
-          key={item.tx || item.messageId || index}
+          key={item.tx || index}
         />
       ))}
       {!sourceData.count && <Empty description={t('No Data')} />}

@@ -14,14 +14,7 @@ import {
   PangolinConfig,
   Tx,
 } from '../../model';
-import {
-  apiUrl,
-  ClaimNetworkPrefix,
-  encodeBlockHeader,
-  encodeMMRRootMessage,
-  getMMRProof,
-  getMPTProof,
-} from '../helper';
+import { apiUrl, ClaimNetworkPrefix, encodeBlockHeader, encodeMMRRootMessage, getMMR, getMPTProof } from '../helper';
 import { connect, entrance, getAvailableNetwork } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
@@ -130,7 +123,7 @@ export function claimToken(
       const eventsProofObs = from(getMPTProof(api, blockHash, storageKey)).pipe(map((str) => str.toHex()));
 
       return MMRRoot && best && best > blockNumber
-        ? zip([from(getMMRProof(api, blockNumber, best, blockHash)), eventsProofObs, accountObs]).pipe(
+        ? zip([from(getMMR(api, blockNumber, best, blockHash)), eventsProofObs, accountObs]).pipe(
             map(
               ([mmrProof, eventsProofStr, account]) =>
                 (contract: Contract) =>
@@ -146,7 +139,7 @@ export function claimToken(
                     .send({ from: account })
             )
           )
-        : zip([from(getMMRProof(api, blockNumber, mmrIndex, blockHash)), eventsProofObs, accountObs]).pipe(
+        : zip([from(getMMR(api, blockNumber, mmrIndex, blockHash)), eventsProofObs, accountObs]).pipe(
             map(([mmrProof, eventsProofStr, account]) => {
               const mmrRootMessage = encodeMMRRootMessage({
                 prefix: networkPrefix,
