@@ -136,9 +136,9 @@ export function isDVM(config: ChainConfig): boolean {
 }
 
 /**
- * @description map net config to vertices
+ * @description map chain config to vertices
  */
-export function netConfigToVertices(config: ChainConfig) {
+export function chainConfigToVertices(config: ChainConfig) {
   const vertices: Vertices = { network: config.name, mode: getNetworkMode(config) };
 
   return vertices;

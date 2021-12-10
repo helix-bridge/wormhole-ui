@@ -26,7 +26,7 @@ import {
   isSubstrateDVM2Substrate,
   MMRProof,
 } from '../helper';
-import { entrance, getAvailableNetwork, getMetamaskActiveAccount, netConfigToVertices } from '../network';
+import { entrance, getAvailableNetwork, getMetamaskActiveAccount, chainConfigToVertices } from '../network';
 import { rxGet } from '../records';
 import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
 import { getErc20Meta, getTokenBalance } from './meta';
@@ -53,7 +53,7 @@ function getMappedTokensFromDvm(
   mappingAddress: string
 ) {
   const web3 = entrance.web3.getInstance(departure.provider.rpc);
-  const s2s = isS2S(netConfigToVertices(departure), netConfigToVertices(arrival));
+  const s2s = isS2S(chainConfigToVertices(departure), chainConfigToVertices(arrival));
   const mappingContract = new web3.eth.Contract(
     s2s ? abi.S2SMappingTokenABI : abi.Erc20MappingTokenABI,
     mappingAddress
@@ -177,7 +177,7 @@ export const getKnownMappedTokens = (
     return of({ total: 0, tokens: [] });
   }
 
-  const mappingAddressObs = isSubstrateDVM2Substrate(netConfigToVertices(departure), netConfigToVertices(arrival))
+  const mappingAddressObs = isSubstrateDVM2Substrate(chainConfigToVertices(departure), chainConfigToVertices(arrival))
     ? from(getS2SMappingParams(departure.provider.rpc))
     : from(getErc20MappingPrams(departure.provider.rpc));
 

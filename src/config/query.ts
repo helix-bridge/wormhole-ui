@@ -1,3 +1,6 @@
+/**
+ * subgraph
+ */
 export const S2S_REDEEM_RECORDS_QUERY = `
   query burnRecordEntities($account: String!, $offset: Int, $limit: Int, $result: [Int!] ) {
     burnRecordEntities(
@@ -25,6 +28,9 @@ export const S2S_REDEEM_RECORDS_QUERY = `
   }
 `;
 
+/**
+ * subgraph
+ */
 export const S2S_REDEEM_RECORD_QUERY = `
   query burnRecordEntity($id: String!) {
     burnRecordEntity(id: $id) {
@@ -43,6 +49,9 @@ export const S2S_REDEEM_RECORD_QUERY = `
   }
 `;
 
+/**
+ * subql
+ */
 export const S2S_ISSUING_RECORDS_QUERY = `
   query s2sEvents($account: String!, $offset: Int!, $limit: Int!, $result: [Int!]) {
     s2sEvents(offset: $offset, first: $limit, filter: { sender: { equalTo: $account }, result: { in: $result } }, orderBy: START_TIMESTAMP_DESC) {
@@ -65,6 +74,9 @@ export const S2S_ISSUING_RECORDS_QUERY = `
   }
 `;
 
+/**
+ * subql
+ */
 export const S2S_UNLOCK_RECORD_QUERY = `
   query s2sEvent($id: String!) {
     s2sEvent(id: $id) {
@@ -82,6 +94,9 @@ export const S2S_UNLOCK_RECORD_QUERY = `
   }
 `;
 
+/**
+ * subgraph
+ */
 export const S2S_ISSUING_MAPPING_RECORD_QUERY = `
   query lockRecordEntity($id: String!) {
     lockRecordEntity(id: $id) {
@@ -93,6 +108,9 @@ export const S2S_ISSUING_MAPPING_RECORD_QUERY = `
   }
 `;
 
+/**
+ * subql subql-darwinia-mmr subql-pangolin-mmr
+ */
 export const MMR_QUERY = `
   query nodeEntities($ids: [String!]) {
     nodeEntities(filter: { id: { in: $ids } }) {
@@ -104,6 +122,9 @@ export const MMR_QUERY = `
   }
 `;
 
+/**
+ * subql
+ */
 export const BRIDGE_DISPATCH_EVENTS = `
   query bridge_dispatch_events($messageIdInfo: String!, $section: String!) {
     events(
