@@ -19,7 +19,7 @@ import {
   isReachable,
   isSameNetworkCurry,
   isValidAddress,
-  verticesToNetConfig,
+  verticesToChainConfig,
 } from '../../utils';
 import { RecordList } from './RecordList';
 
@@ -36,7 +36,7 @@ const isAddressValid = (addr: string | null, departure: Vertices) => {
     if (mode === 'dvm' || isEthereumNetwork(departure.network)) {
       addressValid = isValidAddress(addr, 'ethereum');
     } else {
-      const category = flow([getVerticesFromDisplayName, verticesToNetConfig, getNetworkCategory])(network);
+      const category = flow([getVerticesFromDisplayName, verticesToChainConfig, getNetworkCategory])(network);
 
       addressValid = category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
     }
@@ -85,7 +85,7 @@ export function CrossRecords() {
 
   const loadData = useCallback(
     (addr: string | null, confirm: boolean | null, dep: Vertices, arr: Vertices, isGen: boolean, pag: Paginator) => {
-      if (!addr || !isAddressValid(addr, dep) || !isReachable(verticesToNetConfig(dep))(verticesToNetConfig(arr))) {
+      if (!addr || !isAddressValid(addr, dep) || !isReachable(verticesToChainConfig(dep))(verticesToChainConfig(arr))) {
         setSourceData(SOURCE_DATA_DEFAULT);
         setPaginator(PAGINATOR_DEFAULT);
 
@@ -110,7 +110,7 @@ export function CrossRecords() {
   );
 
   useEffect(() => {
-    const config = verticesToNetConfig(departure);
+    const config = verticesToChainConfig(departure);
     const arrivals = getCrossChainArrivals(config!);
 
     setArrival(arrivals[0]);
@@ -133,7 +133,7 @@ export function CrossRecords() {
         mode: tMode,
       });
     } else {
-      const config = verticesToNetConfig(departure);
+      const config = verticesToChainConfig(departure);
       const data = getCrossChainArrivals(config!);
 
       setArrival(data[0]);
@@ -154,7 +154,7 @@ export function CrossRecords() {
           <Select
             size="large"
             dropdownClassName="dropdown-networks"
-            value={getDisplayName(verticesToNetConfig(departure)!)}
+            value={getDisplayName(verticesToChainConfig(departure)!)}
             className="capitalize"
             onSelect={(name: string) => {
               const target = fromNetworks.find(
@@ -182,7 +182,7 @@ export function CrossRecords() {
             <Select
               size="large"
               dropdownClassName="dropdown-networks"
-              value={getDisplayName(verticesToNetConfig(arrival)!)}
+              value={getDisplayName(verticesToChainConfig(arrival)!)}
               className="type-select capitalize"
               onSelect={(name: string) => {
                 const target = toNetworks.find(
@@ -238,7 +238,7 @@ export function CrossRecords() {
             onSearch={(value) => {
               if (!isAddressValid(value, departure)) {
                 message.error(t(searchPlaceholder));
-              } else if (!isReachable(verticesToNetConfig(departure))(verticesToNetConfig(arrival))) {
+              } else if (!isReachable(verticesToChainConfig(departure))(verticesToChainConfig(arrival))) {
                 message.error(t('Origin network is not matched to the target network'));
               } else {
                 if (value === address) {

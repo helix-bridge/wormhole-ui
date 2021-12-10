@@ -145,9 +145,9 @@ export function netConfigToVertices(config: ChainConfig) {
 }
 
 /**
- * @description map vertices to net config
+ * @description map vertices to chain config
  */
-export function verticesToNetConfig(vertices: Vertices) {
+export function verticesToChainConfig(vertices: Vertices) {
   if (!vertices) {
     return null;
   }

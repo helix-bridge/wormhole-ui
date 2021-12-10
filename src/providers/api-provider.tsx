@@ -18,7 +18,7 @@ import {
   isDVM,
   isEthereumNetwork,
   isPolkadotNetwork,
-  verticesToNetConfig,
+  verticesToChainConfig,
   waitUntilConnected,
 } from '../utils';
 import { updateStorage } from '../utils/helper/storage';
@@ -38,7 +38,7 @@ const initialNetworkConfig = () => {
   const network = getInitialSetting<Network>('from', null);
   const mode = getInitialSetting<NetworkMode>('fMode', 'native') ?? 'native';
 
-  return network && verticesToNetConfig({ network, mode });
+  return network && verticesToChainConfig({ network, mode });
 };
 
 const initialConnection: Connection = {

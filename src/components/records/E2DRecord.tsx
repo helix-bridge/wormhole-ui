@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { RecordComponentProps } from '../../config';
 import { ApiKeys, EthereumConfig, Network, PolkadotConfig } from '../../model';
 import { E2DHistory as E2DRecordType, RedeemHistory, RingBurnHistory } from '../../model/darwinia';
-import { getLegalName, verticesToNetConfig } from '../../utils';
+import { getLegalName, verticesToChainConfig } from '../../utils';
 import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
@@ -25,7 +25,7 @@ export function E2DRecord({
   // eslint-disable-next-line complexity
   const progresses = useMemo(() => {
     const from = isGenesis
-      ? verticesToNetConfig({
+      ? verticesToChainConfig({
           network: getLegalName(chain) as Network,
           mode: 'native',
         })
