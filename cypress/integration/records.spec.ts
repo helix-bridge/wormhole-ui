@@ -15,8 +15,6 @@ describe('History records', () => {
   beforeEach(() => {
     cy.visit(Cypress.config().baseUrl + '/history');
     cy.waitForReact();
-
-    cy.react('Switch').click();
   });
 
   it('should display e2d records properly', () => {
