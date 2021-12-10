@@ -5,7 +5,7 @@ import { Subscription, switchMapTo, tap } from 'rxjs';
 import { RecordComponentProps } from '../../config';
 import { useS2SRecords } from '../../hooks';
 import { ApiKeys, PolkadotConfig, S2SBurnRecordRes, S2SHistoryRecord, S2SIssuingRecordRes } from '../../model';
-import { convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM, netConfigToVertices } from '../../utils';
+import { convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM, chainConfigToVertices } from '../../utils';
 import { IndexingState, Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
@@ -103,7 +103,7 @@ export function S2SRecord({
   useEffect(() => {
     const { laneId, nonce, result } = record;
     const attemptsCount = 100;
-    const isS2DVM = isSubstrate2SubstrateDVM(netConfigToVertices(departure!), netConfigToVertices(arrival!));
+    const isS2DVM = isSubstrate2SubstrateDVM(chainConfigToVertices(departure!), chainConfigToVertices(arrival!));
     const queryTargetRecord = isS2DVM ? fetchS2SIssuingMappingRecord : fetchS2SUnlockRecord;
     const queryOriginRecord = isS2DVM ? fetchS2SIssuingRecord : fetchS2SRedeemRecord;
     const observer = {
