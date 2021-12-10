@@ -34,7 +34,7 @@ const isAddressValid = (addr: string | null, departure: Vertices) => {
 
   if (addr && network) {
     if (mode === 'dvm' || isEthereumNetwork(departure.network)) {
-      addressValid = isValidAddress(addr, 'ethereum');
+      addressValid = isValidAddress(addr, 'ethereum', true);
     } else {
       const category = flow([getVerticesFromDisplayName, verticesToChainConfig, getNetworkCategory])(network);
 
@@ -227,12 +227,18 @@ export function CrossRecords() {
             loading={loading}
             placeholder={searchPlaceholder}
             onChange={(event) => {
-              const addr = event.target.value;
+              const value = event.target.value;
+              if (
+                !isAddressValid(value, departure) ||
+                !isReachable(verticesToChainConfig(departure))(verticesToChainConfig(arrival))
+              ) {
+                return;
+              }
 
-              if (addr === address) {
+              if (value === address) {
                 loadData(address, confirmed, departure, arrival, isGenesis, paginator);
               } else {
-                setAddress(addr);
+                setAddress(value);
               }
             }}
             onSearch={(value) => {
