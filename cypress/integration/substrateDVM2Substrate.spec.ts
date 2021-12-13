@@ -65,7 +65,7 @@ describe('Substrate DVM to Substrate', () => {
     cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangoro');
     cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
     cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('3');
+    cy.get('.ant-modal-confirm-content .ant-typography').contains('0.1');
 
     cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
 

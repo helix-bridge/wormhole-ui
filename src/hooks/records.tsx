@@ -47,7 +47,7 @@ import {
   queryEthereum2DarwiniaRedeemRecords,
   RecordsQueryRequest,
   rxGet,
-  verticesToNetConfig,
+  verticesToChainConfig,
 } from '../utils';
 
 interface RecordsHook<T> {
@@ -99,8 +99,8 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 
 export function useRecords(departure: Departure, arrival: Departure) {
   const { fetchS2SIssuingRecords, fetchS2SRedeemRecords } = useS2SRecords(
-    verticesToNetConfig(departure)! as ChainConfig<ApiKeys>,
-    verticesToNetConfig(arrival)! as ChainConfig<ApiKeys>
+    verticesToChainConfig(departure)! as ChainConfig<ApiKeys>,
+    verticesToChainConfig(arrival)! as ChainConfig<ApiKeys>
   );
   const genParams = useCallback(
     (params: HistoryReq) => {
