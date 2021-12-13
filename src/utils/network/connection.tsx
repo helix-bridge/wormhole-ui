@@ -12,15 +12,12 @@ import {
   from,
   map,
   merge,
-  mergeWith,
   Observable,
   Observer,
   of,
   startWith,
-  Subject,
   switchMap,
   switchMapTo,
-  tap,
 } from 'rxjs';
 import {
   ChainConfig,
@@ -63,20 +60,9 @@ export const getPolkadotConnection: (network: ChainConfig) => Observable<Polkado
     ),
     switchMap((envelop: Exclude<PolkadotConnection, 'api'>) => {
       const subject = new BehaviorSubject<PolkadotConnection>(envelop);
-      const connectingSubject = new Subject<PolkadotConnection>();
       const url = network.provider.rpc;
       const api = entrance.polkadot.getInstance(url);
-      const source = subject.asObservable().pipe(
-        distinctUntilKeyChanged('status'),
-        tap((env) => {
-          const { status } = env;
-
-          if (status === ConnectionStatus.disconnected) {
-            api.connect();
-            connectingSubject.next({ ...envelop, status: ConnectionStatus.connecting, api });
-          }
-        })
-      );
+      const source = subject.asObservable().pipe(distinctUntilKeyChanged('status'));
 
       if (api.isConnected) {
         subject.next({ ...envelop, status: ConnectionStatus.success, api });
@@ -87,14 +73,14 @@ export const getPolkadotConnection: (network: ChainConfig) => Observable<Polkado
       });
 
       api.on('disconnected', () => {
-        subject.next({ ...envelop, status: ConnectionStatus.disconnected, api });
+        subject.next({ ...envelop, status: ConnectionStatus.connecting, api });
       });
 
       api.on('error', (_) => {
         subject.next({ ...envelop, status: ConnectionStatus.error, api });
       });
 
-      return from(api.isReady).pipe(switchMapTo(source), mergeWith(connectingSubject.asObservable()));
+      return from(api.isReady).pipe(switchMapTo(source));
     }),
     startWith<PolkadotConnection>({ status: ConnectionStatus.connecting, accounts: [], api: null, type: 'polkadot' })
   );

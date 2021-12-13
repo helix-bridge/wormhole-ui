@@ -14,7 +14,7 @@
   "Balance {{balance}}": "balance: {{balance}}",
   "Both send and receive network are all required": "Both send and receive network are all required",
   "Bridge is not healthy, try it again later": "Bridge is not healthy, try it again later",
-  "Can not verify amount because of a invalid fee": "Can not verify amount because of a invalid fee",
+  "Can not verify amount because of invalid fee": "Can not verify amount because of invalid fee",
   "Cancel": "Cancel",
   "ChainRelay Confirmed": "ChainRelay Confirmed",
   "Claim": "Claim",
