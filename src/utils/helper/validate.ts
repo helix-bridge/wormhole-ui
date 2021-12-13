@@ -16,7 +16,7 @@ export const isValidAddress = (address: string, network: Network | NetworkCatego
     const isDvm = Web3.utils.isAddress(address);
     const isSS58 = isSS58Address(address);
 
-    return isDvm || (isSS58 && canConvertToEth(address));
+    return strict ? isDvm : isDvm || (isSS58 && canConvertToEth(address));
   }
 
   if (network === 'polkadot') {
@@ -37,6 +37,11 @@ export const isValidAddress = (address: string, network: Network | NetworkCatego
 };
 
 export const isSS58Address = (address: string, ss58Prefix?: SS58Prefix) => {
+  // eslint-disable-next-line no-magic-numbers
+  if (address.length < 48) {
+    return false;
+  }
+
   try {
     encodeAddress(
       isHex(address)

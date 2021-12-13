@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
 import { Network, NetworkMode, SubmitFn, TransferFormValues, TransferNetwork } from '../model';
-import { emptyObsFactory, getInitialSetting, verticesToNetConfig, isReachable, isSameNetConfig } from '../utils';
+import { emptyObsFactory, getInitialSetting, verticesToChainConfig, isReachable, isSameNetConfig } from '../utils';
 import { Airport } from './Airport';
 import { Nets } from './controls/Nets';
 import { getBridge } from './finder';
@@ -16,8 +16,8 @@ const getTransferFromSettings: () => TransferNetwork = () => {
   const go = getInitialSetting('to', '') as Network;
   const fromMode = getInitialSetting('fMode', '') as NetworkMode;
   const toMode = getInitialSetting('tMode', '') as NetworkMode;
-  const from = verticesToNetConfig({ network: come, mode: fromMode });
-  const to = verticesToNetConfig({ network: go, mode: toMode });
+  const from = verticesToChainConfig({ network: come, mode: fromMode });
+  const to = verticesToChainConfig({ network: go, mode: toMode });
 
   if (from?.isTest === to?.isTest) {
     return { from, to };

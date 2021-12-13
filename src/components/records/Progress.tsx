@@ -63,7 +63,7 @@ export const transactionSend: ProgressProps = {
  * - if no error and the last step is no completed, progress pending
  */
 // eslint-disable-next-line complexity
-function Progress({ steps, title, icon, className = '', network }: ProgressProps) {
+export function Progress({ steps, title, icon, className = '', network }: ProgressProps) {
   const { t } = useTranslation();
   const { setCanceler } = useTx();
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
@@ -179,7 +179,7 @@ function Progress({ steps, title, icon, className = '', network }: ProgressProps
         <div className="relative">
           {/* Jagged when adding backgrounds to svg containers, so use image here */}
           <img
-            src={`/image/${icon ?? network?.name + '.png'}`}
+            src={`${icon?.includes('/image/') ? '' : '/image/'}${icon ?? network?.name + '.png'}`}
             className={` w-4 md:w-10 rounded-full overflow-hidden ${iconColorCls} `}
           />
           {progressItemState === State.error && (
