@@ -8,7 +8,7 @@ import { ApiProvider, TxProvider } from '../providers';
 import '../theme/antd/index.less';
 import { img } from './utils';
 
-describe('Language Component', () => {
+describe('Progress Component', () => {
   it('should display completed step', () => {
     const data = {
       title: 'Pangolin Sent',
