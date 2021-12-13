@@ -1,6 +1,7 @@
 import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
-import Web3 from 'web3';
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import Web3 from 'web3';
+import { SHORT_DURATION } from '../../config';
 
 interface ApiGuy<T> {
   [key: string]: T;
@@ -38,7 +39,7 @@ abstract class Entrance<T> {
 
     if (exist) {
       this.beforeRemove(exist[url]);
-      this.apiList = this.apiList.filter((item) => item === exist);
+      this.apiList = this.apiList.filter((item) => item !== exist);
     }
   }
 }
@@ -47,7 +48,7 @@ class PolkadotEntrance extends Entrance<ApiPromise> {
   apiList: ApiGuy<ApiPromise>[] = [];
 
   init(url: string) {
-    const provider = new WsProvider(url, false); // false: disable polkadot api auto reconnect;
+    const provider = new WsProvider(url, SHORT_DURATION);
 
     return new ApiPromise({
       provider,

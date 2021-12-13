@@ -39,11 +39,6 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
       const arrival = form.getFieldValue(FORM_CONTROL.transfer).to as PolkadotConfig<ApiKeys>;
       const api = entrance.polkadot.getInstance(arrival.provider.rpc);
 
-      // todo: remove reconnect
-      if (!api.isConnected) {
-        api.connect();
-      }
-
       await waitUntilConnected(api);
 
       console.info('%c [ tokenAddress ]-29', 'font-size:13px; background:pink; color:#bf2c9f;', token);
