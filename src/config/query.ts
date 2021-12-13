@@ -126,17 +126,10 @@ export const MMR_QUERY = `
  * subql
  */
 export const BRIDGE_DISPATCH_EVENTS = `
-  query bridge_dispatch_events($messageIdInfo: String!, $section: String!) {
-    events(
-      filter: {
-        section: { equalTo: $section }
-        and: { data: { includes: $messageIdInfo } }
-      }
-    ) {
-      nodes {
-        data
-        method
-      }
+  query bridge_dispatch_events($id: String!) {
+    bridgeDispatchEvent(id: $id) {
+      data
+      method
     }
   }
 `;
