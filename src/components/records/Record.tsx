@@ -37,8 +37,15 @@ function toLocalDateTime(timestamp: number): string {
   return dateStr + ' ' + zonedTimeStr;
 }
 
-export function Record(props: PropsWithChildren<RecordProps>) {
-  const { assets, recipient, blockTimestamp, departure, arrival, items, children } = props;
+export function Record({
+  assets,
+  recipient,
+  blockTimestamp,
+  departure,
+  arrival,
+  items,
+  children,
+}: PropsWithChildren<RecordProps>) {
   const hasError = useMemo(() => items.find((item) => item.steps.find((step) => step.state === State.error)), [items]);
   const percent = useMemo(() => {
     const total = items.length;
@@ -52,10 +59,6 @@ export function Record(props: PropsWithChildren<RecordProps>) {
     }
     return hasError ? '#ef4444' : 'normal';
   }, [hasError, percent]);
-
-  if (!blockTimestamp) {
-    return null;
-  }
 
   if (!blockTimestamp) {
     return null;
@@ -83,8 +86,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
                 </div>
 
                 <Progress
-                  // eslint-disable-next-line no-magic-numbers
-                  percent={hasError ? 100 : percent}
+                  percent={hasError ? PERCENT_HUNDRED : percent}
                   steps={items.length}
                   showInfo={false}
                   strokeColor={strokeColor}
@@ -101,10 +103,7 @@ export function Record(props: PropsWithChildren<RecordProps>) {
                 <ClockCircleOutlined />
                 <span className="ml-2">
                   {/* TODO: fix time format from indexer */}
-                  {isSubstrate2SubstrateDVM(
-                    chainConfigToVertices(props.departure!),
-                    chainConfigToVertices(props.arrival!)
-                  )
+                  {isSubstrate2SubstrateDVM(chainConfigToVertices(departure!), chainConfigToVertices(arrival!))
                     ? toLocalDateTime(blockTimestamp)
                     : format(fromUnixTime(blockTimestamp), DATE_TIME_FORMATE)}
                 </span>

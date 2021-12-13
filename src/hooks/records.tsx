@@ -1,11 +1,11 @@
 import { message } from 'antd';
 import { getUnixTime } from 'date-fns';
 import { FetchData, GraphQLClient, useManualQuery } from 'graphql-hooks';
-import Web3 from 'web3';
-import { isBoolean, isNull, omitBy, upperFirst } from 'lodash';
+import { isBoolean, isNull, omitBy } from 'lodash';
 import React, { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { catchError, EMPTY, from, map, Observable, of, Subscription, switchMap, tap } from 'rxjs';
+import Web3 from 'web3';
 import {
   BRIDGE_DISPATCH_EVENTS,
   S2S_ISSUING_MAPPING_RECORD_QUERY,
@@ -302,8 +302,6 @@ export function useS2SRecords(
   const [issuingMemo, setIssuingMemo] = useState<Record<string, S2SHistoryRecord>>({});
   const [burnMemo, setBurnMemo] = useState<Record<string, S2SHistoryRecord>>({});
 
-  const genId = useCallback((laneId: string, nonce: string) => `${laneId}${Web3.utils.toHex(nonce)}`, []);
-
   const toQueryVariables = useCallback((req: HistoryReq) => {
     const {
       address: account,
@@ -414,7 +412,7 @@ export function useS2SRecords(
       { attemptsCount = Infinity, skipCache = false, keepActive = (res) => !res.s2sEvent }
     ) => {
       return fetchRecord(
-        genId(laneId, nonce),
+        laneId + Web3.utils.toHex(nonce),
         fetchIssuingRecord,
         { skipCache, attemptsCount, keepActive: (res) => !res.data || keepActive(res.data) },
         issuingMemo,
@@ -422,7 +420,7 @@ export function useS2SRecords(
         (res) => res.data.s2sEvent
       );
     },
-    [fetchIssuingRecord, fetchRecord, genId, issuingMemo]
+    [fetchIssuingRecord, fetchRecord, issuingMemo]
   );
 
   const fetchS2SUnlockRecord = useCallback<FetchS2SRecord<S2SUnlockRecordRes, S2SHistoryRecord>>(
@@ -432,7 +430,7 @@ export function useS2SRecords(
       { attemptsCount = Infinity, skipCache = false, keepActive: keepActive = (res) => !res.s2sEvent }
     ) => {
       return fetchRecord(
-        genId(laneId, nonce),
+        laneId + Web3.utils.toHex(nonce),
         fetchUnlockRecord,
         { skipCache, attemptsCount, keepActive: (res) => !res.data || keepActive(res.data) },
         unlockedMemo,
@@ -440,7 +438,7 @@ export function useS2SRecords(
         (res) => res.data.s2sEvent
       );
     },
-    [fetchRecord, fetchUnlockRecord, genId, unlockedMemo]
+    [fetchRecord, fetchUnlockRecord, unlockedMemo]
   );
 
   const fetchS2SIssuingMappingRecord = useCallback<FetchS2SRecord<S2SIssuingMappingRecordRes, S2SHistoryRecord>>(
@@ -450,7 +448,7 @@ export function useS2SRecords(
       { attemptsCount = Infinity, skipCache = false, keepActive: keepActive = (res) => !res.lockRecordEntity }
     ) => {
       return fetchRecord(
-        genId(laneId, nonce),
+        laneId + Web3.utils.toHex(nonce),
         fetchIssuingMappingRecord,
         { skipCache, attemptsCount, keepActive: (res) => !res.data || keepActive(res.data) },
         issuingMappingMemo,
@@ -458,7 +456,7 @@ export function useS2SRecords(
         (res) => issuingMappingRecordMapper(res.data!.lockRecordEntity)
       );
     },
-    [fetchIssuingMappingRecord, fetchRecord, genId, issuingMappingMemo]
+    [fetchIssuingMappingRecord, fetchRecord, issuingMappingMemo]
   );
 
   const fetchS2SRedeemRecord = useCallback<FetchS2SRecord<S2SBurnRecordRes, S2SHistoryRecord>>(
@@ -468,7 +466,7 @@ export function useS2SRecords(
       { attemptsCount = Infinity, skipCache = false, keepActive: keepActive = (res) => !res.burnRecordEntity }
     ) => {
       return fetchRecord(
-        genId(laneId, nonce),
+        laneId + Web3.utils.toHex(nonce),
         fetchBurnRecord,
         { skipCache, attemptsCount, keepActive: (res) => !res.data || keepActive(res.data) },
         burnMemo,
@@ -476,20 +474,16 @@ export function useS2SRecords(
         (res) => burnRecordMapper(res.data!.burnRecordEntity)
       );
     },
-    [burnMemo, fetchBurnRecord, fetchRecord, genId]
+    [burnMemo, fetchBurnRecord, fetchRecord]
   );
 
   const fetchMessageEvent = useCallback<FetchS2SRecord<BridgeDispatchEventRes, BridgeDispatchEventRecord>>(
     (laneId: string, nonce: string, { attemptsCount = Infinity }) => {
-      const messageIdInfo = `\\"${laneId}\\",${Web3.utils.toHex(nonce)}`; // TODO
-      const section = `bridge${upperFirst(arrival.name)}Dispatch`;
-
       return of(null).pipe(
-        switchMap(() => from(fetchDispatchEvent({ variables: { messageIdInfo, section } }))),
-        pollWhile(SHORT_DURATION, (res) => !res.data?.events?.nodes[0], attemptsCount, true),
+        switchMap(() => from(fetchDispatchEvent({ variables: { id: `${laneId}${Web3.utils.toHex(nonce)}` } }))),
+        pollWhile(SHORT_DURATION, (res) => !res.data?.bridgeDispatchEvent, attemptsCount, true),
         map((res) => {
-          const { nodes } = res.data!.events;
-          const { method, data } = nodes[0];
+          const { method, data } = res.data!.bridgeDispatchEvent;
 
           if (method === 'MessageDispatched') {
             const detail = JSON.parse(data || '[]');
@@ -510,7 +504,7 @@ export function useS2SRecords(
         })
       );
     },
-    [arrival.name, fetchDispatchEvent]
+    [fetchDispatchEvent]
   );
 
   return {

@@ -166,7 +166,5 @@ export interface BridgeDispatchEventRecord {
 }
 
 export interface BridgeDispatchEventRes {
-  events: {
-    nodes: BridgeDispatchEventRecord[];
-  };
+  bridgeDispatchEvent: BridgeDispatchEventRecord;
 }

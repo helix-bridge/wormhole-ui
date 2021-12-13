@@ -35,7 +35,7 @@ export const SYSTEM_NETWORK_CONFIG: NetworkConfig = {
       dapp: 'https://api.darwinia.network',
       evolution: EVOLUTION_DOMAIN.product,
       subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
-      subql: 'https://api.subquery.network/sq/darwinia-network/crab',
+      subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-crab',
       subscan: 'https://crab.subscan.io',
     },
     contracts: {
@@ -78,7 +78,7 @@ export const SYSTEM_NETWORK_CONFIG: NetworkConfig = {
       dapp: 'https://api.darwinia.network',
       evolution: EVOLUTION_DOMAIN.product,
       subGraph: 'http://t1.pangolin-p2p.darwinia.network:8000/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
-      subql: 'https://api.subquery.network/sq/darwinia-network/darwinia',
+      subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-darwinia',
       subqlMMr: 'https://api.subquery.network/sq/darwinia-network/darwinia-mmr',
     },
     contracts: {
@@ -164,7 +164,7 @@ export const SYSTEM_NETWORK_CONFIG: NetworkConfig = {
       dapp: 'https://api.darwinia.network.l2me.com',
       evolution: EVOLUTION_DOMAIN.dev,
       subGraph: 'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
-      subql: 'https://api.subquery.network/sq/darwinia-network/pangolin',
+      subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-pangolin',
       subqlMMr: 'https://api.subquery.network/sq/darwinia-network/pangolin-mmr',
     },
     contracts: {
@@ -222,7 +222,7 @@ export const SYSTEM_NETWORK_CONFIG: NetworkConfig = {
       dapp: 'https://api.darwinia.network.l2me.com',
       evolution: EVOLUTION_DOMAIN.dev,
       subGraph: 'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
-      subql: 'https://api.subquery.network/sq/darwinia-network/pangoro',
+      subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-pangoro',
     },
     facade: {
       logo: '/image/pangoro.png',
