@@ -36,9 +36,11 @@ export const isValidAddress = (address: string, network: Network | NetworkCatego
   return false;
 };
 
+// eslint-disable-next-line complexity
 export const isSS58Address = (address: string, ss58Prefix?: SS58Prefix) => {
-  // eslint-disable-next-line no-magic-numbers
-  if (address.length < 48) {
+  const len = 48;
+
+  if (!address || address.length < len) {
     return false;
   }
 
@@ -170,7 +172,7 @@ export const invalidFeeRule: ValidatorRuleFactory = (options) => {
     validator: () => {
       return !compared || new BN(compared).lt(new BN(0)) ? Promise.reject() : Promise.resolve();
     },
-    message: t('Can not verify amount because of a invalid fee'),
+    message: t('Can not verify amount because of invalid fee'),
   };
 };
 
