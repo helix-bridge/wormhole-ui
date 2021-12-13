@@ -86,8 +86,7 @@ export function Record({
                 </div>
 
                 <Progress
-                  // eslint-disable-next-line no-magic-numbers
-                  percent={hasError ? 100 : percent}
+                  percent={hasError ? PERCENT_HUNDRED : percent}
                   steps={items.length}
                   showInfo={false}
                   strokeColor={strokeColor}
