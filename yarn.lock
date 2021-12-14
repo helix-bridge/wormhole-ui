@@ -1930,10 +1930,17 @@
   resolved "https://registry.yarnpkg.com/@darwinia/lints/-/lints-1.0.1.tgz#697160945adc2a42b9a004dcf60830f97d7bc9ea"
   integrity sha512-rZVCTFDkLao3BYg3RLSQleFMbrABeIr2iAh3h3DWZtkJfXip3J9ryFEUPTuJwJKDIh/jzaPCgyZ/RKqNLAj+kg==
 
+<<<<<<< HEAD
 "@darwinia/types-known@^2.6.100-4":
   version "2.6.100-4"
   resolved "https://registry.yarnpkg.com/@darwinia/types-known/-/types-known-2.6.100-4.tgz#a8e8ebbf2821081de33f6bb1c6562d7ca03d2b4e"
   integrity sha512-/icPM/VrDwjQ24tcElROPMlvnq0Moyw0X+OD/XlS/NpaDb8v7ATdyRg1qQE4DjztNgfkwjN5XvTLMk6J1+Jxhw==
+=======
+"@darwinia/types-known@^2.6.100-2":
+  version "2.6.100-2"
+  resolved "https://registry.yarnpkg.com/@darwinia/types-known/-/types-known-2.6.100-2.tgz#3634a84c332e908e54a41b99b4675ec6f3b80875"
+  integrity sha512-esdrDlcvJcYczf9rggMt2J/x7raz/nfcmom33+v8kxyiOi62evmrSs52QhqGl2g3XmusvAlqhOjPYXqEqlP4sg==
+>>>>>>> 2b4b84c (chore: open s2s primary bridge)
   dependencies:
     "@babel/runtime" "^7.9.6"
     "@polkadot/types" "4.0.4-5"
