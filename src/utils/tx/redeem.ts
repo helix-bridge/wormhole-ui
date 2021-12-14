@@ -104,7 +104,8 @@ const s2sMappingParams: (rpc: string) => Promise<S2SInfo> = async (rpc: string) 
 
   await waitUntilConnected(api);
 
-  const mappingAddress = (await api.query.substrate2SubstrateIssuing.mappingFactoryAddress()).toString();
+  const module = rpc.includes('pangolin') ? api.query.substrate2SubstrateIssuing : api.query.fromDarwiniaIssuing;
+  const mappingAddress = (await module.mappingFactoryAddress()).toString();
   const specVersion = api.runtimeVersion.specVersion.toString();
 
   return { specVersion, mappingAddress };
