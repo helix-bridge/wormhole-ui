@@ -28,7 +28,7 @@
   "dependencies": {
     "@ant-design/icons": "^4.6.2",
     "@craco/craco": "^6.1.2",
-    "@darwinia/types": "^2.6.100-3",
+    "@darwinia/types": "^2.6.100-4",
     "@metamask/contract-metadata": "^1.28.0",
     "@metamask/jazzicon": "^2.0.0",
     "@polkadot/api": "^6.1.2",
