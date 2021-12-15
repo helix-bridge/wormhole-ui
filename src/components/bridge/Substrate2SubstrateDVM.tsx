@@ -4,7 +4,7 @@ import BN from 'bn.js';
 import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { EMPTY } from 'rxjs';
+import { EMPTY, from, switchMap } from 'rxjs';
 import { abi, FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
 import {
@@ -33,6 +33,7 @@ import {
   issuingSubstrateToken,
   prettyNumber,
   toWei,
+  waitUntilConnected,
   zeroAmountRule,
 } from '../../utils';
 import { Balance } from '../controls/Balance';
@@ -137,6 +138,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       const web3 = entrance.web3.getInstance(arrival.ethereumChain.rpcUrls[0]);
       const { mappingAddress } = await getS2SMappingParams(arrival.provider.rpc);
       const contract = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
+      // TODO
       const ringAddress = '0xb142658BD18c560D8ea74a31C07297CeCfeCF949';
       const tokenAddress = isRing(symbol) ? ringAddress : '';
       const limit = await contract.methods.dailyLimit(tokenAddress).call();
@@ -193,12 +195,24 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (api.rpc as any).fee.marketFee().then((res: any) => {
-      const marketFee = res.amount?.toString();
+    const subscription = from(waitUntilConnected(api))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .pipe(switchMap(() => (api.rpc as any).fee.marketFee()))
+      .subscribe({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        next: (res: any) => {
+          const marketFee = res.amount?.toString();
+          console.info('%c [ marketFee ]-204', 'font-size:13px; background:pink; color:#bf2c9f;', marketFee);
 
-      setFee(new BN(marketFee ?? -1)); // -1: fee market does not available
-    });
+          setFee(new BN(marketFee ?? -1)); // -1: fee market does not available
+        },
+        error: (err) => {
+          console.error('%c [ err ]-208', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+        },
+        complete: () => console.info('complete ---| '),
+      });
+
+    return () => subscription?.unsubscribe();
   }, [api]);
 
   useEffect(() => {
