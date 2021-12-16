@@ -66,7 +66,7 @@ export async function getTokenBalance(address: string, account: string, isErc20N
     return Web3.utils.toBN(balance);
   } catch (err) {
     console.info(
-      '%c [ get token balance error ]-52',
+      `%c [ get token(${address}) balance error. account: ${account} ]-52`,
       'font-size:13px; background:pink; color:#bf2c9f;',
       (err as Record<string, string>).message
     );

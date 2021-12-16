@@ -1,6 +1,6 @@
 import { message } from 'antd';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { from as fromPromise, map, of, switchMap, tap } from 'rxjs';
+import { map, of, switchMap, tap } from 'rxjs';
 import { RegisterStatus } from '../config';
 import {
   Action,
@@ -13,7 +13,7 @@ import {
   RequiredPartial,
   TransferNetwork,
 } from '../model';
-import { isNetworkConsistent } from '../utils';
+import { getEthConnection, isNetworkConsistent } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
 import { getKnownMappedTokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
@@ -96,13 +96,15 @@ export const useMappedTokens = (
   );
 
   useEffect(() => {
-    if (connection.type !== 'metamask' || !from || !to) {
+    if (!from || !to) {
       updateTokens([]);
       return;
     }
 
-    const subscription = fromPromise(isNetworkConsistent(from!.name, (connection as EthereumConnection).chainId))
+    const connectionObs = connection.type === 'metamask' ? of(connection) : getEthConnection();
+    const subscription = connectionObs
       .pipe(
+        map((res) => isNetworkConsistent(from!.name, (res as EthereumConnection).chainId)),
         tap(() => setLoading(true)),
         switchMap((isMatch) => {
           if (!isMatch) {

@@ -5,8 +5,15 @@ import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, switchMap } from 'rxjs';
-import { abi, FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
+import { abi, FORM_CONTROL, RegisterStatus } from '../../config';
+import {
+  useAfterSuccess,
+  useApi,
+  useDarwiniaAvailableBalances,
+  useDeparture,
+  useMappedTokens,
+  useTx,
+} from '../../hooks';
 import {
   AvailableBalance,
   BridgeFormProps,
@@ -119,6 +126,13 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<TransferFormValues<Substrate2SubstrateDVMTransfer, NoNullTransferNetwork>>();
   const getAvailableBalances = useDarwiniaAvailableBalances();
+  const { tokens: targetChainTokens } = useMappedTokens(
+    {
+      from: form.getFieldValue([FORM_CONTROL.transfer, 'to']),
+      to: form.getFieldValue([FORM_CONTROL.transfer, 'from']),
+    },
+    RegisterStatus.registered
+  );
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account: string) => {
       if (!api || !chain.tokens.length || !form.getFieldValue(FORM_CONTROL.asset)) {
@@ -132,21 +146,30 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
     },
     [api, chain.tokens.length, form, getAvailableBalances]
   );
-  const getDailyLimit = useCallback<(symbol: string) => Promise<DailyLimit>>(
+  const getDailyLimit = useCallback<(symbol: string) => Promise<DailyLimit | null>>(
     async (symbol: string) => {
+      if (!targetChainTokens.length) {
+        return null;
+      }
+
       const arrival = form.getFieldValue(FORM_CONTROL.transfer).to as EthereumChainDVMConfig;
       const web3 = entrance.web3.getInstance(arrival.ethereumChain.rpcUrls[0]);
       const { mappingAddress } = await getS2SMappingParams(arrival.provider.rpc);
       const contract = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
-      // TODO
-      const ringAddress = '0xb142658BD18c560D8ea74a31C07297CeCfeCF949';
+      const token = targetChainTokens.find((item) => isRing(item.symbol));
+      const ringAddress = token?.address;
       const tokenAddress = isRing(symbol) ? ringAddress : '';
+
+      if (!tokenAddress) {
+        return null;
+      }
+
       const limit = await contract.methods.dailyLimit(tokenAddress).call();
       const spentToday = await contract.methods.spentToday(tokenAddress).call();
 
       return { limit, spentToday };
     },
-    [form]
+    [form, targetChainTokens]
   );
 
   useEffect(() => {
@@ -198,19 +221,14 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
     const subscription = from(waitUntilConnected(api))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .pipe(switchMap(() => (api.rpc as any).fee.marketFee()))
-      .subscribe({
+      .subscribe(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        next: (res: any) => {
+        (res: any) => {
           const marketFee = res.amount?.toString();
-          console.info('%c [ marketFee ]-204', 'font-size:13px; background:pink; color:#bf2c9f;', marketFee);
 
           setFee(new BN(marketFee ?? -1)); // -1: fee market does not available
-        },
-        error: (err) => {
-          console.error('%c [ err ]-208', 'font-size:13px; background:pink; color:#bf2c9f;', err);
-        },
-        complete: () => console.info('complete ---| '),
-      });
+        }
+      );
 
     return () => subscription?.unsubscribe();
   }, [api]);

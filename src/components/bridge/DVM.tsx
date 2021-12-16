@@ -71,10 +71,18 @@ interface TransferInfoProps {
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
+// eslint-disable-next-line complexity
 function TransferInfo({ tokenInfo, amount, arrival, dailyLimit }: TransferInfoProps) {
   const [symbol, setSymbol] = useState('');
   const unit = tokenInfo ? getUnit(+tokenInfo.decimals) : 'ether';
   const value = new BN(toWei({ value: amount || '0', unit }));
+  const isNoLimit = useMemo(() => {
+    if (dailyLimit) {
+      return new BN(dailyLimit.limit).isZero();
+    }
+
+    return false;
+  }, [dailyLimit]);
 
   useEffect(() => {
     const mode = getNetworkMode(arrival);
@@ -97,7 +105,11 @@ function TransferInfo({ tokenInfo, amount, arrival, dailyLimit }: TransferInfoPr
 
       {!!dailyLimit && (
         <Descriptions.Item label={<Trans>Daily Limit</Trans>} contentStyle={{ color: 'inherit' }}>
-          {fromWei({ value: new BN(dailyLimit.limit).sub(new BN(dailyLimit.spentToday)), unit: 'gwei' }, prettyNumber)}
+          {isNoLimit ? (
+            <Trans>No Limit</Trans>
+          ) : (
+            fromWei({ value: new BN(dailyLimit.limit).sub(new BN(dailyLimit.spentToday)), unit: 'gwei' }, prettyNumber)
+          )}
         </Descriptions.Item>
       )}
     </Descriptions>

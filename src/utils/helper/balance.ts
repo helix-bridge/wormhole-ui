@@ -129,8 +129,9 @@ const completeDecimal = (value: string, bits: number): string => {
  * @see https://github.com/darwinia-network/wormhole-ui/issues/142
  */
 export async function getDarwiniaAvailableBalances(api: ApiPromise, account = ''): Promise<[string, string]> {
+  await waitUntilConnected(api);
+
   try {
-    await waitUntilConnected(api);
     // type = 0 query ring balance.  type = 1 query kton balance.
     /* eslint-disable */
     const ringUsableBalance = await (api.rpc as any).balances.usableBalance(0, account);

@@ -43,10 +43,8 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
 
       console.info('%c [ tokenAddress ]-29', 'font-size:13px; background:pink; color:#bf2c9f;', token);
       // TODO: querying should rely on token info.
-      const [spentToday, limit] = (await api.query.substrate2SubstrateBacking.secureLimitedRingAmount()).toJSON() as [
-        number,
-        number
-      ];
+      const module = arrival.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
+      const [spentToday, limit] = (await api.query[module].secureLimitedRingAmount()).toJSON() as [number, number];
 
       return { spentToday, limit } as DailyLimit;
     },
