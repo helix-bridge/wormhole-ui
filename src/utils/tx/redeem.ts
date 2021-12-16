@@ -1,10 +1,10 @@
 import { decodeAddress } from '@polkadot/util-crypto';
 import { memoize } from 'lodash';
-import { from as fromObs, Observable, switchMap } from 'rxjs';
+import { from as fromObs, map, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../config';
 import { RedeemDarwiniaToken, RedeemDeposit, RedeemDVMToken, Tx, TxFn } from '../../model';
-import { convertToDvm } from '../helper';
+import { convertToDvm, fromWei, toWei } from '../helper';
 import { entrance, waitUntilConnected } from '../network';
 import { buf2hex, getContractTxObs } from './common';
 
@@ -59,33 +59,28 @@ export const redeemErc20: TxFn<RedeemDVMToken> = (value) => {
  * @description substrate <- substrate dvm
  */
 export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, specVersion: string): Observable<Tx> {
-  const { asset, amount, sender, recipient } = value;
+  const { asset, amount, sender, recipient, transfer } = value;
   const receiver = Web3.utils.hexToBytes(convertToDvm(recipient));
   const weight = '690133000';
-  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const contractInner = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
-  const gasObs = fromObs(
-    contractInner.methods
-      .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
-      .estimateGas({ from: sender })
+  const api = entrance.polkadot.getInstance(transfer.from.provider.rpc);
+  const valObs = fromObs(waitUntilConnected(api)).pipe(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    switchMap(() => (api.rpc as any).fee.marketFee() as Promise<{ amount: string }>),
+    map((res) => {
+      const num = fromWei({ value: res.amount.toString(), unit: 'gwei' });
+
+      return Web3.utils.toHex(toWei({ value: num, unit: 'ether' }));
+    })
   );
 
-  return gasObs.pipe(
-    switchMap((gas) =>
+  return valObs.pipe(
+    switchMap((val) =>
       getContractTxObs(
         mappingAddress,
-        (contract) => {
-          const val = Web3.utils.toHex('50000000000000000000');
-
-          console.info('----->', gas);
-          // @see https://github.com/darwinia-network/wormhole-ui/issues/139
-          return (
-            contract.methods
-              .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
-              // .send({ from: sender, gas });
-              .send({ from: sender, gasLimit: '2000000', gasPrice: '50000000000', value: val })
-          );
-        },
+        (contract) =>
+          contract.methods
+            .burnAndRemoteUnlockWaitingConfirm(specVersion, weight, asset.address, receiver, amount)
+            .send({ from: sender, value: val }),
         abi.S2SMappingTokenABI
       )
     )
