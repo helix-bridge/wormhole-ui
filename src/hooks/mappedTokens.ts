@@ -101,6 +101,7 @@ export const useMappedTokens = (
       return;
     }
 
+    // TODO: check metamask network if the connection is polkadot type
     const connectionObs = connection.type === 'metamask' ? of(connection) : getEthConnection();
     const subscription = connectionObs
       .pipe(
