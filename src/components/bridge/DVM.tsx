@@ -270,10 +270,11 @@ export function DVM({
           }),
           insufficientDailyLimit({
             t,
-            compared: dailyLimit
-              ? new BN(dailyLimit.limit).sub(new BN(dailyLimit.spentToday)).toString()
-              : // eslint-disable-next-line no-magic-numbers
-                Math.pow(10, 18).toString(),
+            compared:
+              dailyLimit && !new BN(dailyLimit.limit).isZero()
+                ? new BN(dailyLimit.limit).sub(new BN(dailyLimit.spentToday)).toString()
+                : // eslint-disable-next-line no-magic-numbers
+                  Math.pow(10, 18).toString(),
             token: tokenInfo,
           }),
           {
