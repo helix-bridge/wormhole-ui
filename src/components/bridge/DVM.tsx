@@ -15,6 +15,7 @@ import {
   DVMToken,
   DVMTransfer,
   Erc20Token,
+  EthereumChainDVMConfig,
   IssuingDVMToken,
   MappedToken,
   Network,
@@ -60,19 +61,21 @@ interface DVMProps {
   transform: (value: DVMToken) => Observable<Tx>;
   spenderResolver: (config: ChainConfig) => Promise<string>;
   getDailyLImit?: (token: MappedToken) => Promise<DailyLimit>;
+  getFee?: (config: ChainConfig, token: MappedToken) => Promise<string>;
 }
 
 interface TransferInfoProps {
   amount: string;
   tokenInfo: MemoedTokenInfo | null;
-  arrival: ChainConfig;
+  transfer: NoNullTransferNetwork<EthereumChainDVMConfig, ChainConfig>;
   dailyLimit: DailyLimit | null;
+  fee: string | null;
 }
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
-function TransferInfo({ tokenInfo, amount, arrival, dailyLimit }: TransferInfoProps) {
+function TransferInfo({ tokenInfo, amount, transfer, dailyLimit, fee }: TransferInfoProps) {
   const [symbol, setSymbol] = useState('');
   const unit = tokenInfo ? getUnit(+tokenInfo.decimals) : 'ether';
   const value = new BN(toWei({ value: amount || '0', unit }));
@@ -85,6 +88,7 @@ function TransferInfo({ tokenInfo, amount, arrival, dailyLimit }: TransferInfoPr
   }, [dailyLimit]);
 
   useEffect(() => {
+    const { to: arrival } = transfer;
     const mode = getNetworkMode(arrival);
     (async () => {
       if (tokenInfo && isPolkadotNetwork(arrival.name) && mode === 'native') {
@@ -93,13 +97,21 @@ function TransferInfo({ tokenInfo, amount, arrival, dailyLimit }: TransferInfoPr
         setSymbol(result);
       }
     })();
-  }, [arrival, tokenInfo]);
+  }, [tokenInfo, transfer]);
 
   return (
     <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
       {!value.isZero() && (
         <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
           {fromWei({ value, unit })} {symbol}
+        </Descriptions.Item>
+      )}
+
+      {!!fee && (
+        <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
+          <span className="flex items-center">
+            {fee} {transfer.from.ethereumChain.nativeCurrency.symbol}
+          </span>
         </Descriptions.Item>
       )}
 
@@ -127,6 +139,7 @@ export function DVM({
   tokenRegisterStatus,
   canRegister,
   getDailyLImit,
+  getFee,
   isDVM = true,
 }: BridgeFormProps<DVMTransfer> & DVMProps) {
   const { t } = useTranslation();
@@ -161,6 +174,7 @@ export function DVM({
   const unit = useMemo(() => (selectedErc20 ? getUnit(+selectedErc20.decimals) : 'ether'), [selectedErc20]);
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess();
+  const [fee, setFee] = useState<string>('');
   const refreshAllowance = useCallback(
     async (config: ChainConfig) => {
       const spender = await spenderResolver(config);
@@ -172,6 +186,14 @@ export function DVM({
     },
     [account, form, selectedErc20, spenderResolver]
   );
+
+  useEffect(() => {
+    if (getFee) {
+      const departure = form.getFieldValue(FORM_CONTROL.transfer).from;
+
+      getFee(departure, selectedErc20!).then(setFee);
+    }
+  }, [form, getFee, selectedErc20]);
 
   useEffect(() => {
     const fn = () => (data: RedeemDVMToken | IssuingDVMToken) => {
@@ -345,7 +367,8 @@ export function DVM({
       <TransferInfo
         amount={curAmount}
         tokenInfo={selectedErc20}
-        arrival={form.getFieldValue(FORM_CONTROL.transfer).to}
+        transfer={form.getFieldValue(FORM_CONTROL.transfer)}
+        fee={fee}
         dailyLimit={dailyLimit}
       />
     </>
