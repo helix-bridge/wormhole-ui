@@ -30,6 +30,14 @@ const BRIDGES: BridgeComponents[] = [
   [[{ network: 'ethereum', mode: 'native' }], Ethereum2Darwinia, E2DRecord],
   [[{ network: 'ropsten', mode: 'native' }], Ethereum2Darwinia, E2DRecord],
   [[{ network: 'darwinia', mode: 'native' }], Darwinia2Ethereum, D2ERecord],
+  [
+    [
+      { network: 'darwinia', mode: 'native' },
+      { network: 'crab', mode: 'dvm' },
+    ],
+    Substrate2SubstrateDVM,
+    S2SRecord,
+  ],
   [[{ network: 'pangolin', mode: 'native' }], Darwinia2Ethereum, D2ERecord],
   [
     [
@@ -54,6 +62,14 @@ const BRIDGES: BridgeComponents[] = [
     [
       { network: 'pangolin', mode: 'dvm' },
       { network: 'pangoro', mode: 'native' },
+    ],
+    SubstrateDVM2Substrate,
+    S2SRecord,
+  ],
+  [
+    [
+      { network: 'crab', mode: 'dvm' },
+      { network: 'darwinia', mode: 'native' },
     ],
     SubstrateDVM2Substrate,
     S2SRecord,

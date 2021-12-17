@@ -169,7 +169,7 @@ export function Configuration({ network }: ConfigurationProps) {
                 }}
                 type="primary"
                 danger={!isCustom}
-                className="w-full"
+                className="w-full overflow-hidden"
               >
                 {t(isCustom ? 'Restore System Configuration' : 'Store And Replace System Configuration')}
               </Button>

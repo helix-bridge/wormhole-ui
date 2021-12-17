@@ -1,11 +1,9 @@
 import { ClockCircleOutlined, ImportOutlined, RightOutlined } from '@ant-design/icons';
 import { Collapse, Progress, Tooltip } from 'antd';
-import { format, utcToZonedTime } from 'date-fns-tz';
-import { fromUnixTime } from 'date-fns/esm';
+import { fromUnixTime, format } from 'date-fns/esm';
 import { PropsWithChildren, useMemo } from 'react';
 import { DATE_TIME_FORMATE } from '../../config';
 import { ChainConfig } from '../../model';
-import { chainConfigToVertices, isSubstrate2SubstrateDVM } from '../../utils';
 import { EllipsisMiddle } from '../EllipsisMiddle';
 import { AssetOverview, AssetOverviewProps } from './AssetOverview';
 import { ProgressesProps, State } from './Progress';
@@ -21,21 +19,6 @@ export interface RecordProps extends ProgressesProps {
 }
 
 const PERCENT_HUNDRED = 100;
-
-function toLocalDateTime(timestamp: number): string {
-  const date = fromUnixTime(timestamp);
-  const dateAry = date.toString().split(' ');
-  const pos = -2;
-  const gmt = dateAry[dateAry.length + pos];
-  const zonedTime = utcToZonedTime(date, gmt);
-  const hour = zonedTime.getUTCHours();
-  const minute = zonedTime.getUTCMinutes();
-  const sec = zonedTime.getUTCSeconds().toString();
-  const zonedTimeStr = `${hour}:${minute}:${sec.length > 1 ? sec : '0' + sec}`;
-  const dateStr = date.toLocaleDateString();
-
-  return dateStr + ' ' + zonedTimeStr;
-}
 
 export function Record({
   assets,
@@ -101,12 +84,7 @@ export function Record({
             <div className="flex flex-col justify-between ml-0 md:ml-4 mt-2 md:mt-0 col-span-3 md:col-span-1">
               <span className="flex items-center mb-2">
                 <ClockCircleOutlined />
-                <span className="ml-2">
-                  {/* TODO: fix time format from indexer */}
-                  {isSubstrate2SubstrateDVM(chainConfigToVertices(departure!), chainConfigToVertices(arrival!))
-                    ? toLocalDateTime(blockTimestamp)
-                    : format(fromUnixTime(blockTimestamp), DATE_TIME_FORMATE)}
-                </span>
+                <span className="ml-2">{format(fromUnixTime(blockTimestamp), DATE_TIME_FORMATE) + ' (+UTC)'}</span>
               </span>
 
               <span className="w-full flex items-center">

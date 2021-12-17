@@ -68,8 +68,8 @@ export function S2SRecord({
     return [transactionSend, originLocked, targetDelivered, originConfirmed]; // make sure the order is consist with position defined in ProgressPosition
   });
   const { count, currency } = useMemo<{ count: string; currency: string }>(
-    () => ({ count: record.amount, currency: isRedeem ? 'xORING' : 'ORING' }),
-    [record.amount, isRedeem]
+    () => ({ count: record.amount, currency: `${isRedeem ? 'x' : ''}${departure?.isTest ? 'O' : ''}RING` }),
+    [record.amount, isRedeem, departure]
   );
   /**
    * undefined: no query result;
