@@ -7,6 +7,7 @@
   "Amount": "数量",
   "Appearance of the application": "应用外观的相关信息",
   "Approve": "授权",
+  "Approve Success {{account}}": "授权成功: {{account}}",
   "Asset": "资产",
   "Asset Type": "资产类型",
   "Available": "可用",

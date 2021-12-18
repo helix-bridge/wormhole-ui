@@ -173,7 +173,7 @@ export function DVM({
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
   const unit = useMemo(() => (selectedErc20 ? getUnit(+selectedErc20.decimals) : 'ether'), [selectedErc20]);
   const { observer } = useTx();
-  const { afterTx } = useAfterSuccess();
+  const { afterTx, afterApprove } = useAfterSuccess();
   const [fee, setFee] = useState<string>('');
   const refreshAllowance = useCallback(
     async (config: ChainConfig) => {
@@ -330,7 +330,7 @@ export function DVM({
                     createTxWorkflow(
                       beforeTx,
                       txObs,
-                      afterTx(ApproveSuccess, { onDisappear: () => refreshAllowance(value.transfer.from) })(value)
+                      afterApprove(ApproveSuccess, { onDisappear: () => refreshAllowance(value.transfer.from) })(value)
                     ).subscribe(observer);
                   }}
                   type="link"
