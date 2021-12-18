@@ -39,7 +39,7 @@ describe('Substrate DVM to Substrate', () => {
     cy.wait(5000);
     cy.confirmMetamaskPermissionToSpend();
 
-    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
+    cy.get('.ant-message', { timeout: 1 * 60 * 1000 })
       .find('a')
       .should('have.text', 'View in Etherscan explorer');
   });

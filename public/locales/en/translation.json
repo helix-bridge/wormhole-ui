@@ -7,6 +7,7 @@
   "Amount": "Amount",
   "Appearance of the application": "Appearance of the application",
   "Approve": "Approve",
+  "Approve Success {{account}}": "Approve Success: {{account}}",
   "Asset": "Asset",
   "Asset Type": "Asset Type",
   "Available": "Available",
