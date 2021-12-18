@@ -1,4 +1,4 @@
-import { ModalProps } from 'antd';
+import { ModalProps, message } from 'antd';
 import { FunctionComponent, useCallback, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
@@ -79,5 +79,30 @@ export function useAfterSuccess<
     [chain.ss58Format, history, t]
   );
 
-  return { afterTx };
+  const afterApprove = useCallback(
+    (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Comp: FunctionComponent<TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>>,
+        {
+          onDisappear,
+          unit,
+          hashType = 'txHash',
+        }: Exclude<ModalProps, 'onCancel'> & {
+          onDisappear: (value: T, tx: Tx) => void;
+          hashType?: TxHashType;
+          unit?: Unit;
+        }
+      ) =>
+      (value: T) =>
+      (tx: Tx) =>
+      () => {
+        message.success({
+          content: <Comp tx={tx} value={value} hashType={hashType} unit={unit} />,
+          onClose: onDisappear,
+        });
+      },
+    []
+  );
+
+  return { afterTx, afterApprove };
 }

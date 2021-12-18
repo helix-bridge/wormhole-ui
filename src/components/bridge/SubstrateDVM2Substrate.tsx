@@ -11,7 +11,7 @@ import {
   MappedToken,
   PolkadotConfig,
 } from '../../model';
-import { entrance, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../utils';
+import { entrance, fromWei, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../utils';
 import { DVM } from './DVM';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
@@ -51,6 +51,18 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
     [form]
   );
 
+  const getFee = useCallback(async (config: ChainConfig) => {
+    const api = entrance.polkadot.getInstance(config.provider.rpc);
+
+    await waitUntilConnected(api);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = (await (api.rpc as any).fee.marketFee()) as { amount: string };
+    const num = fromWei({ value: res.amount.toString(), unit: 'gwei' });
+
+    return num;
+  }, []);
+
   return (
     <DVM
       form={form}
@@ -61,6 +73,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
       tokenRegisterStatus={RegisterStatus.registered}
       approveOptions={{ gas: '21000000', gasPrice: '50000000000' }}
       getDailyLImit={getDailyLImit}
+      getFee={getFee}
       isDVM={false}
     />
   );

@@ -262,7 +262,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
   } = useApi();
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();
-  const { afterTx } = useAfterSuccess<ApproveValue>();
+  const { afterTx, afterApprove } = useAfterSuccess<ApproveValue>();
   const account = useMemo(() => {
     const acc = (accounts || [])[0];
 
@@ -484,7 +484,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
                       createApproveRingTx(
                         value,
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        afterTx(ApproveSuccess, { onDisappear: refreshAllowance })(value as unknown as any)
+                        afterApprove(ApproveSuccess, { onDisappear: refreshAllowance })(value as unknown as any)
                       ).subscribe(observer);
                     }}
                     size="small"
