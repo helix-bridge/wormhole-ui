@@ -4,13 +4,14 @@ import BN from 'bn.js';
 import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { EMPTY, from, switchMap } from 'rxjs';
+import { EMPTY, from, switchMap, takeWhile } from 'rxjs';
 import { abi, FORM_CONTROL, RegisterStatus } from '../../config';
 import {
   useAfterSuccess,
   useApi,
   useDarwiniaAvailableBalances,
   useDeparture,
+  useIsMounted,
   useMappedTokens,
   useTx,
 } from '../../hooks';
@@ -171,6 +172,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
     },
     [form, targetChainTokens]
   );
+  const isMounted = useIsMounted();
 
   useEffect(() => {
     const fn = () => (data: IssuingSubstrateToken) => {
@@ -203,7 +205,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
     };
 
     setSubmit(fn);
-  }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setSubmit]);
+  }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
@@ -235,25 +237,35 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
+    const subscription = from(getBalances(sender)).subscribe(setAvailableBalances);
 
-    getBalances(sender).then(setAvailableBalances);
-  }, [accounts, getBalances]);
+    return () => subscription.unsubscribe();
+  }, [accounts, getBalances, setAvailableBalances]);
 
   useEffect(() => {
     if (chain.tokens.length) {
       const asset = chain.tokens[0].symbol;
+      const sub$$ = from(getBalances(form.getFieldValue(FORM_CONTROL.sender))).subscribe(setAvailableBalances);
+      const sub2$$ = from(getDailyLimit(asset)).subscribe(setDailyLimit);
 
       form.setFieldsValue({ [FORM_CONTROL.asset]: asset });
-      getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
-      getDailyLimit(asset).then(setDailyLimit);
+
+      return () => {
+        sub$$.unsubscribe();
+        sub2$$.unsubscribe();
+      };
     }
-  }, [chain.tokens, form, getBalances, getDailyLimit]);
+  }, [chain.tokens, form, getBalances, getDailyLimit, setAvailableBalances, setDailyLimit]);
 
   return (
     <>
       <PolkadotAccountsItem
         availableBalances={availableBalances}
-        onChange={(value) => getBalances(value).then(setAvailableBalances)}
+        onChange={(value) =>
+          from(getBalances(value))
+            .pipe(takeWhile(() => isMounted))
+            .subscribe(setAvailableBalances)
+        }
       />
 
       <RecipientItem
@@ -268,8 +280,13 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
         <Select
           size="large"
           onChange={(value: string) => {
-            getBalances(form.getFieldValue(FORM_CONTROL.sender)).then(setAvailableBalances);
-            getDailyLimit(value).then(setDailyLimit);
+            from(getBalances(form.getFieldValue(FORM_CONTROL.sender)))
+              .pipe(takeWhile(() => isMounted))
+              .subscribe(setAvailableBalances);
+
+            from(getDailyLimit(value))
+              .pipe(takeWhile(() => isMounted))
+              .subscribe(setDailyLimit);
           }}
           placeholder={t('Please select token to be transfer')}
         >
