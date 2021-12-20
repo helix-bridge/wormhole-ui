@@ -1,3 +1,16 @@
+## [2.1.6](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.5...v2.1.6) (2021-12-20)
+
+### Bug Fixes
+
+- bump darwinia types to fix prod ([#227](https://github.com/darwinia-network/wormhole-pro/issues/227)) ([46409bb](https://github.com/darwinia-network/wormhole-pro/commit/46409bb4dbe240558ceba89efa1e5370b1bc0c7a))
+- record time ([#219](https://github.com/darwinia-network/wormhole-pro/issues/219)) ([5636840](https://github.com/darwinia-network/wormhole-pro/commit/5636840c0e3f0ecac344605259a95dfcd48e6e32))
+- **#23:** add daily limit check ([#208](https://github.com/darwinia-network/wormhole-pro/issues/208)) ([0809aab](https://github.com/darwinia-network/wormhole-pro/commit/0809aab45b32dba55f24182304ff4a82d3aff25b)), closes [#23](https://github.com/darwinia-network/wormhole-pro/issues/23)
+
+### Features
+
+- custom configuration ([#206](https://github.com/darwinia-network/wormhole-pro/issues/206)) ([b02322c](https://github.com/darwinia-network/wormhole-pro/commit/b02322c21f6005517e14d5c998fd13a36d1f98f8))
+- support s2s formal bridge ([4df5e4e](https://github.com/darwinia-network/wormhole-pro/commit/4df5e4e831bc3687a4bbcf8ed21ebc04b3ebfae7))
+
 ## [2.1.5](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.4...v2.1.5) (2021-11-26)
 
 ### Bug Fixes
