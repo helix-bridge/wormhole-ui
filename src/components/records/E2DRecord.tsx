@@ -32,28 +32,26 @@ export function E2DRecord({
       : departure;
     const transactionSend: ProgressProps = {
       title: t('{{chain}} Sent', { chain: from?.name }),
-      steps: [{ name: '', state: State.completed }],
+      steps: [{ state: State.completed }],
       network: from,
     };
 
     const originLocked: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: from?.name }),
-      steps: [{ name: 'confirm', state: tx ? State.completed : State.pending, txHash: tx }],
+      steps: [{ state: tx ? State.completed : State.pending, txHash: tx }],
       network: from,
     };
 
     const relayerConfirmed: ProgressProps = {
       title: t('ChainRelay Confirmed'),
-      steps: [{ name: 'confirm', state: is_relayed ? State.completed : State.pending }],
+      steps: [{ state: is_relayed ? State.completed : State.pending }],
       icon: 'relayer.svg',
       network: null,
     };
 
     const targetConfirmed: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: arrival?.name }),
-      steps: [
-        { name: 'confirm', state: darwinia_tx || isGenesis ? State.completed : State.pending, txHash: darwinia_tx },
-      ],
+      steps: [{ state: darwinia_tx || isGenesis ? State.completed : State.pending, txHash: darwinia_tx }],
       network: arrival,
     };
 

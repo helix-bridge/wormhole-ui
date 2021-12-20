@@ -12,7 +12,7 @@ import React, { SetStateAction, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Subscription } from 'rxjs';
 import { useTx } from '../../hooks';
-import { ChainConfig } from '../../model';
+import { BridgeDispatchEventRecord, ChainConfig } from '../../model';
 import { isEthereumNetwork, isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../SubscanLink';
 
@@ -27,9 +27,9 @@ export enum State {
 interface Step {
   indexing?: IndexingState;
   mutateState?: (monitor: React.Dispatch<SetStateAction<boolean>>) => Subscription;
-  name: string;
   state: State;
   txHash?: string;
+  deliverMethod?: BridgeDispatchEventRecord['method'];
 }
 
 export interface ProgressProps {
@@ -46,12 +46,13 @@ export interface ProgressesProps {
 
 export enum IndexingState {
   indexing = 'indexing',
-  indexingCompleted = 'indexingCompleted',
+  success = 'success',
+  fail = 'fail',
 }
 
 export const transactionSend: ProgressProps = {
   title: <Trans>Source-chain Sent</Trans>,
-  steps: [{ name: '', state: State.completed }],
+  steps: [{ state: State.completed }],
   network: null,
 };
 
@@ -106,7 +107,7 @@ export function Progress({ steps, title, icon, className = '', network }: Progre
       );
     }
 
-    if (indexing === IndexingState.indexingCompleted) {
+    if (indexing === IndexingState.fail) {
       return (
         <Tooltip title={t('Failed to query transaction hash')}>
           <Button size="small" className="text-xs" icon={<WarningOutlined style={{ verticalAlign: 0 }} />} disabled>
@@ -183,7 +184,13 @@ export function Progress({ steps, title, icon, className = '', network }: Progre
             className={` w-4 md:w-10 rounded-full overflow-hidden ${iconColorCls} `}
           />
           {progressItemState === State.error && (
-            <ExclamationCircleFilled className="absolute -top-1 -right-1 text-red-500 text-xs" />
+            <Tooltip
+              title={steps
+                .find((item) => item.state === State.error)
+                ?.deliverMethod?.replace(/([a-z])([A-Z])/g, '$1 $2')}
+            >
+              <ExclamationCircleFilled className="absolute -top-1 -right-1 text-red-500 text-xs" />
+            </Tooltip>
           )}
         </div>
         <span className="capitalize mt-4 dark:text-gray-200 text-gray-900">{title}</span>
