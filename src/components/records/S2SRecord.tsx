@@ -1,124 +1,98 @@
-import { omit } from 'lodash';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Subscription, switchMapTo, tap } from 'rxjs';
 import { RecordComponentProps } from '../../config';
 import { useS2SRecords } from '../../hooks';
-import { ApiKeys, PolkadotConfig, S2SBurnRecordRes, S2SHistoryRecord, S2SIssuingRecordRes } from '../../model';
-import { convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM, chainConfigToVertices } from '../../utils';
+import {
+  ApiKeys,
+  BridgeDispatchEventRecord,
+  PolkadotConfig,
+  S2SBurnRecordRes,
+  S2SHistoryRecord,
+  S2SIssuingRecordRes,
+} from '../../model';
+import { chainConfigToVertices, convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM } from '../../utils';
 import { IndexingState, Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
-enum ProgressPosition {
-  send,
-  originLocked,
-  targetDelivered,
-  originConfirmed,
-}
-
 export function S2SRecord({
-  record,
+  record: originRecord,
   departure,
   arrival,
 }: RecordComponentProps<S2SHistoryRecord, PolkadotConfig<ApiKeys>, PolkadotConfig<ApiKeys>>) {
   const { t } = useTranslation();
-  const {
-    fetchS2SIssuingRecord,
-    fetchS2SRedeemRecord,
-    fetchS2SIssuingMappingRecord,
-    fetchS2SUnlockRecord,
-    fetchMessageEvent,
-  } = useS2SRecords(departure!, arrival!);
+  const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchMessageEvent } = useS2SRecords(departure!, arrival!);
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
-
-  const [progresses, setProgresses] = useState<ProgressProps[]>(() => {
-    const { requestTxHash, responseTxHash, result } = record;
-
-    const transactionSend: ProgressProps = {
+  const [record, setRecord] = useState(originRecord);
+  const [messageEvent, setMessageEvent] = useState<BridgeDispatchEventRecord | null>(null);
+  const transactionSend = useMemo(
+    () => ({
       title: t('{{chain}} Sent', { chain: departure?.name }),
-      steps: [{ name: '', state: State.completed }],
+      steps: [{ state: State.completed }],
       network: departure,
-    };
-
-    const originLocked: ProgressProps = {
+    }),
+    [departure, t]
+  );
+  const originLocked = useMemo(
+    () => ({
       title: t('{{chain}} Locked', { chain: departure?.name }),
-      steps: [
-        {
-          name: 'locked',
-          state: requestTxHash ? State.completed : State.pending,
-          txHash: requestTxHash,
-        },
-      ],
+      steps: [{ state: record.requestTxHash ? State.completed : State.pending, txHash: record.requestTxHash }],
       network: departure,
       icon: 'lock.svg',
-    };
+    }),
+    [departure, record.requestTxHash, t]
+  );
 
-    const targetDelivered: ProgressProps = {
+  // eslint-disable-next-line complexity
+  const bridgeDelivered = useMemo<ProgressProps>(() => {
+    const { responseTxHash: txHash, result } = record;
+
+    let state = result;
+
+    if (messageEvent) {
+      state = messageEvent.isSuccess ? State.completed : State.error;
+    }
+
+    return {
       title: t(result === State.error ? '{{chain}} Deliver Failed' : '{{chain}} Delivered', { chain: arrival?.name }),
-      steps: [{ name: 'confirmed', state: result, txHash: undefined, indexing: IndexingState.indexing }],
+      steps: [
+        {
+          state,
+          txHash,
+          indexing: !txHash
+            ? IndexingState.indexing
+            : messageEvent && messageEvent.method === 'MessageDispatched'
+            ? IndexingState.success
+            : IndexingState.fail,
+          deliverMethod: messageEvent?.method,
+        },
+      ],
       network: arrival,
     };
+  }, [arrival, messageEvent, record, t]);
 
-    const originConfirmed: ProgressProps = {
-      title: t(result === State.error ? '{{chain}} Confirm Failed' : '{{chain}} Confirmed', { chain: departure?.name }),
-      steps: [{ name: 'confirmed', state: result, txHash: responseTxHash }],
+  const originConfirmed = useMemo(() => {
+    const { result: state, responseTxHash: txHash } = record;
+
+    return {
+      title: t(state === State.error ? '{{chain}} Confirm Failed' : '{{chain}} Confirmed', { chain: departure?.name }),
+      steps: [{ state, txHash, deliverMethod: messageEvent?.method }],
       network: departure,
     };
+  }, [departure, messageEvent, record, t]);
 
-    return [transactionSend, originLocked, targetDelivered, originConfirmed]; // make sure the order is consist with position defined in ProgressPosition
-  });
   const { count, currency } = useMemo<{ count: string; currency: string }>(
     () => ({ count: record.amount, currency: `${isRedeem ? 'x' : ''}${departure?.isTest ? 'O' : ''}RING` }),
     [record.amount, isRedeem, departure]
   );
-  /**
-   * undefined: no query result;
-   * null: no result until polling finished.
-   */
-  const [deliveredRecord, setDeliveredRecord] = useState<S2SHistoryRecord | null | undefined>();
-  const [confirmedRecord, setConfirmedRecord] = useState<S2SHistoryRecord | null | undefined>();
-
-  const updateProgresses = useCallback((idx: number, res: S2SHistoryRecord | null, source: ProgressProps[]) => {
-    const data = [...source];
-
-    if (!res) {
-      data[idx] = {
-        ...data[idx],
-        steps: data[idx].steps.map((step) =>
-          step.txHash ? omit(step, 'indexing') : { ...step, indexing: IndexingState.indexingCompleted }
-        ),
-      };
-    } else {
-      const { result: originConfirmResult, responseTxHash: originResponseTx } = res;
-
-      data[idx] = {
-        ...data[idx],
-        steps: [{ name: 'confirmed', state: originConfirmResult, txHash: originResponseTx }],
-      };
-    }
-
-    return data;
-  }, []);
+  const progresses = [transactionSend, originLocked, bridgeDelivered, originConfirmed];
 
   useEffect(() => {
     const { laneId, nonce, result } = record;
     const attemptsCount = 100;
     const isS2DVM = isSubstrate2SubstrateDVM(chainConfigToVertices(departure!), chainConfigToVertices(arrival!));
-    const queryTargetRecord = isS2DVM ? fetchS2SIssuingMappingRecord : fetchS2SUnlockRecord;
     const queryOriginRecord = isS2DVM ? fetchS2SIssuingRecord : fetchS2SRedeemRecord;
-    const observer = {
-      next: (res: S2SHistoryRecord) => {
-        setDeliveredRecord(res);
-      },
-      complete: () => {
-        setDeliveredRecord(null);
-      },
-    };
     let subscription: Subscription | null = null;
-
-    if (record.result === State.completed) {
-      subscription = queryTargetRecord(laneId, nonce, { attemptsCount }).subscribe(observer);
-    }
 
     /**
      * Polling events of `bridgeDispatch` section, if MessageDispatched event occurred and it's result is ok, deliver success
@@ -127,13 +101,7 @@ export function S2SRecord({
     if (record.result === State.pending) {
       subscription = fetchMessageEvent(laneId, nonce, { attemptsCount })
         .pipe(
-          tap((res) => {
-            const { isSuccess } = res;
-            return setDeliveredRecord({
-              ...record,
-              result: isSuccess ? State.completed : State.error,
-            } as S2SHistoryRecord);
-          }),
+          tap(setMessageEvent),
           switchMapTo(
             queryOriginRecord(laneId, nonce, {
               attemptsCount,
@@ -143,11 +111,12 @@ export function S2SRecord({
                 return event.result === result;
               },
               skipCache: true,
-            }).pipe(tap((res) => setConfirmedRecord(res)))
-          ),
-          switchMapTo(queryTargetRecord(laneId, nonce, { attemptsCount }))
+            })
+          )
         )
-        .subscribe(observer);
+        .subscribe(setRecord);
+    } else {
+      subscription = fetchMessageEvent(laneId, nonce, { attemptsCount }).subscribe(setMessageEvent);
     }
 
     return () => {
@@ -159,23 +128,8 @@ export function S2SRecord({
   }, []);
 
   useEffect(() => {
-    if (deliveredRecord !== undefined) {
-      const current = updateProgresses(ProgressPosition.targetDelivered, deliveredRecord, progresses);
-
-      setProgresses(current);
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deliveredRecord]);
-
-  useEffect(() => {
-    if (confirmedRecord !== undefined) {
-      const current = updateProgresses(ProgressPosition.targetDelivered, confirmedRecord, progresses);
-
-      setProgresses(current);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [confirmedRecord]);
+    setRecord(originRecord);
+  }, [originRecord]);
 
   return (
     <Record

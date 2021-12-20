@@ -117,14 +117,13 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
   const progresses = useMemo<ProgressProps[]>(() => {
     const transactionSend: ProgressProps = {
       title: t('{{chain}} Sent', { chain: departure?.name }),
-      steps: [{ name: '', state: State.completed }],
+      steps: [{ state: State.completed }],
       network: departure,
     };
     const originLocked: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: departure?.name }),
       steps: [
         {
-          name: 'confirm',
           state: extrinsic_index ? State.completed : State.pending,
           txHash: extrinsic_index,
         },
@@ -135,7 +134,6 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
       title: t('ChainRelay Confirmed'),
       steps: [
         {
-          name: 'confirm',
           state: signatures ? State.completed : State.pending,
           mutateState: signatures && !hash ? claim : undefined,
         },
@@ -147,7 +145,7 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
     const targetConfirmedState = targetConfirmedHash ? State.completed : State.pending;
     const targetConfirmed: ProgressProps = {
       title: t('{{chain}} Confirmed', { chain: arrival?.name }),
-      steps: [{ name: 'confirm', state: targetConfirmedState, txHash: targetConfirmedHash }],
+      steps: [{ state: targetConfirmedState, txHash: targetConfirmedHash }],
       network: arrival,
     };
 

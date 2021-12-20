@@ -8,7 +8,6 @@ import { catchError, EMPTY, from, map, Observable, of, Subscription, switchMap, 
 import Web3 from 'web3';
 import {
   BRIDGE_DISPATCH_EVENTS,
-  S2S_ISSUING_MAPPING_RECORD_QUERY,
   S2S_ISSUING_RECORDS_QUERY,
   S2S_REDEEM_RECORDS_QUERY,
   S2S_REDEEM_RECORD_QUERY,
@@ -26,10 +25,8 @@ import {
   S2SBurnRecordRes,
   S2SBurnRecordsRes,
   S2SHistoryRecord,
-  S2SIssuingMappingRecordRes,
   S2SIssuingRecordRes,
   S2SLockedRecordRes,
-  S2SUnlockRecordRes,
 } from '../model';
 import {
   isDarwinia2Ethereum,
@@ -214,21 +211,6 @@ const burnRecordMapper = ({
     ...rest,
   } as S2SHistoryRecord);
 
-const issuingMappingRecordMapper = (res: S2SIssuingMappingRecordRes['lockRecordEntity']) => {
-  const { transaction, recipient, amount, mapping_token, lane_id, nonce } = res || {};
-
-  return {
-    responseTxHash: transaction,
-    requestTxHash: transaction,
-    amount,
-    token: mapping_token,
-    laneId: lane_id,
-    nonce,
-    recipient,
-    result: 1,
-  } as S2SHistoryRecord;
-};
-
 interface FetchRecordOptions<T> {
   attemptsCount?: number;
   keepActive?: (res: T) => boolean;
@@ -245,9 +227,7 @@ export function useS2SRecords(
   fetchS2SIssuingRecords: FetchS2SRecords;
   fetchS2SRedeemRecords: FetchS2SRecords;
   fetchS2SIssuingRecord: FetchS2SRecord<S2SIssuingRecordRes, S2SHistoryRecord>;
-  fetchS2SUnlockRecord: FetchS2SRecord<S2SUnlockRecordRes, S2SHistoryRecord>;
   fetchS2SRedeemRecord: FetchS2SRecord<S2SBurnRecordRes, S2SHistoryRecord>;
-  fetchS2SIssuingMappingRecord: FetchS2SRecord<S2SIssuingMappingRecordRes, S2SHistoryRecord>;
   fetchMessageEvent: FetchS2SRecord<BridgeDispatchEventRes, BridgeDispatchEventRecord>;
 } {
   const issuingClient = useMemo(
@@ -262,10 +242,6 @@ export function useS2SRecords(
     () => new GraphQLClient({ url: departure.api.subGraph || UNKNOWN_CLIENT }),
     [departure.api.subGraph]
   );
-  const redeemTargetClient = useMemo(
-    () => new GraphQLClient({ url: arrival.api.subGraph || UNKNOWN_CLIENT }),
-    [arrival.api.subGraph]
-  );
   const { t } = useTranslation();
   // s2s issuing
   const [fetchLockedRecords] = useManualQuery<S2SLockedRecordRes>(S2S_ISSUING_RECORDS_QUERY, {
@@ -276,18 +252,10 @@ export function useS2SRecords(
     skipCache: true,
     client: issuingClient,
   });
-  const [fetchUnlockRecord] = useManualQuery<S2SUnlockRecordRes>(S2S_UNLOCK_RECORD_QUERY, {
-    skipCache: true,
-    client: issuingTargetClient,
-  });
   // s2s redeem, departure pangolin-smart
   const [fetchBurnRecords] = useManualQuery<S2SBurnRecordsRes>(S2S_REDEEM_RECORDS_QUERY, {
     skipCache: true,
     client: redeemClient,
-  });
-  const [fetchIssuingMappingRecord] = useManualQuery<S2SIssuingMappingRecordRes>(S2S_ISSUING_MAPPING_RECORD_QUERY, {
-    skipCache: true,
-    client: redeemTargetClient,
   });
   const [fetchBurnRecord] = useManualQuery<S2SBurnRecordRes>(S2S_REDEEM_RECORD_QUERY, {
     skipCache: true,
@@ -297,8 +265,6 @@ export function useS2SRecords(
     skipCache: true,
     client: issuingTargetClient,
   });
-  const [issuingMappingMemo, setIssuingMappingMemo] = useState<Record<string, S2SHistoryRecord>>({});
-  const [unlockedMemo, setUnlockedMemo] = useState<Record<string, S2SHistoryRecord>>({});
   const [issuingMemo, setIssuingMemo] = useState<Record<string, S2SHistoryRecord>>({});
   const [burnMemo, setBurnMemo] = useState<Record<string, S2SHistoryRecord>>({});
 
@@ -423,42 +389,6 @@ export function useS2SRecords(
     [fetchIssuingRecord, fetchRecord, issuingMemo]
   );
 
-  const fetchS2SUnlockRecord = useCallback<FetchS2SRecord<S2SUnlockRecordRes, S2SHistoryRecord>>(
-    (
-      laneId: string,
-      nonce: string,
-      { attemptsCount = Infinity, skipCache = false, keepActive: keepActive = (res) => !res.s2sEvent }
-    ) => {
-      return fetchRecord(
-        laneId + Web3.utils.toHex(nonce),
-        fetchUnlockRecord,
-        { skipCache, attemptsCount, keepActive: (res) => !res.data || keepActive(res.data) },
-        unlockedMemo,
-        setUnlockedMemo,
-        (res) => res.data.s2sEvent
-      );
-    },
-    [fetchRecord, fetchUnlockRecord, unlockedMemo]
-  );
-
-  const fetchS2SIssuingMappingRecord = useCallback<FetchS2SRecord<S2SIssuingMappingRecordRes, S2SHistoryRecord>>(
-    (
-      laneId: string,
-      nonce: string,
-      { attemptsCount = Infinity, skipCache = false, keepActive: keepActive = (res) => !res.lockRecordEntity }
-    ) => {
-      return fetchRecord(
-        laneId + Web3.utils.toHex(nonce),
-        fetchIssuingMappingRecord,
-        { skipCache, attemptsCount, keepActive: (res) => !res.data || keepActive(res.data) },
-        issuingMappingMemo,
-        setIssuingMappingMemo,
-        (res) => issuingMappingRecordMapper(res.data!.lockRecordEntity)
-      );
-    },
-    [fetchIssuingMappingRecord, fetchRecord, issuingMappingMemo]
-  );
-
   const fetchS2SRedeemRecord = useCallback<FetchS2SRecord<S2SBurnRecordRes, S2SHistoryRecord>>(
     (
       laneId: string,
@@ -508,8 +438,6 @@ export function useS2SRecords(
   );
 
   return {
-    fetchS2SIssuingMappingRecord,
-    fetchS2SUnlockRecord,
     fetchS2SIssuingRecords,
     fetchS2SRedeemRecords,
     fetchS2SRedeemRecord,

@@ -29,7 +29,10 @@ export function Record({
   items,
   children,
 }: PropsWithChildren<RecordProps>) {
-  const hasError = useMemo(() => items.find((item) => item.steps.find((step) => step.state === State.error)), [items]);
+  const errorProgress = useMemo(
+    () => items.find((item) => item.steps.find((step) => step.state === State.error)),
+    [items]
+  );
   const percent = useMemo(() => {
     const total = items.length;
     const finished = items.filter((item) => item.steps.every((step) => step.state !== State.pending));
@@ -37,11 +40,12 @@ export function Record({
     return (finished.length / total) * PERCENT_HUNDRED;
   }, [items]);
   const strokeColor = useMemo(() => {
-    if (percent === PERCENT_HUNDRED) {
-      return '#10b981';
+    if (errorProgress) {
+      return '#ef4444';
     }
-    return hasError ? '#ef4444' : 'normal';
-  }, [hasError, percent]);
+
+    return percent === PERCENT_HUNDRED ? '#10b981' : 'normal';
+  }, [errorProgress, percent]);
 
   if (!blockTimestamp) {
     return null;
@@ -68,14 +72,21 @@ export function Record({
                   <RightOutlined className="opacity-90" />
                 </div>
 
-                <Progress
-                  percent={hasError ? PERCENT_HUNDRED : percent}
-                  steps={items.length}
-                  showInfo={false}
-                  strokeColor={strokeColor}
-                  className="w-full absolute bottom-0 records-progress"
-                  style={{ width: 'calc(100% - 3rem)' }}
-                />
+                <Tooltip
+                  title={errorProgress?.steps
+                    .find((item) => item.state === State.error)
+                    ?.deliverMethod?.replace(/([a-z])([A-Z])/g, '$1 $2')}
+                  placement="right"
+                >
+                  <Progress
+                    percent={errorProgress ? PERCENT_HUNDRED : percent}
+                    steps={items.length}
+                    showInfo={false}
+                    strokeColor={strokeColor}
+                    className="w-full absolute bottom-0 records-progress"
+                    style={{ width: 'calc(100% - 3rem)' }}
+                  />
+                </Tooltip>
               </div>
 
               <img className="w-6 md:w-12 mx-auto" src={`/image/${arrival?.name}.png`} />

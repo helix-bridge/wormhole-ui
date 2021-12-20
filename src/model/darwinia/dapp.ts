@@ -126,18 +126,6 @@ export interface S2SBurnRecordRes {
   burnRecordEntity: S2SBurnRecord;
 }
 
-export interface S2SIssuingMappingRecordRes {
-  lockRecordEntity: {
-    id: string;
-    lane_id: string;
-    nonce: string;
-    mapping_token: string;
-    recipient: string;
-    transaction: string;
-    amount: string;
-  };
-}
-
 export interface S2SLockedRecordRes {
   s2sEvents: {
     totalCount: number;
@@ -148,8 +136,6 @@ export interface S2SLockedRecordRes {
 export interface S2SIssuingRecordRes {
   s2sEvent: S2SHistoryRecord;
 }
-
-export type S2SUnlockRecordRes = S2SIssuingRecordRes;
 
 export interface BridgeDispatchEventRecord {
   data: string; // json string [ChainId, [LaneId, MessageNonce], DispatchResult]
