@@ -95,20 +95,6 @@ export const S2S_UNLOCK_RECORD_QUERY = `
 `;
 
 /**
- * subgraph
- */
-export const S2S_ISSUING_MAPPING_RECORD_QUERY = `
-  query lockRecordEntity($id: String!) {
-    lockRecordEntity(id: $id) {
-      amount
-      mapping_token
-      recipient
-      transaction
-    }
-  }
-`;
-
-/**
  * subql subql-darwinia-mmr subql-pangolin-mmr
  */
 export const MMR_QUERY = `
