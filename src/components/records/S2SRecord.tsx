@@ -75,7 +75,7 @@ export function S2SRecord({
    * undefined: no query result;
    * null: no result until polling finished.
    */
-  const [deliveredRecord, setDeliveredRecord] = useState<S2SHistoryRecord | null | undefined>();
+  const [deliveredRecord, setDeliveredRecord] = useState<(S2SHistoryRecord & { method?: string }) | null | undefined>();
   const [confirmedRecord, setConfirmedRecord] = useState<S2SHistoryRecord | null | undefined>();
 
   const updateProgresses = useCallback((idx: number, res: S2SHistoryRecord | null, source: ProgressProps[]) => {
@@ -116,10 +116,6 @@ export function S2SRecord({
     };
     let subscription: Subscription | null = null;
 
-    if (record.result === State.completed) {
-      subscription = queryTargetRecord(laneId, nonce, { attemptsCount }).subscribe(observer);
-    }
-
     /**
      * Polling events of `bridgeDispatch` section, if MessageDispatched event occurred and it's result is ok, deliver success
      * other events represents failed.
@@ -129,7 +125,7 @@ export function S2SRecord({
         .pipe(
           tap((res) => {
             const { isSuccess } = res;
-            return setDeliveredRecord({
+            setDeliveredRecord({
               ...record,
               result: isSuccess ? State.completed : State.error,
             } as S2SHistoryRecord);
@@ -148,6 +144,16 @@ export function S2SRecord({
           switchMapTo(queryTargetRecord(laneId, nonce, { attemptsCount }))
         )
         .subscribe(observer);
+    } else {
+      subscription = fetchMessageEvent(laneId, nonce, { attemptsCount }).subscribe((res) => {
+        const { isSuccess, method } = res;
+
+        setDeliveredRecord({
+          ...record,
+          result: isSuccess ? State.completed : State.error,
+          method,
+        });
+      });
     }
 
     return () => {

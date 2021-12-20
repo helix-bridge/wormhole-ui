@@ -215,15 +215,13 @@ const burnRecordMapper = ({
   } as S2SHistoryRecord);
 
 const issuingMappingRecordMapper = (res: S2SIssuingMappingRecordRes['lockRecordEntity']) => {
-  const { transaction, recipient, amount, mapping_token, lane_id, nonce } = res || {};
+  const { transaction, recipient, amount, mapping_token } = res || {};
 
   return {
     responseTxHash: transaction,
     requestTxHash: transaction,
     amount,
     token: mapping_token,
-    laneId: lane_id,
-    nonce,
     recipient,
     result: 1,
   } as S2SHistoryRecord;
@@ -453,7 +451,7 @@ export function useS2SRecords(
         { skipCache, attemptsCount, keepActive: (res) => !res.data || keepActive(res.data) },
         issuingMappingMemo,
         setIssuingMappingMemo,
-        (res) => issuingMappingRecordMapper(res.data!.lockRecordEntity)
+        (res) => ({ ...issuingMappingRecordMapper(res.data!.lockRecordEntity), laneId, nonce })
       );
     },
     [fetchIssuingMappingRecord, fetchRecord, issuingMappingMemo]

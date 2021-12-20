@@ -37,10 +37,11 @@ export function Record({
     return (finished.length / total) * PERCENT_HUNDRED;
   }, [items]);
   const strokeColor = useMemo(() => {
-    if (percent === PERCENT_HUNDRED) {
-      return '#10b981';
+    if (hasError) {
+      return '#ef4444';
     }
-    return hasError ? '#ef4444' : 'normal';
+
+    return percent === PERCENT_HUNDRED ? '#10b981' : 'normal';
   }, [hasError, percent]);
 
   if (!blockTimestamp) {
