@@ -1,6 +1,6 @@
 import { message } from 'antd';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { map, of, switchMap, tap } from 'rxjs';
+import { map } from 'rxjs';
 import { RegisterStatus } from '../config';
 import {
   Action,
@@ -8,12 +8,11 @@ import {
   Erc20RegisterStatus,
   Erc20Token,
   EthereumConfig,
-  EthereumConnection,
   PangolinConfig,
   RequiredPartial,
   TransferNetwork,
 } from '../model';
-import { getEthConnection, isNetworkConsistent } from '../utils';
+import { isDVM, isEthereumNetwork } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
 import { getKnownMappedTokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
@@ -96,29 +95,22 @@ export const useMappedTokens = (
   );
 
   useEffect(() => {
-    if (!from || !to) {
+    if (!from || !to || !(isEthereumNetwork(from.name) || isDVM(from))) {
       updateTokens([]);
+      message.error(
+        'The departure and arrival networks must exist and the departure network must be an Ethereum network or a DVM network'
+      );
       return;
     }
 
-    // TODO: check metamask network if the connection is polkadot type
-    const connectionObs = connection.type === 'metamask' ? of(connection) : getEthConnection();
-    const subscription = connectionObs
-      .pipe(
-        map((res) => isNetworkConsistent(from!.name, (res as EthereumConnection).chainId)),
-        tap(() => setLoading(true)),
-        switchMap((isMatch) => {
-          if (!isMatch) {
-            return of({ total: 0, tokens: [] });
-          }
+    setLoading(true);
 
-          return getKnownMappedTokens(currentAccount, from, to).pipe(
-            map(({ tokens, total }) => ({
-              total,
-              tokens: status > 0 ? tokens.filter((item) => item.status && +item.status === status) : tokens,
-            }))
-          );
-        })
+    const subscription = getKnownMappedTokens(currentAccount, from, to)
+      .pipe(
+        map(({ tokens, total }) => ({
+          total,
+          tokens: status > 0 ? tokens.filter((item) => item.status && +item.status === status) : tokens,
+        }))
       )
       .subscribe({
         next: ({ tokens, total }) => {

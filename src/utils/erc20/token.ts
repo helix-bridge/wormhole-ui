@@ -1,6 +1,18 @@
-import { upperFirst } from 'lodash';
+import { memoize, upperFirst } from 'lodash';
 import { combineLatest, EMPTY, forkJoin, from, NEVER, Observable, of, take, timer, zip } from 'rxjs';
-import { catchError, delay, map, mergeMap, retry, retryWhen, scan, startWith, switchMap, tap } from 'rxjs/operators';
+import {
+  catchError,
+  delay,
+  map,
+  mergeMap,
+  retry,
+  retryWhen,
+  scan,
+  startWith,
+  switchMap,
+  switchMapTo,
+  tap,
+} from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus } from '../../config';
@@ -26,7 +38,7 @@ import {
   isSubstrateDVM2Substrate,
   MMRProof,
 } from '../helper';
-import { entrance, getAvailableNetwork, getMetamaskActiveAccount, chainConfigToVertices } from '../network';
+import { entrance, getAvailableNetwork, getMetamaskActiveAccount, chainConfigToVertices, connect } from '../network';
 import { rxGet } from '../records';
 import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
 import { getErc20Meta, getTokenBalance } from './meta';
@@ -40,6 +52,28 @@ export type StoredProof = {
 const proofMemo: StoredProof[] = [];
 
 /* --------------------------------------------Inner Section------------------------------------------------------- */
+
+async function mappingTokenLength(
+  departure: PangolinConfig | CrabConfig,
+  arrival: EthereumConfig,
+  mappingAddress: string
+) {
+  const web3 = entrance.web3.getInstance(departure.provider.rpc);
+  const s2s = isS2S(chainConfigToVertices(departure), chainConfigToVertices(arrival));
+  const mappingContract = new web3.eth.Contract(
+    s2s ? abi.S2SMappingTokenABI : abi.Erc20MappingTokenABI,
+    mappingAddress
+  );
+  const len: number = await mappingContract.methods.tokenLength().call();
+
+  return len;
+}
+
+const getMappingTokenLength = memoize(
+  mappingTokenLength,
+  (departure: PangolinConfig | CrabConfig, arrival: EthereumConfig, mappingAddress: string) =>
+    departure.name + '-' + arrival.name + '-' + mappingAddress
+);
 
 /**
  * @function getFromDvm - get all tokens at dvm side
@@ -58,7 +92,7 @@ function getMappedTokensFromDvm(
     s2s ? abi.S2SMappingTokenABI : abi.Erc20MappingTokenABI,
     mappingAddress
   );
-  const countObs = from(mappingContract.methods.tokenLength().call() as Promise<number>);
+  const countObs = from(getMappingTokenLength(departure, arrival, mappingAddress));
   // FIXME: method predicate logic below should be removed after abi method is unified.
   const getToken = (index: number) =>
     from(mappingContract.methods[s2s ? 'allMappingTokens' : 'allTokens'](index).call() as Promise<string>).pipe(
@@ -73,9 +107,10 @@ function getMappedTokensFromDvm(
         const statusObs = s2s
           ? of(1)
           : infoObs.pipe(switchMap(({ source }) => getTokenRegisterStatus(source, departure, false)));
-        const balanceObs = currentAccount
-          ? from(getTokenBalance(address, currentAccount, false))
-          : of(Web3.utils.toBN(0));
+        const balanceObs =
+          currentAccount && Web3.utils.isAddress(currentAccount)
+            ? from(getTokenBalance(address, currentAccount, false))
+            : of(Web3.utils.toBN(0));
 
         return zip(
           [tokenObs, infoObs, statusObs, balanceObs],
@@ -181,7 +216,7 @@ export const getKnownMappedTokens = (
     ? from(getS2SMappingParams(departure.provider.rpc))
     : from(getErc20MappingPrams(departure.provider.rpc));
 
-  return departure.type.includes('ethereum')
+  const tokens = departure.type.includes('ethereum')
     ? getMappedTokensFromEthereum(currentAccount, departure as EthereumConfig)
     : mappingAddressObs.pipe(
         switchMap(({ mappingAddress }) =>
@@ -193,6 +228,8 @@ export const getKnownMappedTokens = (
           )
         )
       );
+
+  return connect(departure).pipe(switchMapTo(tokens));
 };
 
 /**
