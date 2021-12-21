@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { RegisterStatus } from '../../config';
 import { BridgeFormProps, DVMTransfer, ChainConfig, RopstenConfig } from '../../model';
 import { redeemErc20 } from '../../utils';

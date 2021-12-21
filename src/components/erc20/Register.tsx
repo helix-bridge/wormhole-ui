@@ -1,7 +1,7 @@
 import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Empty, Form, Input, List, Progress, Spin, Tabs, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { from, mergeMap } from 'rxjs';
 import Web3 from 'web3';

@@ -4,7 +4,7 @@ import { FormInstance, Rule } from 'antd/lib/form';
 import BN from 'bn.js';
 import { format } from 'date-fns';
 import { TFunction } from 'i18next';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';

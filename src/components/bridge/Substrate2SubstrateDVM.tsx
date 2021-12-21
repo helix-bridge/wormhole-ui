@@ -4,7 +4,7 @@ import BN from 'bn.js';
 import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { EMPTY, from, switchMap, takeWhile } from 'rxjs';
+import { EMPTY, from, Subscription, switchMap, takeWhile } from 'rxjs';
 import { abi, FORM_CONTROL, RegisterStatus } from '../../config';
 import {
   useAfterSuccess,
@@ -243,18 +243,22 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
   }, [accounts, getBalances, setAvailableBalances]);
 
   useEffect(() => {
+    let sub$$: Subscription | null = null;
+    let sub2$$: Subscription | null = null;
+
     if (chain.tokens.length) {
       const asset = chain.tokens[0].symbol;
-      const sub$$ = from(getBalances(form.getFieldValue(FORM_CONTROL.sender))).subscribe(setAvailableBalances);
-      const sub2$$ = from(getDailyLimit(asset)).subscribe(setDailyLimit);
+
+      sub$$ = from(getBalances(form.getFieldValue(FORM_CONTROL.sender))).subscribe(setAvailableBalances);
+      sub2$$ = from(getDailyLimit(asset)).subscribe(setDailyLimit);
 
       form.setFieldsValue({ [FORM_CONTROL.asset]: asset });
-
-      return () => {
-        sub$$.unsubscribe();
-        sub2$$.unsubscribe();
-      };
     }
+
+    return () => {
+      sub$$?.unsubscribe();
+      sub2$$?.unsubscribe();
+    };
   }, [chain.tokens, form, getBalances, getDailyLimit, setAvailableBalances, setDailyLimit]);
 
   return (

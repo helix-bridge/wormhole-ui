@@ -1,7 +1,7 @@
 import { Button, Descriptions, Form } from 'antd';
 import BN from 'bn.js';
 import { isNull } from 'lodash';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Observable } from 'rxjs';

@@ -10,6 +10,8 @@ export const getChainInfo: (tokens: TokenChainInfo[], target: string) => TokenCh
   if (target) {
     return tokens.find((token) => token.symbol.toLowerCase().includes(target.toLowerCase()));
   }
+
+  return;
 };
 
 export function useDarwiniaAvailableBalances() {
