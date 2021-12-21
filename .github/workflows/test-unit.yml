@@ -9,7 +9,7 @@ jobs:
     name: Uint
     runs-on: ubuntu-latest
     container:
-      image: cypress/browsers:node14.18.1-chrome88-ff89
+      image: cypress/browsers:node14.17.0-chrome88-ff89
       options: --privileged
     steps:
       - uses: actions/checkout@v2
