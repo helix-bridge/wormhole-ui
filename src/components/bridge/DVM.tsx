@@ -4,7 +4,7 @@ import { isNull } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { from, Observable, of, Subscription, switchMap } from 'rxjs';
+import { from, Observable, of, Subscription, switchMap, takeWhile } from 'rxjs';
 import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
 import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappedTokens, useTx } from '../../hooks';
@@ -176,25 +176,34 @@ export function DVM({
   const { observer } = useTx();
   const { afterTx, afterApprove } = useAfterSuccess();
   const [fee, setFee] = useState<string>('');
-  const refreshAllowance = useCallback(
-    async (config: ChainConfig) => {
-      const spender = await spenderResolver(config);
-
-      return getAllowance(account, spender, selectedErc20).then((num) => {
-        setAllowance(num);
-        form.validateFields([FORM_CONTROL.amount]);
-      });
-    },
-    [account, form, selectedErc20, spenderResolver]
-  );
   const isMounted = useIsMounted();
+  const refreshAllowance = useCallback(
+    (config: ChainConfig) => {
+      if (isMounted) {
+        from(spenderResolver(config))
+          .pipe(
+            switchMap((spender) => getAllowance(account, spender, selectedErc20)),
+            takeWhile(() => isMounted)
+          )
+          .subscribe((num) => {
+            setAllowance(num);
+            form.validateFields([FORM_CONTROL.amount]);
+          });
+      }
+    },
+    [account, form, isMounted, selectedErc20, spenderResolver]
+  );
 
   useEffect(() => {
+    let sub$$: Subscription | null = null;
+
     if (getFee) {
       const departure = form.getFieldValue(FORM_CONTROL.transfer).from;
 
-      getFee(departure, selectedErc20!).then(setFee);
+      sub$$ = from(getFee(departure, selectedErc20!)).subscribe(setFee);
     }
+
+    return () => sub$$?.unsubscribe();
   }, [form, getFee, selectedErc20]);
 
   useEffect(() => {
@@ -282,11 +291,16 @@ export function DVM({
           tokens={tokens}
           total={total}
           onChange={async (erc20) => {
+            setSelectedErc20(erc20);
+
             const spender = await spenderResolver(form.getFieldValue(FORM_CONTROL.transfer).from);
             const allow = await getAllowance(account, spender, erc20);
 
-            setSelectedErc20(erc20);
             setAllowance(allow);
+
+            if (getDailyLimit && erc20?.address) {
+              getDailyLimit(erc20).then(setDailyLimit);
+            }
           }}
         />
       </Form.Item>
