@@ -1,8 +1,9 @@
 import { memoize, upperFirst } from 'lodash';
-import { combineLatest, EMPTY, forkJoin, from, NEVER, Observable, of, take, timer, zip } from 'rxjs';
+import { combineLatest, EMPTY, forkJoin, from, interval, NEVER, Observable, of, take, timer, zip } from 'rxjs';
 import {
   catchError,
   delay,
+  delayWhen,
   map,
   mergeMap,
   retry,
@@ -15,8 +16,9 @@ import {
 } from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
-import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus } from '../../config';
+import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus, SHORT_DURATION } from '../../config';
 import {
+  ChainConfig,
   CrabConfig,
   Erc20RegisterProof,
   Erc20RegisterProofRes,
@@ -38,7 +40,7 @@ import {
   isSubstrateDVM2Substrate,
   MMRProof,
 } from '../helper';
-import { entrance, getAvailableNetwork, getMetamaskActiveAccount, chainConfigToVertices, connect } from '../network';
+import { chainConfigToVertices, connect, entrance, getAvailableNetwork, getMetamaskActiveAccount } from '../network';
 import { rxGet } from '../records';
 import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
 import { getErc20Meta, getTokenBalance } from './meta';
@@ -53,25 +55,25 @@ const proofMemo: StoredProof[] = [];
 
 /* --------------------------------------------Inner Section------------------------------------------------------- */
 
-async function mappingTokenLength(
+function createMappingTokenContract(
   departure: PangolinConfig | CrabConfig,
-  arrival: EthereumConfig,
+  arrival: ChainConfig,
   mappingAddress: string
-) {
+): Contract {
   const web3 = entrance.web3.getInstance(departure.provider.rpc);
   const s2s = isS2S(chainConfigToVertices(departure), chainConfigToVertices(arrival));
-  const mappingContract = new web3.eth.Contract(
-    s2s ? abi.S2SMappingTokenABI : abi.Erc20MappingTokenABI,
-    mappingAddress
-  );
-  const len: number = await mappingContract.methods.tokenLength().call();
 
-  return len;
+  return new web3.eth.Contract(s2s ? abi.S2SMappingTokenABI : abi.Erc20MappingTokenABI, mappingAddress);
 }
 
 const getMappingTokenLength = memoize(
-  mappingTokenLength,
-  (departure: PangolinConfig | CrabConfig, arrival: EthereumConfig, mappingAddress: string) =>
+  async (departure: PangolinConfig | CrabConfig, arrival: ChainConfig, mappingAddress: string) => {
+    const mappingContract = createMappingTokenContract(departure, arrival, mappingAddress);
+    const len: number = await mappingContract.methods.tokenLength().call();
+
+    return len;
+  },
+  (departure: PangolinConfig | CrabConfig, arrival: ChainConfig, mappingAddress: string) =>
     departure.name + '-' + arrival.name + '-' + mappingAddress
 );
 
@@ -86,17 +88,27 @@ function getMappedTokensFromDvm(
   arrival: EthereumConfig,
   mappingAddress: string
 ) {
-  const web3 = entrance.web3.getInstance(departure.provider.rpc);
   const s2s = isS2S(chainConfigToVertices(departure), chainConfigToVertices(arrival));
-  const mappingContract = new web3.eth.Contract(
-    s2s ? abi.S2SMappingTokenABI : abi.Erc20MappingTokenABI,
-    mappingAddress
-  );
   const countObs = from(getMappingTokenLength(departure, arrival, mappingAddress));
   // FIXME: method predicate logic below should be removed after abi method is unified.
   const getToken = (index: number) =>
-    from(mappingContract.methods[s2s ? 'allMappingTokens' : 'allTokens'](index).call() as Promise<string>).pipe(
+    of(null).pipe(
+      switchMap(() => {
+        const mappingContract = createMappingTokenContract(departure, arrival, mappingAddress);
+
+        return from(mappingContract.methods[s2s ? 'allMappingTokens' : 'allTokens'](index).call() as Promise<string>);
+      }),
+      retryWhen((err) =>
+        err.pipe(
+          tap((error) => {
+            console.warn('WEB3 PROVIDER ERROR:', error.message);
+            entrance.web3.removeInstance(departure.provider.rpc);
+          }),
+          delayWhen(() => interval(SHORT_DURATION))
+        )
+      ),
       switchMap((address) => {
+        const mappingContract = createMappingTokenContract(departure, arrival, mappingAddress);
         const tokenObs = from(getErc20Meta(address));
         const infoObs = from(
           mappingContract.methods[s2s ? 'mappingToken2OriginalInfo' : 'tokenToInfo'](address).call() as Promise<{
@@ -163,12 +175,11 @@ function getMappedTokensFromEthereum(currentAccount: string, config: EthereumCon
 }
 
 function getMappedTokens(countObs: Observable<number>, token: (index: number) => Observable<MappedToken>) {
-  const interval = 200;
   const retryCount = 5;
   const tokensObs = countObs.pipe(
-    retry(retryCount),
-    switchMap((len) => timer(interval, 0).pipe(take(len))),
+    switchMap((len) => timer(SHORT_DURATION / 10, 0).pipe(take(len))),
     mergeMap((index) => token(index)),
+    retry(retryCount),
     scan((acc: MappedToken[], cur: MappedToken) => [...acc, cur], []),
     startWith([])
   );
@@ -206,7 +217,7 @@ const getSymbolType: (address: string) => Promise<{ symbol: string; isString: bo
 export const getKnownMappedTokens = (
   currentAccount: string,
   departure: PangolinConfig | CrabConfig | EthereumConfig,
-  arrival: PangolinConfig | CrabConfig | EthereumConfig
+  arrival: ChainConfig
 ): Observable<{ total: number; tokens: Erc20Token[] }> => {
   if (!currentAccount) {
     return of({ total: 0, tokens: [] });

@@ -1,6 +1,7 @@
 import { message } from 'antd';
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { useCallback, useMemo, useReducer, useState } from 'react';
 import { map } from 'rxjs';
+import useDeepCompareEffect from 'use-deep-compare-effect';
 import { RegisterStatus } from '../config';
 import {
   Action,
@@ -71,11 +72,6 @@ export const useMappedTokens = (
 ) => {
   const [loading, setLoading] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
-  const updateTokens = useCallback(
-    (tokens: MemoedTokenInfo[]) => dispatch({ payload: tokens, type: 'updateTokens' }),
-    []
-  );
-  const updateTotal = useCallback((total: number) => dispatch({ payload: total, type: 'updateTotal' }), []);
   const addKnownProof = useCallback((proofs: StoredProof) => dispatch({ payload: proofs, type: 'updateProof' }), []);
   const switchToConfirmed = useCallback((token: string) => dispatch({ payload: token, type: 'switchToConfirmed' }), []);
   const { connection } = useApi();
@@ -88,15 +84,15 @@ export const useMappedTokens = (
 
       if (index > 0) {
         tokens[index].balance = balance;
-        updateTokens(tokens);
+        dispatch({ payload: tokens, type: 'updateTokens' });
       }
     },
-    [currentAccount, updateTokens, state.tokens]
+    [currentAccount, state.tokens]
   );
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     if (!from || !to || !(isEthereumNetwork(from.name) || isDVM(from))) {
-      updateTokens([]);
+      dispatch({ payload: [], type: 'updateTokens' });
       message.error(
         'The departure and arrival networks must exist and the departure network must be an Ethereum network or a DVM network'
       );
@@ -114,8 +110,8 @@ export const useMappedTokens = (
       )
       .subscribe({
         next: ({ tokens, total }) => {
-          updateTokens(tokens);
-          updateTotal(total);
+          dispatch({ payload: tokens, type: 'updateTokens' });
+          dispatch({ payload: total, type: 'updateTotal' });
         },
         error: (error) => {
           message.error('Querying failed, please try it again later');
@@ -130,12 +126,12 @@ export const useMappedTokens = (
         subscription.unsubscribe();
       }
     };
-  }, [currentAccount, from, updateTokens, status, connection, to, updateTotal]);
+  }, [currentAccount, from, status, to]);
 
   return {
     ...state,
     loading,
-    updateTokens,
+    dispatch,
     addKnownProof,
     switchToConfirmed,
     refreshTokenBalance,

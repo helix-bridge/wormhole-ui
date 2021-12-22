@@ -30,7 +30,6 @@ abstract class Entrance<T> {
     this.apiList.push({ [url]: instance });
     this.afterInit(instance);
 
-    console.info('polkadot apiList: ', JSON.stringify(this.apiList.map((item) => Object.keys(item))));
     return instance;
   }
 

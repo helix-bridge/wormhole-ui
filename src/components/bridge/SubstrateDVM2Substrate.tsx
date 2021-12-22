@@ -34,14 +34,13 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
     return mappingAddress;
   }, []);
 
-  const getDailyLImit = useCallback(
-    async (token: MappedToken) => {
+  const getDailyLimit = useCallback(
+    async (_: MappedToken) => {
       const arrival = form.getFieldValue(FORM_CONTROL.transfer).to as PolkadotConfig<ApiKeys>;
       const api = entrance.polkadot.getInstance(arrival.provider.rpc);
 
       await waitUntilConnected(api);
 
-      console.info('%c [ tokenAddress ]-29', 'font-size:13px; background:pink; color:#bf2c9f;', token);
       // TODO: querying should rely on token info.
       const module = arrival.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
       const [spentToday, limit] = (await api.query[module].secureLimitedRingAmount()).toJSON() as [number, number];
@@ -72,7 +71,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
       spenderResolver={getSpender}
       tokenRegisterStatus={RegisterStatus.registered}
       approveOptions={{ gas: '21000000', gasPrice: '50000000000' }}
-      getDailyLImit={getDailyLImit}
+      getDailyLimit={getDailyLimit}
       getFee={getFee}
       isDVM={false}
     />

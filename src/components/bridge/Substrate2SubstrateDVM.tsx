@@ -4,25 +4,21 @@ import BN from 'bn.js';
 import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { EMPTY, from, Subscription, switchMap, takeWhile } from 'rxjs';
-import { abi, FORM_CONTROL, RegisterStatus } from '../../config';
-import {
-  useAfterSuccess,
-  useApi,
-  useDarwiniaAvailableBalances,
-  useDeparture,
-  useIsMounted,
-  useMappedTokens,
-  useTx,
-} from '../../hooks';
+import { EMPTY, from, of, Subscription, switchMap, takeWhile } from 'rxjs';
+import { abi, FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
+import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useIsMounted, useTx } from '../../hooks';
 import {
   AvailableBalance,
   BridgeFormProps,
+  ChainConfig,
+  CrabConfig,
   DailyLimit,
   EthereumChainDVMConfig,
   IssuingSubstrateToken,
+  MappedToken,
   Network,
   NoNullTransferNetwork,
+  PangolinConfig,
   Substrate2SubstrateDVMTransfer,
   TokenChainInfo,
   TransferFormValues,
@@ -39,11 +35,13 @@ import {
   invalidFeeRule,
   isRing,
   issuingSubstrateToken,
+  pollWhile,
   prettyNumber,
   toWei,
   waitUntilConnected,
   zeroAmountRule,
 } from '../../utils';
+import { getKnownMappedTokens } from '../../utils/erc20/token';
 import { Balance } from '../controls/Balance';
 import { MaxBalance } from '../controls/MaxBalance';
 import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
@@ -127,13 +125,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<TransferFormValues<Substrate2SubstrateDVMTransfer, NoNullTransferNetwork>>();
   const getAvailableBalances = useDarwiniaAvailableBalances();
-  const { tokens: targetChainTokens } = useMappedTokens(
-    {
-      from: form.getFieldValue([FORM_CONTROL.transfer, 'to']),
-      to: form.getFieldValue([FORM_CONTROL.transfer, 'from']),
-    },
-    RegisterStatus.registered
-  );
+  const [targetChainTokens, setTargetChainTokens] = useState<MappedToken[]>([]);
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account: string) => {
       if (!api || !chain.tokens.length || !form.getFieldValue(FORM_CONTROL.asset)) {
@@ -208,6 +200,19 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
   }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
 
   useEffect(() => {
+    const transfer: NoNullTransferNetwork<ChainConfig, PangolinConfig | CrabConfig> = form.getFieldValue([
+      FORM_CONTROL.transfer,
+    ]);
+    const sub$$ = getKnownMappedTokens('null', transfer.to, transfer.from).subscribe(({ tokens }) => {
+      setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
+    });
+
+    return () => {
+      sub$$.unsubscribe();
+    };
+  }, [form]);
+
+  useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
 
     form.setFieldsValue({ [FORM_CONTROL.sender]: sender });
@@ -250,7 +255,12 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       const asset = chain.tokens[0].symbol;
 
       sub$$ = from(getBalances(form.getFieldValue(FORM_CONTROL.sender))).subscribe(setAvailableBalances);
-      sub2$$ = from(getDailyLimit(asset)).subscribe(setDailyLimit);
+      sub2$$ = of(null)
+        .pipe(
+          switchMap(() => from(getDailyLimit(asset))),
+          pollWhile(LONG_DURATION, () => isMounted)
+        )
+        .subscribe(setDailyLimit);
 
       form.setFieldsValue({ [FORM_CONTROL.asset]: asset });
     }
@@ -259,7 +269,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       sub$$?.unsubscribe();
       sub2$$?.unsubscribe();
     };
-  }, [chain.tokens, form, getBalances, getDailyLimit, setAvailableBalances, setDailyLimit]);
+  }, [chain.tokens, form, getBalances, getDailyLimit, isMounted, setAvailableBalances, setDailyLimit]);
 
   return (
     <>

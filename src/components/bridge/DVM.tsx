@@ -4,10 +4,10 @@ import { isNull } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Observable } from 'rxjs';
-import { FORM_CONTROL, RegisterStatus } from '../../config';
+import { from, Observable, of, Subscription, switchMap } from 'rxjs';
+import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
-import { MemoedTokenInfo, useAfterSuccess, useApi, useMappedTokens, useTx } from '../../hooks';
+import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappedTokens, useTx } from '../../hooks';
 import {
   BridgeFormProps,
   ChainConfig,
@@ -37,6 +37,7 @@ import {
   insufficientDailyLimit,
   isPolkadotNetwork,
   isValidAddress,
+  pollWhile,
   prettyNumber,
   toWei,
 } from '../../utils';
@@ -60,7 +61,7 @@ interface DVMProps {
   isDVM?: boolean;
   transform: (value: DVMToken) => Observable<Tx>;
   spenderResolver: (config: ChainConfig) => Promise<string>;
-  getDailyLImit?: (token: MappedToken) => Promise<DailyLimit>;
+  getDailyLimit?: (token: MappedToken) => Promise<DailyLimit>;
   getFee?: (config: ChainConfig, token: MappedToken) => Promise<string>;
 }
 
@@ -138,7 +139,7 @@ export function DVM({
   spenderResolver,
   tokenRegisterStatus,
   canRegister,
-  getDailyLImit,
+  getDailyLimit,
   getFee,
   isDVM = true,
 }: BridgeFormProps<DVMTransfer> & DVMProps) {
@@ -186,6 +187,7 @@ export function DVM({
     },
     [account, form, selectedErc20, spenderResolver]
   );
+  const isMounted = useIsMounted();
 
   useEffect(() => {
     if (getFee) {
@@ -232,6 +234,21 @@ export function DVM({
     setSubmit(fn);
   }, [afterTx, observer, refreshAllowance, refreshTokenBalance, selectedErc20, setSubmit, transform, unit]);
 
+  useEffect(() => {
+    let sub$$: Subscription | null = null;
+
+    if (getDailyLimit && selectedErc20?.address) {
+      sub$$ = of(null)
+        .pipe(
+          switchMap(() => from(getDailyLimit(selectedErc20))),
+          pollWhile(LONG_DURATION, () => isMounted)
+        )
+        .subscribe(setDailyLimit);
+    }
+
+    return () => sub$$?.unsubscribe();
+  }, [getDailyLimit, isMounted, selectedErc20]);
+
   return (
     <>
       <EthereumAccountItem form={form} />
@@ -265,16 +282,11 @@ export function DVM({
           tokens={tokens}
           total={total}
           onChange={async (erc20) => {
-            setSelectedErc20(erc20);
-
             const spender = await spenderResolver(form.getFieldValue(FORM_CONTROL.transfer).from);
             const allow = await getAllowance(account, spender, erc20);
 
+            setSelectedErc20(erc20);
             setAllowance(allow);
-
-            if (getDailyLImit && erc20?.address) {
-              getDailyLImit(erc20).then(setDailyLimit);
-            }
           }}
         />
       </Form.Item>
