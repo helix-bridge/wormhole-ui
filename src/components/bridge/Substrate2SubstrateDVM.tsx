@@ -1,3 +1,4 @@
+import { Fee } from '@darwinia/types';
 import { Descriptions, Form, Progress, Select } from 'antd';
 import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import BN from 'bn.js';
@@ -203,13 +204,16 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
     const transfer: NoNullTransferNetwork<ChainConfig, PangolinConfig | CrabConfig> = form.getFieldValue([
       FORM_CONTROL.transfer,
     ]);
+
+    if (!transfer.to || !transfer.from) {
+      return;
+    }
+
     const sub$$ = getKnownMappedTokens('null', transfer.to, transfer.from).subscribe(({ tokens }) => {
       setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
     });
 
-    return () => {
-      sub$$.unsubscribe();
-    };
+    return () => sub$$?.unsubscribe();
   }, [form]);
 
   useEffect(() => {
@@ -227,15 +231,13 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
     const subscription = from(waitUntilConnected(api))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .pipe(switchMap(() => (api.rpc as any).fee.marketFee()))
-      .subscribe(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (res: any) => {
-          const marketFee = res.amount?.toString();
+      .pipe(switchMap(() => (api.rpc as any).fee.marketFee() as Promise<Fee>))
+      .subscribe((res) => {
+        const marketFee = res.amount?.toString();
 
-          setFee(new BN(marketFee ?? -1)); // -1: fee market does not available
-        }
-      );
+        // TODO: fee from elsewhere
+        setFee(marketFee ? new BN(marketFee).add(new BN('500000000')) : new BN(-1)); // -1: fee market does not available
+      });
 
     return () => subscription?.unsubscribe();
   }, [api]);
