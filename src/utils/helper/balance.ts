@@ -4,7 +4,7 @@ import BN from 'bn.js';
 import { isNull, isNumber, isString, isUndefined } from 'lodash';
 import Web3 from 'web3';
 import { ApiPromise } from '@polkadot/api';
-import { AccountData } from '@darwinia/types';
+import { AccountData, AccountInfo } from '@darwinia/types';
 import { waitUntilConnected } from '../network';
 
 export type WeiValue = string | BN | number | null | undefined;
@@ -148,7 +148,7 @@ export async function getDarwiniaAvailableBalances(api: ApiPromise, account = ''
   }
 
   try {
-    const { data } = await api.query.system.account(account);
+    const { data } = (await api.query.system.account(account)) as AccountInfo;
     const { free, freeKton } = data as unknown as AccountData;
 
     return [free.toString(), freeKton.toString()];

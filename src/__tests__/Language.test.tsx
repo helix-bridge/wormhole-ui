@@ -1,5 +1,7 @@
-import React, { Suspense } from 'react';
+/// <reference types="cypress" />
+
 import { mount } from '@cypress/react';
+import { Suspense } from 'react';
 import { Language } from '../components/Language';
 import '../index.scss';
 import '../theme/antd/index.less';

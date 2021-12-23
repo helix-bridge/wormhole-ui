@@ -1,7 +1,7 @@
 import { ArrowDownOutlined, ArrowRightOutlined, ClearOutlined, DashOutlined, SwapOutlined } from '@ant-design/icons';
 import { Button, Tooltip } from 'antd';
 import { isBoolean, isNull, negate } from 'lodash';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { airportsArrivalFilter, airportsDepartureFilter, useNetworks } from '../../hooks';
 import { Arrival, CustomFormControlProps, ChainConfig, TransferNetwork } from '../../model';

@@ -2,8 +2,9 @@ import { DisconnectOutlined, LinkOutlined, SyncOutlined } from '@ant-design/icon
 import { Button, Popover, Tooltip } from 'antd';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { from, Subscription } from 'rxjs';
 import { useApi } from '../hooks';
-import { EthereumConnection, ChainConfig, EthereumChainConfig } from '../model';
+import { ChainConfig, EthereumChainConfig, EthereumConnection } from '../model';
 import {
   getConfigByConnection,
   getDisplayName,
@@ -29,6 +30,7 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
   // eslint-disable-next-line complexity
   useEffect(() => {
     let is = !!config && isSameNetConfig(config, network);
+    let subscription: Subscription | null = null;
 
     if (!is) {
       setIsConsistent(false);
@@ -45,21 +47,25 @@ export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
 
       setIsConsistent(is);
     } else if (isPolkadotNetwork(config?.name)) {
-      getConfigByConnection(connection).then((conf) => {
+      subscription = from(getConfigByConnection(connection)).subscribe((conf) => {
         is = connection.type === 'polkadot' && isSameNetConfig(config, conf);
         setIsConsistent(is);
       });
     } else {
       setIsConsistent(is);
     }
-  }, [config, connection, network]);
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, [config, connection, network, setIsConsistent]);
 
   useEffect(() => {
-    (async () => {
-      const conf = await getConfigByConnection(connection);
+    const subscription = from(getConfigByConnection(connection)).subscribe(setConnectionConfig);
 
-      setConnectionConfig(conf);
-    })();
+    return () => subscription.unsubscribe();
   }, [connection]);
 
   if (connection.status === 'connecting') {

@@ -82,7 +82,7 @@ export const isSameAddress = (from: string, to: string): boolean => {
 
   if (isSS58Address(from)) {
     if (Web3.utils.isAddress(to)) {
-      toAddress = dvmAddressToAccountId(to).toHuman();
+      toAddress = dvmAddressToAccountId(to).toHuman() as string;
     }
 
     if (isSS58Address(to)) {

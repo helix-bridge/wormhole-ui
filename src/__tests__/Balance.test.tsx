@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+/// <reference types="cypress" />
+
 import { mount } from '@cypress/react';
 import { Balance } from '../components/controls/Balance';
 import '../index.scss';

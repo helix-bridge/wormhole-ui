@@ -1,5 +1,5 @@
 import { Dropdown, Form, Menu, Select, Tag } from 'antd';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChainConfig } from '../../model';
 import { getDisplayName } from '../../utils';

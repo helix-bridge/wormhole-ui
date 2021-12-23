@@ -1,5 +1,6 @@
 import { TypeRegistry } from '@polkadot/types';
-import { AccountId } from '@polkadot/types/interfaces';
+// import { AccountId } from '@polkadot/types/interfaces';
+import type { Codec, DetectCodec } from '@polkadot/types/types';
 import { hexToU8a, numberToU8a, stringToU8a, u8aToHex } from '@polkadot/util';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import { isNull } from 'lodash';
@@ -7,7 +8,7 @@ import { SS58Prefix } from '../../model';
 
 export const registry = new TypeRegistry();
 
-export function dvmAddressToAccountId(address: string | null | undefined): AccountId {
+export function dvmAddressToAccountId(address: string | null | undefined): DetectCodec<Codec, string> {
   if (!address) {
     return registry.createType('AccountId', '');
   }

@@ -273,27 +273,22 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
     };
   }, [form, api, accounts, updateDeparture, observe, getBalances]);
 
-  // eslint-disable-next-line complexity
   useEffect(() => {
     const recipient = form.getFieldValue(FORM_CONTROL.recipient);
     const sender = form.getFieldValue(FORM_CONTROL.sender);
     const { amount, checked } = currentAssets.find((item) => isRing(item.asset)) || {};
 
-    if (!api || !recipient || !sender) {
+    if ([api, recipient, sender].some((item) => !item)) {
       return;
     }
 
-    const extrinsic = api.tx.balances.transfer(recipient, checked ? new BN(amount ?? 0) : new BN(0));
+    const extrinsic = api!.tx.balances.transfer(recipient, checked ? new BN(amount ?? 0) : new BN(0));
     const sub$$ = observe(
       setTxFee,
       from(extrinsic.paymentInfo(sender)).pipe(map((info) => new BN(info.partialFee ?? 0)))
     );
 
-    return () => {
-      if (sub$$) {
-        sub$$.unsubscribe();
-      }
-    };
+    return () => sub$$?.unsubscribe();
   }, [api, currentAssets, form, observe]);
 
   return (
