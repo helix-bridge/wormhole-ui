@@ -1,5 +1,7 @@
+/// <reference types="cypress" />
+
 import { mount } from '@cypress/react';
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { EMPTY } from 'rxjs';
 import { Progress, ProgressProps, State } from '../components/records/Progress';
 import { NETWORK_CONFIG } from '../config';
@@ -82,7 +84,7 @@ describe('Progress Component', () => {
   it('should display step with tx hash button', () => {
     const data: ProgressProps = {
       title: 'Pangolin Confirmed',
-      steps: [{ name: '', state: State.completed, txHash: '0xabcdefghijklmnopqrst' }],
+      steps: [{ state: State.completed, txHash: '0xabcdefghijklmnopqrst' }],
       network: NETWORK_CONFIG.pangolin,
       icon: img('pangolin.svg'),
     };
@@ -107,7 +109,6 @@ describe('Progress Component', () => {
       title: 'ChainRelayer Confirmed',
       steps: [
         {
-          name: '',
           state: State.completed,
           txHash: '0xabcdefghijklmnopqrst',
           mutateState: () => {
@@ -140,7 +141,6 @@ describe('Progress Component', () => {
       title: 'ChainRelayer Confirmed',
       steps: [
         {
-          name: '',
           state: State.completed,
           txHash: '0xabcdefghijklmnopqrst',
           mutateState: fn,

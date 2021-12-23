@@ -8,7 +8,6 @@ import { ActiveAccount } from './components/ActiveAccount';
 import { BridgeStatus } from './components/BridgeStatus';
 import { Footer } from './components/Footer';
 import { DownIcon } from './components/icons';
-import { Nebula } from './components/Nebula';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { THEME } from './config';
 import { Path, routes } from './config/routes';
@@ -82,7 +81,10 @@ function App() {
   const navMenus = useMemo(() => navigators.filter((item) => isDev || (!isDev && !item.hide)), [isDev]);
 
   return (
-    <Layout className="min-h-screen overflow-scroll">
+    <Layout
+      className="min-h-screen overflow-scroll"
+      style={{ background: theme === THEME.DARK ? 'url(image/wormhole-bg.jpeg) round' : '' }}
+    >
       <Header
         className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-2"
         style={{ marginTop: -1 }}
@@ -181,8 +183,6 @@ function App() {
       </Content>
 
       <Footer theme={theme} />
-
-      {theme === THEME.DARK && !isDev && <Nebula />}
     </Layout>
   );
 }

@@ -27,6 +27,7 @@ export function RecipientItem({
         label={t('Recipient')}
         name={FORM_CONTROL.recipient}
         validateFirst
+        validateTrigger="onBlur"
         rules={[
           { required: true },
           {

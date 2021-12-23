@@ -1,10 +1,10 @@
 import { Empty } from 'antd';
+import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import { omit } from 'lodash';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Vertices } from '../../model';
 import { verticesToChainConfig } from '../../utils';
-import { ErrorBoundary } from '../ErrorBoundary';
 import { getRecordComponent } from '../finder';
 
 interface RecordListProps {

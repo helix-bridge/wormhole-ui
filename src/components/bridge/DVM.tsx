@@ -1,13 +1,13 @@
 import { Button, Descriptions, Form } from 'antd';
 import BN from 'bn.js';
 import { isNull } from 'lodash';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Observable } from 'rxjs';
-import { FORM_CONTROL, RegisterStatus } from '../../config';
+import { from, Observable, of, Subscription, switchMap, takeWhile } from 'rxjs';
+import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
-import { MemoedTokenInfo, useAfterSuccess, useApi, useMappedTokens, useTx } from '../../hooks';
+import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappedTokens, useTx } from '../../hooks';
 import {
   BridgeFormProps,
   ChainConfig,
@@ -37,6 +37,7 @@ import {
   insufficientDailyLimit,
   isPolkadotNetwork,
   isValidAddress,
+  pollWhile,
   prettyNumber,
   toWei,
 } from '../../utils';
@@ -60,7 +61,7 @@ interface DVMProps {
   isDVM?: boolean;
   transform: (value: DVMToken) => Observable<Tx>;
   spenderResolver: (config: ChainConfig) => Promise<string>;
-  getDailyLImit?: (token: MappedToken) => Promise<DailyLimit>;
+  getDailyLimit?: (token: MappedToken) => Promise<DailyLimit>;
   getFee?: (config: ChainConfig, token: MappedToken) => Promise<string>;
 }
 
@@ -138,7 +139,7 @@ export function DVM({
   spenderResolver,
   tokenRegisterStatus,
   canRegister,
-  getDailyLImit,
+  getDailyLimit,
   getFee,
   isDVM = true,
 }: BridgeFormProps<DVMTransfer> & DVMProps) {
@@ -175,24 +176,34 @@ export function DVM({
   const { observer } = useTx();
   const { afterTx, afterApprove } = useAfterSuccess();
   const [fee, setFee] = useState<string>('');
+  const isMounted = useIsMounted();
   const refreshAllowance = useCallback(
-    async (config: ChainConfig) => {
-      const spender = await spenderResolver(config);
-
-      return getAllowance(account, spender, selectedErc20).then((num) => {
-        setAllowance(num);
-        form.validateFields([FORM_CONTROL.amount]);
-      });
+    (config: ChainConfig) => {
+      if (isMounted) {
+        from(spenderResolver(config))
+          .pipe(
+            switchMap((spender) => getAllowance(account, spender, selectedErc20)),
+            takeWhile(() => isMounted)
+          )
+          .subscribe((num) => {
+            setAllowance(num);
+            form.validateFields([FORM_CONTROL.amount]);
+          });
+      }
     },
-    [account, form, selectedErc20, spenderResolver]
+    [account, form, isMounted, selectedErc20, spenderResolver]
   );
 
   useEffect(() => {
+    let sub$$: Subscription | null = null;
+
     if (getFee) {
       const departure = form.getFieldValue(FORM_CONTROL.transfer).from;
 
-      getFee(departure, selectedErc20!).then(setFee);
+      sub$$ = from(getFee(departure, selectedErc20!)).subscribe(setFee);
     }
+
+    return () => sub$$?.unsubscribe();
   }, [form, getFee, selectedErc20]);
 
   useEffect(() => {
@@ -231,6 +242,21 @@ export function DVM({
 
     setSubmit(fn);
   }, [afterTx, observer, refreshAllowance, refreshTokenBalance, selectedErc20, setSubmit, transform, unit]);
+
+  useEffect(() => {
+    let sub$$: Subscription | null = null;
+
+    if (getDailyLimit && selectedErc20?.address) {
+      sub$$ = of(null)
+        .pipe(
+          switchMap(() => from(getDailyLimit(selectedErc20))),
+          pollWhile(LONG_DURATION, () => isMounted)
+        )
+        .subscribe(setDailyLimit);
+    }
+
+    return () => sub$$?.unsubscribe();
+  }, [getDailyLimit, isMounted, selectedErc20]);
 
   return (
     <>
@@ -272,8 +298,8 @@ export function DVM({
 
             setAllowance(allow);
 
-            if (getDailyLImit && erc20?.address) {
-              getDailyLImit(erc20).then(setDailyLimit);
+            if (getDailyLimit && erc20?.address) {
+              getDailyLimit(erc20).then(setDailyLimit);
             }
           }}
         />

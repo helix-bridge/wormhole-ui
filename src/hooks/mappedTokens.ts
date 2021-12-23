@@ -1,6 +1,7 @@
 import { message } from 'antd';
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { map, of, switchMap, tap } from 'rxjs';
+import { useCallback, useMemo, useReducer, useState } from 'react';
+import { map } from 'rxjs';
+import useDeepCompareEffect from 'use-deep-compare-effect';
 import { RegisterStatus } from '../config';
 import {
   Action,
@@ -8,12 +9,11 @@ import {
   Erc20RegisterStatus,
   Erc20Token,
   EthereumConfig,
-  EthereumConnection,
   PangolinConfig,
   RequiredPartial,
   TransferNetwork,
 } from '../model';
-import { getEthConnection, isNetworkConsistent } from '../utils';
+import { isDVM, isEthereumNetwork } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
 import { getKnownMappedTokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
@@ -72,11 +72,6 @@ export const useMappedTokens = (
 ) => {
   const [loading, setLoading] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
-  const updateTokens = useCallback(
-    (tokens: MemoedTokenInfo[]) => dispatch({ payload: tokens, type: 'updateTokens' }),
-    []
-  );
-  const updateTotal = useCallback((total: number) => dispatch({ payload: total, type: 'updateTotal' }), []);
   const addKnownProof = useCallback((proofs: StoredProof) => dispatch({ payload: proofs, type: 'updateProof' }), []);
   const switchToConfirmed = useCallback((token: string) => dispatch({ payload: token, type: 'switchToConfirmed' }), []);
   const { connection } = useApi();
@@ -89,41 +84,34 @@ export const useMappedTokens = (
 
       if (index > 0) {
         tokens[index].balance = balance;
-        updateTokens(tokens);
+        dispatch({ payload: tokens, type: 'updateTokens' });
       }
     },
-    [currentAccount, updateTokens, state.tokens]
+    [currentAccount, state.tokens]
   );
 
-  useEffect(() => {
-    if (!from || !to) {
-      updateTokens([]);
+  useDeepCompareEffect(() => {
+    if (!from || !to || !(isEthereumNetwork(from.name) || isDVM(from))) {
+      dispatch({ payload: [], type: 'updateTokens' });
+      message.error(
+        'The departure and arrival networks must exist and the departure network must be an Ethereum network or a DVM network'
+      );
       return;
     }
 
-    // TODO: check metamask network if the connection is polkadot type
-    const connectionObs = connection.type === 'metamask' ? of(connection) : getEthConnection();
-    const subscription = connectionObs
-      .pipe(
-        map((res) => isNetworkConsistent(from!.name, (res as EthereumConnection).chainId)),
-        tap(() => setLoading(true)),
-        switchMap((isMatch) => {
-          if (!isMatch) {
-            return of({ total: 0, tokens: [] });
-          }
+    setLoading(true);
 
-          return getKnownMappedTokens(currentAccount, from, to).pipe(
-            map(({ tokens, total }) => ({
-              total,
-              tokens: status > 0 ? tokens.filter((item) => item.status && +item.status === status) : tokens,
-            }))
-          );
-        })
+    const subscription = getKnownMappedTokens(currentAccount, from, to)
+      .pipe(
+        map(({ tokens, total }) => ({
+          total,
+          tokens: status > 0 ? tokens.filter((item) => item.status && +item.status === status) : tokens,
+        }))
       )
       .subscribe({
         next: ({ tokens, total }) => {
-          updateTokens(tokens);
-          updateTotal(total);
+          dispatch({ payload: tokens, type: 'updateTokens' });
+          dispatch({ payload: total, type: 'updateTotal' });
         },
         error: (error) => {
           message.error('Querying failed, please try it again later');
@@ -138,12 +126,12 @@ export const useMappedTokens = (
         subscription.unsubscribe();
       }
     };
-  }, [currentAccount, from, updateTokens, status, connection, to, updateTotal]);
+  }, [currentAccount, from, status, to]);
 
   return {
     ...state,
     loading,
-    updateTokens,
+    dispatch,
     addKnownProof,
     switchToConfirmed,
     refreshTokenBalance,

@@ -1,4 +1,6 @@
-import React, { Suspense } from 'react';
+/// <reference types="cypress" />
+
+import { Suspense } from 'react';
 import { mount } from '@cypress/react';
 import { CrossRecords } from '../components/records/CrossRecords';
 import { BrowserRouter } from 'react-router-dom';
@@ -11,7 +13,7 @@ describe('Language Component', () => {
     pangolin: pangolinAccount,
     pangoro: pangoroAccount,
     ropsten: ropstenAccount,
-    pangolinDVM: pangolinDVMAccount,
+    // pangolinDVM: pangolinDVMAccount,
   } = Cypress.env('accounts');
 
   it('should not limit search account format', () => {

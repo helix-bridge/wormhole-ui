@@ -1,7 +1,7 @@
 import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Button, Descriptions, Empty, Form, Input, List, Progress, Spin, Tabs, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import React, { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { from, mergeMap } from 'rxjs';
 import Web3 from 'web3';
@@ -58,7 +58,7 @@ export function Register() {
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { tokens, updateTokens } = useMappedTokens(
+  const { tokens, dispatch } = useMappedTokens(
     { from: network as EthereumConfig, to: null },
     RegisterStatus.registering
   );
@@ -113,7 +113,7 @@ export function Register() {
             observer.next(tx);
 
             if (tx.status === 'finalized') {
-              updateTokens([token as Erc20Token, ...data]);
+              dispatch({ payload: [token as Erc20Token, ...data], type: 'updateTokens' });
             }
           },
         });
@@ -209,7 +209,6 @@ function Upcoming({ departure }: UpcomingProps) {
     loading,
     tokens: allTokens,
     proofs: knownProofs,
-    updateTokens,
     addKnownProof,
     switchToConfirmed,
   } = useMappedTokens({ from: departure, to: null }, RegisterStatus.registering);
@@ -236,7 +235,7 @@ function Upcoming({ departure }: UpcomingProps) {
       });
 
     setInQueryingQueue(tokens.map((item) => item.address));
-  }, [tokens, departure, updateTokens, addKnownProof]);
+  }, [tokens, departure, addKnownProof]);
 
   return (
     <>

@@ -1,7 +1,6 @@
 import { typesBundleForPolkadotApps } from '@darwinia/types/mix';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import Web3 from 'web3';
-import { SHORT_DURATION } from '../../config';
 
 interface ApiGuy<T> {
   [key: string]: T;
@@ -48,7 +47,7 @@ class PolkadotEntrance extends Entrance<ApiPromise> {
   apiList: ApiGuy<ApiPromise>[] = [];
 
   init(url: string) {
-    const provider = new WsProvider(url, SHORT_DURATION);
+    const provider = new WsProvider(url);
 
     return new ApiPromise({
       provider,

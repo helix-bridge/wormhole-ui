@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash';
-import React, { FunctionComponent } from 'react';
+import { FunctionComponent } from 'react';
 import { RecordComponentProps } from '../config';
 import { BridgeFormProps, Departure, TransferNetwork } from '../model';
 import { getNetworkMode } from '../utils';
