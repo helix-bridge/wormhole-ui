@@ -236,7 +236,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
         const marketFee = res.amount?.toString();
 
         // TODO: fee from elsewhere
-        setFee(marketFee ? new BN(marketFee).add(new BN('500000000')) : new BN(-1)); // -1: fee market does not available
+        setFee(marketFee ? new BN(marketFee).add(new BN('1000000000')) : new BN(-1)); // -1: fee market does not available
       });
 
     return () => subscription?.unsubscribe();
