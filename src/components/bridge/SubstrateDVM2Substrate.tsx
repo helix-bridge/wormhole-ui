@@ -24,7 +24,9 @@ import { DVM } from './DVM';
 export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMTransfer>) {
   const transform = useCallback((value: DVMToken) => {
     return from(getS2SMappingParams(value.transfer.from.provider.rpc)).pipe(
-      switchMap(({ mappingAddress, specVersion }) => redeemSubstrate(value, mappingAddress, specVersion))
+      switchMap(({ mappingAddress }) =>
+        redeemSubstrate(value, mappingAddress, value.transfer.from.name === 'crab' ? '1171' : '27020')
+      )
     );
   }, []);
 
