@@ -118,7 +118,19 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
     chain,
   } = useApi();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
-  const availableBalance = useMemo(() => availableBalances[0] ?? null, [availableBalances]);
+  const availableBalance = useMemo(() => {
+    const balance = availableBalances[0];
+
+    if (!balance) {
+      return null;
+    }
+    const { max, chainInfo, ...rest } = balance;
+    const reserved = new BN(toWei({ value: '1', unit: chainInfo?.decimal ?? 'gwei' }));
+    const greatest = new BN(max);
+    const result = greatest.sub(reserved);
+
+    return { ...rest, chainInfo, max: result.gte(new BN(0)) ? result.toString() : '0' };
+  }, [availableBalances]);
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
   const [fee, setFee] = useState<BN | null>(null);
   const [dailyLimit, setDailyLimit] = useState<DailyLimit | null>(null);
@@ -235,8 +247,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       .subscribe((res) => {
         const marketFee = res.amount?.toString();
 
-        // TODO: fee from elsewhere
-        setFee(marketFee ? new BN(marketFee).add(new BN('1000000000')) : new BN(-1)); // -1: fee market does not available
+        setFee(new BN(marketFee ?? -1)); // -1: fee market does not available
       });
 
     return () => subscription?.unsubscribe();
@@ -358,7 +369,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
       >
         <Balance
           size="large"
-          placeholder={t('Balance {{balance}}', {
+          placeholder={t('Available Balance {{balance}}', {
             balance: !availableBalance
               ? t('Querying')
               : fromWei({ value: availableBalance?.max, unit: availableBalance?.chainInfo?.decimal }, prettyNumber),
@@ -369,6 +380,10 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
           <MaxBalance
             network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
             onClick={() => {
+              if (!availableBalance) {
+                return;
+              }
+
               const { chainInfo, max } = availableBalance;
               const amount = fromWei({ value: max, unit: chainInfo?.decimal });
 

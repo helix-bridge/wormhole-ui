@@ -11,6 +11,7 @@
   "Asset": "资产",
   "Asset Type": "资产类型",
   "Available": "可用",
+  "Available Balance {{balance}}": "可用余额 {{balance}}",
   "Balance ": "余额",
   "Balance {{balance}}": "余额 {{balance}}",
   "Both send and receive network are all required": "必须选择发送网络和接收网络",

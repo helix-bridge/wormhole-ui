@@ -11,6 +11,7 @@
   "Asset": "Asset",
   "Asset Type": "Asset Type",
   "Available": "Available",
+  "Available Balance {{balance}}": "Available Balance {{balance}}",
   "Balance ": "Balance ",
   "Balance {{balance}}": "balance: {{balance}}",
   "Both send and receive network are all required": "Both send and receive network are all required",
