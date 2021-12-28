@@ -1,3 +1,11 @@
+# [2.2.0](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.6...v2.2.0) (2021-12-28)
+
+### Bug Fixes
+
+- **#244:** fee estimate ([#249](https://github.com/darwinia-network/wormhole-pro/issues/249)) ([14d59f6](https://github.com/darwinia-network/wormhole-pro/commit/14d59f6049e0b9a981595da7faf60ce0d26f9c15)), closes [#244](https://github.com/darwinia-network/wormhole-pro/issues/244)
+- cancel update on unmounted component ([#242](https://github.com/darwinia-network/wormhole-pro/issues/242)) ([37e10c1](https://github.com/darwinia-network/wormhole-pro/commit/37e10c16812dcaf05d29b9c17ad5d513cde90bd4))
+- S2S records ([#241](https://github.com/darwinia-network/wormhole-pro/issues/241)) ([2e23e64](https://github.com/darwinia-network/wormhole-pro/commit/2e23e6477d90cb6d041ca5ebd5b4c588e3bfcaed)), closes [#238](https://github.com/darwinia-network/wormhole-pro/issues/238) [#239](https://github.com/darwinia-network/wormhole-pro/issues/239)
+
 ## [2.1.6](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.5...v2.1.6) (2021-12-20)
 
 ### Bug Fixes
