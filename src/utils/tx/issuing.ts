@@ -74,7 +74,7 @@ export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiProm
   const WEIGHT = '1509000000';
   const obs = new Observable((observer: Observer<Tx>) => {
     try {
-      const specVersion = api.runtimeVersion.specVersion.toString();
+      const specVersion = transfer.to.name === 'crab' ? '1180' : '27020';
       const module = transfer.from.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
 
       api.tx[module]
