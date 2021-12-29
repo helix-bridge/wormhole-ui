@@ -25,7 +25,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
   const transform = useCallback((value: DVMToken) => {
     return from(getS2SMappingParams(value.transfer.from.provider.rpc)).pipe(
       switchMap(({ mappingAddress }) =>
-        redeemSubstrate(value, mappingAddress, value.transfer.from.name === 'crab' ? '1171' : '27020')
+        redeemSubstrate(value, mappingAddress, value.transfer.from.name === 'crab' ? '1180' : '27020')
       )
     );
   }, []);
