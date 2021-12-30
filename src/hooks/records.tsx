@@ -413,16 +413,21 @@ export function useS2SRecords(
         switchMap(() => from(fetchDispatchEvent({ variables: { id: `${laneId}${Web3.utils.toHex(nonce)}` } }))),
         pollWhile(SHORT_DURATION, (res) => !res.data?.bridgeDispatchEvent, attemptsCount, true),
         map((res) => {
-          const { method, data } = res.data!.bridgeDispatchEvent;
+          const { method, data, ...rest } = res.data!.bridgeDispatchEvent;
 
           if (method === 'MessageDispatched') {
             const detail = JSON.parse(data || '[]');
             const resultPosition = 2;
 
-            return { method, data, isSuccess: !(detail[resultPosition] as Record<string, string[]>).ok.length };
+            return {
+              ...rest,
+              method,
+              data,
+              isSuccess: !(detail[resultPosition] as Record<string, string[]>).ok.length,
+            };
           }
 
-          return { method, data, isSuccess: false };
+          return { ...rest, method, data, isSuccess: false };
         }),
         catchError((error) => {
           console.info(

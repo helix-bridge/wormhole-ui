@@ -116,6 +116,8 @@ export const BRIDGE_DISPATCH_EVENTS = `
     bridgeDispatchEvent(id: $id) {
       data
       method
+      block
+      index
     }
   }
 `;

@@ -88,6 +88,13 @@ export type Erc20RegisterProofRes = Erc20RegisterProof | null;
 
 /* ------------------------------------S2S section-------------------------------------------- */
 
+export interface SimpleBlock {
+  hash: string;
+  // eslint-disable-next-line id-denylist
+  number: number;
+  specVersion: number;
+}
+
 export interface S2SBurnRecord {
   lane_id: string;
   nonce: string;
@@ -149,6 +156,8 @@ export interface BridgeDispatchEventRecord {
     | 'MessageCallRejected'
     | 'MessageDispatchPaymentFailed'
     | 'MessageDispatched';
+  block: SimpleBlock;
+  index: number;
 }
 
 export interface BridgeDispatchEventRes {
