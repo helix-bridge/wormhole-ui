@@ -45,12 +45,14 @@ export function S2SRecord({
 
   // eslint-disable-next-line complexity
   const bridgeDelivered = useMemo<ProgressProps>(() => {
-    const { responseTxHash: txHash, result } = record;
+    const { result } = record;
 
     let state = result;
+    let txHash;
 
     if (messageEvent) {
       state = messageEvent.isSuccess ? State.completed : State.error;
+      txHash = messageEvent.block.number + '-' + messageEvent.index;
     }
 
     return {
