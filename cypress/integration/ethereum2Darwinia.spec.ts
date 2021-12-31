@@ -7,6 +7,8 @@ const {
   signaturePageElements,
 } = require('../pages/metamask/notification-page');
 
+const TX_TIME_OUT = 2 * 60 * 1000;
+
 describe('Ethereum to Darwinia', () => {
   const { pangolin: recipient, ropsten: sender } = Cypress.env('accounts');
 
@@ -41,7 +43,7 @@ describe('Ethereum to Darwinia', () => {
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
+    cy.get('.ant-modal-confirm-content', { timeout: TX_TIME_OUT })
       .find('a')
       .should('have.text', 'View in Etherscan explorer');
   });
@@ -68,7 +70,7 @@ describe('Ethereum to Darwinia', () => {
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
+    cy.get('.ant-modal-confirm-content', { timeout: TX_TIME_OUT })
       .find('a')
       .should('have.text', 'View in Etherscan explorer');
   });
