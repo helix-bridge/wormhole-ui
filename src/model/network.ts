@@ -48,19 +48,19 @@ interface Provider {
   etherscan: string;
 }
 
-interface ContractConfig {
+export interface ContractConfig {
   issuing: string;
   redeem: string;
 }
 
-interface E2DContractConfig extends ContractConfig {
+export interface E2DContractConfig extends ContractConfig {
   ring: string; // e2d ring balance address
   kton: string; // e2d kton balance address
   fee: string; // e2d cross chain fee querying address
   redeemDeposit: string; // e2d redeem deposit address
 }
 
-interface E2DVMContractConfig extends ContractConfig {
+export interface E2DVMContractConfig extends ContractConfig {
   proof: string;
 }
 

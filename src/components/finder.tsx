@@ -1,8 +1,8 @@
 import { isEqual } from 'lodash';
 import { FunctionComponent } from 'react';
 import { RecordComponentProps } from '../config';
-import { BridgeFormProps, Departure, TransferNetwork } from '../model';
-import { getNetworkMode } from '../utils';
+import { BridgeFormProps, Departure, TransferNetwork, Arrival } from '../model';
+import { chainConfigToVertices } from '../utils';
 import { Darwinia2Ethereum } from './bridge/Darwinia2Ethereum';
 import { DarwiniaDVM2Ethereum } from './bridge/DarwiniaDVM2Ethereum';
 import { Ethereum2Darwinia } from './bridge/Ethereum2Darwinia';
@@ -14,7 +14,7 @@ import { E2DRecord } from './records/E2DRecord';
 import { S2SRecord } from './records/S2SRecord';
 
 type BridgeComponents = [
-  [Departure, Departure?],
+  [Departure, Pick<Arrival, 'network' | 'mode'>],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   FunctionComponent<BridgeFormProps<any>>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,9 +27,38 @@ enum ComponentIndex {
 }
 
 const BRIDGES: BridgeComponents[] = [
-  [[{ network: 'ethereum', mode: 'native' }], Ethereum2Darwinia, E2DRecord],
-  [[{ network: 'ropsten', mode: 'native' }], Ethereum2Darwinia, E2DRecord],
-  [[{ network: 'darwinia', mode: 'native' }], Darwinia2Ethereum, D2ERecord],
+  [
+    [
+      { network: 'ethereum', mode: 'native' },
+      { network: 'darwinia', mode: 'native' },
+    ],
+    Ethereum2Darwinia,
+    E2DRecord,
+  ],
+  [
+    [
+      { network: 'ropsten', mode: 'native' },
+      { network: 'pangolin', mode: 'native' },
+    ],
+    Ethereum2Darwinia,
+    E2DRecord,
+  ],
+  [
+    [
+      { network: 'darwinia', mode: 'native' },
+      { network: 'ethereum', mode: 'native' },
+    ],
+    Darwinia2Ethereum,
+    D2ERecord,
+  ],
+  [
+    [
+      { network: 'pangolin', mode: 'native' },
+      { network: 'ropsten', mode: 'native' },
+    ],
+    Darwinia2Ethereum,
+    D2ERecord,
+  ],
   [
     [
       { network: 'darwinia', mode: 'native' },
@@ -38,11 +67,10 @@ const BRIDGES: BridgeComponents[] = [
     Substrate2SubstrateDVM,
     S2SRecord,
   ],
-  [[{ network: 'pangolin', mode: 'native' }], Darwinia2Ethereum, D2ERecord],
   [
     [
       { network: 'ethereum', mode: 'native' },
-      { network: 'darwinia', mode: 'dvm' },
+      { network: 'crab', mode: 'dvm' },
     ],
     Ethereum2DarwiniaDVM,
     E2DRecord,
@@ -55,9 +83,30 @@ const BRIDGES: BridgeComponents[] = [
     Ethereum2DarwiniaDVM,
     E2DRecord,
   ],
-  [[{ network: 'darwinia', mode: 'dvm' }], DarwiniaDVM2Ethereum, D2ERecord],
-  [[{ network: 'pangolin', mode: 'dvm' }], DarwiniaDVM2Ethereum, D2ERecord],
-  [[{ network: 'pangoro', mode: 'native' }], Substrate2SubstrateDVM, S2SRecord],
+  [
+    [
+      { network: 'darwinia', mode: 'dvm' },
+      { network: 'ethereum', mode: 'native' },
+    ],
+    DarwiniaDVM2Ethereum,
+    D2ERecord,
+  ],
+  [
+    [
+      { network: 'pangolin', mode: 'dvm' },
+      { network: 'ropsten', mode: 'native' },
+    ],
+    DarwiniaDVM2Ethereum,
+    D2ERecord,
+  ],
+  [
+    [
+      { network: 'pangoro', mode: 'native' },
+      { network: 'pangolin', mode: 'dvm' },
+    ],
+    Substrate2SubstrateDVM,
+    S2SRecord,
+  ],
   [
     [
       { network: 'pangolin', mode: 'dvm' },
@@ -76,38 +125,23 @@ const BRIDGES: BridgeComponents[] = [
   ],
 ];
 
-// eslint-disable-next-line complexity
-export function findBridge({ from, to }: TransferNetwork) {
+function findBridge({ from, to }: TransferNetwork) {
   if (!from) {
     return null;
   }
 
-  const fMode = getNetworkMode(from);
+  const departure = chainConfigToVertices(from);
+  let target: BridgeComponents | null = null;
 
   if (!to) {
-    const target = BRIDGES.find(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
-
-    if (target) {
-      return target;
-    }
+    target = BRIDGES.find(([[dep]]) => isEqual(dep, departure)) ?? null;
   } else {
-    const targets = BRIDGES.filter(([parties]) => isEqual(parties[0], { network: from.name, mode: fMode }));
+    const arrival = chainConfigToVertices(to);
 
-    if (targets.length === 1) {
-      return targets[0];
-    } else {
-      const tMode = getNetworkMode(to);
-      const target =
-        targets.find(([parties]) => isEqual(parties[1], { network: to.name, mode: tMode })) ||
-        targets.find(([parties]) => parties[1] === undefined && tMode === 'native');
-
-      if (target) {
-        return target;
-      }
-    }
+    target = BRIDGES.find(([[dep, arr]]) => isEqual(dep, departure) && isEqual(arr, arrival)) ?? null;
   }
 
-  return null;
+  return target;
 }
 
 export const getBridge = (transfer: TransferNetwork) => {

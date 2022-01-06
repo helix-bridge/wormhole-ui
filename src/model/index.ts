@@ -1,4 +1,5 @@
 export * from './account';
+export * from './bridge';
 export * from './common';
 export * from './darwinia';
 export * from './erc20';

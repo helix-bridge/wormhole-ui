@@ -24,7 +24,7 @@ const allowAlias: (full: string, at?: number) => string[] = (name, startAt = 3) 
 
 export const NETWORK_ALIAS = new Map([[Graph.ethereum, [...allowAlias(Graph.ethereum)]]]);
 
-const EVOLUTION_DOMAIN = {
+export const EVOLUTION_DOMAIN = {
   product: 'https://www.evolution.land',
   dev: 'https://www.evolution.land.l2me.com',
 };
