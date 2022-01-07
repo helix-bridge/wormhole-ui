@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { from, switchMap } from 'rxjs';
-import { FORM_CONTROL, RegisterStatus } from '../../config';
+import { FORM_CONTROL, RegisterStatus } from '../../../config';
 import {
   ApiKeys,
   BridgeFormProps,
@@ -10,9 +10,9 @@ import {
   DVMTransfer,
   MappedToken,
   PolkadotConfig,
-} from '../../model';
-import { entrance, fromWei, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../utils';
-import { DVM } from './DVM';
+} from '../../../model';
+import { entrance, fromWei, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../../utils';
+import { DVM } from '../DVM';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 

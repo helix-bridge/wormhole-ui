@@ -1,4 +1,5 @@
 export * from './abi';
+export * from './birdge';
 export * from './constant';
 export * from './darwinia';
 export * from './erc20';

@@ -6,8 +6,15 @@ import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, of, Subscription, switchMap, takeWhile } from 'rxjs';
-import { abi, FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
-import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useIsMounted, useTx } from '../../hooks';
+import { abi, FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../../config';
+import {
+  useAfterSuccess,
+  useApi,
+  useDarwiniaAvailableBalances,
+  useDeparture,
+  useIsMounted,
+  useTx,
+} from '../../../hooks';
 import {
   AvailableBalance,
   BridgeFormProps,
@@ -23,7 +30,7 @@ import {
   Substrate2SubstrateDVMTransfer,
   TokenChainInfo,
   TransferFormValues,
-} from '../../model';
+} from '../../../model';
 import {
   amountLessThanFeeRule,
   applyModalObs,
@@ -41,14 +48,14 @@ import {
   toWei,
   waitUntilConnected,
   zeroAmountRule,
-} from '../../utils';
-import { getKnownMappedTokens } from '../../utils/erc20/token';
-import { Balance } from '../controls/Balance';
-import { MaxBalance } from '../controls/MaxBalance';
-import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
-import { RecipientItem } from '../controls/RecipientItem';
-import { TransferConfirm } from '../modal/TransferConfirm';
-import { TransferSuccess } from '../modal/TransferSuccess';
+} from '../../../utils';
+import { getKnownMappedTokens } from '../../../utils/erc20/token';
+import { Balance } from '../../controls/Balance';
+import { MaxBalance } from '../../controls/MaxBalance';
+import { PolkadotAccountsItem } from '../../controls/PolkadotAccountsItem';
+import { RecipientItem } from '../../controls/RecipientItem';
+import { TransferConfirm } from '../../modal/TransferConfirm';
+import { TransferSuccess } from '../../modal/TransferSuccess';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 

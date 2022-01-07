@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { RegisterStatus } from '../../config';
-import { BridgeFormProps, CrabConfig, DVMTransfer, ChainConfig, PangolinConfig } from '../../model';
-import { issuingErc20 } from '../../utils';
-import { DVM } from './DVM';
+import { RegisterStatus } from '../../../config';
+import { BridgeFormProps, CrabConfig, DVMTransfer, ChainConfig, PangolinConfig } from '../../../model';
+import { issuingErc20 } from '../../../utils';
+import { DVM } from '../DVM';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 

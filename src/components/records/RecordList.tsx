@@ -1,11 +1,12 @@
 import { Empty } from 'antd';
 import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import { omit } from 'lodash';
-import { useMemo } from 'react';
+import { FunctionComponent, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { RecordComponentProps } from '../../config';
 import { Vertices } from '../../model';
 import { verticesToChainConfig } from '../../utils';
-import { getRecordComponent } from '../finder';
+import { getRecordComponent } from '../bridge/finder';
 
 interface RecordListProps {
   departure: Vertices;
@@ -16,7 +17,12 @@ interface RecordListProps {
 export function RecordList({ departure, arrival, sourceData }: RecordListProps) {
   const { t } = useTranslation();
   const Record = useMemo(
-    () => getRecordComponent({ from: verticesToChainConfig(departure), to: verticesToChainConfig(arrival) }),
+    () =>
+      getRecordComponent({
+        from: verticesToChainConfig(departure),
+        to: verticesToChainConfig(arrival),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as FunctionComponent<RecordComponentProps<any>>,
     [departure, arrival]
   );
 

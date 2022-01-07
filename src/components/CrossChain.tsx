@@ -1,14 +1,14 @@
 import { Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
-import { Network, NetworkMode, SubmitFn, TransferFormValues, TransferNetwork } from '../model';
+import { BridgeFormProps, Network, NetworkMode, SubmitFn, TransferFormValues, TransferNetwork } from '../model';
 import { emptyObsFactory, getInitialSetting, verticesToChainConfig, isReachable, isSameNetConfig } from '../utils';
 import { Airport } from './Airport';
 import { Nets } from './controls/Nets';
-import { getBridge } from './finder';
+import { getBridgeComponent } from './bridge/finder';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
 const getTransferFromSettings: () => TransferNetwork = () => {
@@ -97,7 +97,13 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
         />
       </Form.Item>
 
-      {isCross && isFromReady && React.createElement(getBridge(transfer), { form, setSubmit })}
+      {isCross &&
+        isFromReady &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        React.createElement(getBridgeComponent(transfer) as FunctionComponent<BridgeFormProps<any>>, {
+          form,
+          setSubmit,
+        })}
       {!isCross && isFromReady && <Airport form={form} transfer={transfer} setSubmit={setSubmit} />}
 
       <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>

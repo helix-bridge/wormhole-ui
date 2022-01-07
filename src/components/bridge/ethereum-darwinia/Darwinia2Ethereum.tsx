@@ -6,8 +6,15 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, map, Observable } from 'rxjs';
 import Web3 from 'web3';
-import { FORM_CONTROL } from '../../config';
-import { getChainInfo, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
+import { FORM_CONTROL } from '../../../config';
+import {
+  getChainInfo,
+  useAfterSuccess,
+  useApi,
+  useDarwiniaAvailableBalances,
+  useDeparture,
+  useTx,
+} from '../../../hooks';
 import {
   AvailableBalance,
   BridgeFormProps,
@@ -16,7 +23,7 @@ import {
   NoNullTransferNetwork,
   TokenChainInfo,
   TransferFormValues,
-} from '../../model';
+} from '../../../model';
 import {
   applyModalObs,
   createTxWorkflow,
@@ -25,12 +32,12 @@ import {
   isRing,
   issuingDarwiniaTokens,
   toWei,
-} from '../../utils';
-import { AssetGroup, AssetGroupValue } from '../controls/AssetGroup';
-import { PolkadotAccountsItem } from '../controls/PolkadotAccountsItem';
-import { RecipientItem } from '../controls/RecipientItem';
-import { TransferConfirm } from '../modal/TransferConfirm';
-import { TransferSuccess } from '../modal/TransferSuccess';
+} from '../../../utils';
+import { AssetGroup, AssetGroupValue } from '../../controls/AssetGroup';
+import { PolkadotAccountsItem } from '../../controls/PolkadotAccountsItem';
+import { RecipientItem } from '../../controls/RecipientItem';
+import { TransferConfirm } from '../../modal/TransferConfirm';
+import { TransferSuccess } from '../../modal/TransferSuccess';
 
 interface AmountCheckInfo {
   fee: BN | null;

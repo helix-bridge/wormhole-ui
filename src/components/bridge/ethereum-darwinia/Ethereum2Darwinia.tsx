@@ -8,8 +8,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
-import { abi, FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
+import { abi, FORM_CONTROL } from '../../../config';
+import { useAfterSuccess, useApi, useDeparture, useTx } from '../../../hooks';
 import {
   BridgeFormProps,
   Erc20Token,
@@ -24,7 +24,7 @@ import {
   PangolinConfig,
   DarwiniaConfig,
   EthereumConfig,
-} from '../../model';
+} from '../../../model';
 import {
   AfterTxCreator,
   applyModalObs,
@@ -41,17 +41,17 @@ import {
   redeemDarwiniaToken,
   redeemDeposit,
   toWei,
-} from '../../utils';
-import { Balance } from '../controls/Balance';
-import { DepositItem, getDepositTimeRange } from '../controls/DepositItem';
-import { MaxBalance } from '../controls/MaxBalance';
-import { RecipientItem } from '../controls/RecipientItem';
-import { ApproveConfirm } from '../modal/ApproveConfirm';
-import { ApproveSuccess } from '../modal/ApproveSuccess';
-import { Des } from '../modal/Des';
-import { TransferConfirm } from '../modal/TransferConfirm';
-import { TransferSuccess } from '../modal/TransferSuccess';
-import { getTokenBalance, getMappedTokenMeta, TokenCache } from '../../utils/erc20/meta';
+} from '../../../utils';
+import { Balance } from '../../controls/Balance';
+import { DepositItem, getDepositTimeRange } from '../../controls/DepositItem';
+import { MaxBalance } from '../../controls/MaxBalance';
+import { RecipientItem } from '../../controls/RecipientItem';
+import { ApproveConfirm } from '../../modal/ApproveConfirm';
+import { ApproveSuccess } from '../../modal/ApproveSuccess';
+import { Des } from '../../modal/Des';
+import { TransferConfirm } from '../../modal/TransferConfirm';
+import { TransferSuccess } from '../../modal/TransferSuccess';
+import { getTokenBalance, getMappedTokenMeta, TokenCache } from '../../../utils/erc20/meta';
 
 interface AmountCheckInfo {
   amount?: string;
