@@ -37,7 +37,7 @@ const validateTransfer: (transfer: TransferNetwork, isCross: boolean) => Transfe
 };
 
 // eslint-disable-next-line complexity
-export function TransferForm({ isCross = true }: { isCross?: boolean }) {
+export function CrossChain({ isCross = true }: { isCross?: boolean }) {
   const { t, i18n } = useTranslation();
   const [form] = useForm<TransferFormValues>();
   const {

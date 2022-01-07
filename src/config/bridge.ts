@@ -26,7 +26,7 @@ const ethereumDarwiniaBridgeConfig: EthereumDarwiniaBridgeConfig = {
   ],
 };
 
-const ropsten2PangolinBridgeConfig: EthereumDarwiniaBridgeConfig = {
+const ropstenPangolinBridgeConfig: EthereumDarwiniaBridgeConfig = {
   specVersion: 27020,
   api: {
     dapp: 'https://api.darwinia.network.l2me.com',
@@ -85,7 +85,7 @@ export const BRIDGES_CONFIG: BridgesConfig = [
       { network: 'ropsten', mode: 'native' },
       { network: 'pangolin', mode: 'native' },
     ],
-    ropsten2PangolinBridgeConfig,
+    ropstenPangolinBridgeConfig,
   ],
   [
     [
@@ -101,54 +101,4 @@ export const BRIDGES_CONFIG: BridgesConfig = [
     ],
     pangoroPangolinDVMConfig,
   ],
-  //   [
-  //     [
-  //       { network: 'darwinia', mode: 'native' },
-  //       { network: 'ethereum', mode: 'native' },
-  //     ],
-  //     e2dBridgeConfig,
-  //   ],
-  //   [
-  //     [
-  //       { network: 'pangolin', mode: 'native' },
-  //       { network: 'ropsten', mode: 'native' },
-  //     ],
-  //   ],
-  //   [
-  //     [
-  //       { network: 'ethereum', mode: 'native' },
-  //       { network: 'crab', mode: 'dvm' },
-  //     ],
-  //   ],
-  //   [
-  //     [
-  //       { network: 'ropsten', mode: 'native' },
-  //       { network: 'pangolin', mode: 'dvm' },
-  //     ],
-  //   ],
-  //   [
-  //     [
-  //       { network: 'darwinia', mode: 'dvm' },
-  //       { network: 'ethereum', mode: 'native' },
-  //     ],
-  //   ],
-  //   [
-  //     [
-  //       { network: 'pangolin', mode: 'dvm' },
-  //       { network: 'ropsten', mode: 'native' },
-  //     ],
-  //     [
-  //       [
-  //         { network: 'pangolin', mode: 'dvm' },
-  //         { network: 'pangoro', mode: 'native' },
-  //       ],
-  //     ],
-  //   [
-  //     [
-  //       { network: 'crab', mode: 'dvm' },
-  //       { network: 'darwinia', mode: 'native' },
-  //     ],
-  //     darwiniaCrabDVMConfig,
-  //   ],
-  //   ],
 ];

@@ -1,7 +1,7 @@
 import { Card } from 'antd';
 import { Trans } from 'react-i18next';
 import { Link, RouteComponentProps } from 'react-router-dom';
-import { TransferForm } from '../components/TransferForm';
+import { CrossChain } from '../components/CrossChain';
 import { Path } from '../config/routes';
 import { DepartureProvider } from '../providers';
 
@@ -14,7 +14,7 @@ export function Home(props: RouteComponentProps) {
   return (
     <DepartureProvider>
       <Card className="xl:w-1/3 lg:w-1/2 md:w-2/3 w-full mx-auto dark:shadow-none dark:border-transparent">
-        <TransferForm isCross={isCross}></TransferForm>
+        <CrossChain isCross={isCross}></CrossChain>
       </Card>
 
       <p className="mt-4 text-center xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto">
