@@ -1,6 +1,5 @@
-import { SubstrateSubstrateDVMBridgeConfig } from '../../model';
-import { EVOLUTION_DOMAIN } from '../network';
-import { Bridge } from './bridge';
+import { Bridge, SubstrateSubstrateDVMBridgeConfig } from '../../model';
+import { EVOLUTION_DOMAIN } from '../evolution';
 
 const pangoroPangolinDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
   specVersion: 27020,
@@ -12,6 +11,9 @@ const pangoroPangolinDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
   },
 };
 
+/**
+ * substrate <-> substrate dvm testnet
+ */
 export const pangoroPangolinDVM = new Bridge(
   { network: 'pangoro', mode: 'native' },
   { network: 'pangolin', mode: 'dvm' },

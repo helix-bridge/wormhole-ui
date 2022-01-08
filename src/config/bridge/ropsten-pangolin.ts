@@ -1,6 +1,5 @@
-import { EVOLUTION_DOMAIN } from '../network';
-import { EthereumDarwiniaBridgeConfig } from '../../model';
-import { Bridge } from './bridge';
+import { EVOLUTION_DOMAIN } from '../evolution';
+import { Bridge, EthereumDarwiniaBridgeConfig } from '../../model';
 
 const ropstenPangolinConfig: EthereumDarwiniaBridgeConfig = {
   specVersion: 27020,
@@ -25,6 +24,9 @@ const ropstenPangolinConfig: EthereumDarwiniaBridgeConfig = {
   ],
 };
 
+/**
+ * ethereum <-> darwinia testnet
+ */
 export const ropstenPangolin = new Bridge(
   { network: 'ropsten', mode: 'native' },
   { network: 'pangolin', mode: 'native' },

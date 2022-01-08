@@ -1,6 +1,5 @@
-import { EthereumCrabDVMConfig } from '../../model';
-import { EVOLUTION_DOMAIN } from '../network';
-import { Bridge } from './bridge';
+import { Bridge, EthereumCrabDVMConfig } from '../../model';
+import { EVOLUTION_DOMAIN } from '../evolution';
 
 const ropstenPangolinDVMConfig: EthereumCrabDVMConfig = {
   specVersion: 27020,
@@ -11,8 +10,12 @@ const ropstenPangolinDVMConfig: EthereumCrabDVMConfig = {
   },
 };
 
+/**
+ * ethereum <-> dvm testnet
+ */
 export const ropstenPangolinDVM = new Bridge(
   { network: 'ropsten', mode: 'native' },
   { network: 'pangolin', mode: 'dvm' },
-  ropstenPangolinDVMConfig
+  ropstenPangolinDVMConfig,
+  { stable: false }
 );

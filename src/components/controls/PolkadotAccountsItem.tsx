@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
 import { FORM_CONTROL } from '../../config';
 import { useApi } from '../../hooks';
-import { AvailableBalance, SS58Prefix } from '../../model';
+import { AvailableBalance } from '../../model';
 import { convertToSS58, fromWei } from '../../utils';
 
 interface PolkadotAccountsProps {
@@ -48,7 +48,7 @@ export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAc
       >
         {(accounts ?? []).map(({ meta, address }) => (
           <Select.Option value={address} key={address}>
-            {meta?.name} - {convertToSS58(address, chain.ss58Format as unknown as SS58Prefix)}
+            {meta?.name} - {convertToSS58(address, +chain.ss58Format)}
           </Select.Option>
         ))}
       </Select>

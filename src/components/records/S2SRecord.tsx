@@ -6,7 +6,7 @@ import { useS2SRecords } from '../../hooks';
 import {
   ApiKeys,
   BridgeDispatchEventRecord,
-  PolkadotConfig,
+  PolkadotChainConfig,
   S2SBurnRecordRes,
   S2SHistoryRecord,
   S2SIssuingRecordRes,
@@ -19,7 +19,7 @@ export function S2SRecord({
   record: originRecord,
   departure,
   arrival,
-}: RecordComponentProps<S2SHistoryRecord, PolkadotConfig<ApiKeys>, PolkadotConfig<ApiKeys>>) {
+}: RecordComponentProps<S2SHistoryRecord, PolkadotChainConfig<ApiKeys>, PolkadotChainConfig<ApiKeys>>) {
   const { t } = useTranslation();
   const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchMessageEvent } = useS2SRecords(departure!, arrival!);
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);

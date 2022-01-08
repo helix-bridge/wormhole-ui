@@ -9,7 +9,7 @@ import {
   DVMToken,
   DVMTransfer,
   MappedToken,
-  PolkadotConfig,
+  PolkadotChainConfig,
 } from '../../../model';
 import { entrance, fromWei, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../../utils';
 import { DVM } from '../DVM';
@@ -38,7 +38,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit, transfer }: TransferCo
 
   const getDailyLimit = useCallback(
     async (_: MappedToken) => {
-      const arrival = form.getFieldValue(FORM_CONTROL.transfer).to as PolkadotConfig<ApiKeys>;
+      const arrival = form.getFieldValue(FORM_CONTROL.transfer).to as PolkadotChainConfig<ApiKeys>;
       const api = entrance.polkadot.getInstance(arrival.provider.rpc);
 
       await waitUntilConnected(api);

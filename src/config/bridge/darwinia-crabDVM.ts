@@ -1,6 +1,5 @@
-import { EVOLUTION_DOMAIN } from '../network';
-import { SubstrateSubstrateDVMBridgeConfig } from '../../model';
-import { Bridge } from './bridge';
+import { EVOLUTION_DOMAIN } from '../evolution';
+import { SubstrateSubstrateDVMBridgeConfig, Bridge } from '../../model';
 
 const darwiniaCrabDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
   specVersion: 1180,

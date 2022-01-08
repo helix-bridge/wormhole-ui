@@ -1,4 +1,3 @@
-export * from './bridge';
 export * from './bridges';
 export * from './darwinia-crabDVM';
 export * from './ethereum-crabDVM';

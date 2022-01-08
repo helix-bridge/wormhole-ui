@@ -6,7 +6,6 @@ export * from './erc20';
 export * from './evolution';
 export * from './i18n';
 export * from './network';
-export * from './network-simple';
 export * from './props';
 export * from './query';
 export * from './subscan';

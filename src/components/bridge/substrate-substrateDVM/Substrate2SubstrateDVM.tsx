@@ -20,7 +20,7 @@ import {
   TransferComponentProps,
   CrabConfig,
   DailyLimit,
-  EthereumChainDVMConfig,
+  DVMChainConfig,
   IssuingSubstrateToken,
   MappedToken,
   Network,
@@ -169,7 +169,7 @@ export function Substrate2SubstrateDVM({
         return null;
       }
 
-      const { to: arrival } = transfer as NoNullTransferNetwork<ChainConfig, EthereumChainDVMConfig>;
+      const { to: arrival } = transfer as NoNullTransferNetwork<ChainConfig, DVMChainConfig>;
       const web3 = entrance.web3.getInstance(arrival.ethereumChain.rpcUrls[0]);
       const { mappingAddress } = await getS2SMappingParams(arrival.provider.rpc);
       const contract = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);

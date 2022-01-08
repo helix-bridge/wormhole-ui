@@ -1,10 +1,8 @@
 import { TypeRegistry } from '@polkadot/types';
-// import { AccountId } from '@polkadot/types/interfaces';
 import type { Codec, DetectCodec } from '@polkadot/types/types';
 import { hexToU8a, numberToU8a, stringToU8a, u8aToHex } from '@polkadot/util';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import { isNull } from 'lodash';
-import { SS58Prefix } from '../../model';
 
 export const registry = new TypeRegistry();
 
@@ -29,7 +27,7 @@ export function dvmAddressToAccountId(address: string | null | undefined): Detec
   return accountId;
 }
 
-export function convertToSS58(text: string, prefix: SS58Prefix, isShort = false): string {
+export function convertToSS58(text: string, prefix: number, isShort = false): string {
   if (!text || isNull(prefix)) {
     return '';
   }

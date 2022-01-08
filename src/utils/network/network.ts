@@ -1,23 +1,23 @@
 import { ApiPromise } from '@polkadot/api';
 import { curry, curryRight, has, isEqual, isNull, omit, once, upperFirst } from 'lodash';
 import Web3 from 'web3';
-import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
+import { AIRDROP_GRAPH, NETWORKS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
 import {
   Arrival,
+  ChainConfig,
   Connection,
   Departure,
+  DVMChainConfig,
+  EthereumChainConfig,
   EthereumConnection,
   MetamaskNativeNetworkIds,
-  ChainConfig,
   Network,
   NetworkCategory,
+  NetworkConfig,
   NetworkMode,
+  NoNullFields,
   PolkadotConnection,
   Vertices,
-  EthereumChainConfig,
-  EthereumChainDVMConfig,
-  NetworkConfig,
-  NoNullFields,
 } from '../../model';
 import { entrance } from './entrance';
 
@@ -47,7 +47,15 @@ function isSpecifyNetworkType(type: NetworkCategory) {
 }
 
 function byNetworkAlias(network: string): Network | null {
-  const alias = NETWORK_ALIAS.entries();
+  const minLength = 3;
+  const allowAlias: (full: string, at?: number) => string[] = (name, startAt = minLength) => {
+    const len = name.length;
+    const shortestName = name.slice(0, startAt);
+
+    return new Array(len - startAt).fill('').map((_, index) => shortestName + name.substr(startAt, index));
+  };
+
+  const alias = new Map([['ethereum', [...allowAlias('ethereum')]]]);
   let res = null;
 
   for (const [name, value] of alias) {
@@ -57,7 +65,7 @@ function byNetworkAlias(network: string): Network | null {
     }
   }
 
-  return res;
+  return res as Network | null;
 }
 
 export function getLegalName(network: string): Network | string {
@@ -299,10 +307,7 @@ export async function getConfigByConnection(connection: Connection): Promise<Cha
       return chain && isChainIdEqual(chain.chainId, (connection as EthereumConnection).chainId);
     });
 
-    return (
-      (targets.length > 1 ? targets.find((item) => (item as unknown as EthereumChainDVMConfig).dvm) : targets[0]) ??
-      null
-    );
+    return (targets.length > 1 ? targets.find((item) => (item as unknown as DVMChainConfig).dvm) : targets[0]) ?? null;
   }
 
   if (connection.type === 'polkadot' && connection.api) {

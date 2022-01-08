@@ -4,14 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
 import { useHistory } from 'react-router-dom';
 import { Path } from '../config/routes';
-import {
-  NoNullTransferNetwork,
-  SS58Prefix,
-  TransferFormValues,
-  Tx,
-  TxHashType,
-  TxSuccessComponentProps,
-} from '../model';
+import { NoNullTransferNetwork, TransferFormValues, Tx, TxHashType, TxSuccessComponentProps } from '../model';
 import { TxContext, TxCtx } from '../providers';
 import { applyModal, convertToSS58, genHistoryRouteParams, getNetworkMode, isEthereumNetwork } from '../utils';
 import { useApi } from './api';
@@ -55,7 +48,7 @@ export function useAfterSuccess<
               const sender =
                 isEthereumNetwork(value.transfer.from.name) || fMode === 'dvm'
                   ? value.sender
-                  : convertToSS58(value.sender, chain.ss58Format as unknown as SS58Prefix);
+                  : convertToSS58(value.sender, +chain.ss58Format);
 
               history.push(
                 Path.history +

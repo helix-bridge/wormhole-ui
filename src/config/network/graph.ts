@@ -1,45 +1,32 @@
-import { Arrival, Departure } from '../../model';
+import { isEqual } from 'lodash';
+import { Arrival, Bridge, Departure } from '../../model';
+import { BRIDGES } from '../bridge';
 
-export const NETWORK_GRAPH = new Map<Departure, Arrival[]>([
-  [{ network: 'crab', mode: 'native' }, [{ network: 'darwinia', status: 'pending', mode: 'native' }]],
-  [
-    { network: 'crab', mode: 'dvm' },
-    [
-      { network: 'darwinia', status: 'available', mode: 'native', stable: true },
-      { network: 'ethereum', status: 'available', mode: 'native' },
-    ],
-  ],
-  [
-    { network: 'darwinia', mode: 'native' },
-    [
-      { network: 'ethereum', status: 'available', mode: 'native', stable: true },
-      { network: 'crab', status: 'available', mode: 'dvm', stable: true },
-    ],
-  ],
-  [
-    { network: 'ethereum', mode: 'native' },
-    [
-      { network: 'darwinia', status: 'available', mode: 'native' },
-      { network: 'crab', status: 'available', mode: 'dvm' },
-    ],
-  ],
-  [
-    { network: 'pangolin', mode: 'native' },
-    [{ network: 'ropsten', status: 'available', mode: 'native', stable: true }],
-  ],
-  [
-    { network: 'pangolin', mode: 'dvm' },
-    [
-      { network: 'ropsten', status: 'available', mode: 'native' },
-      { network: 'pangoro', status: 'available', mode: 'native', stable: true },
-    ],
-  ],
-  [{ network: 'pangoro', mode: 'native' }, [{ network: 'pangolin', status: 'available', mode: 'dvm', stable: true }]],
-  [
-    { network: 'ropsten', mode: 'native' },
-    [
-      { network: 'pangolin', status: 'available', mode: 'native', stable: true },
-      { network: 'pangolin', status: 'available', mode: 'dvm' },
-    ],
-  ],
+const isPro = process.env.REACT_APP_HOST_TYPE === 'prod';
+
+export const NETWORK_GRAPH = new Map(
+  BRIDGES.reduce((acc: [Departure, Arrival[]][], bridge: Bridge) => {
+    if (isPro && !bridge.stable) {
+      return acc;
+    }
+
+    const check = (ver1: Departure, ver2: Departure) => {
+      const departure = acc.find((item) => isEqual(item[0], ver1));
+      if (departure) {
+        departure[1].push(ver2);
+      } else {
+        acc.push([{ ...ver1 }, [{ ...ver2 }]]);
+      }
+    };
+
+    check(bridge.departure, bridge.arrival);
+    check(bridge.arrival, bridge.departure);
+
+    return acc;
+  }, [])
+);
+
+export const AIRDROP_GRAPH = new Map<Departure, Arrival[]>([
+  [{ network: 'ethereum', mode: 'native' }, [{ network: 'crab', mode: 'native' }]],
+  [{ network: 'tron', mode: 'native' }, [{ network: 'crab', mode: 'native' }]],
 ]);

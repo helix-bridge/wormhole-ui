@@ -15,7 +15,7 @@ import {
   DVMToken,
   DVMTransfer,
   Erc20Token,
-  EthereumChainDVMConfig,
+  DVMChainConfig,
   IssuingDVMToken,
   MappedToken,
   Network,
@@ -68,7 +68,7 @@ interface DVMProps {
 interface TransferInfoProps {
   amount: string;
   tokenInfo: MemoedTokenInfo | null;
-  transfer: NoNullTransferNetwork<EthereumChainDVMConfig, ChainConfig>;
+  transfer: NoNullTransferNetwork<DVMChainConfig, ChainConfig>;
   dailyLimit: DailyLimit | null;
   fee: string | null;
 }
