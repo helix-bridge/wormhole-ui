@@ -2,7 +2,6 @@ export * from './address';
 export * from './args';
 export * from './balance';
 export * from './block';
-export * from './bridges';
 export * from './common';
 export * from './copy';
 export * from './types';

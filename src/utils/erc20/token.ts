@@ -29,6 +29,7 @@ import {
   RopstenConfig,
   Tx,
 } from '../../model';
+import { isS2S, isSubstrateDVM2Substrate } from '../bridge';
 import {
   apiUrl,
   ClaimNetworkPrefix,
@@ -36,8 +37,6 @@ import {
   encodeMMRRootMessage,
   getMMR,
   getMPTProof,
-  isS2S,
-  isSubstrateDVM2Substrate,
   MMRProof,
 } from '../helper';
 import { chainConfigToVertices, connect, entrance, getAvailableNetwork, getMetamaskActiveAccount } from '../network';

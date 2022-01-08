@@ -1,7 +1,8 @@
 import { SubstrateSubstrateDVMBridgeConfig } from '../../model';
 import { EVOLUTION_DOMAIN } from '../network';
+import { Bridge } from './bridge';
 
-export const pangoroPangolinDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
+const pangoroPangolinDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
   specVersion: 27020,
   api: {
     dapp: 'https://api.darwinia.network.l2me.com',
@@ -10,3 +11,9 @@ export const pangoroPangolinDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
     subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-pangoro',
   },
 };
+
+export const pangoroPangolinDVM = new Bridge(
+  { network: 'pangoro', mode: 'native' },
+  { network: 'pangolin', mode: 'dvm' },
+  pangoroPangolinDVMConfig
+);

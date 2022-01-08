@@ -1,7 +1,8 @@
 import { EVOLUTION_DOMAIN } from '../network';
 import { EthereumDarwiniaBridgeConfig } from '../../model';
+import { Bridge } from './bridge';
 
-export const ropstenPangolinConfig: EthereumDarwiniaBridgeConfig = {
+const ropstenPangolinConfig: EthereumDarwiniaBridgeConfig = {
   specVersion: 27020,
   api: {
     dapp: 'https://api.darwinia.network.l2me.com',
@@ -23,3 +24,9 @@ export const ropstenPangolinConfig: EthereumDarwiniaBridgeConfig = {
     },
   ],
 };
+
+export const ropstenPangolin = new Bridge(
+  { network: 'ropsten', mode: 'native' },
+  { network: 'pangolin', mode: 'native' },
+  ropstenPangolinConfig
+);

@@ -1,7 +1,8 @@
 import { EVOLUTION_DOMAIN } from '../network';
 import { SubstrateSubstrateDVMBridgeConfig } from '../../model';
+import { Bridge } from './bridge';
 
-export const darwiniaCrabDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
+const darwiniaCrabDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
   specVersion: 1180,
   api: {
     dapp: 'https://api.darwinia.network',
@@ -11,3 +12,12 @@ export const darwiniaCrabDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
     //     subqlMMr: 'https://api.subquery.network/sq/darwinia-network/darwinia-mmr',
   },
 };
+
+/**
+ * substrate <-> substrate dvm
+ */
+export const darwiniaCrabDVM = new Bridge(
+  { network: 'darwinia', mode: 'native' },
+  { network: 'crab', mode: 'dvm' },
+  darwiniaCrabDVMConfig
+);

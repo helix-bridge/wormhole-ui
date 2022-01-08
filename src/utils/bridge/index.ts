@@ -1,5 +1,8 @@
-import { BridgePredicateFn, ChainConfig } from '../../model';
-import { getArrival, isEthereumNetwork, isPolkadotNetwork } from '../network';
+import { isEqual } from 'lodash';
+import { ComingSoon } from '../../components/ComingSoon';
+import { Bridge, BRIDGES } from '../../config';
+import { BridgePredicateFn, ChainConfig, TransferNetwork } from '../../model';
+import { chainConfigToVertices, getArrival, isEthereumNetwork, isPolkadotNetwork } from '../network';
 
 export const isSubstrate2SubstrateDVM: BridgePredicateFn = (departure, arrival) => {
   return isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network) && arrival.mode === 'dvm';
@@ -40,4 +43,45 @@ export function isBridgeAvailable(from: ChainConfig, to: ChainConfig): boolean {
   const bridge = getArrival(from, to);
 
   return !!bridge && bridge.status === 'available';
+}
+
+function findBridge({ from, to }: TransferNetwork) {
+  if (!from) {
+    return null;
+  }
+
+  const departure = chainConfigToVertices(from);
+  let bridge: Bridge | null = null;
+
+  if (!to) {
+    bridge = BRIDGES.find((item) => isEqual(item.departure, departure)) ?? null;
+  } else {
+    const arrival = chainConfigToVertices(to);
+    const direction = [departure, arrival];
+
+    bridge = BRIDGES.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction)) ?? null;
+  }
+
+  return bridge;
+}
+
+export function getComponent(type: 'crossChain' | 'record') {
+  return function (transfer: TransferNetwork) {
+    const bridge = findBridge(transfer);
+
+    if (!bridge) {
+      return ComingSoon;
+    }
+
+    switch (type) {
+      case 'record':
+        return isEqual(bridge.departure, chainConfigToVertices(transfer.from!))
+          ? bridge.IssuingRecordComponent
+          : bridge.RedeemRecordComponent;
+      default:
+        return isEqual(bridge.departure, chainConfigToVertices(transfer.from!))
+          ? bridge.IssuingCrossChainComponent
+          : bridge.RedeemCrossChainComponent;
+    }
+  };
 }

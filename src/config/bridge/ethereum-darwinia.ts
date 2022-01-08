@@ -1,7 +1,8 @@
 import { EthereumDarwiniaBridgeConfig } from '../../model';
 import { EVOLUTION_DOMAIN } from '../network';
+import { Bridge } from './bridge';
 
-export const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
+const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
   specVersion: 1180,
   api: { dapp: 'https://api.darwinia.network', evolution: EVOLUTION_DOMAIN.product },
   contracts: {
@@ -25,3 +26,9 @@ export const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
     },
   ],
 };
+
+export const ethereumDarwinia = new Bridge(
+  { network: 'ethereum', mode: 'native' },
+  { network: 'darwinia', mode: 'native' },
+  ethereumDarwiniaConfig
+);

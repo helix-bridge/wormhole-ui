@@ -5,14 +5,15 @@ import { FunctionComponent, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RecordComponentProps } from '../../config';
 import { Vertices } from '../../model';
-import { verticesToChainConfig } from '../../utils';
-import { getRecordComponent } from '../bridge/finder';
+import { getComponent, verticesToChainConfig } from '../../utils';
 
 interface RecordListProps {
   departure: Vertices;
   arrival: Vertices;
   sourceData: { count: number; list: Record<string, string | number | null | undefined>[] };
 }
+
+const getRecordComponent = getComponent('record');
 
 export function RecordList({ departure, arrival, sourceData }: RecordListProps) {
   const { t } = useTranslation();

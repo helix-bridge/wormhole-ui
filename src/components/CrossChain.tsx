@@ -5,11 +5,19 @@ import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
 import { BridgeFormProps, Network, NetworkMode, SubmitFn, TransferFormValues, TransferNetwork } from '../model';
-import { emptyObsFactory, getInitialSetting, verticesToChainConfig, isReachable, isSameNetConfig } from '../utils';
+import {
+  emptyObsFactory,
+  getInitialSetting,
+  verticesToChainConfig,
+  isReachable,
+  isSameNetConfig,
+  getComponent,
+} from '../utils';
 import { Airport } from './Airport';
 import { Nets } from './controls/Nets';
-import { getBridgeComponent } from './bridge/finder';
 import { FromItemButton, SubmitButton } from './SubmitButton';
+
+const getCrossChainComponent = getComponent('crossChain');
 
 const getTransferFromSettings: () => TransferNetwork = () => {
   const come = getInitialSetting('from', '') as Network;
@@ -100,7 +108,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
       {isCross &&
         isFromReady &&
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        React.createElement(getBridgeComponent(transfer) as FunctionComponent<BridgeFormProps<any>>, {
+        React.createElement(getCrossChainComponent(transfer) as FunctionComponent<BridgeFormProps<any>>, {
           form,
           setSubmit,
         })}
