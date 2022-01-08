@@ -18,8 +18,9 @@ export interface CustomFormControlProps<T = string> {
 
 export type SubmitFn = (value: TransferFormValues) => Subscription;
 
-export interface BridgeFormProps<T extends TransferParty> {
+export interface TransferComponentProps<T extends TransferParty> {
   form: FormInstance<TransferFormValues<T>>;
+  transfer: NoNullTransferNetwork;
   setSubmit: React.Dispatch<React.SetStateAction<SubmitFn>>;
 }
 

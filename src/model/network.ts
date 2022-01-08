@@ -127,7 +127,7 @@ export type RopstenConfig = EthereumConfig;
 
 /* ----------------------------------------Tron network config-------------------------------------------------- */
 
-type TronConfig = ChainConfig<Extract<ApiKeys, 'dapp'>>;
+export type TronConfig = ChainConfig<Extract<ApiKeys, 'dapp'>>;
 
 type NetworkMetaConfig<T extends Network, C extends ChainConfig<never>> = Config<T, C>;
 

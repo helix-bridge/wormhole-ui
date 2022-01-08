@@ -3,7 +3,7 @@ import { from, switchMap } from 'rxjs';
 import { FORM_CONTROL, RegisterStatus } from '../../../config';
 import {
   ApiKeys,
-  BridgeFormProps,
+  TransferComponentProps,
   ChainConfig,
   DailyLimit,
   DVMToken,
@@ -21,7 +21,7 @@ import { DVM } from '../DVM';
 /**
  * @description test chain: pangolin dvm -> pangoro
  */
-export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMTransfer>) {
+export function SubstrateDVM2Substrate({ form, setSubmit, transfer }: TransferComponentProps<DVMTransfer>) {
   const transform = useCallback((value: DVMToken) => {
     return from(getS2SMappingParams(value.transfer.from.provider.rpc)).pipe(
       switchMap(({ mappingAddress }) =>
@@ -67,6 +67,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit }: BridgeFormProps<DVMT
   return (
     <DVM
       form={form}
+      transfer={transfer}
       setSubmit={setSubmit}
       transform={transform}
       canRegister={false}

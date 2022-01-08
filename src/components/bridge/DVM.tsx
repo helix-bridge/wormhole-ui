@@ -9,7 +9,7 @@ import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
 import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappedTokens, useTx } from '../../hooks';
 import {
-  BridgeFormProps,
+  TransferComponentProps,
   ChainConfig,
   DailyLimit,
   DVMToken,
@@ -141,8 +141,9 @@ export function DVM({
   canRegister,
   getDailyLimit,
   getFee,
+  transfer,
   isDVM = true,
-}: BridgeFormProps<DVMTransfer> & DVMProps) {
+}: TransferComponentProps<DVMTransfer> & DVMProps) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
@@ -264,6 +265,7 @@ export function DVM({
 
       <RecipientItem
         form={form}
+        transfer={transfer}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
@@ -336,7 +338,6 @@ export function DVM({
                 Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount
                 <Button
                   onClick={async () => {
-                    const transfer = form.getFieldValue(FORM_CONTROL.transfer) as NoNullTransferNetwork;
                     const value: Pick<ApproveValue, 'transfer' | 'sender' | 'asset'> = {
                       sender: account,
                       transfer,

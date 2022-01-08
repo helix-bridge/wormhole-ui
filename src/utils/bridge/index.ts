@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
 import { ComingSoon } from '../../components/ComingSoon';
-import { Bridge, BRIDGES } from '../../config';
-import { BridgePredicateFn, ChainConfig, TransferNetwork } from '../../model';
+import { BRIDGES } from '../../config';
+import { BridgePredicateFn, ChainConfig, Departure, TransferNetwork } from '../../model';
 import { chainConfigToVertices, getArrival, isEthereumNetwork, isPolkadotNetwork } from '../network';
 
 export const isSubstrate2SubstrateDVM: BridgePredicateFn = (departure, arrival) => {
@@ -45,29 +45,26 @@ export function isBridgeAvailable(from: ChainConfig, to: ChainConfig): boolean {
   return !!bridge && bridge.status === 'available';
 }
 
-function findBridge({ from, to }: TransferNetwork) {
-  if (!from) {
-    return null;
-  }
-
-  const departure = chainConfigToVertices(from);
-  let bridge: Bridge | null = null;
-
-  if (!to) {
-    bridge = BRIDGES.find((item) => isEqual(item.departure, departure)) ?? null;
-  } else {
-    const arrival = chainConfigToVertices(to);
-    const direction = [departure, arrival];
-
-    bridge = BRIDGES.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction)) ?? null;
-  }
+function getBridge([departure, arrival]: [Departure, Departure]) {
+  const direction = [departure, arrival];
+  const bridge = BRIDGES.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction)) ?? null;
 
   return bridge;
 }
 
-export function getComponent(type: 'crossChain' | 'record') {
-  return function (transfer: TransferNetwork) {
-    const bridge = findBridge(transfer);
+export function getBridgeComponent(type: 'crossChain' | 'record') {
+  // eslint-disable-next-line complexity
+  return (transfer: TransferNetwork) => {
+    const { from, to } = transfer;
+
+    if (!from || !to) {
+      return null;
+    }
+
+    const departure = chainConfigToVertices(from);
+    const arrival = chainConfigToVertices(to);
+    const direction = [departure, arrival] as [Departure, Departure];
+    const bridge = getBridge(direction);
 
     if (!bridge) {
       return ComingSoon;
@@ -75,11 +72,9 @@ export function getComponent(type: 'crossChain' | 'record') {
 
     switch (type) {
       case 'record':
-        return isEqual(bridge.departure, chainConfigToVertices(transfer.from!))
-          ? bridge.IssuingRecordComponent
-          : bridge.RedeemRecordComponent;
+        return isEqual(bridge.issuing, direction) ? bridge.IssuingRecordComponent : bridge.RedeemRecordComponent;
       default:
-        return isEqual(bridge.departure, chainConfigToVertices(transfer.from!))
+        return isEqual(bridge.issuing, direction)
           ? bridge.IssuingCrossChainComponent
           : bridge.RedeemCrossChainComponent;
     }

@@ -11,7 +11,7 @@ import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../../hooks';
 import {
-  BridgeFormProps,
+  TransferComponentProps,
   Erc20Token,
   Ethereum2DarwiniaTransfer,
   Network,
@@ -246,7 +246,7 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
  * @description test chain: ropsten -> pangolin
  */
 // eslint-disable-next-line complexity
-export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2DarwiniaTransfer>) {
+export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferComponentProps<Ethereum2DarwiniaTransfer>) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(BN_ZERO);
   const [max, setMax] = useState<BN | null>(null);
@@ -389,6 +389,7 @@ export function Ethereum2Darwinia({ form, setSubmit }: BridgeFormProps<Ethereum2
 
       <RecipientItem
         form={form}
+        transfer={transfer}
         extraTip={
           <span className="inline-block mt-2 px-2">
             <Trans>

@@ -17,8 +17,7 @@ import {
 } from '../../../hooks';
 import {
   AvailableBalance,
-  BridgeFormProps,
-  ChainConfig,
+  TransferComponentProps,
   CrabConfig,
   DailyLimit,
   EthereumChainDVMConfig,
@@ -30,6 +29,7 @@ import {
   Substrate2SubstrateDVMTransfer,
   TokenChainInfo,
   TransferFormValues,
+  ChainConfig,
 } from '../../../model';
 import {
   amountLessThanFeeRule,
@@ -117,7 +117,11 @@ function TransferInfo({ fee, balance, tokenInfo, amount, dailyLimit }: TransferI
  * @description test chain: pangoro -> pangolin dvm
  */
 // eslint-disable-next-line complexity
-export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Substrate2SubstrateDVMTransfer>) {
+export function Substrate2SubstrateDVM({
+  form,
+  setSubmit,
+  transfer,
+}: TransferComponentProps<Substrate2SubstrateDVMTransfer>) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
@@ -165,7 +169,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
         return null;
       }
 
-      const arrival = form.getFieldValue(FORM_CONTROL.transfer).to as EthereumChainDVMConfig;
+      const { to: arrival } = transfer as NoNullTransferNetwork<ChainConfig, EthereumChainDVMConfig>;
       const web3 = entrance.web3.getInstance(arrival.ethereumChain.rpcUrls[0]);
       const { mappingAddress } = await getS2SMappingParams(arrival.provider.rpc);
       const contract = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
@@ -182,7 +186,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
       return { limit, spentToday };
     },
-    [form, targetChainTokens]
+    [targetChainTokens, transfer]
   );
   const isMounted = useIsMounted();
 
@@ -220,20 +224,14 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
   }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
 
   useEffect(() => {
-    const transfer: NoNullTransferNetwork<ChainConfig, PangolinConfig | CrabConfig> = form.getFieldValue([
-      FORM_CONTROL.transfer,
-    ]);
-
-    if (!transfer.to || !transfer.from) {
-      return;
-    }
-
-    const sub$$ = getKnownMappedTokens('null', transfer.to, transfer.from).subscribe(({ tokens }) => {
-      setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
-    });
+    const sub$$ = getKnownMappedTokens('null', transfer.to as PangolinConfig | CrabConfig, transfer.from).subscribe(
+      ({ tokens }) => {
+        setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
+      }
+    );
 
     return () => sub$$?.unsubscribe();
-  }, [form]);
+  }, [transfer.from, transfer.to]);
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
@@ -304,6 +302,7 @@ export function Substrate2SubstrateDVM({ form, setSubmit }: BridgeFormProps<Subs
 
       <RecipientItem
         form={form}
+        transfer={transfer}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}

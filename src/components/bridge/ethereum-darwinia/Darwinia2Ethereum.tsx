@@ -17,7 +17,7 @@ import {
 } from '../../../hooks';
 import {
   AvailableBalance,
-  BridgeFormProps,
+  TransferComponentProps,
   Darwinia2EthereumTransfer,
   IssuingDarwiniaToken,
   NoNullTransferNetwork,
@@ -179,7 +179,7 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
  * @description test chain: pangolin -> ropsten
  */
 // eslint-disable-next-line complexity
-export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2EthereumTransfer>) {
+export function Darwinia2Ethereum({ form, setSubmit, transfer }: TransferComponentProps<Darwinia2EthereumTransfer>) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
@@ -307,6 +307,7 @@ export function Darwinia2Ethereum({ form, setSubmit }: BridgeFormProps<Darwinia2
 
       <RecipientItem
         form={form}
+        transfer={transfer}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}

@@ -1,23 +1,32 @@
 import { Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import React, { FunctionComponent, useCallback, useEffect, useState } from 'react';
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
-import { BridgeFormProps, Network, NetworkMode, SubmitFn, TransferFormValues, TransferNetwork } from '../model';
+import {
+  TransferComponentProps,
+  Network,
+  NetworkMode,
+  SubmitFn,
+  TransferFormValues,
+  TransferNetwork,
+  TransferParty,
+  NoNullTransferNetwork,
+} from '../model';
 import {
   emptyObsFactory,
   getInitialSetting,
   verticesToChainConfig,
   isReachable,
   isSameNetConfig,
-  getComponent,
+  getBridgeComponent,
 } from '../utils';
 import { Airport } from './Airport';
 import { Nets } from './controls/Nets';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
-const getCrossChainComponent = getComponent('crossChain');
+const getCrossChainComponent = getBridgeComponent('crossChain');
 
 const getTransferFromSettings: () => TransferNetwork = () => {
   const come = getInitialSetting('from', '') as Network;
@@ -54,18 +63,26 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
     disconnect,
   } = useApi();
   const [transfer, setTransfer] = useState(() => validateTransfer(getTransferFromSettings(), isCross));
-  const [isFromReady, setIsFromReady] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [submitFn, setSubmit] = useState<SubmitFn>(emptyObsFactory);
   const { tx } = useTx();
   const launch = useCallback(() => {
     form.validateFields().then((values) => submitFn(values));
   }, [form, submitFn]);
+  const Content = useMemo(() => {
+    if (!isCross) {
+      return Airport;
+    }
+    const Comp = getCrossChainComponent(transfer) as FunctionComponent<TransferComponentProps<TransferParty>>;
+
+    return Comp ?? null;
+  }, [isCross, transfer]);
 
   useEffect(() => {
-    const { from } = transfer;
-    const isReady = !!from && isSameNetConfig(from, network) && status === 'success';
+    const { from, to } = transfer;
+    const fromReady = !!from && isSameNetConfig(from, network) && status === 'success';
 
-    setIsFromReady(isReady);
+    setIsReady(fromReady && !!to);
   }, [network, status, transfer]);
 
   return (
@@ -85,7 +102,6 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
             validator: (_, value: TransferNetwork) => {
               return (value.from && value.to) || (!value.from && !value.to) ? Promise.resolve() : Promise.reject();
             },
-            message: t('You maybe forgot to select receive or sending network'),
           },
         ]}
       >
@@ -105,14 +121,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
         />
       </Form.Item>
 
-      {isCross &&
-        isFromReady &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        React.createElement(getCrossChainComponent(transfer) as FunctionComponent<BridgeFormProps<any>>, {
-          form,
-          setSubmit,
-        })}
-      {!isCross && isFromReady && <Airport form={form} transfer={transfer} setSubmit={setSubmit} />}
+      {isReady && Content && <Content form={form} transfer={transfer as NoNullTransferNetwork} setSubmit={setSubmit} />}
 
       <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
         <SubmitButton {...transfer} requireTo launch={launch} />

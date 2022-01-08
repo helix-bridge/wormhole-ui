@@ -8,7 +8,7 @@ import { catchError, EMPTY, from, map, Observable, of } from 'rxjs';
 import Web3 from 'web3';
 import { DATE_TIME_FORMATE, FORM_CONTROL } from '../config';
 import { useApi } from '../hooks';
-import { BridgeFormProps, TransferFormValues, TransferNetwork } from '../model';
+import { TransferComponentProps, TransferFormValues, TransferNetwork } from '../model';
 import { buf2hex, entrance, getAirdropData, isValidAddress } from '../utils';
 
 type AirportValues = TransferFormValues<{
@@ -64,7 +64,11 @@ function signWith(data: AirportValues): Observable<SignRes> {
   );
 }
 
-export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportValues> & { transfer: TransferNetwork }) {
+export function Airport({
+  setSubmit,
+  form,
+  transfer,
+}: TransferComponentProps<AirportValues> & { transfer: TransferNetwork }) {
   const { t } = useTranslation();
   const [signature] = useState<string>('');
   const {

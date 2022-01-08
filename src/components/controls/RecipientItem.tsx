@@ -5,20 +5,21 @@ import { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
 import { useLock } from '../../hooks';
-import { BridgeFormProps, NoNullTransferNetwork, TransferFormValues, TransferParty } from '../../model';
+import { TransferComponentProps, NoNullTransferNetwork, TransferFormValues, TransferParty } from '../../model';
 import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../../utils';
 
 // eslint-disable-next-line complexity
 export function RecipientItem({
   form,
   extraTip,
+  transfer,
   isDvm = false,
-}: Omit<BridgeFormProps<TransferParty>, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
+}: Omit<TransferComponentProps<TransferParty>, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
   const { t } = useTranslation();
   const [lock] = useLock(form as FormInstance<TransferFormValues<TransferParty, NoNullTransferNetwork>>);
 
-  const { to } = form.getFieldValue(FORM_CONTROL.transfer) || {};
-  const isPolkadot = isPolkadotNetwork(to?.name);
+  const { to } = transfer;
+  const isPolkadot = isPolkadotNetwork(to.name);
   const type = isPolkadot ? to.name : 'ethereum';
 
   return (
@@ -43,7 +44,7 @@ export function RecipientItem({
               return isValidAddress(value, !isDvm ? type : 'ethereum', true) ? Promise.resolve() : Promise.reject();
             },
             message: !isDvm
-              ? t('Please enter a valid {{network}} address', { network: upperFirst(to?.name) })
+              ? t('Please enter a valid {{network}} address', { network: upperFirst(to.name) })
               : t('Please fill in a {{network}} smart address which start with 0x', { network: upperFirst(to?.name) }),
           },
         ]}

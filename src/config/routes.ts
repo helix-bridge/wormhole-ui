@@ -1,5 +1,6 @@
 import { RouteProps } from 'react-router-dom';
 import { Page404 } from '../components/Page404';
+import { Airdrop } from '../pages/Airdrop';
 import { AirdropHistory } from '../pages/AirdropHistory';
 import { Configure } from '../pages/Configure';
 import { HistoryRecords } from '../pages/CrossHistory';
@@ -29,7 +30,7 @@ export const routes: RouteProps[] = [
   {
     exact: true,
     path: Path.airdrop,
-    component: Home,
+    component: Airdrop,
   },
   {
     exact: true,
