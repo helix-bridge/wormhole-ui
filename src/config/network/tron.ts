@@ -1,6 +1,6 @@
-import { TronConfig } from '../../model';
+import { ChainConfig } from '../../model';
 
-export const tronConfig: TronConfig = {
+export const tronConfig: ChainConfig = {
   facade: {
     logo: '/image/tron.png',
     logoMinor: '/image/tron.png',

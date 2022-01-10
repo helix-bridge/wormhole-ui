@@ -1,6 +1,6 @@
-import { RopstenConfig } from '../../model';
+import { EthereumChainConfig } from '../../model';
 
-export const ropstenConfig: RopstenConfig = {
+export const ropstenConfig: EthereumChainConfig = {
   ethereumChain: {
     chainId: '3',
     chainName: '',

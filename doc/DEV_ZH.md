@@ -19,7 +19,7 @@
 
 开发步骤实际没有先后顺序，由开发者自由决定，以下是建议采用的开发步骤：
 
-1. 添加网络配置。在 src/config/network.ts 中，主要的配置有 2 个， NETWORK_CONFIG 是各网络的配置信息，NETWORK_GRAPH 是桥的配置
+1. 添加网络配置。在 src/config/network.ts 中，主要的配置有 2 个， 是各网络的配置信息，NETWORK_GRAPH 是桥的配置
 
 1. 连接网络。在 src/utils/network/connection.ts 的 config 中配置连接网络的方法。
 

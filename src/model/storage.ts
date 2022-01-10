@@ -5,6 +5,6 @@ import { Network, ChainConfig } from './network';
 export interface StorageInfo extends HashInfo {
   theme?: THEME;
   enableTestNetworks?: boolean;
-  config?: Partial<ChainConfig>;
+  config?: Partial<{ [key in Network]: ChainConfig }>;
   custom?: Network[];
 }

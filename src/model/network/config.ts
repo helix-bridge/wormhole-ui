@@ -32,21 +32,3 @@ export interface PolkadotChainConfig extends ChainConfig {
 export interface DVMChainConfig extends EthereumChainConfig, PolkadotChainConfig {
   dvm: DVMTokenConfig;
 }
-
-/* ----------------------------------------Polkadot network config-------------------------------------------------- */
-
-export type CrabConfig = DVMChainConfig;
-
-export type PangoroConfig = PolkadotChainConfig;
-
-export type DarwiniaConfig = PolkadotChainConfig;
-
-/* ----------------------------------------Ethereum network config-------------------------------------------------- */
-
-export type EthereumConfig = EthereumChainConfig;
-
-export type RopstenConfig = EthereumChainConfig;
-
-/* ----------------------------------------Tron network config-------------------------------------------------- */
-
-export type TronConfig = ChainConfig;

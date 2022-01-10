@@ -4,18 +4,28 @@ import { upperFirst } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EMPTY, filter, from, iif, map, Observable, of, switchMap, take, tap, zip } from 'rxjs';
-import { abi, RecordComponentProps } from '../../config';
+import { abi } from '../../config';
 import { useTx } from '../../hooks';
-import { ConnectionStatus, D2EHistory as D2ERecordType, D2EMeta, EthereumConfig } from '../../model';
-import { ClaimNetworkPrefix, claimToken, connect, entrance } from '../../utils';
+import {
+  ConnectionStatus,
+  D2EHistory as D2ERecordType,
+  D2EMeta,
+  EthereumDarwiniaBridgeConfig,
+  RecordComponentProps,
+} from '../../model';
+import { ClaimNetworkPrefix, claimToken, connect, entrance, getBridge } from '../../utils';
 import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
 const BN_ZERO = new BN(0);
 
-function isSufficient(config: EthereumConfig, tokenType: 'ring' | 'kton', amount: BN): Observable<boolean> {
+function isSufficient(
+  config: EthereumDarwiniaBridgeConfig,
+  tokenType: 'ring' | 'kton',
+  amount: BN
+): Observable<boolean> {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const store = config.contracts.e2d;
+  const store = config.contracts;
   const contract = new web3.eth.Contract(abi.tokenIssuingABI, store.redeem);
   const limit = from(contract.methods.dailyLimit(store[tokenType]).call() as Promise<string>);
   const toadySpent = from(contract.methods.spentToday(store[tokenType]).call() as Promise<string>);
@@ -52,14 +62,15 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
           switchMap((_) => {
             const ringBN = new BN(ring);
             const ktonBN = new BN(kton);
+            const bridge = getBridge<EthereumDarwiniaBridgeConfig>([departure!, arrival!]);
             const isRingSufficient = iif(
               () => ringBN.gt(BN_ZERO),
-              isSufficient(arrival as EthereumConfig, 'ring', ringBN),
+              isSufficient(bridge.config, 'ring', ringBN),
               of(true)
             );
             const isKtonSufficient = iif(
               () => ktonBN.gt(BN_ZERO),
-              isSufficient(arrival as EthereumConfig, 'kton', ktonBN),
+              isSufficient(bridge.config, 'kton', ktonBN),
               of(true)
             );
 

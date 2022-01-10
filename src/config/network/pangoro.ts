@@ -1,6 +1,6 @@
-import { PangoroConfig } from '../../model';
+import { PolkadotChainConfig } from '../../model';
 
-export const pangoroConfig: PangoroConfig = {
+export const pangoroConfig: PolkadotChainConfig = {
   facade: {
     logo: '/image/pangoro.png',
     logoMinor: '/image/pangoro.png',

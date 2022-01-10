@@ -3,16 +3,7 @@ import { useCallback, useMemo, useReducer, useState } from 'react';
 import { map } from 'rxjs';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { RegisterStatus } from '../config';
-import {
-  Action,
-  CrabConfig,
-  Erc20RegisterStatus,
-  Erc20Token,
-  EthereumConfig,
-  DVMChainConfig,
-  RequiredPartial,
-  CrossChainDirection,
-} from '../model';
+import { Action, Erc20RegisterStatus, Erc20Token, NullableCrossChainDirection, RequiredPartial } from '../model';
 import { isDVM, isEthereumNetwork } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
 import { getKnownMappedTokens, StoredProof } from '../utils/erc20/token';
@@ -64,10 +55,7 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
  * @params {number} status - token register status 1:registered 2:registering
  */
 export const useMappedTokens = (
-  {
-    from,
-    to,
-  }: CrossChainDirection<DVMChainConfig | CrabConfig | EthereumConfig, DVMChainConfig | CrabConfig | EthereumConfig>,
+  { from, to }: NullableCrossChainDirection,
   status: Erc20RegisterStatus = RegisterStatus.unregister
 ) => {
   const [loading, setLoading] = useState(false);

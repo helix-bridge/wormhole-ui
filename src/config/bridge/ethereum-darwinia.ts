@@ -1,5 +1,6 @@
+import { darwiniaConfig, ethereumConfig } from '..';
 import { Bridge, EthereumDarwiniaBridgeConfig } from '../../model';
-import { EVOLUTION_DOMAIN } from '../evolution';
+import { EVOLUTION_DOMAIN } from '../api';
 
 const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
   specVersion: 1180,
@@ -29,8 +30,4 @@ const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
 /**
  * ethereum <-> darwinia
  */
-export const ethereumDarwinia = new Bridge(
-  { network: 'ethereum', mode: 'native' },
-  { network: 'darwinia', mode: 'native' },
-  ethereumDarwiniaConfig
-);
+export const ethereumDarwinia = new Bridge(ethereumConfig, darwiniaConfig, ethereumDarwiniaConfig);

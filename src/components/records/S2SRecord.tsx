@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Subscription, switchMapTo, tap } from 'rxjs';
-import { RecordComponentProps } from '../../config';
 import { useS2SRecords } from '../../hooks';
 import {
-  ApiKeys,
   BridgeDispatchEventRecord,
   PolkadotChainConfig,
+  RecordComponentProps,
   S2SBurnRecordRes,
   S2SHistoryRecord,
   S2SIssuingRecordRes,
@@ -19,7 +18,7 @@ export function S2SRecord({
   record: originRecord,
   departure,
   arrival,
-}: RecordComponentProps<S2SHistoryRecord, PolkadotChainConfig<ApiKeys>, PolkadotChainConfig<ApiKeys>>) {
+}: RecordComponentProps<S2SHistoryRecord, PolkadotChainConfig, PolkadotChainConfig>) {
   const { t } = useTranslation();
   const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchMessageEvent } = useS2SRecords(departure!, arrival!);
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);

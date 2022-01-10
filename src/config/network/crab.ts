@@ -1,6 +1,6 @@
-import { CrabConfig } from '../../model';
+import { DVMChainConfig } from '../../model';
 
-export const crabConfig: CrabConfig = {
+export const crabConfig: DVMChainConfig = {
   dvm: {
     kton: '0xbfE9E136270cE46A2A6a8E8D54718BdAEBEbaA3D',
     ring: '0x588abe3F7EE935137102C5e2B8042788935f4CB0',

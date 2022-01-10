@@ -4,7 +4,7 @@ import { mount } from '@cypress/react';
 import { Suspense } from 'react';
 import { EMPTY } from 'rxjs';
 import { Progress, ProgressProps, State } from '../components/records/Progress';
-import { NETWORK_CONFIG } from '../config';
+import { pangolinConfig as pangolin, pangoroConfig as pangoro } from '../config';
 import '../index.scss';
 import { ApiProvider, TxProvider } from '../providers';
 import '../theme/antd/index.less';
@@ -15,7 +15,7 @@ describe('Progress Component', () => {
     const data = {
       title: 'Pangolin Sent',
       steps: [{ name: '', state: State.completed }],
-      network: NETWORK_CONFIG.pangolin,
+      network: pangolin,
       icon: img('pangolin.svg'),
     };
 
@@ -38,7 +38,7 @@ describe('Progress Component', () => {
     const data = {
       title: 'Pangolin Sent',
       steps: [{ name: '', state: State.error }],
-      network: NETWORK_CONFIG.pangolin,
+      network: pangolin,
       icon: img('pangolin.svg'),
     };
 
@@ -61,7 +61,7 @@ describe('Progress Component', () => {
     const data = {
       title: 'Pangolin Sent',
       steps: [{ name: '', state: State.pending }],
-      network: NETWORK_CONFIG.pangolin,
+      network: pangolin,
       icon: img('pangolin.svg'),
     };
 
@@ -85,7 +85,7 @@ describe('Progress Component', () => {
     const data: ProgressProps = {
       title: 'Pangolin Confirmed',
       steps: [{ state: State.completed, txHash: '0xabcdefghijklmnopqrst' }],
-      network: NETWORK_CONFIG.pangolin,
+      network: pangolin,
       icon: img('pangolin.svg'),
     };
 

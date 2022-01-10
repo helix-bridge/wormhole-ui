@@ -1,8 +1,8 @@
-import { isEqual } from 'lodash';
+import { has, isEqual, pick } from 'lodash';
 import { ComingSoon } from '../../components/ComingSoon';
 import { BRIDGES } from '../../config';
-import { ChainConfig, Departure, CrossChainDirection, Vertices } from '../../model';
-import { chainConfigToVertices, getArrival, isEthereumNetwork, isPolkadotNetwork } from '../network';
+import { ChainConfig, Departure, CrossChainDirection, Vertices, Bridge, BridgeConfig } from '../../model';
+import { chainConfigToVertices, isEthereumNetwork, isPolkadotNetwork } from '../network';
 
 type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => boolean;
 
@@ -38,20 +38,41 @@ export const isS2S: BridgePredicateFn = (departure, arrival) => {
 };
 
 export function hasBridge(from: ChainConfig, to: ChainConfig): boolean {
-  return !!getArrival(from, to);
+  try {
+    getBridge([from, to]);
+
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 export function isBridgeAvailable(from: ChainConfig, to: ChainConfig): boolean {
-  const bridge = getArrival(from, to);
+  const bridge = getBridge([from, to]);
 
   return !!bridge && bridge.status === 'available';
 }
 
-function getBridge([departure, arrival]: [Departure, Departure]) {
-  const direction = [departure, arrival];
-  const bridge = BRIDGES.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction)) ?? null;
+export function getBridge<T extends BridgeConfig>(
+  source: CrossChainDirection | [Vertices | ChainConfig, Vertices | ChainConfig]
+): Bridge<T> {
+  const data = Array.isArray(source) ? source : ([source.from, source.to] as [ChainConfig, ChainConfig]);
+  const direction = data.map((item) => {
+    const asVertices = has(item, 'network') && has(item, 'mode');
 
-  return bridge;
+    if (asVertices) {
+      return pick(item as Vertices, ['network', 'mode']) as Vertices;
+    }
+
+    return chainConfigToVertices(item as ChainConfig);
+  });
+  const bridge = BRIDGES.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction));
+
+  if (!bridge) {
+    throw new Error(`Bridge from ${direction[0]?.network} to ${direction[1]?.network} is not exist`);
+  }
+
+  return bridge as Bridge<T>;
 }
 
 export function getBridgeComponent(type: 'crossChain' | 'record') {

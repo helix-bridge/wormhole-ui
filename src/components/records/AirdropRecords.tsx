@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { map } from 'rxjs';
 import Web3 from 'web3';
-import { DATE_TIME_FORMATE, FORM_CONTROL, NETWORK_CONFIG, NETWORK_LIGHT_THEME, SubscanApiPath } from '../../config';
+import { crabConfig, DATE_TIME_FORMATE, FORM_CONTROL, NETWORK_LIGHT_THEME, SubscanApiPath } from '../../config';
 import { airportsDepartureFilter, useApi, useNetworks } from '../../hooks';
 import { ClaimsRes, ChainConfig, Network, SubscanResponse } from '../../model';
 import { apiUrl, fromWei, getAirdropData, getInitialSetting, isSameNetConfig, rxGet } from '../../utils';
@@ -15,6 +15,7 @@ import { LinkIndicator } from '../LinkIndicator';
 import { SubmitButton } from '../SubmitButton';
 
 const SNAPSHOT_TIMESTAMP = 1584683400;
+const CLAIM_ENDPOINT = 'https://crab.subscan.io';
 
 // eslint-disable-next-line complexity
 export function AirdropRecords() {
@@ -45,10 +46,9 @@ export function AirdropRecords() {
   }, [setFromFilters]);
 
   useEffect(() => {
-    const toNetwork = NETWORK_CONFIG.crab;
     // FIXME: api error because of cors
     const sub$$ = rxGet<SubscanResponse<ClaimsRes>>({
-      url: apiUrl(toNetwork.api.subscan, SubscanApiPath.claims),
+      url: apiUrl(CLAIM_ENDPOINT, SubscanApiPath.claims),
       params: { address: sender },
     })
       .pipe(map((res) => res?.data?.info))
@@ -120,7 +120,7 @@ export function AirdropRecords() {
           </Form.Item>
         </>
       )}
-      <SubmitButton from={fromNetwork} to={NETWORK_CONFIG.crab} hideSubmit></SubmitButton>
+      <SubmitButton from={fromNetwork} to={crabConfig} hideSubmit></SubmitButton>
     </Form>
   );
 }

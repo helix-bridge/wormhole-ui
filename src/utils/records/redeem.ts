@@ -1,6 +1,6 @@
 import { catchError, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
+import { DarwiniaApiPath } from '../../config';
 import { HistoryReq, RedeemHistoryRes, RingBurnHistoryRes } from '../../model';
 import { apiUrl } from '../helper';
 import { rxGet } from './api';
@@ -16,7 +16,7 @@ export function queryEthereum2DarwiniaRedeemRecords({
   network,
   paginator,
 }: HistoryReq): Observable<RedeemHistoryRes | null> {
-  const api = NETWORK_CONFIG[network].api.dapp;
+  const api = [network].api.dapp;
 
   return rxGet<RedeemHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.redeem),
@@ -42,7 +42,7 @@ export function queryEthereum2DarwiniaGenesisRecords({
   network,
   paginator,
 }: HistoryReq): Observable<RingBurnHistoryRes | null> {
-  const api = NETWORK_CONFIG[network].api.dapp;
+  const api = [network].api.dapp;
 
   return rxGet<RingBurnHistoryRes & { isGenesis: boolean }>({
     url: apiUrl(api, DarwiniaApiPath.ringBurn),
@@ -74,7 +74,7 @@ export function queryEthereum2DarwiniaDVMRedeemRecords({
   network,
   paginator,
 }: HistoryReq): Observable<RedeemHistoryRes | null> {
-  const api = NETWORK_CONFIG[network].api.dapp;
+  const api = [network].api.dapp;
 
   return rxGet<RedeemHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.tokenLock),

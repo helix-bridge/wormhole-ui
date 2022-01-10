@@ -1,18 +1,15 @@
-import { Bridge, EthereumCrabDVMConfig } from '../../model';
-import { EVOLUTION_DOMAIN } from '../evolution';
+import { Bridge, EthereumDVMBridgeConfig } from '../../model';
+import { EVOLUTION_DOMAIN } from '../api';
+import { ethereumConfig, crabConfig } from '../network';
 
-const ethereumCrabDVMConfig: EthereumCrabDVMConfig = {
+const ethereumCrabDVMConfig: EthereumDVMBridgeConfig = {
   specVersion: 1180,
   api: { dapp: 'https://api.darwinia.network', evolution: EVOLUTION_DOMAIN.product },
   contracts: {
     issuing: '',
     redeem: '',
+    proof: '',
   },
 };
 
-export const ethereumCrabDVM = new Bridge(
-  { network: 'ethereum', mode: 'native' },
-  { network: 'crab', mode: 'dvm' },
-  ethereumCrabDVMConfig,
-  { stable: false }
-);
+export const ethereumCrabDVM = new Bridge(ethereumConfig, crabConfig, ethereumCrabDVMConfig, { stable: false });

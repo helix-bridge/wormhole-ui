@@ -28,7 +28,7 @@ import { FromItemButton, SubmitButton } from './SubmitButton';
 
 const getCrossChainComponent = getBridgeComponent('crossChain');
 
-const getDirectionFromSettings: () => CrossChainDirection = () => {
+const getDirectionFromSettings: () => NullableCrossChainDirection = () => {
   const come = getInitialSetting('from', '') as Network;
   const go = getInitialSetting('to', '') as Network;
   const fromMode = getInitialSetting('fMode', '') as NetworkMode;
@@ -45,7 +45,7 @@ const getDirectionFromSettings: () => CrossChainDirection = () => {
   }
 };
 
-const validateDirection: (dir: CrossChainDirection, isCross: boolean) => NullableCrossChainDirection = (
+const validateDirection: (dir: NullableCrossChainDirection, isCross: boolean) => NullableCrossChainDirection = (
   dir,
   isCross
 ) => {

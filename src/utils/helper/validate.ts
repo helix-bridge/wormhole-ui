@@ -4,8 +4,8 @@ import BN from 'bn.js';
 import type { ValidatorRule } from 'rc-field-form/lib/interface';
 import { TFunction } from 'react-i18next';
 import Web3 from 'web3';
-import { NETWORK_CONFIG } from '../../config';
-import { Network, NetworkCategory, PolkadotTypeNetwork, TokenChainInfo } from '../../model';
+import { NETWORK_CONFIGURATIONS } from '../../config';
+import { Network, NetworkCategory, PolkadotChainConfig, PolkadotTypeNetwork, TokenChainInfo } from '../../model';
 import { isPolkadotNetwork } from '../network';
 import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
 import { toWei } from './balance';
@@ -24,9 +24,9 @@ export const isValidAddress = (address: string, network: Network | NetworkCatego
   }
 
   if (isPolkadotNetwork(network as PolkadotTypeNetwork)) {
-    return strict
-      ? isSS58Address(address, NETWORK_CONFIG[network as PolkadotTypeNetwork].ss58Prefix)
-      : isSS58Address(address);
+    const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network) as PolkadotChainConfig;
+
+    return strict ? isSS58Address(address, target.ss58Prefix) : isSS58Address(address);
   }
 
   if (network === 'tron') {
@@ -86,8 +86,8 @@ export const isSameAddress = (from: string, to: string): boolean => {
     }
 
     if (isSS58Address(to)) {
-      toAddress = convertToSS58(to, NETWORK_CONFIG.darwinia.ss58Prefix);
-      fromAddress = convertToSS58(from, NETWORK_CONFIG.darwinia.ss58Prefix);
+      toAddress = convertToSS58(to, 0);
+      fromAddress = convertToSS58(from, 0);
     }
   }
 

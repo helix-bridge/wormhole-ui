@@ -4,7 +4,7 @@ import { hexToU8a } from '@polkadot/util';
 import { lastValueFrom, map } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
 import { MMR_QUERY } from '../../config';
-import { DarwiniaConfig, Network, DVMChainConfig } from '../../model';
+import { Network, ChainConfig } from '../../model';
 import { genProof } from '../mmr';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
 import { getNetworkByName, waitUntilConnected } from '../network';
@@ -125,7 +125,7 @@ async function getMMRProofByRPC(api: ApiPromise, blockNumber: number, mmrBlockNu
 
 async function getMMRProofBySubql(api: ApiPromise, blockNumber: number, mmrBlockNumber: number) {
   const chain = (await api.rpc.system.chain()).toString().toLowerCase() as Extract<Network, 'pangolin' | 'darwinia'>;
-  const config = getNetworkByName(chain) as DVMChainConfig | DarwiniaConfig;
+  const config = getNetworkByName(chain) as ChainConfig;
   const fetchProofs = proofsFactory(config.api.subqlMMr);
   const proof = await genProof(blockNumber, mmrBlockNumber, fetchProofs);
   const encodeProof = proof.proof.map((item) => remove0x(item.replace(/(^\s*)|(\s*$)/g, ''))).join('');

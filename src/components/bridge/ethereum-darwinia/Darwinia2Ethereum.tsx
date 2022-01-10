@@ -178,11 +178,7 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
  * @description test chain: pangolin -> ropsten
  */
 // eslint-disable-next-line complexity
-export function Darwinia2Ethereum({
-  form,
-  setSubmit,
-  direction: transfer,
-}: CrossChainComponentProps<Darwinia2EthereumPayload>) {
+export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComponentProps<Darwinia2EthereumPayload>) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
@@ -310,7 +306,7 @@ export function Darwinia2Ethereum({
 
       <RecipientItem
         form={form}
-        direction={transfer}
+        direction={direction}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}

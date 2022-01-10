@@ -1,6 +1,6 @@
-import { DarwiniaConfig } from '../../model';
+import { PolkadotChainConfig } from '../../model';
 
-export const darwiniaConfig: DarwiniaConfig = {
+export const darwiniaConfig: PolkadotChainConfig = {
   facade: {
     logo: '/image/darwinia.png',
     logoMinor: '/image/darwinia.svg',

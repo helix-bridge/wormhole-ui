@@ -1,7 +1,7 @@
 import { decodeAddress } from '@polkadot/util-crypto';
 import { catchError, filter, from, map, Observable, of, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
-import { abi, DarwiniaApiPath, NETWORK_CONFIG } from '../../config';
+import { abi, DarwiniaApiPath } from '../../config';
 import {
   ChainConfig,
   D2EHistoryRes,
@@ -40,7 +40,7 @@ export function queryDarwinia2EthereumIssuingRecords({
   network,
   paginator,
 }: HistoryReq): Observable<D2EHistoryRes | null> {
-  const api = NETWORK_CONFIG[network].api.dapp;
+  const api = [network].api.dapp;
 
   return rxGet<D2EHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.locks),
@@ -64,7 +64,7 @@ export function queryDarwiniaDVM2EthereumIssuingRecords({
   network,
   paginator,
 }: HistoryReq): Observable<D2EHistoryRes | null> {
-  const api = NETWORK_CONFIG[network].api.dapp;
+  const api = [network].api.dapp;
 
   return rxGet<D2EHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.issuingBurns),
@@ -107,7 +107,7 @@ export function claimToken(
   arrival: ChainConfig
 ): Observable<Tx> {
   const network = networkPrefix.toLowerCase() as Network;
-  const config = NETWORK_CONFIG[network];
+  const config = [network];
   const apiObs = from(entrance.polkadot.getInstance(config.provider.rpc).isReady);
   const toNetworkConfig = getAvailableNetwork(network)! as EthereumConfig;
   const header = encodeBlockHeader(blockHeaderStr);

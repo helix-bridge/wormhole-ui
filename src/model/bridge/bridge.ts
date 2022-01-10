@@ -1,5 +1,6 @@
-import { isEqual } from 'lodash';
+import { has, isEqual } from 'lodash';
 import { FunctionComponent } from 'react';
+import { ChainConfig } from '..';
 import { Network, NetworkMode } from '../network/network';
 
 /* ----------------------------------------------- bridge state ------------------------------------------------ */
@@ -40,36 +41,43 @@ export interface ContractConfig {
   redeem: string;
 }
 
-export interface BridgeConfig<C extends ContractConfig, K extends ApiKeys = ApiKeys> {
+export interface BridgeConfig<C extends ContractConfig = ContractConfig, K = Record<string, string>> {
   specVersion: number;
   contracts?: C;
-  api?: Partial<Api<K>>;
+  api?: K;
 }
 
 /**
  * ethereum <-> darwinia
  */
-interface E2DContractConfig extends ContractConfig {
+export interface EthereumDarwiniaContractConfig extends ContractConfig {
   ring: string; // e2d ring balance address
   kton: string; // e2d kton balance address
   fee: string; // e2d cross chain fee querying address
   redeemDeposit: string; // e2d redeem deposit address
 }
 
-export interface EthereumDarwiniaBridgeConfig
-  extends BridgeConfig<E2DContractConfig, Extract<ApiKeys, 'dapp' | 'evolution'>> {
+export type EthereumDarwiniaBridgeConfig = Required<
+  BridgeConfig<EthereumDarwiniaContractConfig, Pick<Api<ApiKeys>, 'dapp' | 'evolution'>>
+> & {
   lockEvents: LockEventsStorage[];
-}
+};
 
 /**
  * substrate <-> substrate dvm
  */
-export type SubstrateSubstrateDVMBridgeConfig = BridgeConfig<ContractConfig, Exclude<ApiKeys, 'subscan' | 'subqlMMr'>>;
+export type SubstrateSubstrateDVMBridgeConfig = Required<
+  Omit<BridgeConfig<ContractConfig, Omit<Api<ApiKeys>, 'subscan' | 'subqlMMr'>>, 'contracts'>
+>;
 
 /**
  * ethereum <-> crab dvm
  */
-export type EthereumCrabDVMConfig = BridgeConfig<ContractConfig>;
+export interface EthereumDVMcontractConfig extends ContractConfig {
+  proof: string;
+}
+
+export type EthereumDVMBridgeConfig = Required<BridgeConfig<EthereumDVMcontractConfig>>;
 
 /* ----------------------------------------------- bridge  ------------------------------------------------ */
 
@@ -77,38 +85,41 @@ export type EthereumCrabDVMConfig = BridgeConfig<ContractConfig>;
  * departure -> arrival: issuing;
  * departure <- arrival: redeem;
  */
-export class Bridge<C extends ContractConfig = ContractConfig, A extends ApiKeys = ApiKeys> {
+export class Bridge<C extends BridgeConfig> {
   readonly status: BridgeStatus;
 
   readonly stable: boolean;
 
-  readonly departure: Departure;
+  readonly departure: ChainConfig;
 
-  readonly arrival: Arrival;
+  readonly arrival: ChainConfig;
 
   readonly issuing: [Departure, Arrival];
 
   readonly redeem: [Departure, Arrival];
 
-  private _config: BridgeConfig<C, A>;
+  private _config: C;
 
   private crossChain: Map<Departure[], FunctionComponent> = new Map();
 
   private record: Map<Departure[], FunctionComponent> = new Map();
 
   constructor(
-    departure: Departure,
-    arrival: Arrival,
-    config: BridgeConfig<C, A>,
+    departure: ChainConfig,
+    arrival: ChainConfig,
+    config: C,
     options?: {
       status?: BridgeStatus;
       stable?: boolean;
     }
   ) {
+    const dep = this.toVertices(departure);
+    const arr = this.toVertices(arrival);
+
     this.departure = departure;
     this.arrival = arrival;
-    this.issuing = [departure, arrival];
-    this.redeem = [arrival, departure];
+    this.issuing = [dep, arr];
+    this.redeem = [arr, dep];
     this._config = config;
     this.status = options?.status ?? 'available';
     this.stable = options?.stable ?? true;
@@ -116,6 +127,10 @@ export class Bridge<C extends ContractConfig = ContractConfig, A extends ApiKeys
 
   get config() {
     return this._config;
+  }
+
+  private toVertices(config: ChainConfig): Vertices {
+    return { network: config.name, mode: has(config, 'dvm') ? 'dvm' : 'native' };
   }
 
   setIssuingComponents(crossComp: FunctionComponent, recordComp: FunctionComponent): void {

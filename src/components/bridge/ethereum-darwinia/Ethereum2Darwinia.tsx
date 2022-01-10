@@ -12,15 +12,14 @@ import { abi, FORM_CONTROL } from '../../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../../hooks';
 import {
   CrossChainComponentProps,
+  CrossChainPayload,
   Erc20Token,
   Ethereum2DarwiniaPayload,
+  EthereumDarwiniaBridgeConfig,
   Network,
   RedeemDarwiniaToken,
   RedeemDeposit,
-  CrossChainPayload,
   Tx,
-  RopstenConfig,
-  EthereumConfig,
 } from '../../../model';
 import {
   AfterTxCreator,
@@ -29,6 +28,7 @@ import {
   createTxWorkflow,
   entrance,
   fromWei,
+  getBridge,
   getInfoFromHash,
   isDeposit,
   isKton,
@@ -39,6 +39,7 @@ import {
   redeemDeposit,
   toWei,
 } from '../../../utils';
+import { getMappedTokenMeta, getTokenBalance, TokenCache } from '../../../utils/erc20/meta';
 import { Balance } from '../../controls/Balance';
 import { DepositItem, getDepositTimeRange } from '../../controls/DepositItem';
 import { MaxBalance } from '../../controls/MaxBalance';
@@ -48,7 +49,6 @@ import { ApproveSuccess } from '../../modal/ApproveSuccess';
 import { Des } from '../../modal/Des';
 import { TransferConfirm } from '../../modal/TransferConfirm';
 import { TransferSuccess } from '../../modal/TransferSuccess';
-import { getTokenBalance, getMappedTokenMeta, TokenCache } from '../../../utils/erc20/meta';
 
 interface AmountCheckInfo {
   amount?: string;
@@ -64,25 +64,24 @@ const BN_ZERO = new BN(0);
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
-async function queryTokenMeta(config: EthereumConfig) {
-  const { ring, kton } = config.contracts.e2d;
-  const ringMeta = await getMappedTokenMeta(ring as string);
-  const ktonMeta = await getMappedTokenMeta(kton as string);
+async function queryTokenMeta(ringContract: string, ktonContract: string) {
+  const ringMeta = await getMappedTokenMeta(ringContract);
+  const ktonMeta = await getMappedTokenMeta(ktonContract);
 
   return [ringMeta, ktonMeta];
 }
 
-async function getIssuingAllowance(from: string, config: EthereumConfig): Promise<BN> {
+async function getIssuingAllowance(from: string, ringContract: string, issuingContract: string): Promise<BN> {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const contract = new web3.eth.Contract(abi.tokenABI, config.contracts.e2d.ring);
-  const allowanceAmount = await contract.methods.allowance(from, config.contracts.e2d.issuing).call();
+  const contract = new web3.eth.Contract(abi.tokenABI, ringContract);
+  const allowanceAmount = await contract.methods.allowance(from, issuingContract).call();
 
   return Web3.utils.toBN(allowanceAmount || 0);
 }
 
-async function getFee(config: EthereumConfig): Promise<BN> {
+async function getFee(feeContract: string): Promise<BN> {
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const contract = new web3.eth.Contract(abi.registryABI, config.contracts.e2d.fee);
+  const contract = new web3.eth.Contract(abi.registryABI, feeContract);
   const fee: number = await contract.methods
     .uintOf('0x55494e545f4252494447455f4645450000000000000000000000000000000000')
     .call();
@@ -188,12 +187,14 @@ function createApproveRingTx(value: Pick<ApproveValue, 'direction' | 'sender'>, 
   });
   const {
     sender,
-    direction: { from },
+    direction: { from, to },
   } = value;
+  const bridge = getBridge<EthereumDarwiniaBridgeConfig>([from, to]);
+  const { ring: tokenAddress, issuing: spender } = bridge.config.contracts;
   const txObs = approveToken({
     sender,
-    spender: from.contracts.e2d.issuing,
-    tokenAddress: from.contracts.e2d.ring,
+    spender,
+    tokenAddress,
   });
 
   return createTxWorkflow(beforeTx, txObs, after);
@@ -240,11 +241,7 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
  * @description test chain: ropsten -> pangolin
  */
 // eslint-disable-next-line complexity
-export function Ethereum2Darwinia({
-  form,
-  setSubmit,
-  direction: transfer,
-}: CrossChainComponentProps<Ethereum2DarwiniaPayload>) {
+export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComponentProps<Ethereum2DarwiniaPayload>) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(BN_ZERO);
   const [max, setMax] = useState<BN | null>(null);
@@ -273,25 +270,35 @@ export function Ethereum2Darwinia({
     () => getAmountRules({ fee, balance: max, ringBalance, asset, t }),
     [asset, fee, max, ringBalance, t]
   );
+  const contracts = useMemo(() => {
+    const bridget = getBridge<EthereumDarwiniaBridgeConfig>(direction);
+
+    return bridget.config.contracts;
+  }, [direction]);
+
   const refreshAllowance = useCallback(
-    (value: RedeemDarwiniaToken | ApproveValue) =>
-      getIssuingAllowance(account, value.direction.from).then((num) => {
+    (value: RedeemDarwiniaToken | ApproveValue) => {
+      const bridge = getBridge<EthereumDarwiniaBridgeConfig>(value.direction);
+      const { ring, issuing } = bridge.config.contracts;
+
+      getIssuingAllowance(account, ring, issuing).then((num) => {
         setAllowance(num);
         form.validateFields([FORM_CONTROL.amount]);
-      }),
+      });
+    },
     [account, form]
   );
 
   const refreshBalance = useCallback(
     (value: RedeemDarwiniaToken | ApproveValue) => {
+      const { kton, ring } = contracts;
+
       if (isKton(value.asset)) {
-        getTokenBalance(value.direction.from.contracts.e2d.kton as string, account, false).then((balance) =>
-          setMax(balance)
-        );
+        getTokenBalance(kton, account, false).then((balance) => setMax(balance));
       }
 
       // always need to refresh ring balance, because of it is a fee token
-      getTokenBalance(value.direction.from.contracts.e2d.ring as string, account, false).then((balance) => {
+      getTokenBalance(ring, account, false).then((balance) => {
         if (isRing(value.asset)) {
           setMax(balance);
         }
@@ -300,17 +307,17 @@ export function Ethereum2Darwinia({
       });
       refreshAllowance(value);
     },
-    [account, refreshAllowance]
+    [account, contracts, refreshAllowance]
   );
 
   const refreshDeposit = useCallback(
     (value: RedeemDeposit) => {
+      const { ring } = contracts;
+
       setRemovedDepositIds(() => [...removedDepositIds, value.deposit.deposit_id]);
-      getTokenBalance(value.direction.from.contracts.e2d.ring as string, account, false).then((balance) =>
-        setRingBalance(balance)
-      );
+      getTokenBalance(ring, account, false).then((balance) => setRingBalance(balance));
     },
-    [account, removedDepositIds]
+    [account, contracts, removedDepositIds]
   );
 
   const updateSubmit = useCallback(
@@ -351,7 +358,8 @@ export function Ethereum2Darwinia({
       return;
     }
 
-    const netConfig: RopstenConfig = form.getFieldValue(FORM_CONTROL.direction).from;
+    const { from } = direction;
+    const { ring, kton, fee: feeContract, issuing } = contracts;
     const { recipient } = getInfoFromHash();
 
     form.setFieldsValue({
@@ -360,10 +368,10 @@ export function Ethereum2Darwinia({
     });
 
     Promise.all([
-      getTokenBalance(netConfig.contracts.e2d.ring as string, account, false),
-      getFee(netConfig),
-      getIssuingAllowance(account, netConfig),
-      queryTokenMeta(netConfig),
+      getTokenBalance(ring, account, false),
+      getFee(feeContract),
+      getIssuingAllowance(account, ring, issuing),
+      queryTokenMeta(ring, kton),
     ]).then(([balance, crossFee, allow, tokenMeta]) => {
       setRingBalance(balance);
       setMax(balance);
@@ -372,8 +380,8 @@ export function Ethereum2Darwinia({
       setIsBalanceQuerying(false);
       setTokens(tokenMeta);
     });
-    updateDeparture({ from: netConfig || undefined, sender: form.getFieldValue(FORM_CONTROL.sender) });
-  }, [account, form, updateDeparture]);
+    updateDeparture({ from, sender: form.getFieldValue(FORM_CONTROL.sender) });
+  }, [account, contracts, direction, form, updateDeparture]);
 
   useEffect(() => {
     updateSubmit(asset);
@@ -387,7 +395,7 @@ export function Ethereum2Darwinia({
 
       <RecipientItem
         form={form}
-        direction={transfer}
+        direction={direction}
         extraTip={
           <span className="inline-block mt-2 px-2">
             <Trans>
@@ -406,18 +414,18 @@ export function Ethereum2Darwinia({
             form.setFieldsValue({ amount: '' });
 
             let balance: BN | null = null;
-            const netConfig: EthereumConfig = form.getFieldValue(FORM_CONTROL.direction).from;
+            const { ring, kton } = contracts;
 
             setIsBalanceQuerying(true);
 
             if (isRing(value)) {
-              balance = await getTokenBalance(netConfig.contracts.e2d.ring as string, account, false);
+              balance = await getTokenBalance(ring, account, false);
 
               setRingBalance(balance);
             }
 
             if (isKton(value)) {
-              balance = await getTokenBalance(netConfig.contracts.e2d.kton as string, account, false);
+              balance = await getTokenBalance(kton, account, false);
             }
 
             setAsset(value);
@@ -449,12 +457,7 @@ export function Ethereum2Darwinia({
       )}
 
       {isDeposit(asset) ? (
-        <DepositItem
-          address={account}
-          config={form.getFieldValue(FORM_CONTROL.direction).from}
-          removedIds={removedDepositIds}
-          rules={amountRules}
-        />
+        <DepositItem address={account} direction={direction} removedIds={removedDepositIds} rules={amountRules} />
       ) : (
         <Form.Item
           name={FORM_CONTROL.amount}
@@ -477,7 +480,7 @@ export function Ethereum2Darwinia({
                     onClick={() => {
                       const value = {
                         sender: account,
-                        transfer: form.getFieldValue(FORM_CONTROL.direction),
+                        direction,
                       };
 
                       createApproveRingTx(

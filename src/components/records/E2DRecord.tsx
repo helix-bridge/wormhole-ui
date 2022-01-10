@@ -1,8 +1,7 @@
 import { encodeAddress } from '@polkadot//util-crypto';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RecordComponentProps } from '../../config';
-import { EthereumConfig, Network, PolkadotChainConfig } from '../../model';
+import { EthereumChainConfig, Network, PolkadotChainConfig, RecordComponentProps } from '../../model';
 import { E2DHistory as E2DRecordType, RedeemHistory, RingBurnHistory } from '../../model/darwinia';
 import { getLegalName, verticesToChainConfig } from '../../utils';
 import { Progresses, ProgressProps, State } from './Progress';
@@ -15,7 +14,7 @@ export function E2DRecord({
   arrival,
 }: RecordComponentProps<
   E2DRecordType & Partial<RingBurnHistory & RedeemHistory> & { isGenesis?: boolean },
-  EthereumConfig,
+  EthereumChainConfig,
   PolkadotChainConfig
 >) {
   const { chain, amount, currency, target, block_timestamp, is_relayed, tx, darwinia_tx, isGenesis } = record;

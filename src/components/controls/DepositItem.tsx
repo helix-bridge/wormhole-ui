@@ -1,16 +1,22 @@
 import { Form, Progress, Select } from 'antd';
 import { Rule } from 'antd/lib/form';
 import { addDays, format, fromUnixTime } from 'date-fns';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EvoApiPath, FORM_CONTROL } from '../../config';
 import { useRecordsQuery } from '../../hooks';
-import { CustomFormControlProps, Deposit, DepositResponse, EthereumConfig } from '../../model';
-import { apiUrl, empty } from '../../utils';
+import {
+  CrossChainDirection,
+  CustomFormControlProps,
+  Deposit,
+  DepositResponse,
+  EthereumDarwiniaBridgeConfig,
+} from '../../model';
+import { apiUrl, empty, getBridge } from '../../utils';
 
 interface DepositItemProps {
   address: string;
-  config: EthereumConfig;
+  direction: CrossChainDirection;
   removedIds: number[];
   rules?: Rule[];
 }
@@ -29,15 +35,20 @@ export function getDepositTimeRange({ deposit_time, duration }: Pick<Deposit, 'd
 // eslint-disable-next-line complexity
 export function DepositItem({
   address,
-  config,
+  direction,
   onChange = empty,
   value,
   removedIds = [],
   rules = [],
 }: CustomFormControlProps<Deposit | null> & DepositItemProps) {
   const { t } = useTranslation();
+  const url = useMemo(() => {
+    const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
+
+    return bridge.config.api.evolution;
+  }, [direction]);
   const { data, error, loading } = useRecordsQuery<DepositResponse>({
-    url: apiUrl(config.api.evolution, EvoApiPath.deposit),
+    url: apiUrl(url, EvoApiPath.deposit),
     params: { address },
     // url: apiUrl('https://www.evolution.land', EvoApiPath.deposit),
     // params: { address: '0xf916a4ef2de14a9d8aab6d29d122a641ecde2b28' }, // test account;

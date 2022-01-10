@@ -1,15 +1,14 @@
 import { useCallback } from 'react';
 import { from, switchMap } from 'rxjs';
-import { FORM_CONTROL, RegisterStatus } from '../../../config';
+import { RegisterStatus } from '../../../config';
 import {
-  ApiKeys,
-  CrossChainComponentProps,
   ChainConfig,
+  CrossChainComponentProps,
+  CrossChainDirection,
   DailyLimit,
-  DVMToken,
   DVMPayload,
+  DVMToken,
   MappedToken,
-  PolkadotChainConfig,
 } from '../../../model';
 import { entrance, fromWei, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../../utils';
 import { DVM } from '../DVM';
@@ -21,7 +20,7 @@ import { DVM } from '../DVM';
 /**
  * @description test chain: pangolin dvm -> pangoro
  */
-export function SubstrateDVM2Substrate({ form, setSubmit, direction: transfer }: CrossChainComponentProps<DVMPayload>) {
+export function SubstrateDVM2Substrate({ form, setSubmit, direction }: CrossChainComponentProps<DVMPayload>) {
   const transform = useCallback((value: DVMToken) => {
     return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
       switchMap(({ mappingAddress }) =>
@@ -30,15 +29,15 @@ export function SubstrateDVM2Substrate({ form, setSubmit, direction: transfer }:
     );
   }, []);
 
-  const getSpender = useCallback(async (config: ChainConfig) => {
-    const { mappingAddress } = await getS2SMappingParams(config.provider.rpc);
+  const getSpender = useCallback(async (dir: CrossChainDirection) => {
+    const { mappingAddress } = await getS2SMappingParams(dir.from.provider.rpc);
 
     return mappingAddress;
   }, []);
 
   const getDailyLimit = useCallback(
     async (_: MappedToken) => {
-      const arrival = form.getFieldValue(FORM_CONTROL.direction).to as PolkadotChainConfig<ApiKeys>;
+      const { to: arrival } = direction;
       const api = entrance.polkadot.getInstance(arrival.provider.rpc);
 
       await waitUntilConnected(api);
@@ -49,7 +48,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit, direction: transfer }:
 
       return { spentToday, limit } as DailyLimit;
     },
-    [form]
+    [direction]
   );
 
   const getFee = useCallback(async (config: ChainConfig) => {
@@ -67,7 +66,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit, direction: transfer }:
   return (
     <DVM
       form={form}
-      direction={transfer}
+      direction={direction}
       setSubmit={setSubmit}
       transform={transform}
       canRegister={false}

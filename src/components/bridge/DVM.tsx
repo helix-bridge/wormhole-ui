@@ -60,7 +60,7 @@ interface DVMProps {
   approveOptions?: Record<string, string>;
   isDVM?: boolean;
   transform: (value: DVMToken) => Observable<Tx>;
-  spenderResolver: (config: ChainConfig) => Promise<string>;
+  spenderResolver: (direction: CrossChainDirection) => Promise<string>;
   getDailyLimit?: (token: MappedToken) => Promise<DailyLimit>;
   getFee?: (config: ChainConfig, token: MappedToken) => Promise<string>;
 }
@@ -179,9 +179,9 @@ export function DVM({
   const [fee, setFee] = useState<string>('');
   const isMounted = useIsMounted();
   const refreshAllowance = useCallback(
-    (config: ChainConfig) => {
+    (dir: CrossChainDirection) => {
       if (isMounted) {
-        from(spenderResolver(config))
+        from(spenderResolver(dir))
           .pipe(
             switchMap((spender) => getAllowance(account, spender, selectedErc20)),
             takeWhile(() => isMounted)
@@ -234,7 +234,7 @@ export function DVM({
         afterTx(TransferSuccess, {
           onDisappear: () => {
             refreshTokenBalance(value.asset.address);
-            refreshAllowance(value.direction.from);
+            refreshAllowance(value.direction);
           },
           unit,
         })(value)
@@ -343,7 +343,7 @@ export function DVM({
                       direction,
                       asset: selectedErc20,
                     };
-                    const spender = await spenderResolver(direction.from);
+                    const spender = await spenderResolver(direction);
                     const beforeTx = applyModalObs({
                       content: <ApproveConfirm value={value} />,
                     });
@@ -357,7 +357,7 @@ export function DVM({
                     createTxWorkflow(
                       beforeTx,
                       txObs,
-                      afterApprove(ApproveSuccess, { onDisappear: () => refreshAllowance(value.direction.from) })(value)
+                      afterApprove(ApproveSuccess, { onDisappear: () => refreshAllowance(value.direction) })(value)
                     ).subscribe(observer);
                   }}
                   type="link"

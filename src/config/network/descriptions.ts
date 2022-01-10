@@ -1,4 +1,4 @@
-export const NETWORK_CONFIG_DESCRIPTIONS: {
+export const DESCRIPTIONS: {
   path: string[];
   editable: boolean;
   comment: string;

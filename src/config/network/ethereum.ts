@@ -1,6 +1,6 @@
-import { EthereumConfig } from '../../model';
+import { EthereumChainConfig } from '../../model';
 
-export const ethereumConfig: EthereumConfig = {
+export const ethereumConfig: EthereumChainConfig = {
   ethereumChain: {
     chainId: '1',
     chainName: '',

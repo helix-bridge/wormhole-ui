@@ -3,8 +3,7 @@ import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import { omit } from 'lodash';
 import { FunctionComponent, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RecordComponentProps } from '../../config';
-import { Vertices } from '../../model';
+import { RecordComponentProps, Vertices } from '../../model';
 import { getBridgeComponent, verticesToChainConfig } from '../../utils';
 
 interface RecordListProps {

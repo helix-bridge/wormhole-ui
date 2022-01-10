@@ -26,8 +26,10 @@ import {
   S2SHistoryRecord,
   S2SIssuingRecordRes,
   S2SLockedRecordRes,
+  SubstrateSubstrateDVMBridgeConfig,
 } from '../model';
 import {
+  getBridge,
   isDarwinia2Ethereum,
   isDVM2Ethereum,
   isEthereum2Darwinia,
@@ -229,18 +231,19 @@ export function useS2SRecords(
   fetchS2SRedeemRecord: FetchS2SRecord<S2SBurnRecordRes, S2SHistoryRecord>;
   fetchMessageEvent: FetchS2SRecord<BridgeDispatchEventRes, BridgeDispatchEventRecord>;
 } {
+  const api = useMemo(
+    () => getBridge<SubstrateSubstrateDVMBridgeConfig>([departure, arrival]).config.api,
+    [departure, arrival]
+  );
   const issuingClient = useMemo(
-    () => new GraphQLClient({ url: departure.api.subql || UNKNOWN_CLIENT }),
-    [departure.api.subql]
+    () => new GraphQLClient({ url: `${api.subql}${departure.name}` || UNKNOWN_CLIENT }),
+    [api.subql, departure.name]
   );
   const issuingTargetClient = useMemo(
-    () => new GraphQLClient({ url: arrival.api.subql || UNKNOWN_CLIENT }),
-    [arrival.api.subql]
+    () => new GraphQLClient({ url: `${api.subql}${arrival.name}` || UNKNOWN_CLIENT }),
+    [api.subql, arrival.name]
   );
-  const redeemClient = useMemo(
-    () => new GraphQLClient({ url: departure.api.subGraph || UNKNOWN_CLIENT }),
-    [departure.api.subGraph]
-  );
+  const redeemClient = useMemo(() => new GraphQLClient({ url: api.subGraph || UNKNOWN_CLIENT }), [api.subGraph]);
   const { t } = useTranslation();
   // s2s issuing
   const [fetchLockedRecords] = useManualQuery<S2SLockedRecordRes>(S2S_ISSUING_RECORDS_QUERY, {
