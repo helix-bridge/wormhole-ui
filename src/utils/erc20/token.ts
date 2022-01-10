@@ -25,7 +25,7 @@ import {
   Erc20Token,
   EthereumConfig,
   MappedToken,
-  PangolinConfig,
+  DVMChainConfig,
   RopstenConfig,
   Tx,
 } from '../../model';
@@ -55,7 +55,7 @@ const proofMemo: StoredProof[] = [];
 /* --------------------------------------------Inner Section------------------------------------------------------- */
 
 function createMappingTokenContract(
-  departure: PangolinConfig | CrabConfig,
+  departure: DVMChainConfig | CrabConfig,
   arrival: ChainConfig,
   mappingAddress: string
 ): Contract {
@@ -66,13 +66,13 @@ function createMappingTokenContract(
 }
 
 const getMappingTokenLength = memoize(
-  async (departure: PangolinConfig | CrabConfig, arrival: ChainConfig, mappingAddress: string) => {
+  async (departure: DVMChainConfig | CrabConfig, arrival: ChainConfig, mappingAddress: string) => {
     const mappingContract = createMappingTokenContract(departure, arrival, mappingAddress);
     const len: number = await mappingContract.methods.tokenLength().call();
 
     return len;
   },
-  (departure: PangolinConfig | CrabConfig, arrival: ChainConfig, mappingAddress: string) =>
+  (departure: DVMChainConfig | CrabConfig, arrival: ChainConfig, mappingAddress: string) =>
     departure.name + '-' + arrival.name + '-' + mappingAddress
 );
 
@@ -83,7 +83,7 @@ const getMappingTokenLength = memoize(
  */
 function getMappedTokensFromDvm(
   currentAccount: string,
-  departure: PangolinConfig | CrabConfig,
+  departure: DVMChainConfig | CrabConfig,
   arrival: EthereumConfig,
   mappingAddress: string
 ) {
@@ -215,7 +215,7 @@ const getSymbolType: (address: string) => Promise<{ symbol: string; isString: bo
 // eslint-disable-next-line complexity
 export const getKnownMappedTokens = (
   currentAccount: string,
-  departure: PangolinConfig | CrabConfig | EthereumConfig,
+  departure: DVMChainConfig | CrabConfig | EthereumConfig,
   arrival: ChainConfig
 ): Observable<{ total: number; tokens: Erc20Token[] }> => {
   if (!currentAccount) {
@@ -232,7 +232,7 @@ export const getKnownMappedTokens = (
         switchMap(({ mappingAddress }) =>
           getMappedTokensFromDvm(
             currentAccount,
-            departure as PangolinConfig | CrabConfig,
+            departure as DVMChainConfig | CrabConfig,
             arrival as EthereumConfig,
             mappingAddress
           )
@@ -348,7 +348,7 @@ export const getRegisterProof: (address: string, config: EthereumConfig) => Obse
  */
 export const getTokenRegisterStatus: (
   address: string,
-  config: PangolinConfig | CrabConfig | EthereumConfig,
+  config: DVMChainConfig | CrabConfig | EthereumConfig,
   isEth?: boolean
 ) => Promise<RegisterStatus | null> =
   // eslint-disable-next-line complexity

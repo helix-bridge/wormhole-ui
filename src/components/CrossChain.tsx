@@ -5,14 +5,14 @@ import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL, validateMessages } from '../config';
 import { useApi, useTx } from '../hooks';
 import {
-  TransferComponentProps,
+  CrossChainComponentProps,
   Network,
   NetworkMode,
   SubmitFn,
-  TransferFormValues,
-  TransferNetwork,
-  TransferParty,
-  NoNullTransferNetwork,
+  CrossChainPayload,
+  CrossChainDirection,
+  CrossChainParty,
+  NullableCrossChainDirection,
 } from '../model';
 import {
   emptyObsFactory,
@@ -28,7 +28,7 @@ import { FromItemButton, SubmitButton } from './SubmitButton';
 
 const getCrossChainComponent = getBridgeComponent('crossChain');
 
-const getTransferFromSettings: () => TransferNetwork = () => {
+const getDirectionFromSettings: () => CrossChainDirection = () => {
   const come = getInitialSetting('from', '') as Network;
   const go = getInitialSetting('to', '') as Network;
   const fromMode = getInitialSetting('fMode', '') as NetworkMode;
@@ -45,24 +45,27 @@ const getTransferFromSettings: () => TransferNetwork = () => {
   }
 };
 
-const validateTransfer: (transfer: TransferNetwork, isCross: boolean) => TransferNetwork = (transfer, isCross) => {
-  const { from, to } = transfer;
+const validateDirection: (dir: CrossChainDirection, isCross: boolean) => NullableCrossChainDirection = (
+  dir,
+  isCross
+) => {
+  const { from, to } = dir;
   const isSameEnv = from?.isTest === to?.isTest;
   const reachable = isReachable(from, isCross)(to); // from -> to is available;
 
-  return isSameEnv && reachable ? transfer : { from: null, to: null };
+  return isSameEnv && reachable ? dir : { from: null, to: null };
 };
 
 // eslint-disable-next-line complexity
 export function CrossChain({ isCross = true }: { isCross?: boolean }) {
   const { t, i18n } = useTranslation();
-  const [form] = useForm<TransferFormValues>();
+  const [form] = useForm<CrossChainPayload>();
   const {
     network,
     connection: { status },
     disconnect,
   } = useApi();
-  const [transfer, setTransfer] = useState(() => validateTransfer(getTransferFromSettings(), isCross));
+  const [direction, setDirection] = useState(() => validateDirection(getDirectionFromSettings(), isCross));
   const [isReady, setIsReady] = useState(false);
   const [submitFn, setSubmit] = useState<SubmitFn>(emptyObsFactory);
   const { tx } = useTx();
@@ -73,33 +76,40 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
     if (!isCross) {
       return Airport;
     }
-    const Comp = getCrossChainComponent(transfer) as FunctionComponent<TransferComponentProps<TransferParty>>;
 
-    return Comp ?? null;
-  }, [isCross, transfer]);
+    const { from, to } = direction;
+
+    if (from && to) {
+      const Comp = getCrossChainComponent({ from, to }) as FunctionComponent<CrossChainComponentProps<CrossChainParty>>;
+
+      return Comp ?? null;
+    }
+
+    return null;
+  }, [isCross, direction]);
 
   useEffect(() => {
-    const { from, to } = transfer;
+    const { from, to } = direction;
     const fromReady = !!from && isSameNetConfig(from, network) && status === 'success';
 
     setIsReady(fromReady && !!to);
-  }, [network, status, transfer]);
+  }, [network, status, direction]);
 
   return (
     <Form
-      name={FORM_CONTROL.transfer}
+      name={FORM_CONTROL.direction}
       layout="vertical"
       form={form}
-      initialValues={{ transfer }}
+      initialValues={{ transfer: direction }}
       validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
       className={tx ? 'filter blur-sm drop-shadow' : ''}
     >
       <Form.Item
-        name={FORM_CONTROL.transfer}
+        name={FORM_CONTROL.direction}
         rules={[
           { required: true, message: t('Both send and receive network are all required') },
           {
-            validator: (_, value: TransferNetwork) => {
+            validator: (_, value: CrossChainDirection) => {
               return (value.from && value.to) || (!value.from && !value.to) ? Promise.resolve() : Promise.reject();
             },
           },
@@ -107,7 +117,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
       >
         <Nets
           onChange={(value) => {
-            setTransfer(value);
+            setDirection(value);
             form.resetFields([
               FORM_CONTROL.sender,
               FORM_CONTROL.recipient,
@@ -121,10 +131,10 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
         />
       </Form.Item>
 
-      {isReady && Content && <Content form={form} transfer={transfer as NoNullTransferNetwork} setSubmit={setSubmit} />}
+      {isReady && Content && <Content form={form} direction={direction as CrossChainDirection} setSubmit={setSubmit} />}
 
-      <div className={status === 'success' && transfer.from ? 'grid grid-cols-2 gap-4' : ''}>
-        <SubmitButton {...transfer} requireTo launch={launch} />
+      <div className={status === 'success' && direction.from ? 'grid grid-cols-2 gap-4' : ''}>
+        <SubmitButton {...direction} requireTo launch={launch} />
 
         {status === 'success' && (
           <FromItemButton type="default" onClick={() => disconnect()} disabled={!!tx}>

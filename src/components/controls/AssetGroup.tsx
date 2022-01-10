@@ -4,7 +4,7 @@ import BN from 'bn.js';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
-import { AvailableBalance, CustomFormControlProps, Darwinia2EthereumTransfer, Network } from '../../model';
+import { AvailableBalance, CustomFormControlProps, Darwinia2EthereumPayload, Network } from '../../model';
 import {
   amountLessThanFeeRule,
   fromWei,
@@ -16,7 +16,7 @@ import {
 import { Balance } from './Balance';
 import { MaxBalance } from './MaxBalance';
 
-export type AssetGroupValue = Darwinia2EthereumTransfer['assets'];
+export type AssetGroupValue = Darwinia2EthereumPayload['assets'];
 
 // eslint-disable-next-line complexity
 export function AssetGroup({

@@ -11,18 +11,15 @@ import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../../hooks';
 import {
-  TransferComponentProps,
+  CrossChainComponentProps,
   Erc20Token,
-  Ethereum2DarwiniaTransfer,
+  Ethereum2DarwiniaPayload,
   Network,
-  NoNullTransferNetwork,
   RedeemDarwiniaToken,
   RedeemDeposit,
-  TransferFormValues,
+  CrossChainPayload,
   Tx,
   RopstenConfig,
-  PangolinConfig,
-  DarwiniaConfig,
   EthereumConfig,
 } from '../../../model';
 import {
@@ -59,7 +56,7 @@ interface AmountCheckInfo {
   balance: BN | null;
   ringBalance: BN | null;
   asset: string;
-  form?: FormInstance<Ethereum2DarwiniaTransfer>;
+  form?: FormInstance<Ethereum2DarwiniaPayload>;
   t: TFunction;
 }
 
@@ -183,18 +180,15 @@ function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountChe
 
 /* ----------------------------------------------Tx section-------------------------------------------------- */
 
-type ApproveValue = TransferFormValues<
-  Ethereum2DarwiniaTransfer,
-  NoNullTransferNetwork<RopstenConfig | EthereumConfig, PangolinConfig | DarwiniaConfig>
->;
+type ApproveValue = CrossChainPayload<Ethereum2DarwiniaPayload>;
 
-function createApproveRingTx(value: Pick<ApproveValue, 'transfer' | 'sender'>, after: AfterTxCreator): Observable<Tx> {
+function createApproveRingTx(value: Pick<ApproveValue, 'direction' | 'sender'>, after: AfterTxCreator): Observable<Tx> {
   const beforeTx = applyModalObs({
     content: <ApproveConfirm value={value} />,
   });
   const {
     sender,
-    transfer: { from },
+    direction: { from },
   } = value;
   const txObs = approveToken({
     sender,
@@ -246,7 +240,11 @@ function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Obse
  * @description test chain: ropsten -> pangolin
  */
 // eslint-disable-next-line complexity
-export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferComponentProps<Ethereum2DarwiniaTransfer>) {
+export function Ethereum2Darwinia({
+  form,
+  setSubmit,
+  direction: transfer,
+}: CrossChainComponentProps<Ethereum2DarwiniaPayload>) {
   const { t } = useTranslation();
   const [allowance, setAllowance] = useState(BN_ZERO);
   const [max, setMax] = useState<BN | null>(null);
@@ -277,7 +275,7 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
   );
   const refreshAllowance = useCallback(
     (value: RedeemDarwiniaToken | ApproveValue) =>
-      getIssuingAllowance(account, value.transfer.from).then((num) => {
+      getIssuingAllowance(account, value.direction.from).then((num) => {
         setAllowance(num);
         form.validateFields([FORM_CONTROL.amount]);
       }),
@@ -287,13 +285,13 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
   const refreshBalance = useCallback(
     (value: RedeemDarwiniaToken | ApproveValue) => {
       if (isKton(value.asset)) {
-        getTokenBalance(value.transfer.from.contracts.e2d.kton as string, account, false).then((balance) =>
+        getTokenBalance(value.direction.from.contracts.e2d.kton as string, account, false).then((balance) =>
           setMax(balance)
         );
       }
 
       // always need to refresh ring balance, because of it is a fee token
-      getTokenBalance(value.transfer.from.contracts.e2d.ring as string, account, false).then((balance) => {
+      getTokenBalance(value.direction.from.contracts.e2d.ring as string, account, false).then((balance) => {
         if (isRing(value.asset)) {
           setMax(balance);
         }
@@ -308,7 +306,7 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
   const refreshDeposit = useCallback(
     (value: RedeemDeposit) => {
       setRemovedDepositIds(() => [...removedDepositIds, value.deposit.deposit_id]);
-      getTokenBalance(value.transfer.from.contracts.e2d.ring as string, account, false).then((balance) =>
+      getTokenBalance(value.direction.from.contracts.e2d.ring as string, account, false).then((balance) =>
         setRingBalance(balance)
       );
     },
@@ -353,7 +351,7 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
       return;
     }
 
-    const netConfig: RopstenConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
+    const netConfig: RopstenConfig = form.getFieldValue(FORM_CONTROL.direction).from;
     const { recipient } = getInfoFromHash();
 
     form.setFieldsValue({
@@ -389,7 +387,7 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
 
       <RecipientItem
         form={form}
-        transfer={transfer}
+        direction={transfer}
         extraTip={
           <span className="inline-block mt-2 px-2">
             <Trans>
@@ -408,7 +406,7 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
             form.setFieldsValue({ amount: '' });
 
             let balance: BN | null = null;
-            const netConfig: EthereumConfig = form.getFieldValue(FORM_CONTROL.transfer).from;
+            const netConfig: EthereumConfig = form.getFieldValue(FORM_CONTROL.direction).from;
 
             setIsBalanceQuerying(true);
 
@@ -453,7 +451,7 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
       {isDeposit(asset) ? (
         <DepositItem
           address={account}
-          config={form.getFieldValue(FORM_CONTROL.transfer).from}
+          config={form.getFieldValue(FORM_CONTROL.direction).from}
           removedIds={removedDepositIds}
           rules={amountRules}
         />
@@ -479,7 +477,7 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
                     onClick={() => {
                       const value = {
                         sender: account,
-                        transfer: form.getFieldValue(FORM_CONTROL.transfer),
+                        transfer: form.getFieldValue(FORM_CONTROL.direction),
                       };
 
                       createApproveRingTx(
@@ -506,7 +504,7 @@ export function Ethereum2Darwinia({ form, setSubmit, transfer }: TransferCompone
             onChange={(val) => setCurAmount(val)}
           >
             <MaxBalance
-              network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
+              network={form.getFieldValue(FORM_CONTROL.direction).from?.name as Network}
               onClick={() => {
                 const amount = fromWei({ value: max, unit: 'ether' }, prettyNumber);
 

@@ -12,7 +12,13 @@ import { buf2hex, getContractTxObs } from './common';
  * @description darwinia <- ethereum
  * Because of the ring was released in advance on ethereum, so the action is issuing, but follow the Protocol Overview, it should be redeem.
  */
-export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, transfer, asset, amount, recipient }) => {
+export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({
+  sender,
+  direction: transfer,
+  asset,
+  amount,
+  recipient,
+}) => {
   const contractAddress = transfer.from.contracts.e2d[asset as 'ring' | 'kton'] as string;
 
   recipient = buf2hex(decodeAddress(recipient, false, transfer.to.ss58Prefix!).buffer);
@@ -25,7 +31,7 @@ export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, transfe
 /**
  * @description darwinia <- ethereum
  */
-export const redeemDeposit: TxFn<RedeemDeposit> = ({ transfer: { to, from }, recipient, sender, deposit }) => {
+export const redeemDeposit: TxFn<RedeemDeposit> = ({ direction: { to, from }, recipient, sender, deposit }) => {
   recipient = buf2hex(decodeAddress(recipient, false, to.ss58Prefix!).buffer);
 
   return getContractTxObs(
@@ -43,7 +49,7 @@ export const redeemErc20: TxFn<RedeemDVMToken> = (value) => {
     asset,
     recipient,
     amount,
-    transfer: { from },
+    direction: { from },
     sender,
   } = value;
   const { address } = asset;
@@ -59,7 +65,7 @@ export const redeemErc20: TxFn<RedeemDVMToken> = (value) => {
  * @description substrate <- substrate dvm
  */
 export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, specVersion: string): Observable<Tx> {
-  const { asset, amount, sender, recipient, transfer } = value;
+  const { asset, amount, sender, recipient, direction: transfer } = value;
   const receiver = Web3.utils.hexToBytes(convertToDvm(recipient));
   const weight = '690133000';
   const api = entrance.polkadot.getInstance(transfer.from.provider.rpc);

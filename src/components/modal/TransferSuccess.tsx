@@ -3,12 +3,11 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
 import {
-  Darwinia2EthereumTransfer,
+  Darwinia2EthereumPayload,
   Erc20Token,
   Network,
-  NoNullTransferNetwork,
-  TransferAsset,
-  TransferFormValues,
+  CrossChainAsset,
+  CrossChainPayload,
   TxSuccessComponentProps,
 } from '../../model';
 import {
@@ -22,7 +21,7 @@ import {
 import { SubscanLink } from '../SubscanLink';
 import { Des } from './Des';
 
-function Detail({ amount, asset }: TransferAsset<string | Erc20Token>) {
+function Detail({ amount, asset }: CrossChainAsset<string | Erc20Token>) {
   return (
     <div>
       <span>{amount}</span>
@@ -38,7 +37,7 @@ export function TransferSuccess({
   hashType = 'txHash',
   unit = 'ether',
 }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
-TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
+TxSuccessComponentProps<CrossChainPayload<any>>) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
   const linkProps = { [hashType]: tx.hash };
@@ -77,7 +76,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
         content={
           (value.asset && value.amount && <Detail {...value} amount={fromWei({ value: value.amount, unit })} />) ||
           (value.assets &&
-            value.assets.map((item: Darwinia2EthereumTransfer['assets'][0]) => (
+            value.assets.map((item: Darwinia2EthereumPayload['assets'][0]) => (
               <Detail
                 {...item}
                 amount={item.unit ? fromWei({ value: item.amount, unit: item.unit }) : item.amount}

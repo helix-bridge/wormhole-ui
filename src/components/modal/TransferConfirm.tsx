@@ -1,7 +1,7 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { PropsWithChildren, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Darwinia2EthereumTransfer, TxConfirmComponentProps } from '../../model';
+import { Darwinia2EthereumPayload, TxConfirmComponentProps } from '../../model';
 import { convertToSS58, fromWei, getDisplayName, getNetworkMode, isPolkadotNetwork } from '../../utils';
 import { Des } from './Des';
 
@@ -15,7 +15,7 @@ export function TransferConfirm({ value, children, unit = 'ether' }: PropsWithCh
       return (
         <Des
           title={t('Amount')}
-          content={value.assets.map((bill: Darwinia2EthereumTransfer['assets'][0]) => (
+          content={value.assets.map((bill: Darwinia2EthereumPayload['assets'][0]) => (
             <span key={bill.asset} className="mr-6">
               {fromWei({ value: bill.amount, unit: bill.unit ?? unit })}
               <span className="ml-2">{bill.asset}</span>

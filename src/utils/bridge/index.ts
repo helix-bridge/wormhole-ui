@@ -1,8 +1,10 @@
 import { isEqual } from 'lodash';
 import { ComingSoon } from '../../components/ComingSoon';
 import { BRIDGES } from '../../config';
-import { BridgePredicateFn, ChainConfig, Departure, TransferNetwork } from '../../model';
+import { ChainConfig, Departure, CrossChainDirection, Vertices } from '../../model';
 import { chainConfigToVertices, getArrival, isEthereumNetwork, isPolkadotNetwork } from '../network';
+
+type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => boolean;
 
 export const isSubstrate2SubstrateDVM: BridgePredicateFn = (departure, arrival) => {
   return isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network) && arrival.mode === 'dvm';
@@ -54,8 +56,8 @@ function getBridge([departure, arrival]: [Departure, Departure]) {
 
 export function getBridgeComponent(type: 'crossChain' | 'record') {
   // eslint-disable-next-line complexity
-  return (transfer: TransferNetwork) => {
-    const { from, to } = transfer;
+  return (dir: CrossChainDirection) => {
+    const { from, to } = dir;
 
     if (!from || !to) {
       return null;

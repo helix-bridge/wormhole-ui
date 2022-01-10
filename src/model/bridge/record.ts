@@ -1,4 +1,4 @@
-import { ChainConfig } from '../model';
+import { ChainConfig } from '../network';
 
 export interface RecordComponentProps<T, D = ChainConfig, A = ChainConfig> {
   record: T;

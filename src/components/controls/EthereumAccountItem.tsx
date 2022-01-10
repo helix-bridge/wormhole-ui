@@ -18,7 +18,7 @@ export function EthereumAccountItem({ form }: { form: FormInstance }) {
   useEffect(() => {
     form.setFieldsValue({ [FORM_CONTROL.sender]: account });
 
-    updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender: account });
+    updateDeparture({ from: form.getFieldValue(FORM_CONTROL.direction).from, sender: account });
   }, [account, form, updateDeparture]);
 
   return (

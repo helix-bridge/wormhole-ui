@@ -70,7 +70,7 @@ export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromi
  * @description substrate -> substrate dvm
  */
 export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiPromise, fee: BN): Observable<Tx> {
-  const { sender, recipient, amount, transfer } = value;
+  const { sender, recipient, amount, direction: transfer } = value;
   const WEIGHT = '1509000000';
   const obs = new Observable((observer: Observer<Tx>) => {
     try {
@@ -98,7 +98,7 @@ export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiProm
  * @description ethereum -> substrate dvm
  */
 export function issuingErc20(value: IssuingDVMToken): Observable<Tx> {
-  const { asset, recipient, amount, transfer, sender } = value;
+  const { asset, recipient, amount, direction: transfer, sender } = value;
   const { address } = asset;
 
   return from(getErc20MappingPrams(transfer.from.provider.rpc)).pipe(

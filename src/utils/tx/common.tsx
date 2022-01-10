@@ -7,12 +7,11 @@ import { EMPTY, finalize, Observable, Observer, switchMap, tap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../config';
 import {
-  DVMTransfer,
+  DVMPayload,
   Erc20Token,
-  Ethereum2DarwiniaTransfer,
-  NoNullTransferNetwork,
+  Ethereum2DarwiniaPayload,
   RequiredPartial,
-  TransferFormValues,
+  CrossChainPayload,
   Tx,
   TxFn,
 } from '../../model';
@@ -162,7 +161,7 @@ export function getContractTxObs(
 }
 
 export const approveToken: TxFn<
-  RequiredPartial<TransferFormValues<Ethereum2DarwiniaTransfer & DVMTransfer, NoNullTransferNetwork>, 'sender'> & {
+  RequiredPartial<CrossChainPayload<Ethereum2DarwiniaPayload & DVMPayload>, 'sender'> & {
     tokenAddress?: string;
     spender?: string;
     sendOptions?: { gas: string; gasPrice: string };

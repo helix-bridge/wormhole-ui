@@ -102,7 +102,7 @@ export function Register() {
 
   return (
     <Form
-      name={FORM_CONTROL.transfer}
+      name={FORM_CONTROL.direction}
       layout="vertical"
       form={form}
       initialValues={{ host: DEFAULT_REGISTER_NETWORK }}

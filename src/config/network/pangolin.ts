@@ -1,6 +1,6 @@
-import { PangolinConfig } from '../../model';
+import { DVMChainConfig } from '../../model';
 
-export const pangolinConfig: PangolinConfig = {
+export const DVMChainConfig: DVMChainConfig = {
   dvm: {
     kton: '0xDCd3bC4138afE6F324eaA12C356A20cD576edF08',
     ring: '0xcfDEb76be514c8B8DC8B509E63f95E34ebafD81e',

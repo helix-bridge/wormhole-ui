@@ -3,12 +3,12 @@ import { ChainConfig } from '../../model';
 import { darwiniaConfig } from './darwinia';
 import { ethereumConfig } from './ethereum';
 import { NETWORK_GRAPH } from './graph';
-import { pangolinConfig } from './pangolin';
+import { DVMChainConfig } from './pangolin';
 import { pangoroConfig } from './pangoro';
 import { ropstenConfig } from './ropsten';
 import { tronConfig } from './tron';
 
-const configs = [darwiniaConfig, ethereumConfig, pangoroConfig, ropstenConfig, tronConfig, pangolinConfig];
+const configs = [darwiniaConfig, ethereumConfig, pangoroConfig, ropstenConfig, tronConfig, DVMChainConfig];
 
 /**
  * generate network configs, use dvm field to distinct whether the config is dvm config.

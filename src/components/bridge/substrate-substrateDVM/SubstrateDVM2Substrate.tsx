@@ -3,11 +3,11 @@ import { from, switchMap } from 'rxjs';
 import { FORM_CONTROL, RegisterStatus } from '../../../config';
 import {
   ApiKeys,
-  TransferComponentProps,
+  CrossChainComponentProps,
   ChainConfig,
   DailyLimit,
   DVMToken,
-  DVMTransfer,
+  DVMPayload,
   MappedToken,
   PolkadotChainConfig,
 } from '../../../model';
@@ -21,11 +21,11 @@ import { DVM } from '../DVM';
 /**
  * @description test chain: pangolin dvm -> pangoro
  */
-export function SubstrateDVM2Substrate({ form, setSubmit, transfer }: TransferComponentProps<DVMTransfer>) {
+export function SubstrateDVM2Substrate({ form, setSubmit, direction: transfer }: CrossChainComponentProps<DVMPayload>) {
   const transform = useCallback((value: DVMToken) => {
-    return from(getS2SMappingParams(value.transfer.from.provider.rpc)).pipe(
+    return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
       switchMap(({ mappingAddress }) =>
-        redeemSubstrate(value, mappingAddress, value.transfer.from.name === 'crab' ? '1180' : '27020')
+        redeemSubstrate(value, mappingAddress, value.direction.from.name === 'crab' ? '1180' : '27020')
       )
     );
   }, []);
@@ -38,7 +38,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit, transfer }: TransferCo
 
   const getDailyLimit = useCallback(
     async (_: MappedToken) => {
-      const arrival = form.getFieldValue(FORM_CONTROL.transfer).to as PolkadotChainConfig<ApiKeys>;
+      const arrival = form.getFieldValue(FORM_CONTROL.direction).to as PolkadotChainConfig<ApiKeys>;
       const api = entrance.polkadot.getInstance(arrival.provider.rpc);
 
       await waitUntilConnected(api);
@@ -67,7 +67,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit, transfer }: TransferCo
   return (
     <DVM
       form={form}
-      transfer={transfer}
+      direction={transfer}
       setSubmit={setSubmit}
       transform={transform}
       canRegister={false}

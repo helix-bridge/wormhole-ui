@@ -5,18 +5,18 @@ import { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
 import { useLock } from '../../hooks';
-import { TransferComponentProps, NoNullTransferNetwork, TransferFormValues, TransferParty } from '../../model';
+import { CrossChainComponentProps, CrossChainPayload, CrossChainParty } from '../../model';
 import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../../utils';
 
 // eslint-disable-next-line complexity
 export function RecipientItem({
   form,
   extraTip,
-  transfer,
+  direction: transfer,
   isDvm = false,
-}: Omit<TransferComponentProps<TransferParty>, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
+}: Omit<CrossChainComponentProps<CrossChainParty>, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
   const { t } = useTranslation();
-  const [lock] = useLock(form as FormInstance<TransferFormValues<TransferParty, NoNullTransferNetwork>>);
+  const [lock] = useLock(form as FormInstance<CrossChainPayload<CrossChainParty>>);
 
   const { to } = transfer;
   const isPolkadot = isPolkadotNetwork(to.name);

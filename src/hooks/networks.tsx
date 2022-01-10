@@ -1,8 +1,10 @@
 import { chain } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
 import { AIRDROP_GRAPH, AIRPORTS, NETWORKS } from '../config';
-import { Arrival, Departure, ChainConfig, NetworkFilter } from '../model';
+import { Arrival, Departure, ChainConfig } from '../model';
 import { useApi } from './api';
+
+type NetworkFilter = (network: ChainConfig) => boolean;
 
 const omitTestChain: NetworkFilter = (net) => !net.isTest;
 

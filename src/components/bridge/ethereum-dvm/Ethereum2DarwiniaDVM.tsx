@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { RegisterStatus } from '../../../config';
-import { TransferComponentProps, DVMTransfer, ChainConfig, RopstenConfig } from '../../../model';
+import { CrossChainComponentProps, DVMPayload, ChainConfig, RopstenConfig } from '../../../model';
 import { redeemErc20 } from '../../../utils';
 import { DVM } from '../DVM';
 
@@ -13,7 +13,7 @@ import { DVM } from '../DVM';
 /**
  * @description test chain: ropsten -> pangolin dvm
  */
-export function Ethereum2DarwiniaDVM({ form, setSubmit, transfer }: TransferComponentProps<DVMTransfer>) {
+export function Ethereum2DarwiniaDVM({ form, setSubmit, direction: transfer }: CrossChainComponentProps<DVMPayload>) {
   const spenderResolver = useCallback(
     (config: ChainConfig) => Promise.resolve((config as RopstenConfig).contracts.e2dvm.issuing ?? ''),
     []
@@ -22,7 +22,7 @@ export function Ethereum2DarwiniaDVM({ form, setSubmit, transfer }: TransferComp
   return (
     <DVM
       form={form}
-      transfer={transfer}
+      direction={transfer}
       setSubmit={setSubmit}
       transform={redeemErc20}
       spenderResolver={spenderResolver}

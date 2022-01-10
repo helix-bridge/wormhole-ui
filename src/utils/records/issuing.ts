@@ -11,7 +11,7 @@ import {
   HistoryReq,
   LockEventsStorage,
   Network,
-  PangolinConfig,
+  DVMChainConfig,
   Tx,
 } from '../../model';
 import { apiUrl, ClaimNetworkPrefix, encodeBlockHeader, encodeMMRRootMessage, getMMR, getMPTProof } from '../helper';
@@ -111,7 +111,7 @@ export function claimToken(
   const apiObs = from(entrance.polkadot.getInstance(config.provider.rpc).isReady);
   const toNetworkConfig = getAvailableNetwork(network)! as EthereumConfig;
   const header = encodeBlockHeader(blockHeaderStr);
-  const storageKey = getD2ELockEventsStorageKey(blockNumber, (config as PangolinConfig | DarwiniaConfig).lockEvents);
+  const storageKey = getD2ELockEventsStorageKey(blockNumber, (config as DVMChainConfig | DarwiniaConfig).lockEvents);
   const accountObs = connect(arrival).pipe(
     filter(({ status }) => status === 'success'),
     map(({ accounts }) => accounts[0].address),

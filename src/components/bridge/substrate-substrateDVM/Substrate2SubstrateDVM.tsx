@@ -17,19 +17,17 @@ import {
 } from '../../../hooks';
 import {
   AvailableBalance,
-  TransferComponentProps,
-  CrabConfig,
+  CrossChainComponentProps,
   DailyLimit,
   DVMChainConfig,
   IssuingSubstrateToken,
   MappedToken,
   Network,
-  NoNullTransferNetwork,
-  PangolinConfig,
-  Substrate2SubstrateDVMTransfer,
+  Substrate2SubstrateDVMPayload,
   TokenChainInfo,
-  TransferFormValues,
+  CrossChainPayload,
   ChainConfig,
+  CrossChainDirection,
 } from '../../../model';
 import {
   amountLessThanFeeRule,
@@ -120,8 +118,8 @@ function TransferInfo({ fee, balance, tokenInfo, amount, dailyLimit }: TransferI
 export function Substrate2SubstrateDVM({
   form,
   setSubmit,
-  transfer,
-}: TransferComponentProps<Substrate2SubstrateDVMTransfer>) {
+  direction: direction,
+}: CrossChainComponentProps<Substrate2SubstrateDVMPayload>) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
@@ -147,7 +145,7 @@ export function Substrate2SubstrateDVM({
   const [dailyLimit, setDailyLimit] = useState<DailyLimit | null>(null);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
-  const { afterTx } = useAfterSuccess<TransferFormValues<Substrate2SubstrateDVMTransfer, NoNullTransferNetwork>>();
+  const { afterTx } = useAfterSuccess<CrossChainPayload<Substrate2SubstrateDVMPayload>>();
   const getAvailableBalances = useDarwiniaAvailableBalances();
   const [targetChainTokens, setTargetChainTokens] = useState<MappedToken[]>([]);
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
@@ -169,7 +167,7 @@ export function Substrate2SubstrateDVM({
         return null;
       }
 
-      const { to: arrival } = transfer as NoNullTransferNetwork<ChainConfig, DVMChainConfig>;
+      const { to: arrival } = direction as CrossChainDirection<ChainConfig, DVMChainConfig>;
       const web3 = entrance.web3.getInstance(arrival.ethereumChain.rpcUrls[0]);
       const { mappingAddress } = await getS2SMappingParams(arrival.provider.rpc);
       const contract = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
@@ -186,7 +184,7 @@ export function Substrate2SubstrateDVM({
 
       return { limit, spentToday };
     },
-    [targetChainTokens, transfer]
+    [targetChainTokens, direction]
   );
   const isMounted = useIsMounted();
 
@@ -224,21 +222,21 @@ export function Substrate2SubstrateDVM({
   }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
 
   useEffect(() => {
-    const sub$$ = getKnownMappedTokens('null', transfer.to as PangolinConfig | CrabConfig, transfer.from).subscribe(
+    const sub$$ = getKnownMappedTokens('null', direction.to as DVMChainConfig, direction.from).subscribe(
       ({ tokens }) => {
         setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
       }
     );
 
     return () => sub$$?.unsubscribe();
-  }, [transfer.from, transfer.to]);
+  }, [direction.from, direction.to]);
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
 
     form.setFieldsValue({ [FORM_CONTROL.sender]: sender });
 
-    updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
+    updateDeparture({ from: form.getFieldValue(FORM_CONTROL.direction).from, sender });
   }, [form, api, accounts, updateDeparture]);
 
   useEffect(() => {
@@ -302,7 +300,7 @@ export function Substrate2SubstrateDVM({
 
       <RecipientItem
         form={form}
-        transfer={transfer}
+        direction={direction}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
@@ -329,7 +327,7 @@ export function Substrate2SubstrateDVM({
               {/** FIXME: what's the name ? we can only get symbol, decimals and ss58Format from api properties  */}
               <sup className="ml-2 text-xs" title={t('name')}>
                 {t('{{network}} native token', {
-                  network: capitalize(form.getFieldValue(FORM_CONTROL.transfer)?.from?.name ?? ''),
+                  network: capitalize(form.getFieldValue(FORM_CONTROL.direction)?.from?.name ?? ''),
                 })}
               </sup>
             </Select.Option>
@@ -384,7 +382,7 @@ export function Substrate2SubstrateDVM({
           onChange={(val) => setCurAmount(val)}
         >
           <MaxBalance
-            network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
+            network={form.getFieldValue(FORM_CONTROL.direction).from?.name as Network}
             onClick={() => {
               if (!availableBalance) {
                 return;

@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash';
 import { FunctionComponent } from 'react';
-import { Network, NetworkMode } from './network';
+import { Network, NetworkMode } from '../network/network';
 
 /* ----------------------------------------------- bridge state ------------------------------------------------ */
 

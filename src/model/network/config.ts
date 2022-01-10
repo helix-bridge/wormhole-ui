@@ -1,25 +1,6 @@
-import { Config } from './common';
-import { AddEthereumChainParameter } from './metamask';
-
-export type PolkadotTypeNetwork = 'pangolin' | 'crab' | 'darwinia' | 'pangoro';
-
-type EthereumTypeNetwork = 'ethereum' | 'ropsten';
-
-type TronTypeNetwork = 'tron';
-
-export type Network = PolkadotTypeNetwork | EthereumTypeNetwork | TronTypeNetwork;
-
-export type NetworkCategory = 'polkadot' | 'ethereum' | 'darwinia' | 'dvm' | 'tron';
-
-export type NetworkMode = 'native' | 'dvm';
-
-export type NetworkFilter = (network: ChainConfig) => boolean;
-
-interface Facade {
-  logo: string;
-  logoMinor: string;
-  logoWithText: string;
-}
+import { AddEthereumChainParameter } from '../metamask';
+import { Facade } from './facade';
+import { Network, NetworkCategory } from './network';
 
 interface DVMTokenConfig {
   ring: string;
@@ -27,7 +8,7 @@ interface DVMTokenConfig {
   [key: string]: string;
 }
 
-interface Provider {
+interface ProviderConfig {
   rpc: string;
   etherscan: string;
 }
@@ -36,7 +17,7 @@ export interface ChainConfig {
   facade: Facade;
   isTest: boolean;
   name: Network;
-  provider: Provider;
+  provider: ProviderConfig;
   type: NetworkCategory[];
 }
 
@@ -54,8 +35,6 @@ export interface DVMChainConfig extends EthereumChainConfig, PolkadotChainConfig
 
 /* ----------------------------------------Polkadot network config-------------------------------------------------- */
 
-export type PangolinConfig = DVMChainConfig;
-
 export type CrabConfig = DVMChainConfig;
 
 export type PangoroConfig = PolkadotChainConfig;
@@ -71,7 +50,3 @@ export type RopstenConfig = EthereumChainConfig;
 /* ----------------------------------------Tron network config-------------------------------------------------- */
 
 export type TronConfig = ChainConfig;
-
-/* ----------------------------------------Network Theme config-------------------------------------------------- */
-
-export type NetworkThemeConfig<T> = Config<Network, T>;

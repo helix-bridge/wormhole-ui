@@ -4,7 +4,7 @@ import { isBoolean, isNull, negate } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { airportsArrivalFilter, airportsDepartureFilter, useNetworks } from '../../hooks';
-import { Arrival, CustomFormControlProps, ChainConfig, TransferNetwork } from '../../model';
+import { Arrival, CustomFormControlProps, ChainConfig, CrossChainDirection } from '../../model';
 import {
   getNetworkMode,
   getArrival,
@@ -19,7 +19,7 @@ import { updateStorage } from '../../utils/helper/storage';
 import { LinkIndicator } from '../LinkIndicator';
 import { Destination, DestinationMode } from './Destination';
 
-export type NetsProps = CustomFormControlProps<TransferNetwork>;
+export type NetsProps = CustomFormControlProps<CrossChainDirection>;
 
 // eslint-disable-next-line complexity
 export function Nets({
@@ -41,7 +41,7 @@ export function Nets({
   }, [reverseVertices, value, vertices]);
 
   const triggerChange = useCallback(
-    (val: TransferNetwork) => {
+    (val: CrossChainDirection) => {
       if (onChange) {
         onChange(val);
       }

@@ -9,9 +9,9 @@ import {
   Erc20RegisterStatus,
   Erc20Token,
   EthereumConfig,
-  PangolinConfig,
+  DVMChainConfig,
   RequiredPartial,
-  TransferNetwork,
+  CrossChainDirection,
 } from '../model';
 import { isDVM, isEthereumNetwork } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
@@ -67,7 +67,7 @@ export const useMappedTokens = (
   {
     from,
     to,
-  }: TransferNetwork<PangolinConfig | CrabConfig | EthereumConfig, PangolinConfig | CrabConfig | EthereumConfig>,
+  }: CrossChainDirection<DVMChainConfig | CrabConfig | EthereumConfig, DVMChainConfig | CrabConfig | EthereumConfig>,
   status: Erc20RegisterStatus = RegisterStatus.unregister
 ) => {
   const [loading, setLoading] = useState(false);

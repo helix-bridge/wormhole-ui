@@ -15,7 +15,6 @@ import {
   SHORT_DURATION,
 } from '../config';
 import {
-  ApiKeys,
   BridgeDispatchEventRecord,
   BridgeDispatchEventRes,
   ChainConfig,
@@ -96,8 +95,8 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 
 export function useRecords(departure: Departure, arrival: Departure) {
   const { fetchS2SIssuingRecords, fetchS2SRedeemRecords } = useS2SRecords(
-    verticesToChainConfig(departure)! as ChainConfig<ApiKeys>,
-    verticesToChainConfig(arrival)! as ChainConfig<ApiKeys>
+    verticesToChainConfig(departure)! as ChainConfig,
+    verticesToChainConfig(arrival)! as ChainConfig
   );
   const genParams = useCallback(
     (params: HistoryReq) => {
@@ -221,8 +220,8 @@ type FetchS2SRecords = (req: HistoryReq) => Observable<{ count: number; list: S2
 type FetchS2SRecord<T, R> = (laneId: string, nonce: string, options: FetchRecordOptions<T>) => Observable<R>;
 
 export function useS2SRecords(
-  departure: ChainConfig<ApiKeys>,
-  arrival: ChainConfig<ApiKeys>
+  departure: ChainConfig,
+  arrival: ChainConfig
 ): {
   fetchS2SIssuingRecords: FetchS2SRecords;
   fetchS2SRedeemRecords: FetchS2SRecords;

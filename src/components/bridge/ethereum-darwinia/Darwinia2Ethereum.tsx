@@ -17,12 +17,11 @@ import {
 } from '../../../hooks';
 import {
   AvailableBalance,
-  TransferComponentProps,
-  Darwinia2EthereumTransfer,
+  CrossChainComponentProps,
+  Darwinia2EthereumPayload,
   IssuingDarwiniaToken,
-  NoNullTransferNetwork,
   TokenChainInfo,
-  TransferFormValues,
+  CrossChainPayload,
 } from '../../../model';
 import {
   applyModalObs,
@@ -179,7 +178,11 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
  * @description test chain: pangolin -> ropsten
  */
 // eslint-disable-next-line complexity
-export function Darwinia2Ethereum({ form, setSubmit, transfer }: TransferComponentProps<Darwinia2EthereumTransfer>) {
+export function Darwinia2Ethereum({
+  form,
+  setSubmit,
+  direction: transfer,
+}: CrossChainComponentProps<Darwinia2EthereumPayload>) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
@@ -194,7 +197,7 @@ export function Darwinia2Ethereum({ form, setSubmit, transfer }: TransferCompone
   const [currentAssets, setCurAssets] = useState<AssetGroupValue>([]);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
-  const { afterTx } = useAfterSuccess<TransferFormValues<Darwinia2EthereumTransfer, NoNullTransferNetwork>>();
+  const { afterTx } = useAfterSuccess<CrossChainPayload<Darwinia2EthereumPayload>>();
   const getBalances = useDarwiniaAvailableBalances();
   const observe = useCallback(
     (updateFee: React.Dispatch<React.SetStateAction<BN | null>>, source: Observable<BN | null>) => {
@@ -220,7 +223,7 @@ export function Darwinia2Ethereum({ form, setSubmit, transfer }: TransferCompone
 
       const { assets, sender } = data;
       const assetsToSend = assets?.map((item) => {
-        const { asset, amount, checked } = item as Required<Darwinia2EthereumTransfer['assets'][number]>;
+        const { asset, amount, checked } = item as Required<Darwinia2EthereumPayload['assets'][number]>;
         const { decimal = 'gwei', symbol = asset } = getChainInfo(chain.tokens, asset as string) as TokenChainInfo;
         const amountWei = checked ? toWei({ value: amount, unit: decimal }) : '0';
 
@@ -272,7 +275,7 @@ export function Darwinia2Ethereum({ form, setSubmit, transfer }: TransferCompone
       setCurAssets(assets);
     }
 
-    updateDeparture({ from: form.getFieldValue(FORM_CONTROL.transfer).from, sender });
+    updateDeparture({ from: form.getFieldValue(FORM_CONTROL.direction).from, sender });
 
     return () => {
       sub$$.unsubscribe();
@@ -307,7 +310,7 @@ export function Darwinia2Ethereum({ form, setSubmit, transfer }: TransferCompone
 
       <RecipientItem
         form={form}
-        transfer={transfer}
+        direction={transfer}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
@@ -339,7 +342,7 @@ export function Darwinia2Ethereum({ form, setSubmit, transfer }: TransferCompone
         className="mb-0"
       >
         <AssetGroup
-          network={form.getFieldValue(FORM_CONTROL.transfer).from.name}
+          network={form.getFieldValue(FORM_CONTROL.direction).from.name}
           balances={availableBalances}
           fee={fee}
           form={form}

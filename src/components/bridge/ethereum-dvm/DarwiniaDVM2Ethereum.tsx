@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { RegisterStatus } from '../../../config';
-import { TransferComponentProps, CrabConfig, DVMTransfer, ChainConfig, PangolinConfig } from '../../../model';
+import { CrossChainComponentProps, DVMPayload, ChainConfig, DVMChainConfig } from '../../../model';
 import { issuingErc20 } from '../../../utils';
 import { DVM } from '../DVM';
 
@@ -18,16 +18,16 @@ import { DVM } from '../DVM';
 /**
  * @description test chain: pangolin dvm -> ropsten
  */
-export function DarwiniaDVM2Ethereum({ form, setSubmit, transfer }: TransferComponentProps<DVMTransfer>) {
+export function DarwiniaDVM2Ethereum({ form, setSubmit, direction: transfer }: CrossChainComponentProps<DVMPayload>) {
   const spenderResolver = useCallback(
-    (config: ChainConfig) => Promise.resolve((config as PangolinConfig | CrabConfig).contracts.e2dvm.issuing ?? ''),
+    (config: ChainConfig) => Promise.resolve((config as DVMChainConfig).contracts.e2dvm.issuing ?? ''),
     []
   );
 
   return (
     <DVM
       form={form}
-      transfer={transfer}
+      direction={transfer}
       setSubmit={setSubmit}
       transform={issuingErc20}
       spenderResolver={spenderResolver}
