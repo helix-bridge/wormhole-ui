@@ -20,15 +20,15 @@ import { updateStorage } from '../../utils/helper/storage';
 import { LinkIndicator } from '../LinkIndicator';
 import { Destination, DestinationMode } from './Destination';
 
-export type NetsProps = CustomFormControlProps<NullableCrossChainDirection>;
+type DirectionProps = CustomFormControlProps<NullableCrossChainDirection>;
 
 // eslint-disable-next-line complexity
-export function Nets({
+export function Direction({
   value,
   onChange,
   isCross = true,
   mode = 'default',
-}: NetsProps & { isCross?: boolean; mode?: DestinationMode }) {
+}: DirectionProps & { isCross?: boolean; mode?: DestinationMode }) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(isCross);
   const [vertices, setVertices] = useState<Arrival | null>(null);

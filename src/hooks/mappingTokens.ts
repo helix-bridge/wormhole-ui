@@ -5,8 +5,8 @@ import useDeepCompareEffect from 'use-deep-compare-effect';
 import { RegisterStatus } from '../config';
 import { Action, Erc20RegisterStatus, Erc20Token, NullableCrossChainDirection, RequiredPartial } from '../model';
 import { isDVM, isEthereumNetwork } from '../utils';
-import { getTokenBalance } from '../utils/erc20/meta';
-import { getKnownMappingTokens, StoredProof } from '../utils/erc20/token';
+import { getTokenBalance } from '../utils/token/tokenInfo';
+import { getKnownMappingTokens, StoredProof } from '../utils/token/mappingToken';
 import { useApi } from './api';
 
 export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'>;

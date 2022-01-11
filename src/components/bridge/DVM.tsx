@@ -41,11 +41,11 @@ import {
   prettyNumber,
   toWei,
 } from '../../utils';
-import { Balance } from '../controls/Balance';
-import { Erc20Control } from '../controls/Erc20Control';
-import { EthereumAccountItem } from '../controls/EthereumAccountItem';
-import { MaxBalance } from '../controls/MaxBalance';
-import { RecipientItem } from '../controls/RecipientItem';
+import { Balance } from '../form-control/Balance';
+import { Erc20Control } from '../form-control/Erc20Control';
+import { EthereumAccountItem } from '../form-control/EthereumAccountItem';
+import { MaxBalance } from '../form-control/MaxBalance';
+import { RecipientItem } from '../form-control/RecipientItem';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
 import { ApproveSuccess } from '../modal/ApproveSuccess';
 import { Des } from '../modal/Des';

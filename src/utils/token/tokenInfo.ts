@@ -1,11 +1,14 @@
+import { AccountData, AccountInfo } from '@darwinia/types';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import contractMap from '@metamask/contract-metadata';
+import { ApiPromise } from '@polkadot/api';
 import { memoize } from 'lodash';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import { entrance } from '..';
 import { abi } from '../../config';
+import { waitUntilConnected } from '../network';
 
 export interface TokenCache {
   address: string;
@@ -78,3 +81,42 @@ export async function getTokenBalance(address: string, account: string, isErc20N
 export const getErc20Meta = memoize(erc20Meta);
 
 export const getMappedTokenMeta = memoize(mappedMeta);
+
+/**
+ * @description other api can get balances:  api.derive.balances.all, api.query.system.account;
+ * @see https://github.com/darwinia-network/wormhole-ui/issues/142
+ */
+export async function getDarwiniaBalances(api: ApiPromise, account = ''): Promise<[string, string]> {
+  await waitUntilConnected(api);
+
+  try {
+    // type = 0 query ring balance.  type = 1 query kton balance.
+    /* eslint-disable */
+    const ringUsableBalance = await (api.rpc as any).balances.usableBalance(0, account);
+    const ktonUsableBalance = await (api.rpc as any).balances.usableBalance(1, account);
+    /* eslint-enable */
+
+    return [ringUsableBalance.usableBalance.toString(), ktonUsableBalance.usableBalance.toString()];
+  } catch (error: unknown) {
+    console.warn(
+      '%c [ Failed to  querying balance through rpc ]',
+      'font-size:13px; background:pink; color:#bf2c9f;',
+      (error as Record<string, string>).message
+    );
+  }
+
+  try {
+    const { data } = (await api.query.system.account(account)) as AccountInfo;
+    const { free, freeKton } = data as unknown as AccountData;
+
+    return [free.toString(), freeKton.toString()];
+  } catch (error) {
+    console.warn(
+      '%c [ Failed to  querying balance through account info ]',
+      'font-size:13px; background:pink; color:#bf2c9f;',
+      (error as Record<string, string>).message
+    );
+
+    return ['0', '0'];
+  }
+}

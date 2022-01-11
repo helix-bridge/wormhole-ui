@@ -2,8 +2,8 @@
 
 import { mount } from '@cypress/react';
 import { Suspense } from 'react';
-import { ProgressProps, State } from '../components/records/Progress';
-import { Record, RecordProps } from '../components/records/Record';
+import { ProgressProps, State } from '../components/record/Progress';
+import { Record, RecordProps } from '../components/record/Record';
 import { pangoroConfig as pangoro, pangolinConfig as pangolin, ropstenConfig as ropsten } from '../config';
 import '../index.scss';
 import '../theme/antd/index.less';

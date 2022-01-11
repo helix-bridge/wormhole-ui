@@ -10,7 +10,7 @@ import { crabConfig, DATE_TIME_FORMATE, FORM_CONTROL, NETWORK_LIGHT_THEME, Subsc
 import { airportsDepartureFilter, useApi, useNetworks } from '../../hooks';
 import { ClaimsRes, ChainConfig, Network, SubscanResponse } from '../../model';
 import { apiUrl, fromWei, getAirdropData, getInitialSetting, isSameNetConfig, rxGet } from '../../utils';
-import { Destination } from '../controls/Destination';
+import { Destination } from '../form-control/Destination';
 import { LinkIndicator } from '../LinkIndicator';
 import { SubmitButton } from '../SubmitButton';
 
@@ -18,7 +18,7 @@ const SNAPSHOT_TIMESTAMP = 1584683400;
 const CLAIM_ENDPOINT = 'https://crab.subscan.io';
 
 // eslint-disable-next-line complexity
-export function AirdropRecords() {
+export function AirdropRecord() {
   const { t } = useTranslation();
   const {
     connection: { accounts, status },

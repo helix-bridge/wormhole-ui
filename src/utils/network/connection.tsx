@@ -85,7 +85,7 @@ export const getPolkadotConnection: (network: ChainConfig) => Observable<Polkado
     startWith<PolkadotConnection>({ status: ConnectionStatus.connecting, accounts: [], api: null, type: 'polkadot' })
   );
 
-export const getEthConnection: () => Observable<EthereumConnection> = () => {
+export const getEthereumConnection: () => Observable<EthereumConnection> = () => {
   return from(window.ethereum.request({ method: 'eth_requestAccounts' })).pipe(
     switchMap((_) => {
       const addressToAccounts = (addresses: string[]) =>
@@ -186,7 +186,7 @@ const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {
 
   return from(isNetworkConsistent(network.name, chainId)).pipe(
     switchMap((isMatch) =>
-      isMatch ? getEthConnection() : switchMetamaskNetwork(network.name).pipe(switchMapTo(getEthConnection()))
+      isMatch ? getEthereumConnection() : switchMetamaskNetwork(network.name).pipe(switchMapTo(getEthereumConnection()))
     )
   );
 };

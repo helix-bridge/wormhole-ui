@@ -39,11 +39,11 @@ import {
   redeemDeposit,
   toWei,
 } from '../../../utils';
-import { getMappedTokenMeta, getTokenBalance, TokenCache } from '../../../utils/erc20/meta';
-import { Balance } from '../../controls/Balance';
-import { DepositItem, getDepositTimeRange } from '../../controls/DepositItem';
-import { MaxBalance } from '../../controls/MaxBalance';
-import { RecipientItem } from '../../controls/RecipientItem';
+import { getMappedTokenMeta, getTokenBalance, TokenCache } from '../../../utils/token/tokenInfo';
+import { Balance } from '../../form-control/Balance';
+import { DepositItem, getDepositTimeRange } from '../../form-control/DepositItem';
+import { MaxBalance } from '../../form-control/MaxBalance';
+import { RecipientItem } from '../../form-control/RecipientItem';
 import { ApproveConfirm } from '../../modal/ApproveConfirm';
 import { ApproveSuccess } from '../../modal/ApproveSuccess';
 import { Des } from '../../modal/Des';

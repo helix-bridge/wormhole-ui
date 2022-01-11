@@ -31,19 +31,12 @@ import {
   Tx,
 } from '../../model';
 import { getBridge, isS2S, isSubstrateDVM2Substrate } from '../bridge';
-import {
-  apiUrl,
-  ClaimNetworkPrefix,
-  encodeBlockHeader,
-  encodeMMRRootMessage,
-  getMMR,
-  getMPTProof,
-  MMRProof,
-} from '../helper';
+import { apiUrl, encodeBlockHeader } from '../helper';
+import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR, MMRProof } from '../mmr';
 import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount, isDVM } from '../network';
-import { rxGet } from '../records';
+import { getMPTProof, rxGet } from '../record';
 import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
-import { getErc20Meta, getTokenBalance } from './meta';
+import { getErc20Meta, getTokenBalance } from './tokenInfo';
 
 export type StoredProof = {
   mmrProof: MMRProof;
@@ -78,7 +71,7 @@ const getMappingTokenLength = memoize(
  * @params {string} currentAccount
  * @returns tokens that status maybe registered or registering
  */
-function getMappedTokensFromDvm(
+function getMappingTokensFromDvm(
   currentAccount: string,
   departure: DVMChainConfig,
   arrival: EthereumChainConfig,
@@ -139,14 +132,14 @@ function getMappedTokensFromDvm(
       })
     );
 
-  return getMappedTokens(countObs, getToken);
+  return queryMappingTokens(countObs, getToken);
 }
 
 /**
  * @description get all tokens at ethereum side
  * @returns tokens that status maybe registered or registering
  */
-function getMappedTokensFromEthereum(currentAccount: string, direction: CrossChainDirection) {
+function getMappingTokensFromEthereum(currentAccount: string, direction: CrossChainDirection) {
   const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
   const backingContract = new web3.eth.Contract(abi.bankErc20ABI, bridge.config.contracts.redeem);
@@ -173,10 +166,10 @@ function getMappedTokensFromEthereum(currentAccount: string, direction: CrossCha
       })
     );
 
-  return getMappedTokens(countObs, getToken);
+  return queryMappingTokens(countObs, getToken);
 }
 
-function getMappedTokens(countObs: Observable<number>, token: (index: number) => Observable<MappedToken>) {
+function queryMappingTokens(countObs: Observable<number>, token: (index: number) => Observable<MappedToken>) {
   const retryCount = 5;
   const tokensObs = countObs.pipe(
     switchMap((len) => timer(SHORT_DURATION / 10, 0).pipe(take(len))),
@@ -230,10 +223,10 @@ export const getKnownMappingTokens = (
     : from(getErc20MappingPrams(departure.provider.rpc));
 
   const tokens = departure.type.includes('ethereum')
-    ? getMappedTokensFromEthereum(currentAccount, direction)
+    ? getMappingTokensFromEthereum(currentAccount, direction)
     : mappingAddressObs.pipe(
         switchMap(({ mappingAddress }) =>
-          getMappedTokensFromDvm(
+          getMappingTokensFromDvm(
             currentAccount,
             departure as DVMChainConfig,
             arrival as EthereumChainConfig,

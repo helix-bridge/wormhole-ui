@@ -47,11 +47,11 @@ import {
   waitUntilConnected,
   zeroAmountRule,
 } from '../../../utils';
-import { getKnownMappingTokens } from '../../../utils/erc20/token';
-import { Balance } from '../../controls/Balance';
-import { MaxBalance } from '../../controls/MaxBalance';
-import { PolkadotAccountsItem } from '../../controls/PolkadotAccountsItem';
-import { RecipientItem } from '../../controls/RecipientItem';
+import { getKnownMappingTokens } from '../../../utils/token/mappingToken';
+import { Balance } from '../../form-control/Balance';
+import { MaxBalance } from '../../form-control/MaxBalance';
+import { PolkadotAccountsItem } from '../../form-control/PolkadotAccountsItem';
+import { RecipientItem } from '../../form-control/RecipientItem';
 import { TransferConfirm } from '../../modal/TransferConfirm';
 import { TransferSuccess } from '../../modal/TransferSuccess';
 

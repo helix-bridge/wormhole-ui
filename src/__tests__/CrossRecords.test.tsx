@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { mount } from '@cypress/react';
-import { CrossRecords } from '../components/records/CrossRecords';
+import { CrossChainRecord } from '../components/record/CrossChain';
 import { BrowserRouter } from 'react-router-dom';
 import { ApiProvider } from '../providers';
 import '../index.scss';
@@ -21,7 +21,7 @@ describe('Language Component', () => {
       <Suspense fallback="loading">
         <BrowserRouter>
           <ApiProvider>
-            <CrossRecords />
+            <CrossChainRecord />
           </ApiProvider>
         </BrowserRouter>
       </Suspense>

@@ -1,14 +1,14 @@
 import { encodeAddress } from '@polkadot//util-crypto';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EthereumChainConfig, Network, PolkadotChainConfig, RecordComponentProps } from '../../model';
-import { E2DHistory as E2DRecordType, RedeemHistory, RingBurnHistory } from '../../model/darwinia';
-import { getLegalName, verticesToChainConfig } from '../../utils';
-import { Progresses, ProgressProps, State } from './Progress';
-import { Record } from './Record';
+import { EthereumChainConfig, Network, PolkadotChainConfig, RecordComponentProps } from '../../../model';
+import { E2DHistory as E2DRecordType, RedeemHistory, RingBurnHistory } from '../../../model/darwinia';
+import { getLegalName, verticesToChainConfig } from '../../../utils';
+import { Progresses, ProgressProps, State } from '../Progress';
+import { Record } from '../Record';
 
 // eslint-disable-next-line complexity
-export function E2DRecord({
+export function Ethereum2DarwiniaRecord({
   record,
   departure,
   arrival,

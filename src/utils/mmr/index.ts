@@ -1,1 +1,2 @@
-export * from './proof';
+export * from './mmr';
+// Do not export proof and util;

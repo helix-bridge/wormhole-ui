@@ -7,9 +7,9 @@ import {
   ropstenPangolin,
   ropstenPangolinDVM,
 } from '../../config';
-import { D2ERecord } from '../records/D2ERecord';
-import { E2DRecord } from '../records/E2DRecord';
-import { S2SRecord } from '../records/S2SRecord';
+import { Darwinia2EthereumRecord, Ethereum2DarwiniaRecord } from '../record/ethereum-darwinia';
+import { DVM2EthereumRecord, Ethereum2DVMRecord } from '../record/ethereum-dvm';
+import { SubstrateSubstrateDVMRecord } from '../record/substrate-substrateDVM';
 import { Darwinia2Ethereum } from './ethereum-darwinia/Darwinia2Ethereum';
 import { Ethereum2Darwinia } from './ethereum-darwinia/Ethereum2Darwinia';
 import { DarwiniaDVM2Ethereum } from './ethereum-dvm/DarwiniaDVM2Ethereum';
@@ -17,28 +17,63 @@ import { Ethereum2DarwiniaDVM } from './ethereum-dvm/Ethereum2DarwiniaDVM';
 import { Substrate2SubstrateDVM } from './substrate-substrateDVM/Substrate2SubstrateDVM';
 import { SubstrateDVM2Substrate } from './substrate-substrateDVM/SubstrateDVM2Substrate';
 
-/* ------------------------------------- register bridge components ---------------------------------------- */
-
 /**
  * ethereum <-> darwinia
+ * ropstent <-> pangolin
  */
-ethereumDarwinia.setIssuingComponents(Ethereum2Darwinia as FunctionComponent, E2DRecord as FunctionComponent);
-ethereumDarwinia.setRedeemComponents(Darwinia2Ethereum as FunctionComponent, D2ERecord as FunctionComponent);
-ropstenPangolin.setIssuingComponents(Ethereum2Darwinia as FunctionComponent, E2DRecord as FunctionComponent);
-ropstenPangolin.setRedeemComponents(Darwinia2Ethereum as FunctionComponent, D2ERecord as FunctionComponent);
+ethereumDarwinia.setIssuingComponents(
+  Ethereum2Darwinia as FunctionComponent,
+  Ethereum2DarwiniaRecord as FunctionComponent
+);
+ethereumDarwinia.setRedeemComponents(
+  Darwinia2Ethereum as FunctionComponent,
+  Darwinia2EthereumRecord as FunctionComponent
+);
+ropstenPangolin.setIssuingComponents(
+  Ethereum2Darwinia as FunctionComponent,
+  Ethereum2DarwiniaRecord as FunctionComponent
+);
+ropstenPangolin.setRedeemComponents(
+  Darwinia2Ethereum as FunctionComponent,
+  Darwinia2EthereumRecord as FunctionComponent
+);
 
 /**
  * substrate <-> substrate dvm
+ * darwinia <-> crab dvm
+ * pangoro <-> pangolin dvm
  */
-darwiniaCrabDVM.setIssuingComponents(Substrate2SubstrateDVM as FunctionComponent, S2SRecord as FunctionComponent);
-darwiniaCrabDVM.setRedeemComponents(SubstrateDVM2Substrate as FunctionComponent, S2SRecord as FunctionComponent);
-pangoroPangolinDVM.setIssuingComponents(Substrate2SubstrateDVM as FunctionComponent, S2SRecord as FunctionComponent);
-pangoroPangolinDVM.setRedeemComponents(SubstrateDVM2Substrate as FunctionComponent, S2SRecord as FunctionComponent);
+darwiniaCrabDVM.setIssuingComponents(
+  Substrate2SubstrateDVM as FunctionComponent,
+  SubstrateSubstrateDVMRecord as FunctionComponent
+);
+darwiniaCrabDVM.setRedeemComponents(
+  SubstrateDVM2Substrate as FunctionComponent,
+  SubstrateSubstrateDVMRecord as FunctionComponent
+);
+pangoroPangolinDVM.setIssuingComponents(
+  Substrate2SubstrateDVM as FunctionComponent,
+  SubstrateSubstrateDVMRecord as FunctionComponent
+);
+pangoroPangolinDVM.setRedeemComponents(
+  SubstrateDVM2Substrate as FunctionComponent,
+  SubstrateSubstrateDVMRecord as FunctionComponent
+);
 
 /**
  * ethereum <-> crab dvm
+ * ropsten <-> pangolin dvm
  */
-ethereumCrabDVM.setIssuingComponents(Ethereum2DarwiniaDVM as FunctionComponent, E2DRecord as FunctionComponent);
-ethereumCrabDVM.setRedeemComponents(DarwiniaDVM2Ethereum as FunctionComponent, D2ERecord as FunctionComponent);
-ropstenPangolinDVM.setIssuingComponents(Ethereum2DarwiniaDVM as FunctionComponent, E2DRecord as FunctionComponent);
-ropstenPangolinDVM.setRedeemComponents(DarwiniaDVM2Ethereum as FunctionComponent, D2ERecord as FunctionComponent);
+ethereumCrabDVM.setIssuingComponents(
+  Ethereum2DarwiniaDVM as FunctionComponent,
+  Ethereum2DVMRecord as FunctionComponent
+);
+ethereumCrabDVM.setRedeemComponents(DarwiniaDVM2Ethereum as FunctionComponent, DVM2EthereumRecord as FunctionComponent);
+ropstenPangolinDVM.setIssuingComponents(
+  Ethereum2DarwiniaDVM as FunctionComponent,
+  Ethereum2DVMRecord as FunctionComponent
+);
+ropstenPangolinDVM.setRedeemComponents(
+  DarwiniaDVM2Ethereum as FunctionComponent,
+  DVM2EthereumRecord as FunctionComponent
+);

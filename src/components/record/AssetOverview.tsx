@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
 import { DATE_FORMAT } from '../../config';
 import { fromWei, prettyNumber } from '../../utils';
-import { getDepositTimeRange } from '../controls/DepositItem';
+import { getDepositTimeRange } from '../form-control/DepositItem';
 
 export interface AssetOverviewProps {
   amount: string;

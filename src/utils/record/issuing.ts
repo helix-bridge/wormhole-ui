@@ -1,8 +1,9 @@
+import { ApiPromise } from '@polkadot/api';
+import { TypeRegistry } from '@polkadot/types';
 import { decodeAddress } from '@polkadot/util-crypto';
 import { upperFirst } from 'lodash';
 import { catchError, filter, from, map, Observable, of, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
-import { getBridge } from '..';
 import { abi, DarwiniaApiPath } from '../../config';
 import {
   CrossChainDirection,
@@ -14,8 +15,10 @@ import {
   LockEventsStorage,
   Tx,
 } from '../../model';
-import { apiUrl, ClaimNetworkPrefix, encodeBlockHeader, encodeMMRRootMessage, getMMR, getMPTProof } from '../helper';
-import { connect, entrance } from '../network';
+import { getBridge } from '../bridge';
+import { apiUrl, encodeBlockHeader } from '../helper';
+import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR } from '../mmr';
+import { connect, entrance, waitUntilConnected } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
 
@@ -90,6 +93,19 @@ interface ClaimInfo {
   blockHeaderStr: string;
   blockHash: string;
   meta: D2EMeta;
+}
+
+export async function getMPTProof(
+  api: ApiPromise,
+  hash = '',
+  proofAddress = '0xf8860dda3d08046cf2706b92bf7202eaae7a79191c90e76297e0895605b8b457'
+) {
+  await waitUntilConnected(api);
+
+  const proof = await api.rpc.state.getReadProof([proofAddress], hash);
+  const registry = new TypeRegistry();
+
+  return registry.createType('Vec<Bytes>', proof.proof.toJSON());
 }
 
 /**

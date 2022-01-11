@@ -1,6 +1,10 @@
 import { isUndefined, negate } from 'lodash';
-import { RpcMMRProof } from '../../model';
 import { leaf_index_to_pos, leaf_index_to_mmr_size, get_peaks, gen_proof_for_peak, bag_rhs_peaks } from './util';
+
+interface RpcMMRProof {
+  mmrSize: number;
+  proof: string[];
+}
 
 // eslint-disable-next-line complexity
 async function gen_proof(

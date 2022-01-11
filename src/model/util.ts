@@ -4,14 +4,10 @@ export type NoNullFields<O> = { [K in keyof O]: NonNullable<O[K]> };
 
 export type NullableFields<O, D extends keyof O> = { [K in keyof O]: K extends D ? O[K] | null : O[K] };
 
-export type DeepNoNullFields<T> = {
-  [K in keyof T]: DeepNoNullFields<NonNullable<T[K]>>;
-};
-
 export type RequiredPartial<O, T extends keyof O> = Partial<O> & Required<Pick<O, T>>;
 
 // Analogues to array.prototype.shift
-export type Shift<T extends unknown[]> = ((...t: T) => unknown) extends (first: unknown, ...rest: infer Rest) => unknown
+type Shift<T extends unknown[]> = ((...t: T) => unknown) extends (first: unknown, ...rest: infer Rest) => unknown
   ? Rest
   : never;
 

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { AvailableBalance, TokenChainInfo } from '../model';
-import { getDarwiniaAvailableBalances } from '../utils';
+import { getDarwiniaBalances } from '../utils';
 import { useApi } from './api';
 
 export const getChainInfo: (tokens: TokenChainInfo[], target: string) => TokenChainInfo | undefined = (
@@ -22,7 +22,7 @@ export function useDarwiniaAvailableBalances() {
         return [];
       }
 
-      const [ring, kton] = await getDarwiniaAvailableBalances(api, account);
+      const [ring, kton] = await getDarwiniaBalances(api, account);
 
       return [
         {

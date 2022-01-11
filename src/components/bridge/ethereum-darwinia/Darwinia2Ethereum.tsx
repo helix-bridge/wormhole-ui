@@ -32,9 +32,9 @@ import {
   issuingDarwiniaTokens,
   toWei,
 } from '../../../utils';
-import { AssetGroup, AssetGroupValue } from '../../controls/AssetGroup';
-import { PolkadotAccountsItem } from '../../controls/PolkadotAccountsItem';
-import { RecipientItem } from '../../controls/RecipientItem';
+import { AssetGroup, AssetGroupValue } from '../../form-control/AssetGroup';
+import { PolkadotAccountsItem } from '../../form-control/PolkadotAccountsItem';
+import { RecipientItem } from '../../form-control/RecipientItem';
 import { TransferConfirm } from '../../modal/TransferConfirm';
 import { TransferSuccess } from '../../modal/TransferSuccess';
 

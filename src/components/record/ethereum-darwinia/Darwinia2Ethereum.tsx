@@ -3,18 +3,18 @@ import BN from 'bn.js';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EMPTY, filter, from, iif, map, Observable, of, switchMap, take, tap, zip } from 'rxjs';
-import { abi } from '../../config';
-import { useTx } from '../../hooks';
+import { abi } from '../../../config';
+import { useTx } from '../../../hooks';
 import {
   ConnectionStatus,
   D2EHistory as D2ERecordType,
   D2EMeta,
   EthereumDarwiniaBridgeConfig,
   RecordComponentProps,
-} from '../../model';
-import { claimToken, connect, entrance, getBridge } from '../../utils';
-import { Progresses, ProgressProps, State } from './Progress';
-import { Record } from './Record';
+} from '../../../model';
+import { claimToken, connect, entrance, getBridge } from '../../../utils';
+import { Progresses, ProgressProps, State } from '../Progress';
+import { Record } from '../Record';
 
 const BN_ZERO = new BN(0);
 
@@ -33,7 +33,11 @@ function isSufficient(
 }
 
 // eslint-disable-next-line complexity
-export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D2ERecordType & { meta: D2EMeta }>) {
+export function Darwinia2EthereumRecord({
+  departure,
+  arrival,
+  record,
+}: RecordComponentProps<D2ERecordType & { meta: D2EMeta }>) {
   const { t } = useTranslation();
   const { observer, setTx } = useTx();
   const { block_timestamp, signatures, target, ring_value, kton_value, extrinsic_index, tx } = record;

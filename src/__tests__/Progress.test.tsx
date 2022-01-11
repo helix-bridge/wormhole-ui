@@ -3,7 +3,7 @@
 import { mount } from '@cypress/react';
 import { Suspense } from 'react';
 import { EMPTY } from 'rxjs';
-import { Progress, ProgressProps, State } from '../components/records/Progress';
+import { Progress, ProgressProps, State } from '../components/record/Progress';
 import { pangolinConfig as pangolin, pangoroConfig as pangoro } from '../config';
 import '../index.scss';
 import { ApiProvider, TxProvider } from '../providers';

@@ -23,7 +23,7 @@ import {
   getBridgeComponent,
 } from '../utils';
 import { Airport } from './Airport';
-import { Nets } from './controls/Nets';
+import { Direction } from './form-control/Direction';
 import { FromItemButton, SubmitButton } from './SubmitButton';
 
 const getCrossChainComponent = getBridgeComponent('crossChain');
@@ -116,7 +116,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
           },
         ]}
       >
-        <Nets
+        <Direction
           onChange={(value) => {
             setDirection(value);
             form.resetFields([

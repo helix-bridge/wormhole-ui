@@ -46,7 +46,7 @@ const isAddressValid = (addr: string | null, departure: Vertices) => {
 };
 
 // eslint-disable-next-line complexity
-export function CrossRecords() {
+export function CrossChainRecord() {
   const { t } = useTranslation();
   const { search } = useLocation<HistoryRouteParam>();
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);

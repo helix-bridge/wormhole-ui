@@ -10,7 +10,7 @@ import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useLocalSearch, useMappingTokens, useTx } from '../../hooks';
 import { Erc20Token, EthereumChainConfig } from '../../model';
 import { CROSS_CHAIN_NETWORKS, isSameNetConfig, isValidAddress } from '../../utils';
-import { getErc20Meta } from '../../utils/erc20/meta';
+import { getErc20Meta } from '../../utils/token/tokenInfo';
 import {
   confirmRegister,
   getRegisterProof,
@@ -18,9 +18,9 @@ import {
   hasAvailableDVMBridge,
   launchRegister,
   StoredProof,
-} from '../../utils/erc20/token';
+} from '../../utils/token/mappingToken';
 import { updateStorage } from '../../utils/helper/storage';
-import { Destination } from '../controls/Destination';
+import { Destination } from '../form-control/Destination';
 import { LinkIndicator } from '../LinkIndicator';
 import { SubmitButton } from '../SubmitButton';
 import { Erc20ListInfo } from './Erc20ListInfo';
