@@ -1,5 +1,5 @@
 import { omit } from 'lodash';
-import { pangolinConfig, ropstenConfig } from '..';
+import { pangolinConfig, ropstenConfig } from '../network';
 import { Bridge, EthereumDarwiniaBridgeConfig } from '../../model';
 import { EVOLUTION_DOMAIN } from '../api';
 

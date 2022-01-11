@@ -23,6 +23,7 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+/** eslint-disable */
 import '@testing-library/cypress/add-commands';
 import 'cypress-wait-until';
 

@@ -1,4 +1,4 @@
-import { pangolinConfig, pangoroConfig } from '..';
+import { pangolinConfig, pangoroConfig } from '../network';
 import { Bridge, SubstrateSubstrateDVMBridgeConfig } from '../../model';
 import { EVOLUTION_DOMAIN } from '../api';
 

@@ -4,12 +4,11 @@ import { DisconnectOutlined } from '@ant-design/icons';
 import { mount } from '@cypress/react';
 import { Suspense } from 'react';
 import { Destination } from '../components/controls/Destination';
-import { CROSS_CHAIN_NETWORKS } from '../config';
 import '../index.scss';
 import '../theme/antd/index.less';
 import i18n from '../config/i18n';
 import { img } from './utils';
-import { getDisplayName } from '../utils';
+import { getDisplayName, CROSS_CHAIN_NETWORKS } from '../utils';
 import { upperFirst } from 'lodash';
 
 i18n.init({

@@ -2,7 +2,6 @@ export * from './crab';
 export * from './darwinia';
 export * from './descriptions';
 export * from './ethereum';
-export * from './graph';
 export * from './network-simple';
 export * from './networks';
 export * from './pangolin';

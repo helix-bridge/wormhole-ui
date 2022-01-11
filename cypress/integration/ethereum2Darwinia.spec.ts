@@ -1,11 +1,6 @@
 /// <reference types="cypress" />
 
-const {
-  notificationPageElements,
-  permissionsPageElements,
-  confirmPageElements,
-  signaturePageElements,
-} = require('../pages/metamask/notification-page');
+import * as elements from '../pages/metamask/notification-page';
 
 const TX_TIME_OUT = 2 * 60 * 1000;
 
@@ -75,5 +70,3 @@ describe('Ethereum to Darwinia', () => {
       .should('have.text', 'View in Etherscan explorer');
   });
 });
-
-export {};

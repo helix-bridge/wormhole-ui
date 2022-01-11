@@ -5,11 +5,11 @@ import { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState
 import { Trans, useTranslation } from 'react-i18next';
 import { from, mergeMap } from 'rxjs';
 import Web3 from 'web3';
-import { CROSS_CHAIN_NETWORKS, FORM_CONTROL, RegisterStatus, ropstenConfig, validateMessages } from '../../config';
+import { FORM_CONTROL, RegisterStatus, ropstenConfig, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useLocalSearch, useMappedTokens, useTx } from '../../hooks';
-import { Erc20Token, EthereumChainConfig, EthereumTypeNetwork } from '../../model';
-import { isSameNetConfig, isValidAddress } from '../../utils';
+import { Erc20Token, EthereumChainConfig } from '../../model';
+import { CROSS_CHAIN_NETWORKS, isSameNetConfig, isValidAddress } from '../../utils';
 import { getErc20Meta } from '../../utils/erc20/meta';
 import {
   confirmRegister,
@@ -31,14 +31,6 @@ enum TabKeys {
   register = 'register',
   upcoming = 'upcoming',
 }
-
-/**
- * TODO: move to config
- */
-const registerAddress: { [key in EthereumTypeNetwork]: string } = {
-  ropsten: '0xb2Bea2358d817dAE01B0FD0DC3aECB25910E65AA',
-  ethereum: '',
-};
 
 function tokenSearchFactory<T extends Pick<Erc20Token, 'address' | 'symbol'>>(tokens: T[]) {
   return (value: string) => {
@@ -160,7 +152,7 @@ export function Register() {
             <Input.Search
               placeholder={t('Token Contract Address')}
               size="large"
-              disabled={!registerAddress[net.name as EthereumTypeNetwork]}
+              disabled={hasAvailableDVMBridge(net)}
               onChange={(event) => {
                 setInputValue(event.target.value);
               }}

@@ -1,7 +1,7 @@
 import { chain } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
-import { AIRDROP_GRAPH, AIRPORT_NETWORKS, CROSS_CHAIN_NETWORKS } from '../config';
-import { Arrival, Departure, ChainConfig } from '../model';
+import { Arrival, ChainConfig, Departure } from '../model';
+import { AIRDROP_GRAPH, AIRPORT_NETWORKS, CROSS_CHAIN_NETWORKS } from '../utils';
 import { useApi } from './api';
 
 type NetworkFilter = (network: ChainConfig) => boolean;

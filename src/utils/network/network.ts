@@ -1,14 +1,7 @@
 import { ApiPromise } from '@polkadot/api';
-import { curry, curryRight, has, isEqual, isNull, omit, once, upperFirst } from 'lodash';
+import { chain as lodashChain, curry, curryRight, has, isEqual, isNull, omit, once, upperFirst } from 'lodash';
 import Web3 from 'web3';
-import {
-  AIRDROP_GRAPH,
-  CROSS_CHAIN_NETWORKS,
-  NETWORK_CONFIGURATIONS,
-  NETWORK_GRAPH,
-  NETWORK_SIMPLE,
-  tronConfig,
-} from '../../config';
+import { NETWORK_CONFIGURATIONS, NETWORK_SIMPLE, tronConfig } from '../../config';
 import {
   Arrival,
   ChainConfig,
@@ -26,6 +19,33 @@ import {
   Vertices,
 } from '../../model';
 import { entrance } from './entrance';
+import { AIRDROP_GRAPH, NETWORK_GRAPH } from './graph';
+
+/**
+ * generate network configs, use dvm field to distinct whether the config is dvm config.
+ */
+export const CROSS_CHAIN_NETWORKS: ChainConfig[] = lodashChain([...NETWORK_GRAPH])
+  .map(([departure, arrivals]) => [departure, ...arrivals])
+  .filter((item) => item.length > 1)
+  .flatten()
+  .unionWith((cur, pre) => cur.mode === pre.mode && cur.network === pre.network)
+  .map(({ network, mode }) => {
+    const config: ChainConfig | undefined = NETWORK_CONFIGURATIONS.find((item) => item.name === network);
+
+    if (!config) {
+      throw new Error(`Can not find ${network} network configuration`);
+    }
+
+    return config.type.includes('polkadot') && mode === 'native'
+      ? (omit(config, 'dvm') as Omit<ChainConfig, 'dvm'>)
+      : config;
+  })
+  .sortBy((item) => item.name)
+  .valueOf();
+
+export const AIRPORT_NETWORKS: ChainConfig[] = NETWORK_CONFIGURATIONS.filter((item) =>
+  ['ethereum', 'crab', 'tron'].includes(item.name)
+).map((item) => omit(item, 'dvm'));
 
 function isSpecifyNetworkType(type: NetworkCategory) {
   const findBy = (name: Network) => NETWORK_CONFIGURATIONS.find((item) => item.name === name) ?? null;

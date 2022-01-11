@@ -1,4 +1,4 @@
-import { pangolinConfig, ropstenConfig } from '..';
+import { pangolinConfig, ropstenConfig } from '../network';
 import { Bridge, EthereumDVMBridgeConfig } from '../../model';
 import { EVOLUTION_DOMAIN } from '../api';
 
