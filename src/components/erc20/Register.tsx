@@ -7,7 +7,7 @@ import { from, mergeMap } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL, RegisterStatus, ropstenConfig, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
-import { MemoedTokenInfo, useApi, useLocalSearch, useMappedTokens, useTx } from '../../hooks';
+import { MemoedTokenInfo, useApi, useLocalSearch, useMappingTokens, useTx } from '../../hooks';
 import { Erc20Token, EthereumChainConfig } from '../../model';
 import { CROSS_CHAIN_NETWORKS, isSameNetConfig, isValidAddress } from '../../utils';
 import { getErc20Meta } from '../../utils/erc20/meta';
@@ -59,7 +59,7 @@ export function Register() {
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { tokens, dispatch } = useMappedTokens(
+  const { tokens, dispatch } = useMappingTokens(
     { from: network as EthereumChainConfig, to: null },
     RegisterStatus.registering
   );
@@ -212,7 +212,7 @@ function Upcoming({ departure }: UpcomingProps) {
     proofs: knownProofs,
     addKnownProof,
     switchToConfirmed,
-  } = useMappedTokens({ from: departure, to: null }, RegisterStatus.registering);
+  } = useMappingTokens({ from: departure, to: null }, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
   const { data, setSearch } = useLocalSearch<MemoedTokenInfo>(searchFn as (arg: string) => MemoedTokenInfo[]);

@@ -47,7 +47,7 @@ import {
   waitUntilConnected,
   zeroAmountRule,
 } from '../../../utils';
-import { getKnownMappedTokens } from '../../../utils/erc20/token';
+import { getKnownMappingTokens } from '../../../utils/erc20/token';
 import { Balance } from '../../controls/Balance';
 import { MaxBalance } from '../../controls/MaxBalance';
 import { PolkadotAccountsItem } from '../../controls/PolkadotAccountsItem';
@@ -222,7 +222,7 @@ export function Substrate2SubstrateDVM({
   }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
 
   useEffect(() => {
-    const sub$$ = getKnownMappedTokens('null', { from: direction.to, to: direction.from }).subscribe(({ tokens }) => {
+    const sub$$ = getKnownMappingTokens('null', { from: direction.to, to: direction.from }).subscribe(({ tokens }) => {
       setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
     });
 

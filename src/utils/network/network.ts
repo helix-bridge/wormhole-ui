@@ -186,7 +186,7 @@ export function verticesToChainConfig(vertices: Vertices) {
 
   const config = findNetworkConfig(network);
 
-  return mode === 'dvm' ? (omit(config, 'dvm') as ChainConfig) : config;
+  return mode === 'native' ? (omit(config, 'dvm') as ChainConfig) : config;
 }
 
 export function isSameNetConfig(config1: ChainConfig | null, config2: ChainConfig | null): boolean {

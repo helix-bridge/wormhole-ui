@@ -101,7 +101,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
       name={FORM_CONTROL.direction}
       layout="vertical"
       form={form}
-      initialValues={{ transfer: direction }}
+      initialValues={{ direction }}
       validateMessages={validateMessages[i18n.language as 'en' | 'zh-CN' | 'zh']}
       className={tx ? 'filter blur-sm drop-shadow' : ''}
     >

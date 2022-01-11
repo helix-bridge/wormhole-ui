@@ -12,13 +12,13 @@ import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../.
 export function RecipientItem({
   form,
   extraTip,
-  direction: transfer,
+  direction,
   isDvm = false,
 }: Omit<CrossChainComponentProps<CrossChainParty>, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
   const { t } = useTranslation();
   const [lock] = useLock(form as FormInstance<CrossChainPayload<CrossChainParty>>);
 
-  const { to } = transfer;
+  const { to } = direction;
   const isPolkadot = isPolkadotNetwork(to.name);
   const type = isPolkadot ? to.name : 'ethereum';
 

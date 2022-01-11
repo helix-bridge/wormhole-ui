@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { from, Observable, of, Subscription, switchMap, takeWhile } from 'rxjs';
 import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
-import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappedTokens, useTx } from '../../hooks';
+import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappingTokens, useTx } from '../../hooks';
 import {
   ChainConfig,
   CrossChainComponentProps,
@@ -148,7 +148,7 @@ export function DVM({
   const {
     connection: { accounts },
   } = useApi();
-  const { total, tokens, refreshTokenBalance } = useMappedTokens(
+  const { total, tokens, refreshTokenBalance } = useMappingTokens(
     form.getFieldValue(FORM_CONTROL.direction),
     tokenRegisterStatus
   );

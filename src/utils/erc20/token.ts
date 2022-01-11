@@ -216,7 +216,7 @@ const getSymbolType: (address: string) => Promise<{ symbol: string; isString: bo
  * for dvm: the address field represent the token's dvm address, the source field represent the token's ethereum address.
  */
 // eslint-disable-next-line complexity
-export const getKnownMappedTokens = (
+export const getKnownMappingTokens = (
   currentAccount: string,
   direction: CrossChainDirection
 ): Observable<{ total: number; tokens: Erc20Token[] }> => {

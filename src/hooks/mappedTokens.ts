@@ -6,7 +6,7 @@ import { RegisterStatus } from '../config';
 import { Action, Erc20RegisterStatus, Erc20Token, NullableCrossChainDirection, RequiredPartial } from '../model';
 import { isDVM, isEthereumNetwork } from '../utils';
 import { getTokenBalance } from '../utils/erc20/meta';
-import { getKnownMappedTokens, StoredProof } from '../utils/erc20/token';
+import { getKnownMappingTokens, StoredProof } from '../utils/erc20/token';
 import { useApi } from './api';
 
 export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'>;
@@ -54,7 +54,7 @@ function reducer(state = initialState, action: Action<ActionType, MemoedTokenInf
  * @params {string} networkType
  * @params {number} status - token register status 1:registered 2:registering
  */
-export const useMappedTokens = (
+export const useMappingTokens = (
   { from, to }: NullableCrossChainDirection,
   status: Erc20RegisterStatus = RegisterStatus.unregister
 ) => {
@@ -89,7 +89,7 @@ export const useMappedTokens = (
 
     setLoading(true);
 
-    const subscription = getKnownMappedTokens(currentAccount, { from, to })
+    const subscription = getKnownMappingTokens(currentAccount, { from, to })
       .pipe(
         map(({ tokens, total }) => ({
           total,
@@ -103,7 +103,11 @@ export const useMappedTokens = (
         },
         error: (error) => {
           message.error('Querying failed, please try it again later');
-          console.warn('%c [ query mapping token error ]', 'font-size:13px; background:pink; color:#bf2c9f;', error);
+          console.warn(
+            '%c [ query mapping token error ]',
+            'font-size:13px; background:pink; color:#bf2c9f;',
+            error.message
+          );
           setLoading(false);
         },
         complete: () => setLoading(false),
