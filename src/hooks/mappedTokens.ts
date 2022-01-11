@@ -89,7 +89,7 @@ export const useMappedTokens = (
 
     setLoading(true);
 
-    const subscription = getKnownMappedTokens(currentAccount, from, to)
+    const subscription = getKnownMappedTokens(currentAccount, { from, to })
       .pipe(
         map(({ tokens, total }) => ({
           total,

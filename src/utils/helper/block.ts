@@ -4,7 +4,7 @@ import { hexToU8a } from '@polkadot/util';
 import { lastValueFrom, map } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
 import { MMR_QUERY } from '../../config';
-import { Network, ChainConfig } from '../../model';
+import { Network, PolkadotChainConfig } from '../../model';
 import { genProof } from '../mmr';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
 import { getNetworkByName, waitUntilConnected } from '../network';
@@ -125,8 +125,8 @@ async function getMMRProofByRPC(api: ApiPromise, blockNumber: number, mmrBlockNu
 
 async function getMMRProofBySubql(api: ApiPromise, blockNumber: number, mmrBlockNumber: number) {
   const chain = (await api.rpc.system.chain()).toString().toLowerCase() as Extract<Network, 'pangolin' | 'darwinia'>;
-  const config = getNetworkByName(chain) as ChainConfig;
-  const fetchProofs = proofsFactory(config.api.subqlMMr);
+  const config = getNetworkByName(chain) as PolkadotChainConfig;
+  const fetchProofs = proofsFactory(config.endpoints.mmr);
   const proof = await genProof(blockNumber, mmrBlockNumber, fetchProofs);
   const encodeProof = proof.proof.map((item) => remove0x(item.replace(/(^\s*)|(\s*$)/g, ''))).join('');
   const size = new TypeRegistry().createType('u64', proof.mmrSize.toString()) as unknown as BigInt;

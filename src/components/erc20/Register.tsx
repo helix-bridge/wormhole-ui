@@ -15,6 +15,7 @@ import {
   confirmRegister,
   getRegisterProof,
   getTokenRegisterStatus,
+  hasAvailableDVMBridge,
   launchRegister,
   StoredProof,
 } from '../../utils/erc20/token';
@@ -79,7 +80,7 @@ export function Register() {
     () =>
       status === 'success' &&
       isSameNetConfig(network, net) &&
-      !!registerAddress[net.name as EthereumTypeNetwork] &&
+      hasAvailableDVMBridge(net) &&
       isValidAddress(inputValue, 'ethereum'),
     [inputValue, net, network, status]
   );

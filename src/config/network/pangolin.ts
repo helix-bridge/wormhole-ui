@@ -15,6 +15,9 @@ export const pangolinConfig: DVMChainConfig = {
     },
     rpcUrls: ['https://pangolin-rpc.darwinia.network/'],
   },
+  endpoints: {
+    mmr: 'https://api.subquery.network/sq/darwinia-network/pangolin-mmr',
+  },
   facade: {
     logo: '/image/pangolin.png',
     logoMinor: '/image/pangolin.svg',

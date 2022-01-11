@@ -97,21 +97,19 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 
 export function useRecords(departure: Departure, arrival: Departure) {
   const { fetchS2SIssuingRecords, fetchS2SRedeemRecords } = useS2SRecords(
-    verticesToChainConfig(departure)! as ChainConfig,
-    verticesToChainConfig(arrival)! as ChainConfig
+    verticesToChainConfig(departure),
+    verticesToChainConfig(arrival)
   );
-  const genParams = useCallback(
-    (params: HistoryReq) => {
-      const req = omitBy<HistoryReq>(params, isNull) as HistoryReq;
+  const genParams = useCallback((params: HistoryReq) => {
+    const req = omitBy<HistoryReq>(params, isNull) as HistoryReq;
+    const [dep] = params.direction;
 
-      if (isTronNetwork(departure.network)) {
-        return { ...req, address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '' };
-      }
+    if (isTronNetwork(dep.network)) {
+      return { ...req, address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '' };
+    }
 
-      return req;
-    },
-    [departure]
-  );
+    return req;
+  }, []);
 
   const genQueryFn = useCallback<(isGenesis: boolean) => (req: HistoryReq) => Observable<unknown>>(
     // eslint-disable-next-line complexity
@@ -151,9 +149,9 @@ export function useRecords(departure: Departure, arrival: Departure) {
 
   const queryRecords = useCallback(
     (params: HistoryReq, isGenesis: boolean) => {
-      const { network, address } = params;
+      const { direction, address } = params;
 
-      if (!network || !address) {
+      if (!direction || !address) {
         return EMPTY;
       }
 

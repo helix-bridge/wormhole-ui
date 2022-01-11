@@ -1,3 +1,4 @@
+import { Arrival, Departure } from '..';
 import { Network } from '../network/network';
 import { DListRes } from './api';
 
@@ -8,7 +9,7 @@ export interface Paginator {
 
 export interface HistoryReq {
   address: string;
-  network: Network; // departure network
+  direction: [Departure, Arrival];
   paginator: Paginator;
   confirmed: boolean | null;
 }

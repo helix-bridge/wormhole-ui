@@ -222,14 +222,12 @@ export function Substrate2SubstrateDVM({
   }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
 
   useEffect(() => {
-    const sub$$ = getKnownMappedTokens('null', direction.to as DVMChainConfig, direction.from).subscribe(
-      ({ tokens }) => {
-        setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
-      }
-    );
+    const sub$$ = getKnownMappedTokens('null', direction).subscribe(({ tokens }) => {
+      setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
+    });
 
     return () => sub$$?.unsubscribe();
-  }, [direction.from, direction.to]);
+  }, [direction]);
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';

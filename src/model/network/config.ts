@@ -27,6 +27,9 @@ export interface EthereumChainConfig extends ChainConfig {
 
 export interface PolkadotChainConfig extends ChainConfig {
   ss58Prefix: number;
+  endpoints: {
+    mmr: string;
+  };
 }
 
 export interface DVMChainConfig extends EthereumChainConfig, PolkadotChainConfig {

@@ -18,6 +18,8 @@ export type Departure = Vertices;
 
 export type Arrival = Vertices;
 
+export type BridgeDirection = [Departure, Arrival];
+
 /* ----------------------------------------------- bridge config ------------------------------------------------ */
 
 /**
@@ -77,7 +79,9 @@ export interface EthereumDVMcontractConfig extends ContractConfig {
   proof: string;
 }
 
-export type EthereumDVMBridgeConfig = Required<BridgeConfig<EthereumDVMcontractConfig>>;
+export type EthereumDVMBridgeConfig = Required<
+  BridgeConfig<EthereumDVMcontractConfig, Pick<Api<ApiKeys>, 'dapp' | 'evolution'>>
+>;
 
 /* ----------------------------------------------- bridge  ------------------------------------------------ */
 
@@ -96,7 +100,7 @@ export class Bridge<C extends BridgeConfig> {
 
   readonly issuing: [Departure, Arrival];
 
-  readonly redeem: [Departure, Arrival];
+  readonly redeem: [Arrival, Departure];
 
   private _config: C;
 

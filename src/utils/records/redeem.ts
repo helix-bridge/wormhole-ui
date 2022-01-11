@@ -1,7 +1,14 @@
 import { catchError, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { getBridge } from '..';
 import { DarwiniaApiPath } from '../../config';
-import { HistoryReq, RedeemHistoryRes, RingBurnHistoryRes } from '../../model';
+import {
+  EthereumDarwiniaBridgeConfig,
+  EthereumDVMBridgeConfig,
+  HistoryReq,
+  RedeemHistoryRes,
+  RingBurnHistoryRes,
+} from '../../model';
 import { apiUrl } from '../helper';
 import { rxGet } from './api';
 
@@ -13,10 +20,11 @@ import { rxGet } from './api';
 export function queryEthereum2DarwiniaRedeemRecords({
   address,
   confirmed,
-  network,
+  direction,
   paginator,
 }: HistoryReq): Observable<RedeemHistoryRes | null> {
-  const api = [network].api.dapp;
+  const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
+  const api = bridge.config.api.dapp;
 
   return rxGet<RedeemHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.redeem),
@@ -39,10 +47,11 @@ export function queryEthereum2DarwiniaRedeemRecords({
 export function queryEthereum2DarwiniaGenesisRecords({
   address,
   confirmed,
-  network,
+  direction,
   paginator,
 }: HistoryReq): Observable<RingBurnHistoryRes | null> {
-  const api = [network].api.dapp;
+  const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
+  const api = bridge.config.api.dapp;
 
   return rxGet<RingBurnHistoryRes & { isGenesis: boolean }>({
     url: apiUrl(api, DarwiniaApiPath.ringBurn),
@@ -71,10 +80,11 @@ export function queryEthereum2DarwiniaGenesisRecords({
 export function queryEthereum2DarwiniaDVMRedeemRecords({
   address,
   confirmed,
-  network,
+  direction,
   paginator,
 }: HistoryReq): Observable<RedeemHistoryRes | null> {
-  const api = [network].api.dapp;
+  const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
+  const api = bridge.config.api.dapp;
 
   return rxGet<RedeemHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.tokenLock),

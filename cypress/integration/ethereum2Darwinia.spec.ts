@@ -75,3 +75,5 @@ describe('Ethereum to Darwinia', () => {
       .should('have.text', 'View in Etherscan explorer');
   });
 });
+
+export {};

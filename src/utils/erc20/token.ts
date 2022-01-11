@@ -1,4 +1,4 @@
-import { memoize, upperFirst } from 'lodash';
+import { isEqual, memoize, upperFirst } from 'lodash';
 import { combineLatest, EMPTY, forkJoin, from, interval, NEVER, Observable, of, take, timer, zip } from 'rxjs';
 import {
   catchError,
@@ -16,20 +16,21 @@ import {
 } from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
-import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus, SHORT_DURATION } from '../../config';
+import { abi, BRIDGES, DarwiniaApiPath, LONG_DURATION, RegisterStatus, SHORT_DURATION } from '../../config';
 import {
+  Bridge,
   ChainConfig,
-  CrabConfig,
+  CrossChainDirection,
+  DVMChainConfig,
   Erc20RegisterProof,
   Erc20RegisterProofRes,
   Erc20Token,
-  EthereumConfig,
+  EthereumChainConfig,
+  EthereumDVMBridgeConfig,
   MappedToken,
-  DVMChainConfig,
-  RopstenConfig,
   Tx,
 } from '../../model';
-import { isS2S, isSubstrateDVM2Substrate } from '../bridge';
+import { getBridge, isS2S, isSubstrateDVM2Substrate } from '../bridge';
 import {
   apiUrl,
   ClaimNetworkPrefix,
@@ -39,7 +40,7 @@ import {
   getMPTProof,
   MMRProof,
 } from '../helper';
-import { chainConfigToVertices, connect, entrance, getAvailableNetwork, getMetamaskActiveAccount } from '../network';
+import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount, isDVM } from '../network';
 import { rxGet } from '../records';
 import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
 import { getErc20Meta, getTokenBalance } from './meta';
@@ -54,11 +55,7 @@ const proofMemo: StoredProof[] = [];
 
 /* --------------------------------------------Inner Section------------------------------------------------------- */
 
-function createMappingTokenContract(
-  departure: DVMChainConfig | CrabConfig,
-  arrival: ChainConfig,
-  mappingAddress: string
-): Contract {
+function createMappingTokenContract(departure: DVMChainConfig, arrival: ChainConfig, mappingAddress: string): Contract {
   const web3 = entrance.web3.getInstance(departure.provider.rpc);
   const s2s = isS2S(chainConfigToVertices(departure), chainConfigToVertices(arrival));
 
@@ -66,13 +63,13 @@ function createMappingTokenContract(
 }
 
 const getMappingTokenLength = memoize(
-  async (departure: DVMChainConfig | CrabConfig, arrival: ChainConfig, mappingAddress: string) => {
+  async (departure: DVMChainConfig, arrival: ChainConfig, mappingAddress: string) => {
     const mappingContract = createMappingTokenContract(departure, arrival, mappingAddress);
     const len: number = await mappingContract.methods.tokenLength().call();
 
     return len;
   },
-  (departure: DVMChainConfig | CrabConfig, arrival: ChainConfig, mappingAddress: string) =>
+  (departure: DVMChainConfig, arrival: ChainConfig, mappingAddress: string) =>
     departure.name + '-' + arrival.name + '-' + mappingAddress
 );
 
@@ -83,8 +80,8 @@ const getMappingTokenLength = memoize(
  */
 function getMappedTokensFromDvm(
   currentAccount: string,
-  departure: DVMChainConfig | CrabConfig,
-  arrival: EthereumConfig,
+  departure: DVMChainConfig,
+  arrival: EthereumChainConfig,
   mappingAddress: string
 ) {
   const s2s = isS2S(chainConfigToVertices(departure), chainConfigToVertices(arrival));
@@ -115,9 +112,14 @@ function getMappedTokensFromDvm(
             backing: string;
           }>
         );
+        const bridge = getBridge<EthereumDVMBridgeConfig>([departure, arrival]);
         const statusObs = s2s
           ? of(1)
-          : infoObs.pipe(switchMap(({ source }) => getTokenRegisterStatus(source, departure, false)));
+          : infoObs.pipe(
+              switchMap(({ source }) =>
+                getTokenRegisterStatus(source, bridge.config.contracts.redeem, arrival.provider.etherscan)
+              )
+            );
         const balanceObs =
           currentAccount && Web3.utils.isAddress(currentAccount)
             ? from(getTokenBalance(address, currentAccount, false))
@@ -144,15 +146,16 @@ function getMappedTokensFromDvm(
  * @description get all tokens at ethereum side
  * @returns tokens that status maybe registered or registering
  */
-function getMappedTokensFromEthereum(currentAccount: string, config: EthereumConfig) {
+function getMappedTokensFromEthereum(currentAccount: string, direction: CrossChainDirection) {
+  const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-  const backingContract = new web3.eth.Contract(abi.bankErc20ABI, config.contracts.e2dvm.redeem);
+  const backingContract = new web3.eth.Contract(abi.bankErc20ABI, bridge.config.contracts.redeem);
   const countObs = from(backingContract.methods.assetLength().call() as Promise<number>);
   const getToken = (index: number) =>
     from(backingContract.methods.allAssets(index).call() as Promise<string>).pipe(
       switchMap((address) => {
         const infoObs = from(getErc20Meta(address)).pipe(catchError(() => of({})));
-        const statusObs = from(getTokenRegisterStatus(address, config));
+        const statusObs = from(getTokenRegisterStatus(address, bridge.config.contracts.redeem));
         const balanceObs = currentAccount ? from(getTokenBalance(address, currentAccount)) : of(Web3.utils.toBN(0));
 
         return zip(
@@ -215,25 +218,25 @@ const getSymbolType: (address: string) => Promise<{ symbol: string; isString: bo
 // eslint-disable-next-line complexity
 export const getKnownMappedTokens = (
   currentAccount: string,
-  departure: DVMChainConfig | CrabConfig | EthereumConfig,
-  arrival: ChainConfig
+  direction: CrossChainDirection
 ): Observable<{ total: number; tokens: Erc20Token[] }> => {
   if (!currentAccount) {
     return of({ total: 0, tokens: [] });
   }
+  const { from: departure, to: arrival } = direction;
 
   const mappingAddressObs = isSubstrateDVM2Substrate(chainConfigToVertices(departure), chainConfigToVertices(arrival))
     ? from(getS2SMappingParams(departure.provider.rpc))
     : from(getErc20MappingPrams(departure.provider.rpc));
 
   const tokens = departure.type.includes('ethereum')
-    ? getMappedTokensFromEthereum(currentAccount, departure as EthereumConfig)
+    ? getMappedTokensFromEthereum(currentAccount, direction)
     : mappingAddressObs.pipe(
         switchMap(({ mappingAddress }) =>
           getMappedTokensFromDvm(
             currentAccount,
-            departure as DVMChainConfig | CrabConfig,
-            arrival as EthereumConfig,
+            departure as DVMChainConfig,
+            arrival as EthereumChainConfig,
             mappingAddress
           )
         )
@@ -246,17 +249,20 @@ export const getKnownMappedTokens = (
  * @description test address 0x1F4E71cA23f2390669207a06dDDef70BDE75b679;
  * @params { Address } address - erc20 token address
  */
-export function launchRegister(address: string, config: RopstenConfig | EthereumConfig): Observable<Tx> {
+export function launchRegister(address: string, departure: EthereumChainConfig): Observable<Tx> {
   const senderObs = from(getMetamaskActiveAccount());
   const symbolObs = from(getSymbolType(address));
-  const hasRegisteredObs = from(getTokenRegisterStatus(address, config)).pipe(map((status) => !!status));
+  const bridge = getAvailableDVMBridge(departure);
+  const hasRegisteredObs = from(getTokenRegisterStatus(address, bridge.config.contracts.redeem)).pipe(
+    map((status) => !!status)
+  );
 
   return forkJoin([senderObs, symbolObs, hasRegisteredObs]).pipe(
     switchMap(([sender, { isString }, has]) => {
       return has
         ? EMPTY
         : getContractTxObs(
-            config.contracts.e2dvm.redeem,
+            bridge.config.contracts.redeem,
             (contract) => {
               const register = isString ? contract.methods.registerToken : contract.methods.registerTokenBytes32;
 
@@ -273,9 +279,9 @@ export function launchRegister(address: string, config: RopstenConfig | Ethereum
  * 2. calculate mpt proof and mmr proof then combine them together
  * 3. cache the result and emit it to proof subject.
  */
-export const getRegisterProof: (address: string, config: EthereumConfig) => Observable<StoredProof> = (
-  address: string,
-  config: EthereumConfig
+export const getRegisterProof: (address: string, config: EthereumChainConfig) => Observable<StoredProof> = (
+  address,
+  config
 ) => {
   const proofMemoItem = proofMemo.find((item) => item.registerProof.source === address);
 
@@ -283,11 +289,11 @@ export const getRegisterProof: (address: string, config: EthereumConfig) => Obse
     return of(proofMemoItem);
   }
 
-  const targetConfig = getAvailableNetwork(config.name);
-  const apiObs = from(entrance.polkadot.getInstance(targetConfig!.provider.rpc).isReady);
+  const bridge = getAvailableDVMBridge(config);
+  const apiObs = from(entrance.polkadot.getInstance(bridge.arrival.provider.rpc).isReady);
 
   return rxGet<Erc20RegisterProofRes>({
-    url: apiUrl(config.api.dapp, DarwiniaApiPath.issuingRegister),
+    url: apiUrl(bridge.config.api.dapp, DarwiniaApiPath.issuingRegister),
     params: { source: address },
   }).pipe(
     map((data) => {
@@ -303,7 +309,7 @@ export const getRegisterProof: (address: string, config: EthereumConfig) => Obse
     switchMap((registerProof) => {
       const { block_hash, block_num, mmr_index } = registerProof;
       const mptProof = apiObs.pipe(
-        switchMap((api) => getMPTProof(api, block_hash, config.contracts.e2dvm.proof)),
+        switchMap((api) => getMPTProof(api, block_hash, bridge.config.contracts.proof)),
         map((proof) => proof.toHex()),
         catchError((err) => {
           console.warn(
@@ -348,29 +354,20 @@ export const getRegisterProof: (address: string, config: EthereumConfig) => Obse
  */
 export const getTokenRegisterStatus: (
   address: string,
-  config: DVMChainConfig | CrabConfig | EthereumConfig,
-  isEth?: boolean
+  departure: EthereumChainConfig | string,
+  provider?: string
 ) => Promise<RegisterStatus | null> =
   // eslint-disable-next-line complexity
-  async (address, config, isEth = true) => {
+  async (address, departure, provider) => {
     if (!address || !Web3.utils.isAddress(address)) {
       console.warn(`Token address is invalid, except an ERC20 token address. Received value: ${address}`);
       return null;
     }
 
-    let web3: Web3;
-    let contract: Contract;
-
-    if (isEth) {
-      web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
-
-      contract = new web3.eth.Contract(abi.bankErc20ABI, config.contracts.e2dvm.redeem);
-    } else {
-      web3 = entrance.web3.getInstance(config.provider.etherscan);
-
-      contract = new web3.eth.Contract(abi.bankErc20ABI, config.contracts.e2dvm.redeem);
-    }
-
+    const contractAddress =
+      typeof departure === 'string' ? departure : getAvailableDVMBridge(departure).config.contracts.redeem;
+    const web3 = entrance.web3.getInstance(provider || entrance.web3.defaultProvider);
+    const contract = new web3.eth.Contract(abi.bankErc20ABI, contractAddress);
     const { target, timestamp } = await contract.methods.assets(address).call();
     let isTargetTruthy = false;
     const isTimestampExist = +timestamp > 0;
@@ -393,15 +390,15 @@ export const getTokenRegisterStatus: (
     return RegisterStatus.unregister;
   };
 
-export function confirmRegister(proof: StoredProof, config: EthereumConfig): Observable<Tx> {
+export function confirmRegister(proof: StoredProof, departure: EthereumChainConfig): Observable<Tx> {
   const { eventsProof, mmrProof, registerProof } = proof;
   const { signatures, mmr_root, mmr_index, block_header } = registerProof;
   const { peaks, siblings } = mmrProof;
   const senderObs = from(getMetamaskActiveAccount());
-  const toConfig = getAvailableNetwork(config.name)!;
+  const bridge = getAvailableDVMBridge(departure);
   const mmrRootMessage = encodeMMRRootMessage({
     root: mmr_root,
-    prefix: upperFirst(toConfig.name) as ClaimNetworkPrefix,
+    prefix: upperFirst(bridge.arrival.name) as ClaimNetworkPrefix,
     methodID: '0x479fbdf9',
     index: +mmr_index,
   });
@@ -410,7 +407,7 @@ export function confirmRegister(proof: StoredProof, config: EthereumConfig): Obs
   return senderObs.pipe(
     switchMap((sender) =>
       getContractTxObs(
-        config.contracts.e2dvm.redeem,
+        bridge.config.contracts.redeem,
         (contract) =>
           contract.methods
             .crossChainSync(
@@ -428,4 +425,28 @@ export function confirmRegister(proof: StoredProof, config: EthereumConfig): Obs
       )
     )
   );
+}
+
+export function getAvailableDVMBridge(departure: ChainConfig): Bridge<EthereumDVMBridgeConfig> {
+  // FIXME: by default we use the first vertices here.
+  const [bridge] = BRIDGES.filter(
+    (item) => item.status === 'available' && isEqual(item.departure, departure) && isDVM(item.arrival)
+  );
+
+  if (bridge) {
+    throw new Error(
+      `Can not find available bridge(Ethereum type <-> DVM type) by departure network: ${departure.name}`
+    );
+  }
+
+  return bridge as Bridge<EthereumDVMBridgeConfig>;
+}
+
+export function hasAvailableDVMBridge(departure: ChainConfig): boolean {
+  try {
+    getAvailableDVMBridge(departure);
+    return true;
+  } catch (_) {
+    return false;
+  }
 }

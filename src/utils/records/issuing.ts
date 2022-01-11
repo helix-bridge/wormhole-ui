@@ -1,21 +1,21 @@
 import { decodeAddress } from '@polkadot/util-crypto';
+import { upperFirst } from 'lodash';
 import { catchError, filter, from, map, Observable, of, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
+import { getBridge } from '..';
 import { abi, DarwiniaApiPath } from '../../config';
 import {
-  ChainConfig,
+  CrossChainDirection,
   D2EHistoryRes,
   D2EMeta,
-  DarwiniaConfig,
-  EthereumConfig,
+  EthereumDarwiniaBridgeConfig,
+  EthereumDVMBridgeConfig,
   HistoryReq,
   LockEventsStorage,
-  Network,
-  DVMChainConfig,
   Tx,
 } from '../../model';
 import { apiUrl, ClaimNetworkPrefix, encodeBlockHeader, encodeMMRRootMessage, getMMR, getMPTProof } from '../helper';
-import { connect, entrance, getAvailableNetwork } from '../network';
+import { connect, entrance } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
 import { rxGet } from './api';
 
@@ -37,10 +37,11 @@ function getD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsS
 export function queryDarwinia2EthereumIssuingRecords({
   address,
   confirmed,
-  network,
+  direction,
   paginator,
 }: HistoryReq): Observable<D2EHistoryRes | null> {
-  const api = [network].api.dapp;
+  const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
+  const api = bridge.config.api.dapp;
 
   return rxGet<D2EHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.locks),
@@ -61,10 +62,11 @@ export function queryDarwinia2EthereumIssuingRecords({
 export function queryDarwiniaDVM2EthereumIssuingRecords({
   address,
   confirmed,
-  network,
+  direction,
   paginator,
 }: HistoryReq): Observable<D2EHistoryRes | null> {
-  const api = [network].api.dapp;
+  const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
+  const api = bridge.config.api.dapp;
 
   return rxGet<D2EHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.issuingBurns),
@@ -80,7 +82,7 @@ export function queryDarwiniaDVM2EthereumIssuingRecords({
 /* -------------------------------------------Claim Token---------------------------------------------- */
 
 interface ClaimInfo {
-  networkPrefix: ClaimNetworkPrefix;
+  direction: CrossChainDirection;
   mmrIndex: number;
   mmrRoot: string;
   mmrSignatures: string;
@@ -93,25 +95,22 @@ interface ClaimInfo {
 /**
  * @description darwinia -> ethereum & darwinia DVM -> ethereum  needs claim action
  */
-export function claimToken(
-  {
-    networkPrefix,
-    mmrIndex,
-    mmrRoot,
-    mmrSignatures,
-    blockNumber,
-    blockHeaderStr,
-    blockHash,
-    meta: { MMRRoot, best },
-  }: ClaimInfo,
-  arrival: ChainConfig
-): Observable<Tx> {
-  const network = networkPrefix.toLowerCase() as Network;
-  const config = [network];
-  const apiObs = from(entrance.polkadot.getInstance(config.provider.rpc).isReady);
-  const toNetworkConfig = getAvailableNetwork(network)! as EthereumConfig;
+export function claimToken({
+  direction,
+  mmrIndex,
+  mmrRoot,
+  mmrSignatures,
+  blockNumber,
+  blockHeaderStr,
+  blockHash,
+  meta: { MMRRoot, best },
+}: ClaimInfo): Observable<Tx> {
+  const { from: departure, to: arrival } = direction;
+  const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
+  const networkPrefix = upperFirst(departure.name) as ClaimNetworkPrefix;
+  const apiObs = from(entrance.polkadot.getInstance(departure.provider.rpc).isReady);
   const header = encodeBlockHeader(blockHeaderStr);
-  const storageKey = getD2ELockEventsStorageKey(blockNumber, (config as DVMChainConfig | DarwiniaConfig).lockEvents);
+  const storageKey = getD2ELockEventsStorageKey(blockNumber, bridge.config.lockEvents);
   const accountObs = connect(arrival).pipe(
     filter(({ status }) => status === 'success'),
     map(({ accounts }) => accounts[0].address),
@@ -164,6 +163,6 @@ export function claimToken(
             })
           );
     }),
-    switchMap((txFn) => getContractTxObs(toNetworkConfig.contracts.e2d.redeem || '', txFn, abi.tokenIssuingABI))
+    switchMap((txFn) => getContractTxObs(bridge.config.contracts.redeem || '', txFn, abi.tokenIssuingABI))
   );
 }

@@ -6,6 +6,9 @@ export const pangoroConfig: PolkadotChainConfig = {
     logoMinor: '/image/pangoro.png',
     logoWithText: '',
   },
+  endpoints: {
+    mmr: '',
+  },
   isTest: true,
   name: 'pangoro',
   provider: {

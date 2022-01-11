@@ -66,6 +66,11 @@ export function getBridge<T extends BridgeConfig>(
 
     return chainConfigToVertices(item as ChainConfig);
   });
+
+  return findBridge<T>(direction as [Vertices, Vertices]);
+}
+
+export function findBridge<T extends BridgeConfig>(direction: [Vertices, Vertices]): Bridge<T> {
   const bridge = BRIDGES.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction));
 
   if (!bridge) {

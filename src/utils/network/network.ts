@@ -48,7 +48,7 @@ function isSpecifyNetworkType(type: NetworkCategory) {
       }
     }
 
-    return config && config.type.includes(type);
+    return !!config && config.type.includes(type);
   };
 }
 
@@ -162,17 +162,11 @@ export function chainConfigToVertices(config: ChainConfig) {
  * @description map vertices to chain config
  */
 export function verticesToChainConfig(vertices: Vertices) {
-  if (!vertices) {
-    return null;
-  }
-
   const { mode, network } = vertices;
 
-  if (network === 'tron') {
-    return tronConfig;
-  }
+  const config = findNetworkConfig(network);
 
-  return CROSS_CHAIN_NETWORKS.find((item) => item.name === network && mode === getNetworkMode(item)) ?? null;
+  return mode === 'dvm' ? (omit(config, 'dvm') as ChainConfig) : config;
 }
 
 export function isSameNetConfig(config1: ChainConfig | null, config2: ChainConfig | null): boolean {
@@ -280,17 +274,6 @@ export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> 
   return expectNetworkId === networkId;
 }
 
-export function getAvailableNetwork(net: Network): ChainConfig | null {
-  // FIXME: by default we use the first vertices here.
-  const [vertices] = (getArrivals(NETWORK_GRAPH, [net]) ?? []).filter((item) => item.status === 'available');
-
-  if (!vertices) {
-    return null;
-  }
-
-  return getNetworkByName(vertices.network);
-}
-
 export function getDisplayName(config: ChainConfig): string {
   const mode = getNetworkMode(config);
   const name = upperFirst(config.name);
@@ -322,8 +305,10 @@ export async function getConfigByConnection(connection: Connection): Promise<Cha
     await waitUntilConnected(api);
 
     const chain = await api?.rpc.system.chain();
+    const network = chain.toHuman()?.toLowerCase() as Network;
+    const target = findNetworkConfig(network);
 
-    return chain ? omit([chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;
+    return chain ? omit(target, 'dvm') : null;
   }
 
   if (connection.type === 'tron') {
@@ -357,4 +342,14 @@ export function isChainIdEqual(id1: string | number, id2: string | number): bool
 
 export function getCrossChainArrivals(departure: ChainConfig): Arrival[] {
   return getArrivals(NETWORK_GRAPH, departure);
+}
+
+export function findNetworkConfig(network: Network): ChainConfig {
+  const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network);
+
+  if (!target) {
+    throw new Error(`Can not find chain configuration by ${network}`);
+  }
+
+  return target;
 }

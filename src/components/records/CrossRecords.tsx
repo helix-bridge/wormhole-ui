@@ -94,7 +94,7 @@ export function CrossRecords() {
 
       setLoading(true);
 
-      return queryRecords({ network: dep.network, address: addr, paginator: pag, confirmed: confirm }, isGen)
+      return queryRecords({ direction: [dep, arr], address: addr, paginator: pag, confirmed: confirm }, isGen)
         .pipe(takeWhile(() => isMounted))
         .subscribe({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

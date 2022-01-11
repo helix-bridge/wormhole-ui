@@ -1,6 +1,5 @@
 import { message } from 'antd';
 import BN from 'bn.js';
-import { upperFirst } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EMPTY, filter, from, iif, map, Observable, of, switchMap, take, tap, zip } from 'rxjs';
@@ -13,7 +12,7 @@ import {
   EthereumDarwiniaBridgeConfig,
   RecordComponentProps,
 } from '../../model';
-import { ClaimNetworkPrefix, claimToken, connect, entrance, getBridge } from '../../utils';
+import { claimToken, connect, entrance, getBridge } from '../../utils';
 import { Progresses, ProgressProps, State } from './Progress';
 import { Record } from './Record';
 
@@ -87,19 +86,16 @@ export function D2ERecord({ departure, arrival, record }: RecordComponentProps<D
           }),
           switchMap(([isRingSuf, isKtonSuf]) =>
             isRingSuf && isKtonSuf
-              ? claimToken(
-                  {
-                    networkPrefix: upperFirst(departure?.name) as ClaimNetworkPrefix,
-                    mmrIndex: mmr_index,
-                    mmrRoot: mmr_root,
-                    mmrSignatures: sign,
-                    blockNumber: block_num,
-                    blockHeaderStr: block_header,
-                    blockHash: block_hash,
-                    meta,
-                  },
-                  arrival!
-                )
+              ? claimToken({
+                  direction: { from: departure!, to: arrival! },
+                  mmrIndex: mmr_index,
+                  mmrRoot: mmr_root,
+                  mmrSignatures: sign,
+                  blockNumber: block_num,
+                  blockHeaderStr: block_header,
+                  blockHash: block_hash,
+                  meta,
+                })
               : EMPTY
           )
         )

@@ -9,6 +9,8 @@
 // https://on.cypress.io/plugins-guide
 // ***********************************************************
 
+/** eslint-disable */
+
 const path = require('path');
 const cracoPlugin = require('@cypress/react/plugins/craco');
 const cracoConf = require(path.join(__dirname, '../../craco.config.js'));
@@ -25,7 +27,6 @@ const Timeout = require('await-timeout');
 /**
  * @type {Cypress.PluginConfig}
  */
-// eslint-disable-next-line no-unused-vars
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
