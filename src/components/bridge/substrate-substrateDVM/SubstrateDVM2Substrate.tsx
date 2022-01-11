@@ -9,8 +9,9 @@ import {
   DVMPayload,
   DVMToken,
   MappedToken,
+  SubstrateSubstrateDVMBridgeConfig,
 } from '../../../model';
-import { entrance, fromWei, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../../utils';
+import { entrance, fromWei, getBridge, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../../utils';
 import { DVM } from '../DVM';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
@@ -21,13 +22,16 @@ import { DVM } from '../DVM';
  * @description test chain: pangolin dvm -> pangoro
  */
 export function SubstrateDVM2Substrate({ form, setSubmit, direction }: CrossChainComponentProps<DVMPayload>) {
-  const transform = useCallback((value: DVMToken) => {
-    return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
-      switchMap(({ mappingAddress }) =>
-        redeemSubstrate(value, mappingAddress, value.direction.from.name === 'crab' ? '1180' : '27020')
-      )
-    );
-  }, []);
+  const transform = useCallback(
+    (value: DVMToken) => {
+      const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
+
+      return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
+        switchMap(({ mappingAddress }) => redeemSubstrate(value, mappingAddress, String(bridge.config.specVersion)))
+      );
+    },
+    [direction]
+  );
 
   const getSpender = useCallback(async (dir: CrossChainDirection) => {
     const { mappingAddress } = await getS2SMappingParams(dir.from.provider.rpc);
