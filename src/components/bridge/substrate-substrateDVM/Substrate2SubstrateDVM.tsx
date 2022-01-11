@@ -118,7 +118,7 @@ function TransferInfo({ fee, balance, tokenInfo, amount, dailyLimit }: TransferI
 export function Substrate2SubstrateDVM({
   form,
   setSubmit,
-  direction: direction,
+  direction,
 }: CrossChainComponentProps<Substrate2SubstrateDVMPayload>) {
   const { t } = useTranslation();
   const {
@@ -222,7 +222,7 @@ export function Substrate2SubstrateDVM({
   }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
 
   useEffect(() => {
-    const sub$$ = getKnownMappedTokens('null', direction).subscribe(({ tokens }) => {
+    const sub$$ = getKnownMappedTokens('null', { from: direction.to, to: direction.from }).subscribe(({ tokens }) => {
       setTargetChainTokens(tokens.filter((item) => item.status === RegisterStatus.registered));
     });
 

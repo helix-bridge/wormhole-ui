@@ -9,21 +9,21 @@ import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
 import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappedTokens, useTx } from '../../hooks';
 import {
-  CrossChainComponentProps,
   ChainConfig,
+  CrossChainComponentProps,
+  CrossChainDirection,
+  CrossChainPayload,
   DailyLimit,
-  DVMToken,
-  DVMPayload,
-  Erc20Token,
   DVMChainConfig,
+  DVMPayload,
+  DVMToken,
+  Erc20Token,
   IssuingDVMToken,
   MappedToken,
   Network,
   RedeemDVMToken,
   RequiredPartial,
-  CrossChainPayload,
   Tx,
-  CrossChainDirection,
 } from '../../model';
 import {
   applyModalObs,
@@ -295,7 +295,7 @@ export function DVM({
           onChange={async (erc20) => {
             setSelectedErc20(erc20);
 
-            const spender = await spenderResolver(form.getFieldValue(FORM_CONTROL.direction).from);
+            const spender = await spenderResolver(direction);
             const allow = await getAllowance(account, spender, erc20);
 
             setAllowance(allow);

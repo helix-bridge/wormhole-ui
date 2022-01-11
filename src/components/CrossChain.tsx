@@ -28,13 +28,14 @@ import { FromItemButton, SubmitButton } from './SubmitButton';
 
 const getCrossChainComponent = getBridgeComponent('crossChain');
 
+// eslint-disable-next-line complexity
 const getDirectionFromSettings: () => NullableCrossChainDirection = () => {
   const come = getInitialSetting('from', '') as Network;
   const go = getInitialSetting('to', '') as Network;
   const fromMode = getInitialSetting('fMode', '') as NetworkMode;
   const toMode = getInitialSetting('tMode', '') as NetworkMode;
-  const from = verticesToChainConfig({ network: come, mode: fromMode });
-  const to = verticesToChainConfig({ network: go, mode: toMode });
+  const from = come ? verticesToChainConfig({ network: come, mode: fromMode ?? 'native' }) : null;
+  const to = go ? verticesToChainConfig({ network: go, mode: toMode ?? 'native' }) : null;
 
   if (from?.isTest === to?.isTest) {
     return { from, to };

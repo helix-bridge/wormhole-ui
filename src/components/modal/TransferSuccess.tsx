@@ -39,12 +39,12 @@ export function TransferSuccess({
 }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
 TxSuccessComponentProps<CrossChainPayload<any>>) {
   const { t } = useTranslation();
-  const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
+  const color = NETWORK_LIGHT_THEME[value.direction.from?.name as Network]['@project-main-bg'];
   const linkProps = { [hashType]: tx.hash };
   const sender = useMemo(
     () =>
-      isPolkadotNetwork(value.transfer.from.name) && getNetworkMode(value.transfer.from) !== 'dvm'
-        ? convertToSS58(value.sender, value.transfer.from.ss58Prefix)
+      isPolkadotNetwork(value.direction.from.name) && getNetworkMode(value.direction.from) !== 'dvm'
+        ? convertToSS58(value.sender, value.direction.from.ss58Prefix)
         : value.sender,
     [value]
   );
@@ -54,7 +54,7 @@ TxSuccessComponentProps<CrossChainPayload<any>>) {
       <Des
         title={
           <span className="capitalize">
-            {t('{{network}} Network Address', { network: getDisplayName(value.transfer.from) })}
+            {t('{{network}} Network Address', { network: getDisplayName(value.direction.from) })}
           </span>
         }
         content={sender}
@@ -64,7 +64,7 @@ TxSuccessComponentProps<CrossChainPayload<any>>) {
       <Des
         title={
           <span className="capitalize">
-            {t('{{network}} Network Address', { network: getDisplayName(value.transfer.to) })}
+            {t('{{network}} Network Address', { network: getDisplayName(value.direction.to) })}
           </span>
         }
         content={value.recipient}
@@ -91,9 +91,9 @@ TxSuccessComponentProps<CrossChainPayload<any>>) {
         {t('The transaction has been sent, please check the transfer progress in the cross-chain history.')}
       </p>
 
-      <SubscanLink {...linkProps} network={value.transfer.from?.name as Network}>
+      <SubscanLink {...linkProps} network={value.direction.from?.name as Network}>
         {t('View in {{scan}} explorer', {
-          scan: isEthereumNetwork(value.transfer.from?.name) ? 'Etherscan' : 'Subscan',
+          scan: isEthereumNetwork(value.direction.from?.name) ? 'Etherscan' : 'Subscan',
         })}
       </SubscanLink>
     </>

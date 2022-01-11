@@ -1,7 +1,7 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { PropsWithChildren, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Darwinia2EthereumPayload, TxConfirmComponentProps } from '../../model';
+import { Darwinia2EthereumPayload, PolkadotChainConfig, TxConfirmComponentProps } from '../../model';
 import { convertToSS58, fromWei, getDisplayName, getNetworkMode, isPolkadotNetwork } from '../../utils';
 import { Des } from './Des';
 
@@ -39,8 +39,8 @@ export function TransferConfirm({ value, children, unit = 'ether' }: PropsWithCh
   }, [children, t, unit, value.amount, value.asset, value.assets]);
   const sender = useMemo(
     () =>
-      isPolkadotNetwork(value.transfer.from.name) && getNetworkMode(value.transfer.from) === 'native'
-        ? convertToSS58(value.sender, value.transfer.from.ss58Prefix)
+      isPolkadotNetwork(value.direction.from.name) && getNetworkMode(value.direction.from) === 'native'
+        ? convertToSS58(value.sender, (value.direction.from as PolkadotChainConfig).ss58Prefix)
         : value.sender,
     [value]
   );
@@ -51,9 +51,9 @@ export function TransferConfirm({ value, children, unit = 'ether' }: PropsWithCh
         title={t('Cross-chain direction')}
         content={
           <>
-            <span className="capitalize">{getDisplayName(value.transfer.from)}</span>
+            <span className="capitalize">{getDisplayName(value.direction.from)}</span>
             <ArrowRightOutlined className="mx-4" />
-            <span className="capitalize">{getDisplayName(value.transfer.to)}</span>
+            <span className="capitalize">{getDisplayName(value.direction.to)}</span>
           </>
         }
       />
