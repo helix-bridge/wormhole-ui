@@ -13,6 +13,7 @@ import {
   CrossChainDirection,
   CrossChainParty,
   NullableCrossChainDirection,
+  CrossType,
 } from '../model';
 import {
   emptyObsFactory,
@@ -24,7 +25,7 @@ import {
 } from '../utils';
 import { Airport } from './Airport';
 import { Direction } from './form-control/Direction';
-import { FromItemButton, SubmitButton } from './SubmitButton';
+import { FromItemButton, SubmitButton } from './widget/SubmitButton';
 
 const getCrossChainComponent = getBridgeComponent('crossChain');
 
@@ -46,19 +47,19 @@ const getDirectionFromSettings: () => NullableCrossChainDirection = () => {
   }
 };
 
-const validateDirection: (dir: NullableCrossChainDirection, isCross: boolean) => NullableCrossChainDirection = (
+const validateDirection: (dir: NullableCrossChainDirection, type: CrossType) => NullableCrossChainDirection = (
   dir,
-  isCross
+  type
 ) => {
   const { from, to } = dir;
   const isSameEnv = from?.isTest === to?.isTest;
-  const reachable = isReachable(from, isCross)(to); // from -> to is available;
+  const reachable = isReachable(from, type)(to); // from -> to is available;
 
   return isSameEnv && reachable ? dir : { from: null, to: null };
 };
 
 // eslint-disable-next-line complexity
-export function CrossChain({ isCross = true }: { isCross?: boolean }) {
+export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
   const { t, i18n } = useTranslation();
   const [form] = useForm<CrossChainPayload>();
   const {
@@ -66,7 +67,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
     connection: { status },
     disconnect,
   } = useApi();
-  const [direction, setDirection] = useState(() => validateDirection(getDirectionFromSettings(), isCross));
+  const [direction, setDirection] = useState(() => validateDirection(getDirectionFromSettings(), type));
   const [isReady, setIsReady] = useState(false);
   const [submitFn, setSubmit] = useState<SubmitFn>(emptyObsFactory);
   const { tx } = useTx();
@@ -74,7 +75,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
     form.validateFields().then((values) => submitFn(values));
   }, [form, submitFn]);
   const Content = useMemo(() => {
-    if (!isCross) {
+    if (type === 'airdrop') {
       return Airport;
     }
 
@@ -87,7 +88,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
     }
 
     return null;
-  }, [isCross, direction]);
+  }, [type, direction]);
 
   useEffect(() => {
     const { from, to } = direction;
@@ -128,7 +129,7 @@ export function CrossChain({ isCross = true }: { isCross?: boolean }) {
               FORM_CONTROL.deposit,
             ]);
           }}
-          isCross={isCross}
+          type={type}
         />
       </Form.Item>
 

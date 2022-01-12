@@ -7,6 +7,7 @@ import {
   Arrival,
   ChainConfig,
   Connection,
+  CrossType,
   Departure,
   DVMChainConfig,
   EthereumChainConfig,
@@ -137,10 +138,10 @@ const isInNodeList = (source: Map<Departure, Arrival[]>) => (net1: ChainConfig |
 const isInCrossList = isInNodeList(NETWORK_GRAPH);
 const isInAirportList = isInNodeList(AIRDROP_GRAPH);
 
-export const isReachable = (net: ChainConfig | null, isCross = true) =>
-  isCross ? curry(isInCrossList)(net) : curry(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net1
-export const isTraceable = (net: ChainConfig | null, isCross = true) =>
-  isCross ? curryRight(isInCrossList)(net) : curryRight(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net2
+export const isReachable = (net: ChainConfig | null, type: CrossType = 'cross-chain') =>
+  type === 'cross-chain' ? curry(isInCrossList)(net) : curry(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net1
+export const isTraceable = (net: ChainConfig | null, type: CrossType = 'cross-chain') =>
+  type === 'cross-chain' ? curryRight(isInCrossList)(net) : curryRight(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net2
 export const isSameNetworkCurry = curry(isSameNetwork);
 export const isPolkadotNetwork = isSpecifyNetworkType('polkadot');
 export const isEthereumNetwork = isSpecifyNetworkType('ethereum');

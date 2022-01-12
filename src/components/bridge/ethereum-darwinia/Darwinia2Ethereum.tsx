@@ -22,6 +22,7 @@ import {
   IssuingDarwiniaToken,
   TokenChainInfo,
   CrossChainPayload,
+  DarwiniaAsset,
 } from '../../../model';
 import {
   applyModalObs,
@@ -47,8 +48,8 @@ interface AmountCheckInfo {
 const BN_ZERO = new BN(0);
 
 const INITIAL_ASSETS: AssetGroupValue = [
-  { asset: 'ring', amount: '', checked: true },
-  { asset: 'kton', amount: '' },
+  { asset: DarwiniaAsset.ring, amount: '', checked: true },
+  { asset: DarwiniaAsset.kton, amount: '' },
 ];
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
@@ -89,7 +90,7 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
 
   const hasAssetSet = useMemo(() => !!assets.filter((item) => item.checked && item?.amount).length, [assets]);
   const chainSymbol = useCallback(
-    (token: 'ring' | 'kton') => {
+    (token: DarwiniaAsset) => {
       const info = getChainInfo(chain.tokens, token);
 
       return info?.symbol || token.toUpperCase();
@@ -126,10 +127,12 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
                     <span className="mr-2" key={asset}>{`${fromWei({
                       value: origin.sub(fee),
                       unit: 'gwei',
-                    })} ${chainSymbol('ring')}`}</span>
+                    })} ${chainSymbol(DarwiniaAsset.ring)}`}</span>
                   );
                 } else {
-                  return <span className="mr-2" key={asset}>{`${amount || 0} ${chainSymbol('kton')}`}</span>;
+                  return (
+                    <span className="mr-2" key={asset}>{`${amount || 0} ${chainSymbol(DarwiniaAsset.kton)}`}</span>
+                  );
                 }
               }
             })}
@@ -139,7 +142,7 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
 
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
         <span className="flex items-center">
-          {fromWei({ value: fee, unit: 'gwei' })} {chainSymbol('ring')}
+          {fromWei({ value: fee, unit: 'gwei' })} {chainSymbol(DarwiniaAsset.ring)}
           <Tooltip
             title={
               <ul className="pl-4 list-disc">
@@ -220,7 +223,10 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
       const { assets, sender } = data;
       const assetsToSend = assets?.map((item) => {
         const { asset, amount, checked } = item as Required<Darwinia2EthereumPayload['assets'][number]>;
-        const { decimal = 'gwei', symbol = asset } = getChainInfo(chain.tokens, asset as string) as TokenChainInfo;
+        const { decimal = 'gwei', symbol = asset } = getChainInfo(
+          chain.tokens,
+          asset as DarwiniaAsset
+        ) as TokenChainInfo<DarwiniaAsset>;
         const amountWei = checked ? toWei({ value: amount, unit: decimal }) : '0';
 
         return {

@@ -4,7 +4,14 @@ import { isBoolean, isNull, negate } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { airportsArrivalFilter, airportsDepartureFilter, useNetworks } from '../../hooks';
-import { Arrival, BridgeStatus, ChainConfig, CustomFormControlProps, NullableCrossChainDirection } from '../../model';
+import {
+  Arrival,
+  BridgeStatus,
+  ChainConfig,
+  CrossType,
+  CustomFormControlProps,
+  NullableCrossChainDirection,
+} from '../../model';
 import {
   getArrival,
   getBridge,
@@ -17,20 +24,18 @@ import {
   truth,
 } from '../../utils';
 import { updateStorage } from '../../utils/helper/storage';
-import { LinkIndicator } from '../LinkIndicator';
+import { ConnectionIndicator } from '../widget/ConnectionIndicator';
 import { Destination, DestinationMode } from './Destination';
 
-type DirectionProps = CustomFormControlProps<NullableCrossChainDirection>;
+type DirectionProps = CustomFormControlProps<NullableCrossChainDirection> & {
+  type?: CrossType;
+  mode?: DestinationMode;
+};
 
 // eslint-disable-next-line complexity
-export function Direction({
-  value,
-  onChange,
-  isCross = true,
-  mode = 'default',
-}: DirectionProps & { isCross?: boolean; mode?: DestinationMode }) {
+export function Direction({ value, onChange, type = 'cross-chain', mode = 'default' }: DirectionProps) {
   const { t } = useTranslation();
-  const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(isCross);
+  const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(type);
   const [vertices, setVertices] = useState<Arrival | null>(null);
   const [reverseVertices, setReverseVertices] = useState<Arrival | null>(null);
   const [random, setRandom] = useState(0); // just for trigger animation when from and to reversed.
@@ -70,12 +75,13 @@ export function Direction({
           ? (net: ChainConfig) => net.isTest === from?.isTest
           : truth
         : (net: ChainConfig) => (isBoolean(from?.isTest) && isBoolean(to?.isTest) ? net.isTest === from?.isTest : true);
+    const isCross = type === 'cross-chain';
     const departureFilter = isCross ? [] : [airportsDepartureFilter];
     const arrivalFilter = isCross ? [] : [airportsArrivalFilter];
 
-    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from, isCross), ...arrivalFilter]);
-    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to, isCross), ...departureFilter]);
-  }, [value, setFromFilters, setToFilters, isCross]);
+    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from, type), ...arrivalFilter]);
+    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to, type), ...departureFilter]);
+  }, [value, setFromFilters, setToFilters, type]);
 
   // eslint-disable-next-line complexity
   useEffect(() => {
@@ -111,7 +117,7 @@ export function Direction({
         value={value?.from}
         extra={
           bridgetStatus !== 'pending' ? (
-            <LinkIndicator config={value?.from ?? null} showSwitch={bridgetStatus === 'available'} />
+            <ConnectionIndicator config={value?.from ?? null} showSwitch={bridgetStatus === 'available'} />
           ) : (
             <></>
           )

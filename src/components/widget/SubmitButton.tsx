@@ -1,9 +1,9 @@
 import { Button, ButtonProps, Form } from 'antd';
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useApi, useTx } from '../hooks';
-import { ConnectionStatus, ChainConfig } from '../model';
-import { getDisplayName, hasBridge, isBridgeAvailable, isSameNetConfig } from '../utils';
+import { useApi, useTx } from '../../hooks';
+import { ConnectionStatus, ChainConfig } from '../../model';
+import { getDisplayName, hasBridge, isBridgeAvailable, isSameNetConfig } from '../../utils';
 
 interface SubmitButtonProps extends ButtonProps {
   from: ChainConfig | null;

@@ -18,7 +18,7 @@ import {
   isEthereumNetwork,
   isPolkadotNetwork,
 } from '../../utils';
-import { SubscanLink } from '../SubscanLink';
+import { SubscanLink } from '../widget/SubscanLink';
 import { Des } from './Des';
 
 function Detail({ amount, asset }: CrossChainAsset<string | Erc20Token>) {

@@ -7,7 +7,7 @@ import {
   Ethereum2DarwiniaPayload,
   Substrate2SubstrateDVMPayload,
 } from './bridge';
-import { DeepRequired } from './util';
+import { DeepRequired } from './type-operator';
 
 export type TxStatus =
   | 'future'

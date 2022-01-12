@@ -8,7 +8,7 @@ function Cross() {
   return (
     <>
       <Card className="xl:w-1/3 lg:w-1/2 md:w-2/3 w-full mx-auto dark:shadow-none dark:border-transparent">
-        <CrossChain isCross={false}></CrossChain>
+        <CrossChain type={'airdrop'}></CrossChain>
       </Card>
 
       <p className="mt-4 text-center xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto">

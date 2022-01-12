@@ -23,3 +23,7 @@ export type DeepRequired<T, P extends string[]> = T extends object
         }
       >
   : T;
+
+export type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+export type WithNull<T> = { [K in keyof T]: T[K] | null };

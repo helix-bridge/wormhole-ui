@@ -11,8 +11,8 @@ import { airportsDepartureFilter, useApi, useNetworks } from '../../hooks';
 import { ClaimsRes, ChainConfig, Network, SubscanResponse } from '../../model';
 import { apiUrl, fromWei, getAirdropData, getInitialSetting, isSameNetConfig, rxGet } from '../../utils';
 import { Destination } from '../form-control/Destination';
-import { LinkIndicator } from '../LinkIndicator';
-import { SubmitButton } from '../SubmitButton';
+import { ConnectionIndicator } from '../widget/ConnectionIndicator';
+import { SubmitButton } from '../widget/SubmitButton';
 
 const SNAPSHOT_TIMESTAMP = 1584683400;
 const CLAIM_ENDPOINT = 'https://crab.subscan.io';
@@ -26,7 +26,7 @@ export function AirdropRecord() {
   } = useApi();
   const [claimAmount, setClaimAmount] = useState(new BN(0));
   const [target, setTarget] = useState('');
-  const { fromNetworks, setFromFilters } = useNetworks(false);
+  const { fromNetworks, setFromFilters } = useNetworks('airdrop');
   const [fromNetwork, setFromNetwork] = useState<ChainConfig | null>(() => {
     const from = getInitialSetting('from', null);
     return fromNetworks.find((item) => item.name === from) ?? null;
@@ -76,7 +76,7 @@ export function AirdropRecord() {
       <Form.Item name="host" label={t('Host Network')} rules={[{ required: true }]} className="mb-0">
         <Destination
           networks={fromNetworks}
-          extra={<LinkIndicator config={fromNetwork} />}
+          extra={<ConnectionIndicator config={fromNetwork} />}
           onChange={(value) => {
             if (value) {
               setFromNetwork(value);

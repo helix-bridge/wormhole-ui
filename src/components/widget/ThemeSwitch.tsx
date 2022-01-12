@@ -1,9 +1,9 @@
 import { Button, Switch, SwitchProps } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { NETWORK_DARK_THEME, NETWORK_LIGHT_THEME, SKIN_THEME, THEME } from '../config';
-import { Network } from '../model';
-import { readStorage, updateStorage } from '../utils/helper/storage';
-import { MoonIcon, SunIcon } from './icons';
+import { NETWORK_DARK_THEME, NETWORK_LIGHT_THEME, SKIN_THEME, THEME } from '../../config';
+import { Network } from '../../model';
+import { readStorage, updateStorage } from '../../utils/helper/storage';
+import { MoonIcon, SunIcon } from '../icons';
 
 const toggleTheme = (theme: THEME, network: Network = 'pangolin') => {
   const networkTheme = theme === THEME.DARK ? NETWORK_DARK_THEME : NETWORK_LIGHT_THEME;

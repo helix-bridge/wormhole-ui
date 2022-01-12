@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import { ActiveAccount } from './components/ActiveAccount';
-import { BridgeStatus } from './components/BridgeStatus';
-import { Footer } from './components/Footer';
+import { ActiveAccount } from './components/widget/ActiveAccount';
+import { BridgeState } from './components/bridge/BridgeState';
+import { Footer } from './components/widget/Footer';
 import { DownIcon } from './components/icons';
-import { ThemeSwitch } from './components/ThemeSwitch';
+import { ThemeSwitch } from './components/widget/ThemeSwitch';
 import { THEME } from './config';
 import { Path, routes } from './config/routes';
 import { useApi } from './hooks';
@@ -170,7 +170,7 @@ function App() {
       </Header>
 
       <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-24 sm:my-20 z-10">
-        <BridgeStatus className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow max-w-full mb-8" />
+        <BridgeState className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow max-w-full mb-8" />
         <TransitionGroup>
           <CSSTransition in={true} key={location.key} timeout={300} classNames="fade">
             <Switch location={location}>

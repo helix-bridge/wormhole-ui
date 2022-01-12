@@ -1,7 +1,7 @@
 import { Button, Result } from 'antd';
 import { Trans } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Path } from '../config/routes';
+import { Path } from '../../config/routes';
 
 export function Page404() {
   return (

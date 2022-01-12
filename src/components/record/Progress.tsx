@@ -14,7 +14,7 @@ import { Subscription } from 'rxjs';
 import { useTx } from '../../hooks';
 import { BridgeDispatchEventRecord, ChainConfig } from '../../model';
 import { isEthereumNetwork, isPolkadotNetwork } from '../../utils';
-import { SubscanLink } from '../SubscanLink';
+import { SubscanLink } from '../widget/SubscanLink';
 
 export enum State {
   pending = 0,

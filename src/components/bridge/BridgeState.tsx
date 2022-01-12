@@ -2,7 +2,7 @@ import { Alert } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { map } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
-import { useApi } from '../hooks';
+import { useApi } from '../../hooks';
 
 interface IncidentResponse {
   page: Page;
@@ -40,11 +40,11 @@ interface Page {
   updated_at: string;
 }
 
-interface BridgeStatusProps {
+interface BridgeStateProps {
   className?: string;
 }
 
-export function BridgeStatus({ className = '' }: BridgeStatusProps) {
+export function BridgeState({ className = '' }: BridgeStateProps) {
   const { isDev } = useApi();
   const url = useMemo(
     () =>

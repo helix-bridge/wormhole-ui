@@ -54,7 +54,7 @@ export function CrossChainRecord() {
   const { search } = useLocation<HistoryRouteParam>();
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
-  const { setToFilters, toNetworks, fromNetworks } = useNetworks(true);
+  const { setToFilters, toNetworks, fromNetworks } = useNetworks();
   const [departure, setDeparture] = useState<Vertices>(() => {
     const { from: network, fMode: mode } = searchParams;
     return network && mode ? { network, mode } : defaultSelect[0];
@@ -126,7 +126,7 @@ export function CrossChainRecord() {
     const isSameEnv = (net: ChainConfig) =>
       isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
-    setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
+    setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target)]);
 
     const { to, tMode } = searchParams;
 
@@ -172,7 +172,7 @@ export function CrossChainRecord() {
                 setArrival(getCrossChainArrivals(dep)[0]);
               }
 
-              setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
+              setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target)]);
               setDeparture(dep);
             }}
           >

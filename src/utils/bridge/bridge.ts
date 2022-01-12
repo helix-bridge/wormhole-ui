@@ -1,5 +1,5 @@
 import { has, isEqual, pick } from 'lodash';
-import { ComingSoon } from '../../components/ComingSoon';
+import { ComingSoon } from '../../components/widget/ComingSoon';
 import { BRIDGES } from '../../config';
 import {
   ChainConfig,

@@ -3,8 +3,8 @@ import { Button, Popover, Tooltip } from 'antd';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { from, Subscription } from 'rxjs';
-import { useApi } from '../hooks';
-import { ChainConfig, EthereumChainConfig, EthereumConnection } from '../model';
+import { useApi } from '../../hooks';
+import { ChainConfig, EthereumChainConfig, EthereumConnection } from '../../model';
 import {
   getConfigByConnection,
   getDisplayName,
@@ -13,7 +13,7 @@ import {
   isEthereumNetwork,
   isPolkadotNetwork,
   isSameNetConfig,
-} from '../utils';
+} from '../../utils';
 
 interface LinkIndicatorProps {
   config: ChainConfig | null;
@@ -21,7 +21,7 @@ interface LinkIndicatorProps {
 }
 
 // eslint-disable-next-line complexity
-export function LinkIndicator({ config, showSwitch }: LinkIndicatorProps) {
+export function ConnectionIndicator({ config, showSwitch }: LinkIndicatorProps) {
   const { t } = useTranslation();
   const { connection, network, connectNetwork } = useApi();
   const [isConsistent, setIsConsistent] = useState(false);

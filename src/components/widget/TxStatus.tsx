@@ -1,7 +1,7 @@
 import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { Alert, AlertProps, Button, Typography } from 'antd';
 import { Trans } from 'react-i18next';
-import { Tx } from '../model';
+import { Tx } from '../../model';
 
 interface TxStatusProps extends Partial<AlertProps> {
   tx: Tx | null;

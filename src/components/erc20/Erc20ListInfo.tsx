@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Erc20Token, RequiredPartial } from '../../model';
 import { JazzIcon } from '../icons';
-import { EllipsisMiddle } from '../EllipsisMiddle';
+import { EllipsisMiddle } from '../widget/EllipsisMiddle';
 
 interface Erc20SimpleProps {
   token: RequiredPartial<Erc20Token, 'address' | 'logo' | 'name' | 'symbol'>;

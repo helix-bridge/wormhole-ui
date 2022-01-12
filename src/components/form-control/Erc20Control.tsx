@@ -7,7 +7,7 @@ import { RegisterStatus } from '../../config';
 import { MemoedTokenInfo } from '../../hooks';
 import { CustomFormControlProps, Erc20Token } from '../../model';
 import { fromWei, getUnit, prettyNumber } from '../../utils';
-import { EllipsisMiddle } from '../EllipsisMiddle';
+import { EllipsisMiddle } from '../widget/EllipsisMiddle';
 import { Erc20ListInfo } from '../erc20/Erc20ListInfo';
 
 interface Erc20ControlProps extends CustomFormControlProps<Erc20Token | null> {

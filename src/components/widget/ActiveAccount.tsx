@@ -1,6 +1,6 @@
 import { CSSProperties, useMemo } from 'react';
-import { useApi } from '../hooks';
-import { getDisplayName, getNetworkMode, isEthereumNetwork, isPolkadotNetwork, isTronNetwork } from '../utils';
+import { useApi } from '../../hooks';
+import { getDisplayName, getNetworkMode, isEthereumNetwork, isPolkadotNetwork, isTronNetwork } from '../../utils';
 import { EllipsisMiddle } from './EllipsisMiddle';
 
 interface ActiveAccountProps {

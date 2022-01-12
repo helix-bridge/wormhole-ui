@@ -23,8 +23,8 @@ import {
   updateStorage,
 } from '../../utils';
 import { Destination } from '../form-control/Destination';
-import { LinkIndicator } from '../LinkIndicator';
-import { SubmitButton } from '../SubmitButton';
+import { ConnectionIndicator } from '../widget/ConnectionIndicator';
+import { SubmitButton } from '../widget/SubmitButton';
 import { Erc20ListInfo } from './Erc20ListInfo';
 
 const DEFAULT_REGISTER_NETWORK = ropstenConfig;
@@ -126,7 +126,7 @@ export function Register() {
       <Form.Item name="host" label={t('Host Network')} rules={[{ required: true }]}>
         <Destination
           networks={networks}
-          extra={<LinkIndicator config={net} />}
+          extra={<ConnectionIndicator config={net} />}
           onChange={(value) => {
             if (value) {
               setNet(value as EthereumChainConfig);
