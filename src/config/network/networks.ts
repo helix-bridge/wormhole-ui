@@ -6,7 +6,7 @@ import { pangoroConfig } from './pangoro';
 import { ropstenConfig } from './ropsten';
 import { tronConfig } from './tron';
 
-export const NETWORK_CONFIGURATIONS = [
+export const SYSTEM_NETWORK_CONFIGURATIONS = [
   crabConfig,
   darwiniaConfig,
   ethereumConfig,

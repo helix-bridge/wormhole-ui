@@ -4,9 +4,9 @@ import { useForm } from 'antd/lib/form/Form';
 import { isArray, isBoolean, isEqual, isNumber, isObject, isString, last } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { DESCRIPTIONS, NETWORK_CONFIGURATIONS } from '../config';
+import { DESCRIPTIONS, SYSTEM_NETWORK_CONFIGURATIONS } from '../config';
 import { Network } from '../model';
-import { addCustomChain, readStorage, removeCustomChain, saveNetworkConfig } from '../utils/helper/storage';
+import { addCustomChain, readStorage, removeCustomChain, saveNetworkConfig, getNetworkByName } from '../utils';
 
 interface ConfigurationProps {
   network: Network;
@@ -78,7 +78,7 @@ function getConfigControl(config: unknown, keys: (string | number)[]) {
 
 export function Configuration({ network }: ConfigurationProps) {
   const { t } = useTranslation();
-  const controls = getConfigControl([network], []);
+  const controls = getConfigControl(getNetworkByName(network), []);
   const [form] = useForm();
   const [isCustom, setIsCustom] = useState(false);
   const tip = useCallback(() => {
@@ -114,7 +114,7 @@ export function Configuration({ network }: ConfigurationProps) {
 
       <Button
         onClick={() => {
-          const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network);
+          const target = SYSTEM_NETWORK_CONFIGURATIONS.find((item) => item.name === network);
 
           form.setFieldsValue(target);
         }}

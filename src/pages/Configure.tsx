@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router';
 import { Configuration } from '../components/Configuration';
-import { NETWORK_CONFIGURATIONS } from '../config';
+import { NETWORK_CONFIGURATIONS } from '../utils';
 import { Network } from '../model';
 
 const { Sider, Content } = Layout;

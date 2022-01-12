@@ -4,9 +4,8 @@ import BN from 'bn.js';
 import type { ValidatorRule } from 'rc-field-form/lib/interface';
 import { TFunction } from 'react-i18next';
 import Web3 from 'web3';
-import { NETWORK_CONFIGURATIONS } from '../../config';
 import { Network, NetworkCategory, PolkadotChainConfig, PolkadotTypeNetwork, TokenChainInfo } from '../../model';
-import { isPolkadotNetwork } from '../network';
+import { isPolkadotNetwork, NETWORK_CONFIGURATIONS } from '../network';
 import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
 import { toWei } from './balance';
 

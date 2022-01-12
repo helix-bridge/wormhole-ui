@@ -1,7 +1,8 @@
 import { ApiPromise } from '@polkadot/api';
-import { chain as lodashChain, curry, curryRight, has, isEqual, isNull, omit, once, upperFirst } from 'lodash';
+import { chain as lodashChain, curry, curryRight, has, isEqual, isNull, omit, once, pick, upperFirst } from 'lodash';
 import Web3 from 'web3';
-import { NETWORK_CONFIGURATIONS, NETWORK_SIMPLE, tronConfig } from '../../config';
+import { getCustomNetworkConfig } from '../helper';
+import { SYSTEM_NETWORK_CONFIGURATIONS, NETWORK_SIMPLE, tronConfig } from '../../config';
 import {
   Arrival,
   ChainConfig,
@@ -20,6 +21,12 @@ import {
 } from '../../model';
 import { entrance } from './entrance';
 import { AIRDROP_GRAPH, NETWORK_GRAPH } from './graph';
+
+export const NETWORK_CONFIGURATIONS = SYSTEM_NETWORK_CONFIGURATIONS.map((item) => {
+  const customConfigs = getCustomNetworkConfig();
+
+  return customConfigs[item.name] ? { ...item, ...pick(customConfigs[item.name], Object.keys(item)) } : item;
+});
 
 /**
  * generate network configs, use dvm field to distinct whether the config is dvm config.

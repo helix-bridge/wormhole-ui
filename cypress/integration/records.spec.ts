@@ -50,7 +50,7 @@ describe('History records', () => {
       .click()
       .then(() => {
         cy.get('.ant-select-item-option-content')
-          .contains(/Pangolin/g)
+          .contains(/^Pangolin$/)
           .click();
       });
 
