@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { delay, Observer, of } from 'rxjs';
-import { TxStatus } from '../components/TxStatus';
+import { TxStatus } from '../components/widget/TxStatus';
 import { LONG_DURATION } from '../config';
 import { Tx } from '../model';
 

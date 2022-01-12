@@ -1,15 +1,13 @@
 import { Observable } from 'rxjs';
 import { Unit } from 'web3-utils';
-import { CrabConfig, DarwiniaConfig, EthereumConfig, PangolinConfig, RopstenConfig } from './network';
 import {
-  Darwinia2EthereumTransfer,
-  DVMTransfer,
-  Ethereum2DarwiniaTransfer,
-  NoNullTransferNetwork,
-  Substrate2SubstrateDVMTransfer,
-  TransferFormValues,
-} from './transfer';
-import { DeepRequired } from './util';
+  CrossChainPayload,
+  Darwinia2EthereumPayload,
+  DVMPayload,
+  Ethereum2DarwiniaPayload,
+  Substrate2SubstrateDVMPayload,
+} from './bridge';
+import { DeepRequired } from './type-operator';
 
 export type TxStatus =
   | 'future'
@@ -41,43 +39,36 @@ export interface Tx {
 
 export type TxFn<T> = (value: T) => Observable<Tx>;
 
-export type TxConfirmComponentProps<T> = { value: TransferFormValues<T, NoNullTransferNetwork>; unit?: Unit };
+export type TxConfirmComponentProps<T> = { value: CrossChainPayload<T>; unit?: Unit };
 
 export type TxHashType = 'block' | 'extrinsic' | 'address' | 'txHash'; // consistent with the SubscanLink component props;
 
 export type TxSuccessComponentProps<T> = {
   tx: Tx;
-  value: TransferFormValues<T, NoNullTransferNetwork>;
+  value: CrossChainPayload<T>;
   hashType?: TxHashType;
   unit?: Unit;
 };
 
 /* -----------------------------------issuing and redeem----------------------------------------------*/
 
-export type DVMToken = TransferFormValues<
-  DeepRequired<DVMTransfer, ['sender' | 'recipient' | 'amount' | 'asset']>,
-  NoNullTransferNetwork<PangolinConfig | CrabConfig, RopstenConfig | EthereumConfig>
->;
+export type DVMToken = CrossChainPayload<DeepRequired<DVMPayload, ['sender' | 'recipient' | 'amount' | 'asset']>>;
 
 export type RedeemDVMToken = DVMToken;
 export type IssuingDVMToken = DVMToken;
 
-export type RedeemDarwiniaToken = TransferFormValues<
-  DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
-  NoNullTransferNetwork<RopstenConfig | EthereumConfig, PangolinConfig | DarwiniaConfig>
+export type RedeemDarwiniaToken = CrossChainPayload<
+  DeepRequired<Ethereum2DarwiniaPayload, ['sender' | 'asset' | 'amount' | 'recipient']>
 >;
 
-export type RedeemDeposit = TransferFormValues<
-  DeepRequired<Ethereum2DarwiniaTransfer, ['sender' | 'deposit' | 'recipient']>,
-  NoNullTransferNetwork<RopstenConfig | EthereumConfig, PangolinConfig | DarwiniaConfig>
+export type RedeemDeposit = CrossChainPayload<
+  DeepRequired<Ethereum2DarwiniaPayload, ['sender' | 'deposit' | 'recipient']>
 >;
 
-export type IssuingDarwiniaToken = TransferFormValues<
-  DeepRequired<Darwinia2EthereumTransfer, ['sender' | 'assets' | 'recipient']>,
-  NoNullTransferNetwork
+export type IssuingDarwiniaToken = CrossChainPayload<
+  DeepRequired<Darwinia2EthereumPayload, ['sender' | 'assets' | 'recipient']>
 >;
 
-export type IssuingSubstrateToken = TransferFormValues<
-  DeepRequired<Substrate2SubstrateDVMTransfer, ['sender' | 'asset' | 'amount' | 'recipient']>,
-  NoNullTransferNetwork
+export type IssuingSubstrateToken = CrossChainPayload<
+  DeepRequired<Substrate2SubstrateDVMPayload, ['sender' | 'asset' | 'amount' | 'recipient']>
 >;

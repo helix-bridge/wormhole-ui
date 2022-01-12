@@ -167,7 +167,6 @@
   "Waiting for bridge response": "Waiting for bridge response",
   "When the process is aborted or an error occurs, the token will be revert to the original account": "When the process is aborted or an error occurs, the token will be revert to the original account",
   "Wormhole is in beta. Please use at your own risk level": "Wormhole is in beta. Please use at your own risk level",
-  "You maybe forgot to select receive or sending network": "You maybe forgot to select receive or sending network",
   "You must select at least one of these assets": "You must select at least one of these assets",
   "You must select the destination network to unlock": "You must select the destination network to unlock",
   "approveBalanceInsufficient": "Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount <1>approve</1>",

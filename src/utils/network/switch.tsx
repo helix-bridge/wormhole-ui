@@ -2,13 +2,12 @@ import { Button, message, notification } from 'antd';
 import { Trans } from 'react-i18next';
 import { Observable, Observer } from 'rxjs';
 import Web3 from 'web3';
-import { NETWORK_CONFIG } from '../../config';
 import { EthereumChainConfig, MetamaskError, Network } from '../../model';
-import { isNativeMetamaskChain } from './network';
+import { findNetworkConfig, isNativeMetamaskChain } from './network';
 
 async function switchEthereumChain(network: Network): Promise<null> {
-  const params = (NETWORK_CONFIG[network] as EthereumChainConfig).ethereumChain;
-  const chainId = Web3.utils.toHex(+params.chainId);
+  const chain = findNetworkConfig(network) as EthereumChainConfig;
+  const chainId = Web3.utils.toHex(+chain.ethereumChain.chainId);
   const res: null = await window.ethereum.request({
     method: 'wallet_switchEthereumChain',
     params: [{ chainId }],
@@ -22,11 +21,11 @@ async function switchEthereumChain(network: Network): Promise<null> {
  */
 async function addEthereumChain(network: Network): Promise<null> {
   // TODO check the chaiId field, store in decimal in configuration but may be required hexadecimal in metamask side.
-  const params = (NETWORK_CONFIG[network] as EthereumChainConfig).ethereumChain;
-  const chainId = Web3.utils.toHex(+params.chainId);
+  const chain = findNetworkConfig(network) as EthereumChainConfig;
+  const chainId = Web3.utils.toHex(+chain.ethereumChain.chainId);
   const result = await window.ethereum.request({
     method: 'wallet_addEthereumChain',
-    params: [{ ...params, chainId }],
+    params: [{ ...chain.ethereumChain, chainId }],
   });
 
   return result;

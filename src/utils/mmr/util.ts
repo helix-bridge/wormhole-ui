@@ -34,7 +34,7 @@ export function leaf_index_to_mmr_size(index: number): number {
   return 2 * leaves_count - peak_count;
 }
 
-export function pos_height_in_tree(pos: number): number {
+function pos_height_in_tree(pos: number): number {
   pos += 1;
 
   while (!all_ones(pos)) {
@@ -156,11 +156,11 @@ export function bag_rhs_peaks(rhs_peaks: string[]): string {
   return rhs_peaks.pop() as string;
 }
 
-export function parent_offset(height: number): number {
+function parent_offset(height: number): number {
   return 2 << height;
 }
 
-export function sibling_offset(height: number): number {
+function sibling_offset(height: number): number {
   return (2 << height) - 1;
 }
 

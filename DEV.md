@@ -19,7 +19,7 @@ The two key aspects of the bridge implementation (connecting to the network and 
 
 There is no real order to the development steps, they are at the discretion of the developer, the following are the recommended development steps.
 
-1. Add the network configuration. In src/config/network.ts there are 2 main configurations, NETWORK_CONFIG for each network and NETWORK_GRAPH for the bridge configuration
+1. Add the network configuration. In src/config/network.ts there are 2 main configurations, for each network and NETWORK_GRAPH for the bridge configuration
 
 1. Connecting to the network. The method of connecting to the network is configured in the config of src/utils/network/connection.ts.
 

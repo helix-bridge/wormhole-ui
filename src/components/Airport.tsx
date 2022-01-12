@@ -8,10 +8,10 @@ import { catchError, EMPTY, from, map, Observable, of } from 'rxjs';
 import Web3 from 'web3';
 import { DATE_TIME_FORMATE, FORM_CONTROL } from '../config';
 import { useApi } from '../hooks';
-import { BridgeFormProps, TransferFormValues, TransferNetwork } from '../model';
+import { CrossChainComponentProps, CrossChainPayload, CrossChainDirection } from '../model';
 import { buf2hex, entrance, getAirdropData, isValidAddress } from '../utils';
 
-type AirportValues = TransferFormValues<{
+type AirportValues = CrossChainPayload<{
   sender: string;
   recipient: string;
   signature: string;
@@ -29,8 +29,11 @@ interface SignRes {
 const SNAPSHOT_TIMESTAMP = 1584683400;
 
 function signWith(data: AirportValues): Observable<SignRes> {
-  const { transfer, recipient, sender } = data;
-  const { from: come } = transfer;
+  const {
+    direction: { from: come },
+    recipient,
+    sender,
+  } = data;
   const ss58Prefix = 42;
   const address = buf2hex(decodeAddress(recipient, false, ss58Prefix).buffer);
   // eslint-disable-next-line no-magic-numbers
@@ -64,7 +67,11 @@ function signWith(data: AirportValues): Observable<SignRes> {
   );
 }
 
-export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportValues> & { transfer: TransferNetwork }) {
+export function Airport({
+  setSubmit,
+  form,
+  direction,
+}: CrossChainComponentProps<AirportValues> & { direction: CrossChainDirection }) {
   const { t } = useTranslation();
   const [signature] = useState<string>('');
   const {
@@ -74,11 +81,11 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
   const { address: account } = useMemo(() => (accounts || [])[0] ?? { address: '' }, [accounts]);
 
   useEffect(() => {
-    const num = getAirdropData(account, transfer.from!.name);
+    const num = getAirdropData(account, direction.from!.name);
 
     setAmount(num.toString());
     form.setFieldsValue({ amount: num.toString() });
-  }, [account, form, transfer.from]);
+  }, [account, form, direction.from]);
 
   useEffect(() => {
     const fn = () => (value: AirportValues) =>
@@ -98,7 +105,7 @@ export function Airport({ setSubmit, form, transfer }: BridgeFormProps<AirportVa
       <Form.Item
         label={
           <span className="capitalize">
-            {t('Connected to {{network}}', { network: form.getFieldValue(FORM_CONTROL.transfer)?.from?.name ?? '' })}
+            {t('Connected to {{network}}', { network: form.getFieldValue(FORM_CONTROL.direction)?.from?.name ?? '' })}
           </span>
         }
         name={FORM_CONTROL.sender}

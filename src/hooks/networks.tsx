@@ -1,8 +1,10 @@
 import { chain } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
-import { AIRDROP_GRAPH, AIRPORTS, NETWORKS } from '../config';
-import { Arrival, Departure, ChainConfig, NetworkFilter } from '../model';
+import { Arrival, ChainConfig, CrossType, Departure } from '../model';
+import { AIRDROP_GRAPH, AIRPORT_NETWORKS, CROSS_CHAIN_NETWORKS } from '../utils';
 import { useApi } from './api';
+
+type NetworkFilter = (network: ChainConfig) => boolean;
 
 const omitTestChain: NetworkFilter = (net) => !net.isTest;
 
@@ -26,20 +28,20 @@ const arrivalFilterCreator: (source: Map<Departure, Arrival[]>) => NetworkFilter
 export const airportsDepartureFilter = departureFilterCreator(AIRDROP_GRAPH);
 export const airportsArrivalFilter = arrivalFilterCreator(AIRDROP_GRAPH);
 
-export function useNetworks(isCross: boolean) {
+export function useNetworks(type: CrossType = 'cross-chain') {
   const { enableTestNetworks } = useApi();
   const [fromFilters, setFromFilters] = useState<NetworkFilter[]>([]);
-  const [fromNetworks, setFromNetworks] = useState<ChainConfig[]>(NETWORKS);
+  const [fromNetworks, setFromNetworks] = useState<ChainConfig[]>(CROSS_CHAIN_NETWORKS);
   const [toFilters, setToFilters] = useState<NetworkFilter[]>([]);
-  const [toNetworks, setToNetworks] = useState<ChainConfig[]>(NETWORKS);
+  const [toNetworks, setToNetworks] = useState<ChainConfig[]>(CROSS_CHAIN_NETWORKS);
   const getNetworks = useCallback(
     (filters: NetworkFilter[]) => {
       return [...getGlobalFilters(enableTestNetworks), ...filters].reduce(
         (networks, predicateFn) => networks.filter((network) => predicateFn(network)),
-        isCross ? NETWORKS : AIRPORTS
+        type === 'cross-chain' ? CROSS_CHAIN_NETWORKS : AIRPORT_NETWORKS
       );
     },
-    [enableTestNetworks, isCross]
+    [enableTestNetworks, type]
   );
 
   useEffect(() => {

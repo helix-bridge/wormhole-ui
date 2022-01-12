@@ -2,9 +2,16 @@ import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import BN from 'bn.js';
 import { from, Observable, Observer, switchMap, switchMapTo, tap } from 'rxjs';
+import { getBridge } from '..';
 import { abi } from '../../config';
-import { IssuingDarwiniaToken, IssuingDVMToken, IssuingSubstrateToken, Tx } from '../../model';
-import { isKton, isRing } from '../helper/validate';
+import {
+  IssuingDarwiniaToken,
+  IssuingDVMToken,
+  IssuingSubstrateToken,
+  SubstrateSubstrateDVMBridgeConfig,
+  Tx,
+} from '../../model';
+import { isKton, isRing } from '../helper/validator';
 import { getContractTxObs } from './common';
 import { getErc20MappingPrams } from './redeem';
 
@@ -70,15 +77,15 @@ export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromi
  * @description substrate -> substrate dvm
  */
 export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiPromise, fee: BN): Observable<Tx> {
-  const { sender, recipient, amount, transfer } = value;
+  const { sender, recipient, amount, direction } = value;
+  const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
   const WEIGHT = '1509000000';
   const obs = new Observable((observer: Observer<Tx>) => {
     try {
-      const specVersion = transfer.to.name === 'crab' ? '1180' : '27020';
-      const module = transfer.from.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
+      const module = direction.from.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
 
       api.tx[module]
-        .lockAndRemoteIssue(specVersion, WEIGHT, amount, fee, recipient)
+        .lockAndRemoteIssue(String(bridge.config.specVersion), WEIGHT, amount, fee, recipient)
         .signAndSend(sender, extrinsicSpy(observer))
         .catch((error) => {
           observer.error({ status: 'error', error });
@@ -98,7 +105,7 @@ export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiProm
  * @description ethereum -> substrate dvm
  */
 export function issuingErc20(value: IssuingDVMToken): Observable<Tx> {
-  const { asset, recipient, amount, transfer, sender } = value;
+  const { asset, recipient, amount, direction: transfer, sender } = value;
   const { address } = asset;
 
   return from(getErc20MappingPrams(transfer.from.provider.rpc)).pipe(

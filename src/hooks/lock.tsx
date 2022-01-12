@@ -1,14 +1,14 @@
 import { FormInstance } from 'antd';
 import { useEffect, useState } from 'react';
 import { FORM_CONTROL } from '../config';
-import { NoNullTransferNetwork, TransferFormValues, TransferNetwork } from '../model';
+import { CrossChainPayload, CrossChainDirection } from '../model';
 
-export function useLock(form: FormInstance<TransferFormValues<{ recipient: string }, NoNullTransferNetwork>>) {
+export function useLock(form: FormInstance<CrossChainPayload<{ recipient: string }>>) {
   const [lock, setLock] = useState<boolean>(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const { from, to } = form.getFieldValue(FORM_CONTROL.transfer) as TransferNetwork;
+    const { from, to } = form.getFieldValue(FORM_CONTROL.direction) as CrossChainDirection;
     const needLock = !from || !to;
 
     setLock(needLock);

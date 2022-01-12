@@ -3,6 +3,7 @@ const nextButton = `${notificationPage} .permissions-connect-choose-account__bot
 const allowToSpendButton = `${notificationPage} [data-testid="page-container-footer-next"]`;
 const rejectToSpendButton = `${notificationPage} [data-testid="page-container-footer-cancel"]`;
 const switchNetworkButton = `${notificationPage} .confirmation-footer__actions button:nth-child(2)`
+
 module.exports.notificationPageElements = {
   notificationPage,
   nextButton,
@@ -13,6 +14,7 @@ module.exports.notificationPageElements = {
 
 const confirmSignatureRequestButton = `${notificationPage} .request-signature__footer__sign-button`;
 const rejectSignatureRequestButton = `${notificationPage} .request-signature__footer__cancel-button`;
+
 module.exports.signaturePageElements = {
   confirmSignatureRequestButton,
   rejectSignatureRequestButton,
@@ -20,6 +22,7 @@ module.exports.signaturePageElements = {
 
 const permissionsPage = '.permissions-connect';
 const connectButton = `${permissionsPage} .permission-approval-container__footers button:nth-child(2)`;
+
 module.exports.permissionsPageElements = {
   permissionsPage,
   connectButton,
@@ -34,6 +37,7 @@ const gasLimitInput = `${confirmPageGasFeeSection} .advanced-gas-inputs__gas-edi
 const totalLabel = `${confirmPageContent} div:nth-child(2) > .confirm-detail-row .currency-display-component__text`;
 const rejectButton = `${confirmPageContent} [data-testid="page-container-footer-cancel"]`;
 const confirmButton = `${confirmPageContent} [data-testid="page-container-footer-next"]`;
+
 module.exports.confirmPageElements = {
   notificationPage,
   confirmPageHeader,

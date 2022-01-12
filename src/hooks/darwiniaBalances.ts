@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
-import { AvailableBalance, TokenChainInfo } from '../model';
-import { getDarwiniaAvailableBalances } from '../utils';
+import { AvailableBalance, DarwiniaAsset, TokenChainInfo } from '../model';
+import { getDarwiniaBalances } from '../utils';
 import { useApi } from './api';
 
-export const getChainInfo: (tokens: TokenChainInfo[], target: string) => TokenChainInfo | undefined = (
+export const getChainInfo: (tokens: TokenChainInfo[], target: DarwiniaAsset) => TokenChainInfo | undefined = (
   tokens: TokenChainInfo[],
-  target: string
+  target: DarwiniaAsset
 ) => {
   if (target) {
     return tokens.find((token) => token.symbol.toLowerCase().includes(target.toLowerCase()));
@@ -22,19 +22,19 @@ export function useDarwiniaAvailableBalances() {
         return [];
       }
 
-      const [ring, kton] = await getDarwiniaAvailableBalances(api, account);
+      const [ring, kton] = await getDarwiniaBalances(api, account);
 
       return [
         {
           max: ring,
-          asset: 'ring',
-          chainInfo: getChainInfo(chain.tokens, 'ring'),
+          asset: DarwiniaAsset.ring,
+          chainInfo: getChainInfo(chain.tokens, DarwiniaAsset.ring),
           checked: true,
         },
         {
           max: kton,
-          asset: 'kton',
-          chainInfo: getChainInfo(chain.tokens, 'kton'),
+          asset: DarwiniaAsset.kton,
+          chainInfo: getChainInfo(chain.tokens, DarwiniaAsset.kton),
         },
       ];
     },

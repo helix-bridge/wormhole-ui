@@ -49,7 +49,9 @@ describe('History records', () => {
       .eq(0)
       .click()
       .then(() => {
-        cy.get('.ant-select-item-option-content').contains('Pangolin').click();
+        cy.get('.ant-select-item-option-content')
+          .contains(/^Pangolin$/)
+          .click();
       });
 
     cy.react('Search').find('input').type(pangolinAccount);

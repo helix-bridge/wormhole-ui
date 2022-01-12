@@ -3,12 +3,11 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
 import {
-  Darwinia2EthereumTransfer,
+  Darwinia2EthereumPayload,
   Erc20Token,
   Network,
-  NoNullTransferNetwork,
-  TransferAsset,
-  TransferFormValues,
+  CrossChainAsset,
+  CrossChainPayload,
   TxSuccessComponentProps,
 } from '../../model';
 import {
@@ -19,10 +18,10 @@ import {
   isEthereumNetwork,
   isPolkadotNetwork,
 } from '../../utils';
-import { SubscanLink } from '../SubscanLink';
+import { SubscanLink } from '../widget/SubscanLink';
 import { Des } from './Des';
 
-function Detail({ amount, asset }: TransferAsset<string | Erc20Token>) {
+function Detail({ amount, asset }: CrossChainAsset<string | Erc20Token>) {
   return (
     <div>
       <span>{amount}</span>
@@ -38,14 +37,14 @@ export function TransferSuccess({
   hashType = 'txHash',
   unit = 'ether',
 }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
-TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
+TxSuccessComponentProps<CrossChainPayload<any>>) {
   const { t } = useTranslation();
-  const color = NETWORK_LIGHT_THEME[value.transfer.from?.name as Network]['@project-main-bg'];
+  const color = NETWORK_LIGHT_THEME[value.direction.from?.name as Network]['@project-main-bg'];
   const linkProps = { [hashType]: tx.hash };
   const sender = useMemo(
     () =>
-      isPolkadotNetwork(value.transfer.from.name) && getNetworkMode(value.transfer.from) !== 'dvm'
-        ? convertToSS58(value.sender, value.transfer.from.ss58Prefix)
+      isPolkadotNetwork(value.direction.from.name) && getNetworkMode(value.direction.from) !== 'dvm'
+        ? convertToSS58(value.sender, value.direction.from.ss58Prefix)
         : value.sender,
     [value]
   );
@@ -55,7 +54,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
       <Des
         title={
           <span className="capitalize">
-            {t('{{network}} Network Address', { network: getDisplayName(value.transfer.from) })}
+            {t('{{network}} Network Address', { network: getDisplayName(value.direction.from) })}
           </span>
         }
         content={sender}
@@ -65,7 +64,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
       <Des
         title={
           <span className="capitalize">
-            {t('{{network}} Network Address', { network: getDisplayName(value.transfer.to) })}
+            {t('{{network}} Network Address', { network: getDisplayName(value.direction.to) })}
           </span>
         }
         content={value.recipient}
@@ -77,7 +76,7 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
         content={
           (value.asset && value.amount && <Detail {...value} amount={fromWei({ value: value.amount, unit })} />) ||
           (value.assets &&
-            value.assets.map((item: Darwinia2EthereumTransfer['assets'][0]) => (
+            value.assets.map((item: Darwinia2EthereumPayload['assets'][0]) => (
               <Detail
                 {...item}
                 amount={item.unit ? fromWei({ value: item.amount, unit: item.unit }) : item.amount}
@@ -92,9 +91,9 @@ TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>) {
         {t('The transaction has been sent, please check the transfer progress in the cross-chain history.')}
       </p>
 
-      <SubscanLink {...linkProps} network={value.transfer.from?.name as Network}>
+      <SubscanLink {...linkProps} network={value.direction.from?.name as Network}>
         {t('View in {{scan}} explorer', {
-          scan: isEthereumNetwork(value.transfer.from?.name) ? 'Etherscan' : 'Subscan',
+          scan: isEthereumNetwork(value.direction.from?.name) ? 'Etherscan' : 'Subscan',
         })}
       </SubscanLink>
     </>
