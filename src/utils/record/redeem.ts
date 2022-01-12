@@ -9,8 +9,7 @@ import {
   RedeemHistoryRes,
   RingBurnHistoryRes,
 } from '../../model';
-import { apiUrl } from '../helper';
-import { rxGet } from './api';
+import { apiUrl, rxGet } from '../helper';
 
 /* -------------------------------------------E2D---------------------------------------------- */
 

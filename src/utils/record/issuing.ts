@@ -16,11 +16,10 @@ import {
   Tx,
 } from '../../model';
 import { getBridge } from '../bridge';
-import { apiUrl, encodeBlockHeader } from '../helper';
+import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR } from '../mmr';
 import { connect, entrance, waitUntilConnected } from '../network';
 import { buf2hex, getContractTxObs } from '../tx';
-import { rxGet } from './api';
 
 /* -------------------------------------------Inner Helper Fn---------------------------------------------- */
 

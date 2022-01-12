@@ -30,10 +30,10 @@ import {
   Tx,
 } from '../../model';
 import { getAvailableDVMBridge, getBridge, isS2S, isSubstrateDVM2Substrate } from '../bridge';
-import { apiUrl, encodeBlockHeader } from '../helper';
+import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR, MMRProof } from '../mmr';
 import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount } from '../network';
-import { getMPTProof, rxGet } from '../record';
+import { getMPTProof } from '../record';
 import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
 import { getErc20Meta, getTokenBalance } from './tokenInfo';
 

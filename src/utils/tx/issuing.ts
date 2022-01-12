@@ -11,7 +11,7 @@ import {
   SubstrateSubstrateDVMBridgeConfig,
   Tx,
 } from '../../model';
-import { isKton, isRing } from '../helper/validate';
+import { isKton, isRing } from '../helper/validator';
 import { getContractTxObs } from './common';
 import { getErc20MappingPrams } from './redeem';
 
