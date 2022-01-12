@@ -360,7 +360,9 @@ export function isChainIdEqual(id1: string | number, id2: string | number): bool
   return id1 === id2;
 }
 
-export function getCrossChainArrivals(departure: ChainConfig): Arrival[] {
+export function getCrossChainArrivals(dep: ChainConfig | Vertices): Arrival[] {
+  const departure = has(dep, 'mode') ? verticesToChainConfig(dep as Vertices) : (dep as ChainConfig);
+
   return getArrivals(NETWORK_GRAPH, departure);
 }
 

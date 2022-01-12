@@ -1,8 +1,16 @@
 import { has, isEqual, pick } from 'lodash';
 import { ComingSoon } from '../../components/ComingSoon';
 import { BRIDGES } from '../../config';
-import { ChainConfig, Departure, CrossChainDirection, Vertices, Bridge, BridgeConfig } from '../../model';
-import { chainConfigToVertices, isEthereumNetwork, isPolkadotNetwork } from '../network';
+import {
+  ChainConfig,
+  Departure,
+  CrossChainDirection,
+  Vertices,
+  Bridge,
+  BridgeConfig,
+  EthereumDVMBridgeConfig,
+} from '../../model';
+import { chainConfigToVertices, isDVM, isEthereumNetwork, isPolkadotNetwork } from '../network';
 
 type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => boolean;
 
@@ -37,9 +45,9 @@ export const isS2S: BridgePredicateFn = (departure, arrival) => {
   return [isSubstrate2SubstrateDVM, isSubstrateDVM2Substrate].some((fn) => fn(departure, arrival));
 };
 
-export function hasBridge(from: ChainConfig, to: ChainConfig): boolean {
+export function hasBridge(source: CrossChainDirection | [Vertices | ChainConfig, Vertices | ChainConfig]): boolean {
   try {
-    getBridge([from, to]);
+    getBridge(source);
 
     return true;
   } catch (_) {
@@ -74,7 +82,9 @@ export function findBridge<T extends BridgeConfig>(direction: [Vertices, Vertice
   const bridge = BRIDGES.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction));
 
   if (!bridge) {
-    throw new Error(`Bridge from ${direction[0]?.network} to ${direction[1]?.network} is not exist`);
+    throw new Error(
+      `Bridge from ${direction[0]?.network}(${direction[0].mode}) to ${direction[1]?.network}(${direction[1].mode}) is not exist`
+    );
   }
 
   return bridge as Bridge<T>;
@@ -107,4 +117,28 @@ export function getBridgeComponent(type: 'crossChain' | 'record') {
           : bridge.RedeemCrossChainComponent;
     }
   };
+}
+
+export function getAvailableDVMBridge(departure: ChainConfig): Bridge<EthereumDVMBridgeConfig> {
+  // FIXME: by default we use the first vertices here.
+  const [bridge] = BRIDGES.filter(
+    (item) => item.status === 'available' && isEqual(item.departure, departure) && isDVM(item.arrival)
+  );
+
+  if (bridge) {
+    throw new Error(
+      `Can not find available bridge(Ethereum type <-> DVM type) by departure network: ${departure.name}`
+    );
+  }
+
+  return bridge as Bridge<EthereumDVMBridgeConfig>;
+}
+
+export function hasAvailableDVMBridge(departure: ChainConfig): boolean {
+  try {
+    getAvailableDVMBridge(departure);
+    return true;
+  } catch (_) {
+    return false;
+  }
 }

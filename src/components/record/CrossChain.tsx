@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { EMPTY, takeWhile } from 'rxjs';
+import { darwiniaCrabDVM } from '../../config';
 import { useIsMounted, useNetworks, useRecords } from '../../hooks';
 import { ChainConfig, HistoryRouteParam, Paginator, Vertices } from '../../model';
 import {
@@ -14,6 +15,7 @@ import {
   getNetworkCategory,
   getNetworkMode,
   getVerticesFromDisplayName,
+  hasBridge,
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
@@ -25,6 +27,7 @@ import { RecordList } from './RecordList';
 
 const SOURCE_DATA_DEFAULT = { count: 0, list: [] };
 const PAGINATOR_DEFAULT = { row: 10, page: 0 };
+const defaultSelect = darwiniaCrabDVM.issuing;
 
 // eslint-disable-next-line complexity
 const isAddressValid = (addr: string | null, departure: Vertices) => {
@@ -52,17 +55,17 @@ export function CrossChainRecord() {
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
   const { setToFilters, toNetworks, fromNetworks } = useNetworks(true);
-  const [departure, setDeparture] = useState<Vertices>({
-    network: searchParams.from || fromNetworks[0].name,
-    mode: searchParams.fMode || getNetworkMode(fromNetworks[0]),
+  const [departure, setDeparture] = useState<Vertices>(() => {
+    const { from: network, fMode: mode } = searchParams;
+    return network && mode ? { network, mode } : defaultSelect[0];
+  });
+  const [arrival, setArrival] = useState<Vertices>(() => {
+    const { to: network, tMode: mode } = searchParams;
+    return network && mode ? { network, mode } : defaultSelect[1];
   });
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState<boolean | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [arrival, setArrival] = useState<Vertices>({
-    network: searchParams.to || toNetworks[0].name,
-    mode: searchParams.tMode || getNetworkMode(toNetworks[0]),
-  });
   const searchPlaceholder = useMemo(() => {
     const { network, mode } = departure;
     if (isPolkadotNetwork(network)) {
@@ -160,11 +163,17 @@ export function CrossChainRecord() {
               const target = fromNetworks.find(
                 (item) => getDisplayName(item).toLowerCase() === name.toLowerCase()
               ) as ChainConfig;
+              const dep = { network: target.name, mode: getNetworkMode(target) };
+              const reachable = hasBridge([dep, arrival]);
               const isSameEnv = (net: ChainConfig) =>
                 isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
+              if (!reachable) {
+                setArrival(getCrossChainArrivals(dep)[0]);
+              }
+
               setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target, true)]);
-              setDeparture({ network: target.name, mode: getNetworkMode(target) });
+              setDeparture(dep);
             }}
           >
             {fromNetworks.map((item) => {

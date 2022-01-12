@@ -1,4 +1,4 @@
-import { isEqual, memoize, upperFirst } from 'lodash';
+import { memoize, upperFirst } from 'lodash';
 import { combineLatest, EMPTY, forkJoin, from, interval, NEVER, Observable, of, take, timer, zip } from 'rxjs';
 import {
   catchError,
@@ -16,9 +16,8 @@ import {
 } from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
-import { abi, BRIDGES, DarwiniaApiPath, LONG_DURATION, RegisterStatus, SHORT_DURATION } from '../../config';
+import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus, SHORT_DURATION } from '../../config';
 import {
-  Bridge,
   ChainConfig,
   CrossChainDirection,
   DVMChainConfig,
@@ -30,10 +29,10 @@ import {
   MappedToken,
   Tx,
 } from '../../model';
-import { getBridge, isS2S, isSubstrateDVM2Substrate } from '../bridge';
+import { getAvailableDVMBridge, getBridge, isS2S, isSubstrateDVM2Substrate } from '../bridge';
 import { apiUrl, encodeBlockHeader } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR, MMRProof } from '../mmr';
-import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount, isDVM } from '../network';
+import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount } from '../network';
 import { getMPTProof, rxGet } from '../record';
 import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
 import { getErc20Meta, getTokenBalance } from './tokenInfo';
@@ -418,28 +417,4 @@ export function confirmRegister(proof: StoredProof, departure: EthereumChainConf
       )
     )
   );
-}
-
-export function getAvailableDVMBridge(departure: ChainConfig): Bridge<EthereumDVMBridgeConfig> {
-  // FIXME: by default we use the first vertices here.
-  const [bridge] = BRIDGES.filter(
-    (item) => item.status === 'available' && isEqual(item.departure, departure) && isDVM(item.arrival)
-  );
-
-  if (bridge) {
-    throw new Error(
-      `Can not find available bridge(Ethereum type <-> DVM type) by departure network: ${departure.name}`
-    );
-  }
-
-  return bridge as Bridge<EthereumDVMBridgeConfig>;
-}
-
-export function hasAvailableDVMBridge(departure: ChainConfig): boolean {
-  try {
-    getAvailableDVMBridge(departure);
-    return true;
-  } catch (_) {
-    return false;
-  }
 }

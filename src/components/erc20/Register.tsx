@@ -9,17 +9,19 @@ import { FORM_CONTROL, RegisterStatus, ropstenConfig, validateMessages } from '.
 import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useLocalSearch, useMappingTokens, useTx } from '../../hooks';
 import { Erc20Token, EthereumChainConfig } from '../../model';
-import { CROSS_CHAIN_NETWORKS, isSameNetConfig, isValidAddress } from '../../utils';
-import { getErc20Meta } from '../../utils/token/tokenInfo';
 import {
+  CROSS_CHAIN_NETWORKS,
+  hasAvailableDVMBridge,
+  isSameNetConfig,
+  isValidAddress,
   confirmRegister,
   getRegisterProof,
   getTokenRegisterStatus,
-  hasAvailableDVMBridge,
   launchRegister,
   StoredProof,
-} from '../../utils/token/mappingToken';
-import { updateStorage } from '../../utils/helper/storage';
+  getErc20Meta,
+  updateStorage,
+} from '../../utils';
 import { Destination } from '../form-control/Destination';
 import { LinkIndicator } from '../LinkIndicator';
 import { SubmitButton } from '../SubmitButton';
