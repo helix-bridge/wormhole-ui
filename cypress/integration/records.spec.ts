@@ -36,7 +36,7 @@ describe('History records', () => {
     cy.react('Search').find('input').type(ropstenAccount);
   });
 
-  it('should display d2e records and launch claim', () => {
+  it.only('should display d2e records and launch claim', () => {
     cy.intercept(
       {
         method: 'GET',
@@ -49,7 +49,9 @@ describe('History records', () => {
       .eq(0)
       .click()
       .then(() => {
-        cy.get('.ant-select-item-option-content').contains('Pangolin').click();
+        cy.get('.ant-select-item-option-content')
+          .contains(/Pangolin/g)
+          .click();
       });
 
     cy.react('Search').find('input').type(pangolinAccount);
