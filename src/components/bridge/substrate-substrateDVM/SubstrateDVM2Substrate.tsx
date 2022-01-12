@@ -55,8 +55,8 @@ export function SubstrateDVM2Substrate({ form, setSubmit, direction }: CrossChai
     [direction]
   );
 
-  const getFee = useCallback(async (config: ChainConfig) => {
-    const api = entrance.polkadot.getInstance(config.provider.rpc);
+  const getFee = useCallback(async (departure: ChainConfig) => {
+    const api = entrance.polkadot.getInstance(departure.provider.rpc);
 
     await waitUntilConnected(api);
 

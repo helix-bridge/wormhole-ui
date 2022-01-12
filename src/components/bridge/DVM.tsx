@@ -62,7 +62,7 @@ interface DVMProps {
   transform: (value: DVMToken) => Observable<Tx>;
   spenderResolver: (direction: CrossChainDirection) => Promise<string>;
   getDailyLimit?: (token: MappedToken) => Promise<DailyLimit>;
-  getFee?: (config: ChainConfig, token: MappedToken) => Promise<string>;
+  getFee?: (departure: ChainConfig, token: MappedToken) => Promise<string>;
 }
 
 interface TransferInfoProps {
@@ -199,13 +199,13 @@ export function DVM({
     let sub$$: Subscription | null = null;
 
     if (getFee) {
-      const departure = form.getFieldValue(FORM_CONTROL.direction).from;
+      const { from: departure } = direction;
 
       sub$$ = from(getFee(departure, selectedErc20!)).subscribe(setFee);
     }
 
     return () => sub$$?.unsubscribe();
-  }, [form, getFee, selectedErc20]);
+  }, [direction, getFee, selectedErc20]);
 
   useEffect(() => {
     const fn = () => (data: RedeemDVMToken | IssuingDVMToken) => {
