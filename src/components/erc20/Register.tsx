@@ -5,26 +5,29 @@ import { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState
 import { Trans, useTranslation } from 'react-i18next';
 import { from, mergeMap } from 'rxjs';
 import Web3 from 'web3';
-import { FORM_CONTROL, NETWORKS, NETWORK_CONFIG, RegisterStatus, validateMessages } from '../../config';
+import { FORM_CONTROL, RegisterStatus, ropstenConfig, validateMessages } from '../../config';
 import i18n from '../../config/i18n';
-import { MemoedTokenInfo, useApi, useLocalSearch, useMappedTokens, useTx } from '../../hooks';
-import { Erc20Token, EthereumConfig, RopstenConfig } from '../../model';
-import { isSameNetConfig, isValidAddress } from '../../utils';
-import { getErc20Meta } from '../../utils/erc20/meta';
+import { MemoedTokenInfo, useApi, useLocalSearch, useMappingTokens, useTx } from '../../hooks';
+import { Erc20Token, EthereumChainConfig } from '../../model';
 import {
+  CROSS_CHAIN_NETWORKS,
+  hasAvailableDVMBridge,
+  isSameNetConfig,
+  isValidAddress,
   confirmRegister,
   getRegisterProof,
   getTokenRegisterStatus,
   launchRegister,
   StoredProof,
-} from '../../utils/erc20/token';
-import { updateStorage } from '../../utils/helper/storage';
-import { Destination } from '../controls/Destination';
-import { LinkIndicator } from '../LinkIndicator';
-import { SubmitButton } from '../SubmitButton';
+  getErc20Meta,
+  updateStorage,
+} from '../../utils';
+import { Destination } from '../form-control/Destination';
+import { ConnectionIndicator } from '../widget/ConnectionIndicator';
+import { SubmitButton } from '../widget/SubmitButton';
 import { Erc20ListInfo } from './Erc20ListInfo';
 
-const DEFAULT_REGISTER_NETWORK = NETWORK_CONFIG.ropsten;
+const DEFAULT_REGISTER_NETWORK = ropstenConfig;
 
 enum TabKeys {
   register = 'register',
@@ -47,7 +50,7 @@ function tokenSearchFactory<T extends Pick<Erc20Token, 'address' | 'symbol'>>(to
 export function Register() {
   const { t } = useTranslation();
   const [form] = useForm();
-  const [net, setNet] = useState<EthereumConfig | RopstenConfig>(DEFAULT_REGISTER_NETWORK);
+  const [net, setNet] = useState<EthereumChainConfig>(DEFAULT_REGISTER_NETWORK);
   const {
     connection: { status },
     network,
@@ -58,20 +61,20 @@ export function Register() {
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { tokens, dispatch } = useMappedTokens(
-    { from: network as EthereumConfig, to: null },
+  const { tokens, dispatch } = useMappingTokens(
+    { from: network as EthereumChainConfig, to: null },
     RegisterStatus.registering
   );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(tokens), [tokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
   const { observer } = useTx();
-  const networks = useMemo(() => NETWORKS.filter((item) => item.type.includes('ethereum')), []);
+  const networks = useMemo(() => CROSS_CHAIN_NETWORKS.filter((item) => item.type.includes('ethereum')), []);
   const canStart = useMemo(
     () =>
       status === 'success' &&
       isSameNetConfig(network, net) &&
-      !!net.contracts.e2dvm.redeem &&
+      hasAvailableDVMBridge(net) &&
       isValidAddress(inputValue, 'ethereum'),
     [inputValue, net, network, status]
   );
@@ -102,7 +105,7 @@ export function Register() {
 
   return (
     <Form
-      name={FORM_CONTROL.transfer}
+      name={FORM_CONTROL.direction}
       layout="vertical"
       form={form}
       initialValues={{ host: DEFAULT_REGISTER_NETWORK }}
@@ -123,10 +126,10 @@ export function Register() {
       <Form.Item name="host" label={t('Host Network')} rules={[{ required: true }]}>
         <Destination
           networks={networks}
-          extra={<LinkIndicator config={net} />}
+          extra={<ConnectionIndicator config={net} />}
           onChange={(value) => {
             if (value) {
-              setNet(value as EthereumConfig | RopstenConfig);
+              setNet(value as EthereumChainConfig);
             }
           }}
         />
@@ -151,7 +154,7 @@ export function Register() {
             <Input.Search
               placeholder={t('Token Contract Address')}
               size="large"
-              disabled={!net.contracts.e2dvm.redeem}
+              disabled={hasAvailableDVMBridge(net)}
               onChange={(event) => {
                 setInputValue(event.target.value);
               }}
@@ -200,7 +203,7 @@ export function Register() {
 }
 
 interface UpcomingProps {
-  departure: EthereumConfig;
+  departure: EthereumChainConfig;
 }
 
 function Upcoming({ departure }: UpcomingProps) {
@@ -211,7 +214,7 @@ function Upcoming({ departure }: UpcomingProps) {
     proofs: knownProofs,
     addKnownProof,
     switchToConfirmed,
-  } = useMappedTokens({ from: departure, to: null }, RegisterStatus.registering);
+  } = useMappingTokens({ from: departure, to: null }, RegisterStatus.registering);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
   const { data, setSearch } = useLocalSearch<MemoedTokenInfo>(searchFn as (arg: string) => MemoedTokenInfo[]);

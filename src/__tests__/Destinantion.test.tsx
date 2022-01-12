@@ -3,20 +3,19 @@
 import { DisconnectOutlined } from '@ant-design/icons';
 import { mount } from '@cypress/react';
 import { Suspense } from 'react';
-import { Destination } from '../components/controls/Destination';
-import { NETWORKS } from '../config';
+import { Destination } from '../components/form-control/Destination';
 import '../index.scss';
 import '../theme/antd/index.less';
 import i18n from '../config/i18n';
 import { img } from './utils';
-import { getDisplayName } from '../utils';
+import { getDisplayName, CROSS_CHAIN_NETWORKS } from '../utils';
 import { upperFirst } from 'lodash';
 
 i18n.init({
   lng: 'en',
 });
 
-const patchedNetworks = NETWORKS.map((item) => ({
+const patchedNetworks = CROSS_CHAIN_NETWORKS.map((item) => ({
   ...item,
   facade: { ...item.facade, logo: '/public' + item.facade.logo },
 }));
@@ -78,7 +77,7 @@ context('Destination component', () => {
     it('should display network logo', () => {
       mount(
         <Suspense fallback="loading">
-          <Destination networks={NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
+          <Destination networks={CROSS_CHAIN_NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
         </Suspense>
       );
       cy.get(`img[src="${img('network.png')}"]`).should('be.visible');
@@ -87,7 +86,7 @@ context('Destination component', () => {
     it('should display default menu content', () => {
       mount(
         <Suspense fallback="loading">
-          <Destination networks={NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
+          <Destination networks={CROSS_CHAIN_NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
         </Suspense>
       );
       cy.get('.ant-dropdown-trigger').contains('Select Network').should('be.visible');
@@ -96,7 +95,7 @@ context('Destination component', () => {
     it('should display the network menus properly', () => {
       mount(
         <Suspense fallback="loading">
-          <Destination networks={NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
+          <Destination networks={CROSS_CHAIN_NETWORKS} mode="card" defaultLogo={img('network.png')} title="from" />
         </Suspense>
       );
 
@@ -106,29 +105,29 @@ context('Destination component', () => {
           // menu total = network length + 1;
           cy.get('.ant-dropdown-menu-item')
             .should('be.visible')
-            .and('have.length', NETWORKS.length + 1);
+            .and('have.length', CROSS_CHAIN_NETWORKS.length + 1);
 
           // all networks should be rendered
-          NETWORKS.forEach((network) => {
+          CROSS_CHAIN_NETWORKS.forEach((network) => {
             cy.get('.ant-dropdown-menu-item').contains(upperFirst(network.name));
           });
 
           // test networks should have tag sibling
-          NETWORKS.filter((item) => item.isTest).forEach((network) => {
+          CROSS_CHAIN_NETWORKS.filter((item) => item.isTest).forEach((network) => {
             cy.get('.ant-dropdown-menu-item').contains(upperFirst(network.name)).next().contains('Test');
           });
         });
     });
 
     it('Display the network correctly', () => {
-      const logo = img(NETWORKS[2].facade.logo.split('/')[2]);
-      const value = { ...NETWORKS[2], facade: { logo, logoWithText: '', logoMinor: '' } };
+      const logo = img(CROSS_CHAIN_NETWORKS[2].facade.logo.split('/')[2]);
+      const value = { ...CROSS_CHAIN_NETWORKS[2], facade: { logo, logoWithText: '', logoMinor: '' } };
 
       mount(
         <Suspense fallback="loading">
           <Destination
             value={value}
-            networks={NETWORKS}
+            networks={CROSS_CHAIN_NETWORKS}
             mode="card"
             defaultLogo={img('network.png')}
             title="from"
@@ -136,7 +135,7 @@ context('Destination component', () => {
           />
         </Suspense>
       );
-      cy.get('.ant-dropdown-trigger').contains(upperFirst(NETWORKS[2].name));
+      cy.get('.ant-dropdown-trigger').contains(upperFirst(CROSS_CHAIN_NETWORKS[2].name));
       cy.get(`img[src="${logo}"]`).should('be.visible');
     });
 
@@ -144,7 +143,7 @@ context('Destination component', () => {
       mount(
         <Suspense fallback="loading">
           <Destination
-            networks={NETWORKS}
+            networks={CROSS_CHAIN_NETWORKS}
             defaultLogo={img('network.png')}
             title="from"
             mode="card"

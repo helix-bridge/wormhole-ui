@@ -4,23 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
 import { useHistory } from 'react-router-dom';
 import { Path } from '../config/routes';
-import {
-  NoNullTransferNetwork,
-  SS58Prefix,
-  TransferFormValues,
-  Tx,
-  TxHashType,
-  TxSuccessComponentProps,
-} from '../model';
+import { CrossChainPayload, Tx, TxHashType, TxSuccessComponentProps } from '../model';
 import { TxContext, TxCtx } from '../providers';
 import { applyModal, convertToSS58, genHistoryRouteParams, getNetworkMode, isEthereumNetwork } from '../utils';
 import { useApi } from './api';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
-export function useAfterSuccess<
-  T extends TransferFormValues<{ sender: string; recipient?: string }, NoNullTransferNetwork>
->() {
+export function useAfterSuccess<T extends CrossChainPayload<{ sender: string; recipient?: string }>>() {
   const { t } = useTranslation();
   const history = useHistory();
   const { chain } = useApi();
@@ -28,7 +19,7 @@ export function useAfterSuccess<
   const afterTx = useCallback(
     (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        Comp: FunctionComponent<TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>>,
+        Comp: FunctionComponent<TxSuccessComponentProps<CrossChainPayload<any>>>,
         {
           onDisappear,
           unit,
@@ -50,12 +41,12 @@ export function useAfterSuccess<
             onClick: () => {
               destroy();
 
-              const { from, to } = value.transfer;
+              const { from, to } = value.direction;
               const fMode = getNetworkMode(from);
               const sender =
-                isEthereumNetwork(value.transfer.from.name) || fMode === 'dvm'
+                isEthereumNetwork(value.direction.from.name) || fMode === 'dvm'
                   ? value.sender
-                  : convertToSS58(value.sender, chain.ss58Format as unknown as SS58Prefix);
+                  : convertToSS58(value.sender, +chain.ss58Format);
 
               history.push(
                 Path.history +
@@ -82,7 +73,7 @@ export function useAfterSuccess<
   const afterApprove = useCallback(
     (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        Comp: FunctionComponent<TxSuccessComponentProps<TransferFormValues<any, NoNullTransferNetwork>>>,
+        Comp: FunctionComponent<TxSuccessComponentProps<CrossChainPayload<any>>>,
         {
           onDisappear,
           unit,

@@ -3,7 +3,7 @@ export * from './darwiniaBalances';
 export * from './departure';
 export * from './localSearch';
 export * from './lock';
-export * from './mappedTokens';
+export * from './mappingTokens';
 export * from './isMounted';
 export * from './networks';
 export * from './records';

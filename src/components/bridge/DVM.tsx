@@ -7,22 +7,22 @@ import { Link } from 'react-router-dom';
 import { from, Observable, of, Subscription, switchMap, takeWhile } from 'rxjs';
 import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
 import { Path } from '../../config/routes';
-import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappedTokens, useTx } from '../../hooks';
+import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappingTokens, useTx } from '../../hooks';
 import {
-  BridgeFormProps,
   ChainConfig,
+  CrossChainComponentProps,
+  CrossChainDirection,
+  CrossChainPayload,
   DailyLimit,
+  DVMChainConfig,
+  DVMPayload,
   DVMToken,
-  DVMTransfer,
   Erc20Token,
-  EthereumChainDVMConfig,
   IssuingDVMToken,
   MappedToken,
   Network,
-  NoNullTransferNetwork,
   RedeemDVMToken,
   RequiredPartial,
-  TransferFormValues,
   Tx,
 } from '../../model';
 import {
@@ -41,18 +41,18 @@ import {
   prettyNumber,
   toWei,
 } from '../../utils';
-import { Balance } from '../controls/Balance';
-import { Erc20Control } from '../controls/Erc20Control';
-import { EthereumAccountItem } from '../controls/EthereumAccountItem';
-import { MaxBalance } from '../controls/MaxBalance';
-import { RecipientItem } from '../controls/RecipientItem';
+import { Balance } from '../form-control/Balance';
+import { Erc20Control } from '../form-control/Erc20Control';
+import { EthereumAccountItem } from '../form-control/EthereumAccountItem';
+import { MaxBalance } from '../form-control/MaxBalance';
+import { RecipientItem } from '../form-control/RecipientItem';
 import { ApproveConfirm } from '../modal/ApproveConfirm';
 import { ApproveSuccess } from '../modal/ApproveSuccess';
 import { Des } from '../modal/Des';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
 
-export type ApproveValue = TransferFormValues<RequiredPartial<DVMTransfer, 'sender'>, NoNullTransferNetwork>;
+type ApproveValue = CrossChainPayload<RequiredPartial<DVMPayload, 'sender'>>;
 
 interface DVMProps {
   tokenRegisterStatus: RegisterStatus;
@@ -60,15 +60,15 @@ interface DVMProps {
   approveOptions?: Record<string, string>;
   isDVM?: boolean;
   transform: (value: DVMToken) => Observable<Tx>;
-  spenderResolver: (config: ChainConfig) => Promise<string>;
+  spenderResolver: (direction: CrossChainDirection) => Promise<string>;
   getDailyLimit?: (token: MappedToken) => Promise<DailyLimit>;
-  getFee?: (config: ChainConfig, token: MappedToken) => Promise<string>;
+  getFee?: (departure: ChainConfig, token: MappedToken) => Promise<string>;
 }
 
 interface TransferInfoProps {
   amount: string;
   tokenInfo: MemoedTokenInfo | null;
-  transfer: NoNullTransferNetwork<EthereumChainDVMConfig, ChainConfig>;
+  direction: CrossChainDirection<DVMChainConfig, ChainConfig>;
   dailyLimit: DailyLimit | null;
   fee: string | null;
 }
@@ -76,7 +76,7 @@ interface TransferInfoProps {
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
 // eslint-disable-next-line complexity
-function TransferInfo({ tokenInfo, amount, transfer, dailyLimit, fee }: TransferInfoProps) {
+function TransferInfo({ tokenInfo, amount, direction, dailyLimit, fee }: TransferInfoProps) {
   const [symbol, setSymbol] = useState('');
   const unit = tokenInfo ? getUnit(+tokenInfo.decimals) : 'ether';
   const value = new BN(toWei({ value: amount || '0', unit }));
@@ -89,7 +89,7 @@ function TransferInfo({ tokenInfo, amount, transfer, dailyLimit, fee }: Transfer
   }, [dailyLimit]);
 
   useEffect(() => {
-    const { to: arrival } = transfer;
+    const { to: arrival } = direction;
     const mode = getNetworkMode(arrival);
     (async () => {
       if (tokenInfo && isPolkadotNetwork(arrival.name) && mode === 'native') {
@@ -98,7 +98,7 @@ function TransferInfo({ tokenInfo, amount, transfer, dailyLimit, fee }: Transfer
         setSymbol(result);
       }
     })();
-  }, [tokenInfo, transfer]);
+  }, [tokenInfo, direction]);
 
   return (
     <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
@@ -111,7 +111,7 @@ function TransferInfo({ tokenInfo, amount, transfer, dailyLimit, fee }: Transfer
       {!!fee && (
         <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
           <span className="flex items-center">
-            {fee} {transfer.from.ethereumChain.nativeCurrency.symbol}
+            {fee} {direction.from.ethereumChain.nativeCurrency.symbol}
           </span>
         </Descriptions.Item>
       )}
@@ -141,14 +141,15 @@ export function DVM({
   canRegister,
   getDailyLimit,
   getFee,
+  direction,
   isDVM = true,
-}: BridgeFormProps<DVMTransfer> & DVMProps) {
+}: CrossChainComponentProps<DVMPayload> & DVMProps) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
   } = useApi();
-  const { total, tokens, refreshTokenBalance } = useMappedTokens(
-    form.getFieldValue(FORM_CONTROL.transfer),
+  const { total, tokens, refreshTokenBalance } = useMappingTokens(
+    form.getFieldValue(FORM_CONTROL.direction),
     tokenRegisterStatus
   );
   const [allowance, setAllowance] = useState(new BN(0));
@@ -178,9 +179,9 @@ export function DVM({
   const [fee, setFee] = useState<string>('');
   const isMounted = useIsMounted();
   const refreshAllowance = useCallback(
-    (config: ChainConfig) => {
+    (dir: CrossChainDirection) => {
       if (isMounted) {
-        from(spenderResolver(config))
+        from(spenderResolver(dir))
           .pipe(
             switchMap((spender) => getAllowance(account, spender, selectedErc20)),
             takeWhile(() => isMounted)
@@ -198,13 +199,13 @@ export function DVM({
     let sub$$: Subscription | null = null;
 
     if (getFee) {
-      const departure = form.getFieldValue(FORM_CONTROL.transfer).from;
+      const { from: departure } = direction;
 
       sub$$ = from(getFee(departure, selectedErc20!)).subscribe(setFee);
     }
 
     return () => sub$$?.unsubscribe();
-  }, [form, getFee, selectedErc20]);
+  }, [direction, getFee, selectedErc20]);
 
   useEffect(() => {
     const fn = () => (data: RedeemDVMToken | IssuingDVMToken) => {
@@ -233,7 +234,7 @@ export function DVM({
         afterTx(TransferSuccess, {
           onDisappear: () => {
             refreshTokenBalance(value.asset.address);
-            refreshAllowance(value.transfer.from);
+            refreshAllowance(value.direction);
           },
           unit,
         })(value)
@@ -264,6 +265,7 @@ export function DVM({
 
       <RecipientItem
         form={form}
+        direction={direction}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
@@ -293,7 +295,7 @@ export function DVM({
           onChange={async (erc20) => {
             setSelectedErc20(erc20);
 
-            const spender = await spenderResolver(form.getFieldValue(FORM_CONTROL.transfer).from);
+            const spender = await spenderResolver(direction);
             const allow = await getAllowance(account, spender, erc20);
 
             setAllowance(allow);
@@ -336,19 +338,18 @@ export function DVM({
                 Exceed the authorized amount, click to authorize more amount, or reduce the transfer amount
                 <Button
                   onClick={async () => {
-                    const transfer = form.getFieldValue(FORM_CONTROL.transfer) as NoNullTransferNetwork;
-                    const value: Pick<ApproveValue, 'transfer' | 'sender' | 'asset'> = {
+                    const value: Pick<ApproveValue, 'direction' | 'sender' | 'asset'> = {
                       sender: account,
-                      transfer,
+                      direction,
                       asset: selectedErc20,
                     };
-                    const spender = await spenderResolver(transfer.from);
+                    const spender = await spenderResolver(direction);
                     const beforeTx = applyModalObs({
                       content: <ApproveConfirm value={value} />,
                     });
                     const txObs = approveToken({
                       sender: account,
-                      transfer,
+                      direction,
                       tokenAddress: selectedErc20?.address,
                       spender,
                     });
@@ -356,7 +357,7 @@ export function DVM({
                     createTxWorkflow(
                       beforeTx,
                       txObs,
-                      afterApprove(ApproveSuccess, { onDisappear: () => refreshAllowance(value.transfer.from) })(value)
+                      afterApprove(ApproveSuccess, { onDisappear: () => refreshAllowance(value.direction) })(value)
                     ).subscribe(observer);
                   }}
                   type="link"
@@ -378,7 +379,7 @@ export function DVM({
           className="flex-1"
         >
           <MaxBalance
-            network={form.getFieldValue(FORM_CONTROL.transfer).from?.name as Network}
+            network={form.getFieldValue(FORM_CONTROL.direction).from?.name as Network}
             onClick={() => {
               const amount = fromWei({ value: selectedErc20?.balance, unit }, prettyNumber);
 
@@ -393,7 +394,7 @@ export function DVM({
       <TransferInfo
         amount={curAmount}
         tokenInfo={selectedErc20}
-        transfer={form.getFieldValue(FORM_CONTROL.transfer)}
+        direction={form.getFieldValue(FORM_CONTROL.direction)}
         fee={fee}
         dailyLimit={dailyLimit}
       />

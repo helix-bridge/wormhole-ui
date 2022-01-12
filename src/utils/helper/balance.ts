@@ -1,11 +1,7 @@
-import BigNumber from 'bignumber.js';
 import { Unit, unitMap, Units } from 'web3-utils';
 import BN from 'bn.js';
 import { isNull, isNumber, isString, isUndefined } from 'lodash';
 import Web3 from 'web3';
-import { ApiPromise } from '@polkadot/api';
-import { AccountData, AccountInfo } from '@darwinia/types';
-import { waitUntilConnected } from '../network';
 
 export type WeiValue = string | BN | number | null | undefined;
 export interface PrettyNumberOptions {
@@ -28,26 +24,6 @@ export function getUnit(num: number): Unit {
 
 export function getPrecisionByUnit(unit: Unit): number {
   return ETH_UNITS[unit].length - 1;
-}
-
-export function accuracyFormat(num: BigNumber.Value, accuracy: number | string) {
-  if (accuracy) {
-    return bn2str(bnShift(num, -accuracy));
-  } else if (+accuracy === 0) {
-    return num;
-  } else {
-    return '';
-  }
-}
-
-export function bnShift(num: BigNumber.Value, shift: number | string) {
-  shift = parseInt(shift as string, 10);
-
-  return new BigNumber(num).shiftedBy(shift).toNumber();
-}
-
-export function bn2str(num: BigNumber.Value) {
-  return new BigNumber(num).toString(10);
 }
 
 // eslint-disable-next-line complexity
@@ -121,44 +97,5 @@ export function toWei(
 const completeDecimal = (value: string, bits: number): string => {
   const length = value.length;
 
-  return length > bits ? value.substr(0, bits) : value;
+  return length > bits ? value.slice(0, bits) : value;
 };
-
-/**
- * @description other api can get balances:  api.derive.balances.all, api.query.system.account;
- * @see https://github.com/darwinia-network/wormhole-ui/issues/142
- */
-export async function getDarwiniaAvailableBalances(api: ApiPromise, account = ''): Promise<[string, string]> {
-  await waitUntilConnected(api);
-
-  try {
-    // type = 0 query ring balance.  type = 1 query kton balance.
-    /* eslint-disable */
-    const ringUsableBalance = await (api.rpc as any).balances.usableBalance(0, account);
-    const ktonUsableBalance = await (api.rpc as any).balances.usableBalance(1, account);
-    /* eslint-enable */
-
-    return [ringUsableBalance.usableBalance.toString(), ktonUsableBalance.usableBalance.toString()];
-  } catch (error: unknown) {
-    console.warn(
-      '%c [ Failed to  querying balance through rpc ]',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      (error as Record<string, string>).message
-    );
-  }
-
-  try {
-    const { data } = (await api.query.system.account(account)) as AccountInfo;
-    const { free, freeKton } = data as unknown as AccountData;
-
-    return [free.toString(), freeKton.toString()];
-  } catch (error) {
-    console.warn(
-      '%c [ Failed to  querying balance through account info ]',
-      'font-size:13px; background:pink; color:#bf2c9f;',
-      (error as Record<string, string>).message
-    );
-
-    return ['0', '0'];
-  }
-}

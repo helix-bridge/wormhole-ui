@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
 import { mount } from '@cypress/react';
-import { Balance } from '../components/controls/Balance';
+import { Balance } from '../components/form-control/Balance';
 import '../index.scss';
 import '../theme/antd/index.less';
 

@@ -7,7 +7,7 @@ coverage
 
 *.config.js
 
-cypress
+cypress/
 
 **/__tests__/
-**/plugin/**/*.js
+**/plugins/**/*.js

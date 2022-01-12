@@ -1,8 +1,9 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
-import { BallScalePulse } from './components/BallScalePulse';
+import { BallScalePulse } from './components/widget/BallScalePulse';
+import './components/bridge/register';
 import { THEME } from './config';
 import './index.scss';
 import { ApiProvider, GqlProvider, TxProvider } from './providers';

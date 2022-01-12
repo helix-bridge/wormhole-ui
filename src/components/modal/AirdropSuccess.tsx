@@ -5,6 +5,9 @@ import { Trans } from 'react-i18next';
 
 const INDENTATION = 4;
 
+/**
+ * @deprecated unused
+ */
 export function AirdropSuccess({ data }: { data: Record<string, unknown> }) {
   const value = useMemo(() => JSON.stringify(data, undefined, INDENTATION), [data]);
 

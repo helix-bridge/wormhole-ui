@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router';
 import { Configuration } from '../components/Configuration';
-import { NETWORK_CONFIG } from '../config';
+import { NETWORK_CONFIGURATIONS } from '../utils';
 import { Network } from '../model';
 
 const { Sider, Content } = Layout;
@@ -24,7 +24,7 @@ function Config() {
       <Layout className="h-full">
         <Sider width={100} className="h-full overflow-scroll">
           <Menu mode="vertical" defaultSelectedKeys={['darwinia']} className="min-h-full">
-            {Object.values(NETWORK_CONFIG).map((item) => (
+            {NETWORK_CONFIGURATIONS.map((item) => (
               <Menu.Item
                 onClick={(value) => {
                   setActive(value.key as Network);

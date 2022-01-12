@@ -1,7 +1,7 @@
 import { Typography } from 'antd';
 import { ReactNode } from 'react';
 
-export interface DesProps {
+interface DesProps {
   title: string | ReactNode;
   content: string | ReactNode;
   icon?: ReactNode;

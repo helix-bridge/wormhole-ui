@@ -15,7 +15,6 @@ import {
   SHORT_DURATION,
 } from '../config';
 import {
-  ApiKeys,
   BridgeDispatchEventRecord,
   BridgeDispatchEventRes,
   ChainConfig,
@@ -27,8 +26,10 @@ import {
   S2SHistoryRecord,
   S2SIssuingRecordRes,
   S2SLockedRecordRes,
+  SubstrateSubstrateDVMBridgeConfig,
 } from '../model';
 import {
+  getBridge,
   isDarwinia2Ethereum,
   isDVM2Ethereum,
   isEthereum2Darwinia,
@@ -96,21 +97,19 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 
 export function useRecords(departure: Departure, arrival: Departure) {
   const { fetchS2SIssuingRecords, fetchS2SRedeemRecords } = useS2SRecords(
-    verticesToChainConfig(departure)! as ChainConfig<ApiKeys>,
-    verticesToChainConfig(arrival)! as ChainConfig<ApiKeys>
+    verticesToChainConfig(departure),
+    verticesToChainConfig(arrival)
   );
-  const genParams = useCallback(
-    (params: HistoryReq) => {
-      const req = omitBy<HistoryReq>(params, isNull) as HistoryReq;
+  const genParams = useCallback((params: HistoryReq) => {
+    const req = omitBy<HistoryReq>(params, isNull) as HistoryReq;
+    const [dep] = params.direction;
 
-      if (isTronNetwork(departure.network)) {
-        return { ...req, address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '' };
-      }
+    if (isTronNetwork(dep.network)) {
+      return { ...req, address: window.tronWeb ? window.tronWeb.address.toHex(params.address) : '' };
+    }
 
-      return req;
-    },
-    [departure]
-  );
+    return req;
+  }, []);
 
   const genQueryFn = useCallback<(isGenesis: boolean) => (req: HistoryReq) => Observable<unknown>>(
     // eslint-disable-next-line complexity
@@ -150,9 +149,9 @@ export function useRecords(departure: Departure, arrival: Departure) {
 
   const queryRecords = useCallback(
     (params: HistoryReq, isGenesis: boolean) => {
-      const { network, address } = params;
+      const { direction, address } = params;
 
-      if (!network || !address) {
+      if (!direction || !address) {
         return EMPTY;
       }
 
@@ -221,8 +220,8 @@ type FetchS2SRecords = (req: HistoryReq) => Observable<{ count: number; list: S2
 type FetchS2SRecord<T, R> = (laneId: string, nonce: string, options: FetchRecordOptions<T>) => Observable<R>;
 
 export function useS2SRecords(
-  departure: ChainConfig<ApiKeys>,
-  arrival: ChainConfig<ApiKeys>
+  departure: ChainConfig,
+  arrival: ChainConfig
 ): {
   fetchS2SIssuingRecords: FetchS2SRecords;
   fetchS2SRedeemRecords: FetchS2SRecords;
@@ -230,18 +229,19 @@ export function useS2SRecords(
   fetchS2SRedeemRecord: FetchS2SRecord<S2SBurnRecordRes, S2SHistoryRecord>;
   fetchMessageEvent: FetchS2SRecord<BridgeDispatchEventRes, BridgeDispatchEventRecord>;
 } {
+  const api = useMemo(
+    () => getBridge<SubstrateSubstrateDVMBridgeConfig>([departure, arrival]).config.api,
+    [departure, arrival]
+  );
   const issuingClient = useMemo(
-    () => new GraphQLClient({ url: departure.api.subql || UNKNOWN_CLIENT }),
-    [departure.api.subql]
+    () => new GraphQLClient({ url: `${api.subql}${departure.name}` || UNKNOWN_CLIENT }),
+    [api.subql, departure.name]
   );
   const issuingTargetClient = useMemo(
-    () => new GraphQLClient({ url: arrival.api.subql || UNKNOWN_CLIENT }),
-    [arrival.api.subql]
+    () => new GraphQLClient({ url: `${api.subql}${arrival.name}` || UNKNOWN_CLIENT }),
+    [api.subql, arrival.name]
   );
-  const redeemClient = useMemo(
-    () => new GraphQLClient({ url: departure.api.subGraph || UNKNOWN_CLIENT }),
-    [departure.api.subGraph]
-  );
+  const redeemClient = useMemo(() => new GraphQLClient({ url: api.subGraph || UNKNOWN_CLIENT }), [api.subGraph]);
   const { t } = useTranslation();
   // s2s issuing
   const [fetchLockedRecords] = useManualQuery<S2SLockedRecordRes>(S2S_ISSUING_RECORDS_QUERY, {

@@ -1,4 +1,4 @@
-import { Network } from './network';
+import { Network } from './network/network';
 
 export interface HistoryRouteParam {
   from: Network;

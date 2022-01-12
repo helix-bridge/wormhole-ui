@@ -1,28 +1,62 @@
 import { ApiPromise } from '@polkadot/api';
-import { curry, curryRight, has, isEqual, isNull, omit, once, upperFirst } from 'lodash';
+import { chain as lodashChain, curry, curryRight, has, isEqual, isNull, omit, once, pick, upperFirst } from 'lodash';
 import Web3 from 'web3';
-import { AIRDROP_GRAPH, NETWORKS, NETWORK_ALIAS, NETWORK_CONFIG, NETWORK_GRAPH, NETWORK_SIMPLE } from '../../config';
+import { getCustomNetworkConfig } from '../helper';
+import { SYSTEM_NETWORK_CONFIGURATIONS, NETWORK_SIMPLE, tronConfig } from '../../config';
 import {
   Arrival,
+  ChainConfig,
   Connection,
+  CrossType,
   Departure,
+  DVMChainConfig,
+  EthereumChainConfig,
   EthereumConnection,
   MetamaskNativeNetworkIds,
-  ChainConfig,
   Network,
   NetworkCategory,
   NetworkMode,
+  NoNullFields,
   PolkadotConnection,
   Vertices,
-  EthereumChainConfig,
-  EthereumChainDVMConfig,
-  NetworkConfig,
-  NoNullFields,
 } from '../../model';
 import { entrance } from './entrance';
+import { AIRDROP_GRAPH, NETWORK_GRAPH } from './graph';
+
+export const NETWORK_CONFIGURATIONS = SYSTEM_NETWORK_CONFIGURATIONS.map((item) => {
+  const customConfigs = getCustomNetworkConfig();
+
+  return customConfigs[item.name] ? { ...item, ...pick(customConfigs[item.name], Object.keys(item)) } : item;
+});
+
+/**
+ * generate network configs, use dvm field to distinct whether the config is dvm config.
+ */
+export const CROSS_CHAIN_NETWORKS: ChainConfig[] = lodashChain([...NETWORK_GRAPH])
+  .map(([departure, arrivals]) => [departure, ...arrivals])
+  .filter((item) => item.length > 1)
+  .flatten()
+  .unionWith((cur, pre) => cur.mode === pre.mode && cur.network === pre.network)
+  .map(({ network, mode }) => {
+    const config: ChainConfig | undefined = NETWORK_CONFIGURATIONS.find((item) => item.name === network);
+
+    if (!config) {
+      throw new Error(`Can not find ${network} network configuration`);
+    }
+
+    return config.type.includes('polkadot') && mode === 'native'
+      ? (omit(config, 'dvm') as Omit<ChainConfig, 'dvm'>)
+      : config;
+  })
+  .sortBy((item) => item.name)
+  .valueOf();
+
+export const AIRPORT_NETWORKS: ChainConfig[] = NETWORK_CONFIGURATIONS.filter((item) =>
+  ['ethereum', 'crab', 'tron'].includes(item.name)
+).map((item) => omit(item, 'dvm'));
 
 function isSpecifyNetworkType(type: NetworkCategory) {
-  const findBy = (name: Network) => NETWORK_CONFIG[name] || null;
+  const findBy = (name: Network) => NETWORK_CONFIGURATIONS.find((item) => item.name === name) ?? null;
 
   return (network: Network | null | undefined) => {
     if (!network) {
@@ -42,12 +76,20 @@ function isSpecifyNetworkType(type: NetworkCategory) {
       }
     }
 
-    return config && config.type.includes(type);
+    return !!config && config.type.includes(type);
   };
 }
 
 function byNetworkAlias(network: string): Network | null {
-  const alias = NETWORK_ALIAS.entries();
+  const minLength = 3;
+  const allowAlias: (full: string, at?: number) => string[] = (name, startAt = minLength) => {
+    const len = name.length;
+    const shortestName = name.slice(0, startAt);
+
+    return new Array(len - startAt).fill('').map((_, index) => shortestName + name.substr(startAt, index));
+  };
+
+  const alias = new Map([['ethereum', [...allowAlias('ethereum')]]]);
   let res = null;
 
   for (const [name, value] of alias) {
@@ -57,7 +99,7 @@ function byNetworkAlias(network: string): Network | null {
     }
   }
 
-  return res;
+  return res as Network | null;
 }
 
 export function getLegalName(network: string): Network | string {
@@ -96,10 +138,10 @@ const isInNodeList = (source: Map<Departure, Arrival[]>) => (net1: ChainConfig |
 const isInCrossList = isInNodeList(NETWORK_GRAPH);
 const isInAirportList = isInNodeList(AIRDROP_GRAPH);
 
-export const isReachable = (net: ChainConfig | null, isCross = true) =>
-  isCross ? curry(isInCrossList)(net) : curry(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net1
-export const isTraceable = (net: ChainConfig | null, isCross = true) =>
-  isCross ? curryRight(isInCrossList)(net) : curryRight(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net2
+export const isReachable = (net: ChainConfig | null, type: CrossType = 'cross-chain') =>
+  type === 'cross-chain' ? curry(isInCrossList)(net) : curry(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net1
+export const isTraceable = (net: ChainConfig | null, type: CrossType = 'cross-chain') =>
+  type === 'cross-chain' ? curryRight(isInCrossList)(net) : curryRight(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net2
 export const isSameNetworkCurry = curry(isSameNetwork);
 export const isPolkadotNetwork = isSpecifyNetworkType('polkadot');
 export const isEthereumNetwork = isSpecifyNetworkType('ethereum');
@@ -148,17 +190,11 @@ export function chainConfigToVertices(config: ChainConfig) {
  * @description map vertices to chain config
  */
 export function verticesToChainConfig(vertices: Vertices) {
-  if (!vertices) {
-    return null;
-  }
-
   const { mode, network } = vertices;
 
-  if (network === 'tron') {
-    return NETWORK_CONFIG.tron;
-  }
+  const config = findNetworkConfig(network);
 
-  return NETWORKS.find((item) => item.name === network && mode === getNetworkMode(item)) ?? null;
+  return mode === 'native' ? (omit(config, 'dvm') as ChainConfig) : config;
 }
 
 export function isSameNetConfig(config1: ChainConfig | null, config2: ChainConfig | null): boolean {
@@ -171,9 +207,9 @@ export function isSameNetConfig(config1: ChainConfig | null, config2: ChainConfi
   );
 }
 
-export function getNetworkByName(name: Network | null | undefined): NetworkConfig[Network] | null {
+export function getNetworkByName(name: Network | null | undefined): ChainConfig | null {
   if (name) {
-    return NETWORK_CONFIG[name];
+    return NETWORK_CONFIGURATIONS.find((item) => item.name === name) ?? null;
   }
 
   console.warn('🚀 Can not find target network config by name: ', name);
@@ -188,7 +224,7 @@ export function getArrival(from: ChainConfig | null | undefined, to: ChainConfig
   }
 
   const mode = getNetworkMode(from);
-  let departure = NETWORK_CONFIG[from.name];
+  let departure = NETWORK_CONFIGURATIONS.find((config) => config.name === from.name) as ChainConfig;
 
   if (mode === 'native') {
     departure = omit(departure, 'dvm');
@@ -205,7 +241,8 @@ export async function isNetworkConsistent(network: Network, id = ''): Promise<bo
   id = id && Web3.utils.isHex(id) ? parseInt(id, 16).toString() : id;
   // id 1: eth mainnet 3: ropsten 4: rinkeby 5: goerli 42: kovan  43: pangolin 44: crab
   const actualId: string = id ? await Promise.resolve(id) : await window.ethereum.request({ method: 'net_version' });
-  const storedId = (NETWORK_CONFIG[network] as EthereumChainConfig).ethereumChain.chainId;
+  const chain = getNetworkByName(network) as EthereumChainConfig;
+  const storedId = chain.ethereumChain.chainId;
 
   return storedId === actualId;
 }
@@ -218,8 +255,9 @@ export function isNativeMetamaskChain(network: Network): boolean {
     MetamaskNativeNetworkIds.goerli,
     MetamaskNativeNetworkIds.kovan,
   ];
+  const chain = getNetworkByName(network) as EthereumChainConfig;
 
-  return ids.includes(+(NETWORK_CONFIG[network] as EthereumChainConfig).ethereumChain.chainId);
+  return ids.includes(+chain.ethereumChain.chainId);
 }
 
 export function getNetworkCategory(config: ChainConfig): NetworkCategory | null {
@@ -264,19 +302,6 @@ export async function isNetworkMatch(expectNetworkId: number): Promise<boolean> 
   return expectNetworkId === networkId;
 }
 
-export function getAvailableNetwork(net: Network): ChainConfig | null {
-  // FIXME: by default we use the first vertices here.
-  const [vertices] = (getArrivals(NETWORK_GRAPH, NETWORK_CONFIG[net]) ?? []).filter(
-    (item) => item.status === 'available'
-  );
-
-  if (!vertices) {
-    return null;
-  }
-
-  return NETWORK_CONFIG[vertices.network];
-}
-
 export function getDisplayName(config: ChainConfig): string {
   const mode = getNetworkMode(config);
   const name = upperFirst(config.name);
@@ -293,16 +318,13 @@ export function getVerticesFromDisplayName(name: string): Vertices {
 // eslint-disable-next-line complexity
 export async function getConfigByConnection(connection: Connection): Promise<ChainConfig | null> {
   if (connection.type === 'metamask') {
-    const targets = NETWORKS.filter((item) => {
+    const targets = CROSS_CHAIN_NETWORKS.filter((item) => {
       const chain = (item as unknown as EthereumChainConfig).ethereumChain;
 
       return chain && isChainIdEqual(chain.chainId, (connection as EthereumConnection).chainId);
     });
 
-    return (
-      (targets.length > 1 ? targets.find((item) => (item as unknown as EthereumChainDVMConfig).dvm) : targets[0]) ??
-      null
-    );
+    return (targets.length > 1 ? targets.find((item) => (item as unknown as DVMChainConfig).dvm) : targets[0]) ?? null;
   }
 
   if (connection.type === 'polkadot' && connection.api) {
@@ -311,12 +333,14 @@ export async function getConfigByConnection(connection: Connection): Promise<Cha
     await waitUntilConnected(api);
 
     const chain = await api?.rpc.system.chain();
+    const network = chain.toHuman()?.toLowerCase() as Network;
+    const target = findNetworkConfig(network);
 
-    return chain ? omit(NETWORK_CONFIG[chain.toHuman()?.toLowerCase() as Network], 'dvm') : null;
+    return chain ? omit(target, 'dvm') : null;
   }
 
   if (connection.type === 'tron') {
-    return NETWORK_CONFIG.tron;
+    return tronConfig;
   }
 
   return null;
@@ -344,6 +368,18 @@ export function isChainIdEqual(id1: string | number, id2: string | number): bool
   return id1 === id2;
 }
 
-export function getCrossChainArrivals(departure: ChainConfig): Arrival[] {
+export function getCrossChainArrivals(dep: ChainConfig | Vertices): Arrival[] {
+  const departure = has(dep, 'mode') ? verticesToChainConfig(dep as Vertices) : (dep as ChainConfig);
+
   return getArrivals(NETWORK_GRAPH, departure);
+}
+
+export function findNetworkConfig(network: Network): ChainConfig {
+  const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network);
+
+  if (!target) {
+    throw new Error(`Can not find chain configuration by ${network}`);
+  }
+
+  return target;
 }

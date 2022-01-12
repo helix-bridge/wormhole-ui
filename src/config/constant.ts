@@ -16,5 +16,5 @@ export enum FORM_CONTROL {
   deposit = 'deposit',
   recipient = 'recipient',
   sender = 'sender',
-  transfer = 'transfer',
+  direction = 'direction',
 }

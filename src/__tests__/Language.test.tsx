@@ -2,7 +2,7 @@
 
 import { mount } from '@cypress/react';
 import { Suspense } from 'react';
-import { Language } from '../components/Language';
+import { Language } from '../components/widget/Language';
 import '../index.scss';
 import '../theme/antd/index.less';
 
