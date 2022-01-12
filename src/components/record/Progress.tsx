@@ -9,7 +9,7 @@ import {
 import { Button, Row, Tooltip } from 'antd';
 import { last } from 'lodash';
 import React, { SetStateAction, useMemo, useState } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { Subscription } from 'rxjs';
 import { useTx } from '../../hooks';
 import { BridgeDispatchEventRecord, ChainConfig } from '../../model';
@@ -49,12 +49,6 @@ export enum IndexingState {
   success = 'success',
   fail = 'fail',
 }
-
-export const transactionSend: ProgressProps = {
-  title: <Trans>Source-chain Sent</Trans>,
-  steps: [{ state: State.completed }],
-  network: null,
-};
 
 /**
  * @description Each progress could includes multi steps. e.g. s2s origin chain: lock -> confirm

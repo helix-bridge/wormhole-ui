@@ -52,7 +52,7 @@ import { Des } from '../modal/Des';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
 
-export type ApproveValue = CrossChainPayload<RequiredPartial<DVMPayload, 'sender'>>;
+type ApproveValue = CrossChainPayload<RequiredPartial<DVMPayload, 'sender'>>;
 
 interface DVMProps {
   tokenRegisterStatus: RegisterStatus;

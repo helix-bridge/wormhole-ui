@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { THEME } from '../config';
 import { readStorage } from '../utils/helper/storage';
 
-export interface BallScalePulseProps {
+interface BallScalePulseProps {
   size?: number;
 }
 

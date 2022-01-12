@@ -5,7 +5,7 @@ import { isPolkadotNetwork } from '../utils';
 
 const { Link } = Typography;
 
-export interface SubscanLinkProps extends PropsWithChildren<unknown> {
+interface SubscanLinkProps extends PropsWithChildren<unknown> {
   address?: string;
   block?: string;
   className?: string;
