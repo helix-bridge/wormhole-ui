@@ -6,9 +6,8 @@ import { ApiPromise } from '@polkadot/api';
 import { memoize } from 'lodash';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
-import { entrance } from '..';
 import { abi } from '../../config';
-import { waitUntilConnected } from '../network';
+import { entrance, waitUntilConnected } from '../network';
 
 export interface TokenCache {
   address: string;

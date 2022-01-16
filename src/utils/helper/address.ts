@@ -27,6 +27,9 @@ export function dvmAddressToAccountId(address: string | null | undefined): Detec
   return accountId;
 }
 
+/**
+ * @param isShort deprecate, use css to implement
+ */
 export function convertToSS58(text: string, prefix: number | null, isShort = false): string {
   if (!text || isNull(prefix)) {
     return '';
