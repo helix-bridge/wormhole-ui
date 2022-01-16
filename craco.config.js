@@ -81,6 +81,12 @@ module.exports = {
         type: 'javascript/auto',
       });
 
+      config.module.rules.push({
+        test: /\.js$/,
+        include: /node_modules/,
+        loader: require.resolve('@open-wc/webpack-import-meta-loader'),
+      });
+
       return config;
     },
   },
