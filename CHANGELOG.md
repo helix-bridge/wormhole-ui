@@ -1,3 +1,9 @@
+## [2.2.1](https://github.com/darwinia-network/wormhole-pro/compare/v2.2.0...v2.2.1) (2022-01-17)
+
+### Bug Fixes
+
+- deliver extrinsic link ([d9dff05](https://github.com/darwinia-network/wormhole-pro/commit/d9dff053aef3ec1d3225ef18a6cebfd5dc7024f9))
+
 # [2.2.0](https://github.com/darwinia-network/wormhole-pro/compare/v2.1.6...v2.2.0) (2021-12-28)
 
 ### Bug Fixes
