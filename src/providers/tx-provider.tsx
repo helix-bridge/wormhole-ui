@@ -1,8 +1,9 @@
+import { message } from 'antd';
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { delay, Observer, of } from 'rxjs';
 import { TxStatus } from '../components/widget/TxStatus';
 import { LONG_DURATION } from '../config';
-import { Tx } from '../model';
+import { RequiredPartial, Tx } from '../model';
 
 export interface TxCtx {
   setTx: (tx: Tx | null) => void;
@@ -19,7 +20,10 @@ export const TxProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const observer = useMemo<Observer<Tx>>(() => {
     return {
       next: setTx,
-      error: setTx,
+      error: (error: RequiredPartial<Tx, 'error'>) => {
+        message.info(error.error.message);
+        setTx(null);
+      },
       complete: () => {
         console.info('[ tx completed! ]');
       },
