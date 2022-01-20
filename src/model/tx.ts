@@ -34,7 +34,7 @@ export type TxStatus =
 export interface Tx {
   status: TxStatus;
   hash?: string;
-  error?: string;
+  error?: Error;
 }
 
 export type TxFn<T> = (value: T) => Observable<Tx>;
