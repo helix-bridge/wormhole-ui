@@ -2,7 +2,7 @@ import { isEqual } from 'lodash';
 import { BRIDGES } from '../../config';
 import { Arrival, Bridge, BridgeConfig, Departure } from '../../model';
 
-const isPro = process.env.REACT_APP_HOST_TYPE === 'prod';
+const isPro = process.env.REACT_APP_HOST_TYPE !== 'dev';
 
 export const NETWORK_GRAPH = new Map(
   BRIDGES.reduce((acc: [Departure, Arrival[]][], bridge: Bridge<BridgeConfig>) => {
