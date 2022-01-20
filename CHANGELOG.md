@@ -1,3 +1,10 @@
+## [2.2.2](https://github.com/darwinia-network/wormhole-pro/compare/v2.2.1...v2.2.2) (2022-01-20)
+
+### Bug Fixes
+
+- **#267:** observer receive error data if tx canceled ([#269](https://github.com/darwinia-network/wormhole-pro/issues/269)) ([a4bb676](https://github.com/darwinia-network/wormhole-pro/commit/a4bb676219014f12a7c29b9b50a55b47963df4cd)), closes [#267](https://github.com/darwinia-network/wormhole-pro/issues/267)
+- **#268:** evm to dvm exposed in prod ([#270](https://github.com/darwinia-network/wormhole-pro/issues/270)) ([2b575fb](https://github.com/darwinia-network/wormhole-pro/commit/2b575fbe8582b21fb10ee7243570a4249da4a0a5)), closes [#268](https://github.com/darwinia-network/wormhole-pro/issues/268)
+
 ## [2.2.1](https://github.com/darwinia-network/wormhole-pro/compare/v2.2.0...v2.2.1) (2022-01-17)
 
 ### Bug Fixes
