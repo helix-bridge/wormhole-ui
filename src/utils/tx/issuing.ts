@@ -1,8 +1,8 @@
 import { ApiPromise, SubmittableResult } from '@polkadot/api';
+import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import BN from 'bn.js';
 import { from, Observable, Observer, switchMap, switchMapTo, tap } from 'rxjs';
-import { getBridge } from '..';
 import { abi } from '../../config';
 import {
   IssuingDarwiniaToken,
@@ -11,7 +11,9 @@ import {
   SubstrateSubstrateDVMBridgeConfig,
   Tx,
 } from '../../model';
+import { getBridge } from '../bridge';
 import { isKton, isRing } from '../helper/validator';
+import { waitUntilConnected } from '../network';
 import { getContractTxObs } from './common';
 import { getErc20MappingPrams } from './redeem';
 
@@ -58,19 +60,9 @@ export function issuingDarwiniaTokens(value: IssuingDarwiniaToken, api: ApiPromi
   const { sender, recipient, assets } = value;
   const { amount: ring } = assets.find((item) => isRing(item.asset)) || { amount: '0' };
   const { amount: kton } = assets.find((item) => isKton(item.asset)) || { amount: '0' };
-  const obs = new Observable((observer: Observer<Tx>) => {
-    api.tx.ethereumBacking
-      .lock(ring, kton, recipient)
-      .signAndSend(sender, extrinsicSpy(observer))
-      .catch((error) => {
-        observer.error({ status: 'error', error });
-      });
-  });
+  const extrinsic = api.tx.ethereumBacking.lock(ring, kton, recipient);
 
-  return from(web3FromAddress(sender)).pipe(
-    tap((injector) => api.setSigner(injector.signer)),
-    switchMapTo(obs)
-  );
+  return signAndSendExtrinsic(api, sender, extrinsic);
 }
 
 /**
@@ -80,19 +72,29 @@ export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiProm
   const { sender, recipient, amount, direction } = value;
   const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
   const WEIGHT = '1509000000';
-  const obs = new Observable((observer: Observer<Tx>) => {
-    try {
-      const module = direction.from.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
+  const module = direction.from.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
+  const extrinsic = api.tx[module].lockAndRemoteIssue(
+    String(bridge.config.specVersion),
+    WEIGHT,
+    amount,
+    fee,
+    recipient
+  );
 
-      api.tx[module]
-        .lockAndRemoteIssue(String(bridge.config.specVersion), WEIGHT, amount, fee, recipient)
-        .signAndSend(sender, extrinsicSpy(observer))
-        .catch((error) => {
-          observer.error({ status: 'error', error });
-        });
-    } catch (err) {
-      observer.error({ status: 'error', error: (err as Record<string, string>).message });
-    }
+  return signAndSendExtrinsic(api, sender, extrinsic);
+}
+
+export function signAndSendExtrinsic(
+  api: ApiPromise,
+  sender: string,
+  extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>
+) {
+  const obs = new Observable((spy: Observer<Tx>) => {
+    waitUntilConnected(api!)
+      .then(() => extrinsic.signAndSend(sender, extrinsicSpy(spy)))
+      .catch((error) => {
+        spy.error({ status: 'error', error });
+      });
   });
 
   return from(web3FromAddress(sender)).pipe(

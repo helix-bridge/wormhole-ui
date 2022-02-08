@@ -146,7 +146,11 @@ export function AssetGroup({
                       network={network}
                       size="large"
                       onClick={() => {
-                        const max = balance?.max || '0';
+                        const max = balance?.max
+                          ? new BN(balance.max).sub(
+                              new BN(Math.pow(10, getPrecisionByUnit(balance.chainInfo?.decimal || 'gwei')))
+                            )
+                          : new BN(0);
                         const val = {
                           ...target,
                           amount: fromWei({ value: max, unit }),
