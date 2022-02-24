@@ -110,13 +110,7 @@ export function getLegalName(network: string): Network | string {
   return byNetworkAlias(network) || network;
 }
 
-const isSameNetwork = (net1: ChainConfig | null, net2: ChainConfig | null) => {
-  if ([net1, net2].some(isNull)) {
-    return false;
-  }
-
-  return typeof net1 === typeof net2 && net1?.name === net2?.name;
-};
+const isChainConfigEqual = (net1: ChainConfig | null, net2: ChainConfig | null) => isEqual(net1, net2);
 
 const getArrivals = (source: Map<Departure, Arrival[]>, departure: ChainConfig) => {
   const mode: NetworkMode = getNetworkMode(departure);
@@ -142,7 +136,7 @@ export const isReachable = (net: ChainConfig | null, type: CrossType = 'cross-ch
   type === 'cross-chain' ? curry(isInCrossList)(net) : curry(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net1
 export const isTraceable = (net: ChainConfig | null, type: CrossType = 'cross-chain') =>
   type === 'cross-chain' ? curryRight(isInCrossList)(net) : curryRight(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net2
-export const isSameNetworkCurry = curry(isSameNetwork);
+export const isChainConfigEqualTo = curry(isChainConfigEqual);
 export const isPolkadotNetwork = isSpecifyNetworkType('polkadot');
 export const isEthereumNetwork = isSpecifyNetworkType('ethereum');
 export const isTronNetwork = isSpecifyNetworkType('tron');

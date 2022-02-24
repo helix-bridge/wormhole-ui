@@ -18,7 +18,7 @@ import {
   getNetworkMode,
   HashInfo,
   isReachable,
-  isSameNetworkCurry,
+  isChainConfigEqualTo,
   isTraceable,
   patchUrl,
   truth,
@@ -79,8 +79,8 @@ export function Direction({ value, onChange, type = 'cross-chain', mode = 'defau
     const departureFilter = isCross ? [] : [airportsDepartureFilter];
     const arrivalFilter = isCross ? [] : [airportsArrivalFilter];
 
-    setToFilters([negate(isSameNetworkCurry(from)), isSameEnv, isReachable(from, type), ...arrivalFilter]);
-    setFromFilters([negate(isSameNetworkCurry(to)), isSameEnv, isTraceable(to, type), ...departureFilter]);
+    setToFilters([negate(isChainConfigEqualTo(from)), isSameEnv, isReachable(from, type), ...arrivalFilter]);
+    setFromFilters([negate(isChainConfigEqualTo(to)), isSameEnv, isTraceable(to, type), ...departureFilter]);
   }, [value, setFromFilters, setToFilters, type]);
 
   // eslint-disable-next-line complexity

@@ -19,7 +19,7 @@ import {
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
-  isSameNetworkCurry,
+  isChainConfigEqualTo,
   isValidAddress,
   verticesToChainConfig,
 } from '../../utils';
@@ -126,7 +126,7 @@ export function CrossChainRecord() {
     const isSameEnv = (net: ChainConfig) =>
       isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
-    setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target)]);
+    setToFilters([negate(isChainConfigEqualTo(target)), isSameEnv, isReachable(target)]);
 
     const { to, tMode } = searchParams;
 
@@ -172,7 +172,7 @@ export function CrossChainRecord() {
                 setArrival(getCrossChainArrivals(dep)[0]);
               }
 
-              setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target)]);
+              setToFilters([negate(isChainConfigEqualTo(target)), isSameEnv, isReachable(target)]);
               setDeparture(dep);
             }}
           >
