@@ -121,18 +121,21 @@ export function Substrate2SubstrateDVM({
   direction,
 }: CrossChainComponentProps<Substrate2SubstrateDVMPayload>) {
   const { t } = useTranslation();
+
   const {
     connection: { accounts },
     api,
     chain,
   } = useApi();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
+
   const availableBalance = useMemo(() => {
     const balance = availableBalances[0];
 
     if (!balance) {
       return null;
     }
+
     const { max, chainInfo, ...rest } = balance;
     const reserved = new BN(toWei({ value: '1', unit: chainInfo?.decimal ?? 'gwei' }));
     const greatest = new BN(max);
@@ -140,6 +143,7 @@ export function Substrate2SubstrateDVM({
 
     return { ...rest, chainInfo, max: result.gte(new BN(0)) ? result.toString() : '0' };
   }, [availableBalances]);
+
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
   const [fee, setFee] = useState<BN | null>(null);
   const [dailyLimit, setDailyLimit] = useState<DailyLimit | null>(null);
@@ -148,6 +152,7 @@ export function Substrate2SubstrateDVM({
   const { afterTx } = useAfterSuccess<CrossChainPayload<Substrate2SubstrateDVMPayload>>();
   const getAvailableBalances = useDarwiniaAvailableBalances();
   const [targetChainTokens, setTargetChainTokens] = useState<MappedToken[]>([]);
+
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account: string) => {
       if (!api || !chain.tokens.length || !form.getFieldValue(FORM_CONTROL.asset)) {
@@ -161,6 +166,7 @@ export function Substrate2SubstrateDVM({
     },
     [api, chain.tokens.length, form, getAvailableBalances]
   );
+
   const getDailyLimit = useCallback<(symbol: string) => Promise<DailyLimit | null>>(
     async (symbol: string) => {
       if (!targetChainTokens.length) {
@@ -186,6 +192,7 @@ export function Substrate2SubstrateDVM({
     },
     [targetChainTokens, direction]
   );
+
   const isMounted = useIsMounted();
 
   useEffect(() => {

@@ -4,7 +4,8 @@ import { Unit } from 'web3-utils';
 import { FORM_CONTROL } from '../../config';
 import { useApi } from '../../hooks';
 import { AvailableBalance } from '../../model';
-import { convertToSS58, fromWei } from '../../utils';
+import { fromWei } from '../../utils';
+import { IdentAccountAddress } from '../widget/account';
 
 interface PolkadotAccountsProps {
   onChange?: (acc: string) => void;
@@ -15,7 +16,6 @@ export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAc
   const { t } = useTranslation();
   const {
     connection: { accounts },
-    chain,
   } = useApi();
 
   return (
@@ -24,7 +24,7 @@ export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAc
       label={t('Sender Account')}
       rules={[{ required: true }]}
       extra={
-        <span>
+        <span className="text-xs ml-4">
           {t('Balance ')}
           <span className="ml-2">
             {availableBalances.length
@@ -46,9 +46,9 @@ export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAc
           }
         }}
       >
-        {(accounts ?? []).map(({ meta, address }) => (
-          <Select.Option value={address} key={address}>
-            {meta?.name} - {convertToSS58(address, +chain.ss58Format)}
+        {(accounts ?? []).map((item) => (
+          <Select.Option value={item.address} key={item.address}>
+            <IdentAccountAddress account={item} iconSize={24} />
           </Select.Option>
         ))}
       </Select>
