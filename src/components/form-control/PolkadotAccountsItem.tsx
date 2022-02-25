@@ -6,6 +6,7 @@ import { useApi } from '../../hooks';
 import { AvailableBalance } from '../../model';
 import { fromWei } from '../../utils';
 import { IdentAccountAddress } from '../widget/account';
+import { FormItemExtra } from '../widget/facade';
 
 interface PolkadotAccountsProps {
   onChange?: (acc: string) => void;
@@ -24,7 +25,7 @@ export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAc
       label={t('Sender Account')}
       rules={[{ required: true }]}
       extra={
-        <span className="text-xs ml-4">
+        <FormItemExtra>
           {t('Balance ')}
           <span className="ml-2">
             {availableBalances.length
@@ -35,7 +36,7 @@ export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAc
                 ))
               : '-'}
           </span>
-        </span>
+        </FormItemExtra>
       }
     >
       <Select
@@ -45,6 +46,7 @@ export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAc
             onChange(addr);
           }
         }}
+        placeholder={t('Select the sender account')}
       >
         {(accounts ?? []).map((item) => (
           <Select.Option value={item.address} key={item.address}>

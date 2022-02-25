@@ -51,6 +51,7 @@ import { ApproveSuccess } from '../modal/ApproveSuccess';
 import { Des } from '../modal/Des';
 import { TransferConfirm } from '../modal/TransferConfirm';
 import { TransferSuccess } from '../modal/TransferSuccess';
+import { FormItemExtra } from '../widget/facade';
 
 type ApproveValue = CrossChainPayload<RequiredPartial<DVMPayload, 'sender'>>;
 
@@ -277,13 +278,13 @@ export function DVM({
         label={t('Asset')}
         extra={
           canRegister ? (
-            <span className="inline-block mt-2">
+            <FormItemExtra className="inline-block mt-2">
               <Trans i18nKey="registrationTip">
                 If you can not find the token you want to send in the list, highly recommended to
                 <Link to={Path.register}> go to the registration page</Link>, where you will find it after completing
                 the registration steps.
               </Trans>
-            </span>
+            </FormItemExtra>
           ) : null
         }
         rules={[{ required: true }]}
