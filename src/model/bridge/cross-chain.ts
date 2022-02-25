@@ -59,6 +59,7 @@ export interface Ethereum2DarwiniaPayload extends CrossChainParty, CrossChainAss
 export enum DarwiniaAsset {
   ring = 'ring',
   kton = 'kton',
+  crab = 'crab',
 }
 
 export interface Darwinia2EthereumPayload extends CrossChainParty {

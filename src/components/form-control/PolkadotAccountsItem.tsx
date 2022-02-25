@@ -29,9 +29,9 @@ export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAc
           {t('Balance ')}
           <span className="ml-2">
             {availableBalances.length
-              ? availableBalances.map(({ asset, max, chainInfo }, index) => (
-                  <span key={asset || index} className="mr-2">
-                    {fromWei({ value: max, unit: (chainInfo?.decimal as Unit) || 'gwei' })} {chainInfo?.symbol}
+              ? availableBalances.map(({ asset, max, token }, index) => (
+                  <span key={asset || index} className="mr2">
+                    {fromWei({ value: max, unit: (token.decimal as Unit) || 'gwei' })} {token.symbol}
                   </span>
                 ))
               : '-'}

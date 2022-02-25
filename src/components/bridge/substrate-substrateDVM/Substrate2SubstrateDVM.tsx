@@ -24,7 +24,7 @@ import {
   MappedToken,
   Network,
   Substrate2SubstrateDVMPayload,
-  TokenChainInfo,
+  Token,
   CrossChainPayload,
   ChainConfig,
   CrossChainDirection,
@@ -63,13 +63,13 @@ interface TransferInfoProps {
   fee: BN | null;
   balance: BN | string | number;
   amount: string;
-  tokenInfo: TokenChainInfo;
+  token: Token;
   dailyLimit: DailyLimit | null;
 }
 
 // eslint-disable-next-line complexity
-function TransferInfo({ fee, balance, tokenInfo, amount, dailyLimit }: TransferInfoProps) {
-  const unit = tokenInfo.decimal;
+function TransferInfo({ fee, balance, token, amount, dailyLimit }: TransferInfoProps) {
+  const unit = token.decimal;
   const value = new BN(toWei({ value: amount || '0', unit }));
   const iterationCount = 5;
 
@@ -89,12 +89,12 @@ function TransferInfo({ fee, balance, tokenInfo, amount, dailyLimit }: TransferI
     <Descriptions size="small" column={1} labelStyle={{ color: 'inherit' }} className="text-green-400">
       {value.gte(fee) && !value.isZero() && (
         <Descriptions.Item label={<Trans>Recipient will receive</Trans>} contentStyle={{ color: 'inherit' }}>
-          {fromWei({ value: value.sub(fee), unit })} x{tokenInfo.symbol}
+          {fromWei({ value: value.sub(fee), unit })} x{token.symbol}
         </Descriptions.Item>
       )}
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
         <span className="flex items-center">
-          {fromWei({ value: fee, unit })} {tokenInfo.symbol}
+          {fromWei({ value: fee, unit })} {token.symbol}
         </span>
       </Descriptions.Item>
 
@@ -136,12 +136,12 @@ export function Substrate2SubstrateDVM({
       return null;
     }
 
-    const { max, chainInfo, ...rest } = balance;
-    const reserved = new BN(toWei({ value: '1', unit: chainInfo?.decimal ?? 'gwei' }));
+    const { max, token, ...rest } = balance;
+    const reserved = new BN(toWei({ value: '1', unit: token.decimal ?? 'gwei' }));
     const greatest = new BN(max);
     const result = greatest.sub(reserved);
 
-    return { ...rest, chainInfo, max: result.gte(new BN(0)) ? result.toString() : '0' };
+    return { ...rest, token, max: result.gte(new BN(0)) ? result.toString() : '0' };
   }, [availableBalances]);
 
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
@@ -361,18 +361,18 @@ export function Substrate2SubstrateDVM({
           amountLessThanFeeRule({
             t,
             compared: fee ? fee.toString() : null,
-            token: availableBalance?.chainInfo,
+            token: availableBalance?.token,
             asset: String(form.getFieldValue(FORM_CONTROL.asset)),
           }),
           insufficientBalanceRule({
             t,
             compared: availableBalance?.max,
-            token: availableBalance?.chainInfo,
+            token: availableBalance?.token,
           }),
           insufficientDailyLimit({
             t,
             compared: new BN(dailyLimit?.limit ?? '0').sub(new BN(dailyLimit?.spentToday ?? '0')).toString(),
-            token: availableBalance?.chainInfo,
+            token: availableBalance?.token,
           }),
         ]}
       >
@@ -381,7 +381,7 @@ export function Substrate2SubstrateDVM({
           placeholder={t('Available Balance {{balance}}', {
             balance: !availableBalance
               ? t('Querying')
-              : fromWei({ value: availableBalance?.max, unit: availableBalance?.chainInfo?.decimal }, prettyNumber),
+              : fromWei({ value: availableBalance?.max, unit: availableBalance?.token.decimal }, prettyNumber),
           })}
           className="flex-1"
           onChange={(val) => setCurAmount(val)}
@@ -393,8 +393,8 @@ export function Substrate2SubstrateDVM({
                 return;
               }
 
-              const { chainInfo, max } = availableBalance;
-              const amount = fromWei({ value: max, unit: chainInfo?.decimal });
+              const { token, max } = availableBalance;
+              const amount = fromWei({ value: max, unit: token.decimal });
 
               form.setFieldsValue({ [FORM_CONTROL.amount]: amount });
               setCurAmount(amount);
@@ -404,13 +404,13 @@ export function Substrate2SubstrateDVM({
         </Balance>
       </Form.Item>
 
-      {!!availableBalances.length && availableBalances[0].chainInfo && (
+      {!!availableBalances.length && availableBalances[0].token && (
         <ErrorBoundary>
           <TransferInfo
             fee={fee}
             balance={availableBalances[0].max}
             amount={curAmount}
-            tokenInfo={availableBalances[0].chainInfo}
+            token={availableBalances[0].token}
             dailyLimit={dailyLimit}
           />
         </ErrorBoundary>
