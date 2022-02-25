@@ -82,6 +82,7 @@ function isSpecifyNetworkType(type: NetworkCategory) {
 
 function byNetworkAlias(network: string): Network | null {
   const minLength = 3;
+
   const allowAlias: (full: string, at?: number) => string[] = (name, startAt = minLength) => {
     const len = name.length;
     const shortestName = name.slice(0, startAt);
@@ -89,7 +90,11 @@ function byNetworkAlias(network: string): Network | null {
     return new Array(len - startAt).fill('').map((_, index) => shortestName + name.substr(startAt, index));
   };
 
-  const alias = new Map([['ethereum', [...allowAlias('ethereum')]]]);
+  const alias = new Map([
+    ['ethereum', [...allowAlias('ethereum')]],
+    ['crab', ['darwinia crab']],
+  ]);
+
   let res = null;
 
   for (const [name, value] of alias) {
@@ -327,7 +332,7 @@ export async function getConfigByConnection(connection: Connection): Promise<Cha
     await waitUntilConnected(api);
 
     const chain = await api?.rpc.system.chain();
-    const network = chain.toHuman()?.toLowerCase() as Network;
+    const network = chain.toHuman()?.toLowerCase();
     const target = findNetworkConfig(network);
 
     return chain ? omit(target, 'dvm') : null;
@@ -368,8 +373,8 @@ export function getCrossChainArrivals(dep: ChainConfig | Vertices): Arrival[] {
   return getArrivals(NETWORK_GRAPH, departure);
 }
 
-export function findNetworkConfig(network: Network): ChainConfig {
-  const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network);
+export function findNetworkConfig(network: Network | string): ChainConfig {
+  const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network || item.name === byNetworkAlias(network));
 
   if (!target) {
     throw new Error(`Can not find chain configuration by ${network}`);

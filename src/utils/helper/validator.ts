@@ -94,7 +94,7 @@ export const isSameAddress = (from: string, to: string): boolean => {
   return fromAddress === toAddress;
 };
 
-export const isRing = (name: string | null | undefined) => /ring/i.test(String(name));
+export const isRing = (name: string | null | undefined) => /ring/i.test(String(name)) || /crab/i.test(String(name));
 
 export const isKton = (name: string | null | undefined) => /kton/i.test(String(name));
 

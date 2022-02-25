@@ -1,4 +1,5 @@
-import { Form, Select } from 'antd';
+import { Form, FormInstance, Select } from 'antd';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
 import { FORM_CONTROL } from '../../config';
@@ -11,13 +12,23 @@ import { FormItemExtra } from '../widget/facade';
 interface PolkadotAccountsProps {
   onChange?: (acc: string) => void;
   availableBalances: AvailableBalance[];
+  form?: FormInstance;
 }
 
-export function PolkadotAccountsItem({ onChange, availableBalances }: PolkadotAccountsProps) {
+export function PolkadotAccountsItem({ onChange, availableBalances, form }: PolkadotAccountsProps) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
   } = useApi();
+
+  useEffect(() => {
+    if (form && onChange) {
+      const value = form.getFieldValue([FORM_CONTROL.sender]);
+
+      onChange(value); // If reconnect happen, restore the parent component state
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Form.Item

@@ -3,7 +3,7 @@ import { AvailableBalance, DarwiniaAsset, Token } from '../model';
 import { getDarwiniaBalances } from '../utils';
 import { useApi } from './api';
 
-export const getToken: (tokens: Token[], target: DarwiniaAsset) => Token = (tokens: Token[], target: DarwiniaAsset) => {
+export const getToken: (tokens: Token[], target: DarwiniaAsset) => Token = (tokens, target) => {
   const result = tokens.find((token) => token.symbol.toLowerCase().includes(target.toLowerCase()));
   const unknown: Token = { symbol: 'unknown', decimal: 'gwei' };
 

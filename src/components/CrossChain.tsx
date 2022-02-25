@@ -139,7 +139,14 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
         <SubmitButton {...direction} requireTo launch={launch} />
 
         {status === 'success' && (
-          <FromItemButton type="default" onClick={() => disconnect()} disabled={!!tx}>
+          <FromItemButton
+            type="default"
+            onClick={() => {
+              disconnect();
+              form.resetFields();
+            }}
+            disabled={!!tx}
+          >
             {t('Disconnect')}
           </FromItemButton>
         )}

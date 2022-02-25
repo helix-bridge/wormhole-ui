@@ -8,10 +8,12 @@ import {
   IssuingDarwiniaToken,
   IssuingDVMToken,
   IssuingSubstrateToken,
+  SmartTxPayload,
   SubstrateSubstrateDVMBridgeConfig,
   Tx,
 } from '../../model';
 import { getBridge } from '../bridge';
+import { dvmAddressToAccountId } from '../helper';
 import { isKton, isRing } from '../helper/validator';
 import { waitUntilConnected } from '../network';
 import { getContractTxObs } from './common';
@@ -53,6 +55,25 @@ function extrinsicSpy(observer: Observer<Tx>) {
   };
 }
 
+export function signAndSendExtrinsic(
+  api: ApiPromise,
+  sender: string,
+  extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>
+) {
+  const obs = new Observable((spy: Observer<Tx>) => {
+    waitUntilConnected(api!)
+      .then(() => extrinsic.signAndSend(sender, extrinsicSpy(spy)))
+      .catch((error) => {
+        spy.error({ status: 'error', error });
+      });
+  });
+
+  return from(web3FromAddress(sender)).pipe(
+    tap((injector) => api.setSigner(injector.signer)),
+    switchMapTo(obs)
+  );
+}
+
 /**
  * @description darwinia -> ethereum
  */
@@ -84,23 +105,14 @@ export function issuingSubstrateToken(value: IssuingSubstrateToken, api: ApiProm
   return signAndSendExtrinsic(api, sender, extrinsic);
 }
 
-export function signAndSendExtrinsic(
-  api: ApiPromise,
-  sender: string,
-  extrinsic: SubmittableExtrinsic<'promise', SubmittableResult>
-) {
-  const obs = new Observable((spy: Observer<Tx>) => {
-    waitUntilConnected(api!)
-      .then(() => extrinsic.signAndSend(sender, extrinsicSpy(spy)))
-      .catch((error) => {
-        spy.error({ status: 'error', error });
-      });
-  });
+export function issuingFromSubstrate2DVM(value: SmartTxPayload, api: ApiPromise): Observable<Tx> {
+  const { sender, recipient, amount, asset } = value;
+  const toAccount = dvmAddressToAccountId(recipient).toHuman();
+  const extrinsic = isRing(asset)
+    ? api.tx.balances.transfer(toAccount, new BN(amount))
+    : api.tx.kton.transfer(toAccount, new BN(amount));
 
-  return from(web3FromAddress(sender)).pipe(
-    tap((injector) => api.setSigner(injector.signer)),
-    switchMapTo(obs)
-  );
+  return signAndSendExtrinsic(api, sender, extrinsic);
 }
 
 /**
