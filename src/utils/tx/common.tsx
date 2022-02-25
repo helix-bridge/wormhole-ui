@@ -1,35 +1,23 @@
 import { Modal, ModalFuncProps, ModalProps } from 'antd';
-import { Contract } from 'web3-eth-contract';
-import { AbiItem } from 'web3-utils';
-import { Trans } from 'react-i18next';
 import BN from 'bn.js';
+import { Trans } from 'react-i18next';
 import { EMPTY, finalize, Observable, Observer, switchMap, tap } from 'rxjs';
 import Web3 from 'web3';
+import { PromiEvent } from 'web3-core';
+import { Contract } from 'web3-eth-contract';
+import { AbiItem } from 'web3-utils';
 import { abi } from '../../config';
 import {
+  CrossChainPayload,
   DVMPayload,
   Erc20Token,
   Ethereum2DarwiniaPayload,
   RequiredPartial,
-  CrossChainPayload,
   Tx,
   TxFn,
 } from '../../model';
 import { empty } from '../helper';
 import { entrance } from '../network';
-
-/**
- * TODO: web3 types
- */
-interface Receipt {
-  transactionHash: string;
-  transactionIndex: number;
-  blockHash: string;
-  blockNumber: number;
-  contractAddress: string;
-  cumulativeGasUsed: number;
-  gasUsed: number;
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModalSpyFn<T = any> = (observer: Observer<T>, closeFn: () => void) => void;
@@ -131,8 +119,7 @@ export function createTxWorkflow(
  */
 export function getContractTxObs(
   contractAddress: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fn: (contract: Contract) => any,
+  fn: (contract: Contract) => PromiEvent<unknown>,
   contractAbi: AbiItem | AbiItem[] = abi.tokenABI
 ): Observable<Tx> {
   return new Observable((observer) => {
@@ -146,7 +133,7 @@ export function getContractTxObs(
         .on('transactionHash', (hash: string) => {
           observer.next({ status: 'queued', hash });
         })
-        .on('receipt', ({ transactionHash }: Receipt) => {
+        .on('receipt', ({ transactionHash }) => {
           observer.next({ status: 'finalized', hash: transactionHash });
           observer.complete();
         })

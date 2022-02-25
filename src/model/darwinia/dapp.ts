@@ -90,7 +90,8 @@ export type Erc20RegisterProofRes = Erc20RegisterProof | null;
 /* ------------------------------------S2S section-------------------------------------------- */
 
 export interface SimpleBlock {
-  hash: string;
+  blockHash: string;
+  extrinsicHash: string;
   // eslint-disable-next-line id-denylist
   number: number;
   specVersion: number;
