@@ -51,7 +51,7 @@ export function SubstrateSubstrateDVMRecord({
 
     if (messageEvent) {
       state = messageEvent.isSuccess ? State.completed : State.error;
-      txHash = messageEvent.block.number + '-' + messageEvent.index;
+      txHash = messageEvent.block.extrinsicHash;
     }
 
     return {
