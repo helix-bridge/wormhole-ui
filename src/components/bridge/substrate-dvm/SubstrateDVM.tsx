@@ -115,11 +115,7 @@ export function SubstrateDVM({
           }),
         ]}
       >
-        <Balance
-          placeholder={t('Available balance: {{balance}}', { balance: '0' })}
-          size="large"
-          className="flex-1"
-        ></Balance>
+        <Balance size="large" className="flex-1"></Balance>
       </Form.Item>
     </>
   );

@@ -23,6 +23,7 @@ import {
   Network,
   RedeemDVMToken,
   RequiredPartial,
+  Token,
   Tx,
 } from '../../model';
 import {
@@ -156,7 +157,7 @@ export function DVM({
   const [allowance, setAllowance] = useState(new BN(0));
   const [dailyLimit, setDailyLimit] = useState<DailyLimit | null>(null);
   const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
-  const tokenInfo = useMemo(
+  const tokenInfo = useMemo<Token>(
     () => ({
       symbol: selectedErc20?.symbol ?? '',
       decimal: getUnit(+(selectedErc20?.decimals ?? '9')),
