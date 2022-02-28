@@ -1,8 +1,10 @@
+import { ApiPromise } from '@polkadot/api';
+import { BN_ZERO } from '@polkadot/util';
 import { Form, Select } from 'antd';
 import BN from 'bn.js';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { combineLatest, EMPTY, filter, from, map, switchMap } from 'rxjs';
+import { combineLatest, EMPTY, filter, from, map, switchMap, tap } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../../config';
 import { useAfterSuccess, useApi, useTx } from '../../../hooks';
@@ -20,11 +22,14 @@ import {
 import {
   applyModalObs,
   createTxWorkflow,
+  dvmAddressToAccountId,
   fromWei,
   getPolkadotConnection,
   getUnit,
+  isKton,
   redeemFromDVM2Substrate,
   toWei,
+  waitUntilConnected,
 } from '../../../utils';
 import { Balance } from '../../form-control/Balance';
 import { EthereumAccountItem } from '../../form-control/EthereumAccountItem';
@@ -32,6 +37,7 @@ import { RecipientItem } from '../../form-control/RecipientItem';
 import { TransferConfirm } from '../../modal/TransferConfirm';
 import { TransferSuccess } from '../../modal/TransferSuccess';
 import { FormItemExtra } from '../../widget/facade';
+import { KtonDraw } from './KtonDraw';
 
 async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<[string, string]> {
   const web3 = new Web3(window.ethereum);
@@ -71,11 +77,15 @@ export function DVMSubstrate({
 }: CrossChainComponentProps<Substrate2DVMPayload, DVMChainConfig, PolkadotChainConfig>) {
   const { t } = useTranslation();
   const {
+    network,
     connection: { accounts },
   } = useApi();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload>>();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
+  const [apiPromise, setApiPromise] = useState<ApiPromise | null>(null);
+  const [pendingClaimAmount, setPendingClaimAmount] = useState<BN>(BN_ZERO);
+  const kton = useMemo(() => availableBalances.find((item) => isKton(item.asset)), [availableBalances]);
 
   /**
    * TODO: remove this after api refactor
@@ -87,6 +97,9 @@ export function DVMSubstrate({
 
     const chainInfoObs = getPolkadotConnection(to).pipe(
       filter((connection) => connection.status === ConnectionStatus.success),
+      tap((connection) => {
+        setApiPromise(connection.api);
+      }),
       switchMap((connection) => {
         const { api } = connection;
         return api ? from(api.rpc.system.properties()) : EMPTY;
@@ -134,6 +147,7 @@ export function DVMSubstrate({
       });
 
       const obs = redeemFromDVM2Substrate(value, direction);
+
       const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'txHash',
         onDisappear: () => {
@@ -150,8 +164,43 @@ export function DVMSubstrate({
     setSubmit(fn);
   }, [afterTx, availableBalances, direction, form, observer, setSubmit]);
 
+  useEffect(() => {
+    (async () => {
+      const account = accounts[0]?.address;
+      if (!network || !account || !apiPromise) {
+        return;
+      }
+
+      const address = dvmAddressToAccountId(account).toHuman();
+
+      await waitUntilConnected(apiPromise);
+
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ktonUsableBalance = await (apiPromise.rpc as any).balances.usableBalance(1, address);
+        const usableBalance: string = ktonUsableBalance.usableBalance.toString();
+        const count = Web3.utils.toBN(usableBalance);
+
+        setPendingClaimAmount(count);
+      } catch (error) {
+        console.warn((error as Record<string, string>).message);
+      }
+    })();
+  }, [network, direction.to.provider.rpc, accounts, apiPromise]);
+
   return (
     <>
+      {apiPromise && pendingClaimAmount.gt(BN_ZERO) && (
+        <Form.Item>
+          <KtonDraw
+            direction={direction}
+            kton={kton?.token}
+            pendingClaimAmount={pendingClaimAmount}
+            onSuccess={() => setPendingClaimAmount(BN_ZERO)}
+          />
+        </Form.Item>
+      )}
+
       <EthereumAccountItem
         form={form}
         extra={
