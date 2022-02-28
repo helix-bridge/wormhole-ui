@@ -5,22 +5,32 @@ import { useTranslation } from 'react-i18next';
 import { combineLatest, EMPTY, filter, from, map, switchMap } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../../config';
-import { useApi } from '../../../hooks';
+import { useAfterSuccess, useApi, useTx } from '../../../hooks';
 import {
   AvailableBalance,
-  Bridge,
   Chain,
   ConnectionStatus,
   CrossChainComponentProps,
+  CrossChainPayload,
   DVMChainConfig,
   PolkadotChainConfig,
+  SmartTxPayload,
   Substrate2DVMPayload,
-  SubstrateDVMBridgeConfig,
 } from '../../../model';
-import { fromWei, getBridge, getPolkadotConnection, getUnit, toWei } from '../../../utils';
+import {
+  applyModalObs,
+  createTxWorkflow,
+  fromWei,
+  getPolkadotConnection,
+  getUnit,
+  redeemFromDVM2Substrate,
+  toWei,
+} from '../../../utils';
 import { Balance } from '../../form-control/Balance';
 import { EthereumAccountItem } from '../../form-control/EthereumAccountItem';
 import { RecipientItem } from '../../form-control/RecipientItem';
+import { TransferConfirm } from '../../modal/TransferConfirm';
+import { TransferSuccess } from '../../modal/TransferSuccess';
 import { FormItemExtra } from '../../widget/facade';
 
 async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<[string, string]> {
@@ -58,21 +68,22 @@ export function DVMSubstrate({
   form,
   direction,
   setSubmit,
-}: CrossChainComponentProps<Substrate2DVMPayload, PolkadotChainConfig, DVMChainConfig>) {
+}: CrossChainComponentProps<Substrate2DVMPayload, DVMChainConfig, PolkadotChainConfig>) {
   const { t } = useTranslation();
   const {
     connection: { accounts },
   } = useApi();
+  const { observer } = useTx();
+  const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload>>();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
 
   /**
    * TODO: remove this after api refactor
    */
   useEffect(() => {
-    const { to } = direction;
+    const { to, from: departure } = direction;
     const account = accounts[0]?.address;
-    const bridge = getBridge(direction) as unknown as Bridge<SubstrateDVMBridgeConfig>;
-    const balancesObs = from(getTokenBalanceEth(bridge.config.contracts.kton, account));
+    const balancesObs = from(getTokenBalanceEth(departure.dvm.smartKton, account));
 
     const chainInfoObs = getPolkadotConnection(to).pipe(
       filter((connection) => connection.status === ConnectionStatus.success),
@@ -110,13 +121,34 @@ export function DVMSubstrate({
   }, [accounts, direction]);
 
   useEffect(() => {
-    const fn = () => (value: unknown) => {
-      console.info('%c [ value ]-114', 'font-size:13px; background:pink; color:#bf2c9f;', value);
-      return EMPTY.subscribe();
+    const fn = () => (data: SmartTxPayload) => {
+      const { sender, amount } = data;
+
+      const value = {
+        ...data,
+        amount: toWei({ value: amount }),
+      };
+
+      const beforeTransfer = applyModalObs({
+        content: <TransferConfirm value={value} />,
+      });
+
+      const obs = redeemFromDVM2Substrate(value, direction);
+      const afterTransfer = afterTx(TransferSuccess, {
+        hashType: 'txHash',
+        onDisappear: () => {
+          form.setFieldsValue({
+            [FORM_CONTROL.sender]: sender,
+          });
+          // getBalances(sender).then(setAvailableBalances);
+        },
+      })(value);
+
+      return createTxWorkflow(beforeTransfer, obs, afterTransfer).subscribe(observer);
     };
 
     setSubmit(fn);
-  }, [setSubmit]);
+  }, [afterTx, availableBalances, direction, form, observer, setSubmit]);
 
   return (
     <>

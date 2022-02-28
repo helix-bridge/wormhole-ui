@@ -7,10 +7,6 @@ const pangolinPangolinDVMConfig: SubstrateDVMBridgeConfig = {
   api: {
     subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-',
   },
-  contracts: {
-    ring: '0xc52287b259b2431ba0f61BC7EBD0eD793B0b7044',
-    kton: '0x8809f9b3ACEF1dA309f49b5Ab97A4C0faA64E6Ae',
-  },
 };
 
 /**

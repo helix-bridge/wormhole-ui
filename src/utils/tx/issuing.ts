@@ -16,7 +16,7 @@ import { getBridge } from '../bridge';
 import { dvmAddressToAccountId } from '../helper';
 import { isKton, isRing } from '../helper/validator';
 import { waitUntilConnected } from '../network';
-import { getContractTxObs } from './common';
+import { genEthereumContractTxObs } from './common';
 import { getErc20MappingPrams } from './redeem';
 
 function extrinsicSpy(observer: Observer<Tx>) {
@@ -124,7 +124,7 @@ export function issuingErc20(value: IssuingDVMToken): Observable<Tx> {
 
   return from(getErc20MappingPrams(transfer.from.provider.rpc)).pipe(
     switchMap(({ mappingAddress }) =>
-      getContractTxObs(
+      genEthereumContractTxObs(
         mappingAddress,
         (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
         abi.Erc20MappingTokenABI

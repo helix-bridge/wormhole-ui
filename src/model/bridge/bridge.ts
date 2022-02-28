@@ -86,12 +86,9 @@ export type EthereumDVMBridgeConfig = Required<
 /**
  * smart app
  */
-export interface SubstrateDVMContractConfig {
-  ring: string;
-  kton: string;
-}
-
-export type SubstrateDVMBridgeConfig = Required<BridgeConfig<SubstrateDVMContractConfig, Pick<Api<ApiKeys>, 'subql'>>>;
+export type SubstrateDVMBridgeConfig = Required<
+  Omit<BridgeConfig<ContractConfig, Pick<Api<ApiKeys>, 'subql'>>, 'contracts'>
+>;
 
 /* ----------------------------------------------- bridge  ------------------------------------------------ */
 
