@@ -4,12 +4,17 @@ describe('DVM to main net', () => {
   const { pangolinDVM: sender, pangolin: recipient } = Cypress.env('accounts');
 
   before(() => {
-    //     cy.activeMetamask();
+    cy.activeMetamask();
   });
 
   beforeEach(() => {
     cy.visit(Cypress.config().baseUrl + '/#fm%3Ddvm%26tm%3Dnative%26f%3Dpangolin%26t%3Dpangolin');
     cy.waitForReact();
+  });
+
+  it('just to accept metamask access', () => {
+    cy.acceptMetamaskAccess(); // allow metamask connect;
+    expect(true).to.true;
   });
 
   it('should launch ring tx', () => {
