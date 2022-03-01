@@ -14,15 +14,6 @@ describe('Substrate DVM to Substrate', () => {
   });
 
   it('approve before launch tx', () => {
-    // cy.acceptMetamaskAccess(); // allow metamask connect;
-    cy.get('.ant-notification-notice-btn > .ant-btn')
-      .click()
-      .then(() => {
-        // metamask has may have two steps here: 1. approve  2. switch
-        cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
-        cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
-      });
-
     cy.react('RecipientItem').find('input').type(recipient);
     cy.react('Erc20Control')
       .find('input')
