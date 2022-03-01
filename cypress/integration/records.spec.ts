@@ -8,6 +8,10 @@ describe('History records', () => {
     pangolinDVM: pangolinDVMAccount,
   } = Cypress.env('accounts');
 
+  let selectFrom;
+  let selectTo;
+  let setSearchAccount;
+
   before(() => {
     cy.activeMetamask();
   });
@@ -15,6 +19,26 @@ describe('History records', () => {
   beforeEach(() => {
     cy.visit(Cypress.config().baseUrl + '/history');
     cy.waitForReact();
+
+    selectFrom = (network: string | RegExp) =>
+      cy
+        .react('Select')
+        .eq(0)
+        .click()
+        .then(() => {
+          cy.get('.ant-select-item-option-content').contains(network).click();
+        });
+
+    selectTo = (network: string | RegExp) =>
+      cy
+        .react('Select')
+        .eq(1)
+        .click()
+        .then(() => {
+          cy.get('.ant-select-item-option-content span[title="To"]').contains(network).click();
+        });
+
+    setSearchAccount = (account: string) => cy.react('Search').find('input').type(account);
   });
 
   it('should display ethereum to darwinia records', () => {
@@ -27,9 +51,9 @@ describe('History records', () => {
       { fixture: 'e2d.records.json' }
     );
 
-    cy.selectFrom('Ropsten');
-    cy.selectTo('Pangolin');
-    cy.setSearchAccount(ropstenAccount);
+    selectFrom('Ropsten');
+    selectTo('Pangolin');
+    setSearchAccount(ropstenAccount);
 
     cy.react('Record').should('have.length', 10);
   });
@@ -43,9 +67,9 @@ describe('History records', () => {
       { fixture: 'd2e.records.json' }
     );
 
-    cy.selectFrom(/^Pangolin$/);
-    cy.selectTo('Ropsten');
-    cy.setSearchAccount(pangolinAccount);
+    selectFrom(/^Pangolin$/);
+    selectTo('Ropsten');
+    setSearchAccount(pangolinAccount);
 
     cy.react('Record').should('have.length', 6);
 
@@ -70,9 +94,9 @@ describe('History records', () => {
       { fixture: 's2sDVM.records.json' }
     );
 
-    cy.selectFrom('Pangoro');
-    cy.selectTo('Pangolin-Smart');
-    cy.setSearchAccount(pangoroAccount);
+    selectFrom('Pangoro');
+    selectTo('Pangolin-Smart');
+    setSearchAccount(pangoroAccount);
 
     cy.react('Record').should('have.length', 8);
   });
@@ -86,9 +110,9 @@ describe('History records', () => {
       { fixture: 'sDVM2s.records.json' }
     );
 
-    cy.selectFrom('Pangolin-Smart');
-    cy.selectTo('Pangoro');
-    cy.setSearchAccount(pangolinDVMAccount);
+    selectFrom('Pangolin-Smart');
+    selectTo('Pangoro');
+    setSearchAccount(pangolinDVMAccount);
 
     cy.react('Record').should('have.length', 10);
   });
@@ -102,9 +126,9 @@ describe('History records', () => {
       { fixture: 'dvm2s.records.json' }
     );
 
-    cy.selectFrom('Pangolin-Smart');
-    cy.selectTo('Pangolin');
-    cy.setSearchAccount(pangolinDVMAccount);
+    selectFrom('Pangolin-Smart');
+    selectTo('Pangolin');
+    setSearchAccount(pangolinDVMAccount);
 
     cy.react('Record').should('have.length', 4);
   });
@@ -118,9 +142,9 @@ describe('History records', () => {
       { fixture: 's2dvm.records.json' }
     );
 
-    cy.selectFrom(/^Pangolin$/);
-    cy.selectTo('Pangolin-Smart');
-    cy.setSearchAccount(pangolinAccount);
+    selectFrom(/^Pangolin$/);
+    selectTo('Pangolin-Smart');
+    setSearchAccount(pangolinAccount);
 
     cy.react('Record').should('have.length', 9);
   });
