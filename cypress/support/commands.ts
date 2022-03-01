@@ -274,3 +274,26 @@ Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
 Cypress.Commands.add('waitForReactComponent', () => {
   return cy.waitForReact(3000, '#__cy_root');
 });
+
+// for record tests
+Cypress.Commands.add('selectFrom', (network: string | RegExp) => {
+  cy.react('Select')
+    .eq(0)
+    .click()
+    .then(() => {
+      cy.get('.ant-select-item-option-content').contains(network).click();
+    });
+});
+
+Cypress.Commands.add('selectTo', (network: string | RegExp) => {
+  cy.react('Select')
+    .eq(1)
+    .click()
+    .then(() => {
+      cy.get('.ant-select-item-option-content span[title="To"]').contains(network).click();
+    });
+});
+
+Cypress.Commands.add('setSearchAccount', (account) => {
+  cy.react('Search').find('input').type(account);
+});
