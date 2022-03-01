@@ -19,7 +19,7 @@ describe('Substrate DVM to Substrate', () => {
       .then(() => {
         // metamask may have two steps here: 1. approve  2. switch
         cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
-        cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
+        // cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
       });
 
     cy.react('RecipientItem').find('input').type(recipient);
