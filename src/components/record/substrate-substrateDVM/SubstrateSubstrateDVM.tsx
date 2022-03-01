@@ -24,6 +24,7 @@ export function SubstrateSubstrateDVMRecord({
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
   const [record, setRecord] = useState(originRecord);
   const [messageEvent, setMessageEvent] = useState<BridgeDispatchEventRecord | null>(null);
+
   const transactionSend = useMemo(
     () => ({
       title: t('{{chain}} Sent', { chain: departure?.name }),
@@ -32,6 +33,7 @@ export function SubstrateSubstrateDVMRecord({
     }),
     [departure, t]
   );
+
   const originLocked = useMemo(
     () => ({
       title: t('{{chain}} Locked', { chain: departure?.name }),
@@ -86,6 +88,7 @@ export function SubstrateSubstrateDVMRecord({
     () => ({ count: record.amount, currency: `${isRedeem ? 'x' : ''}${departure?.isTest ? 'O' : ''}RING` }),
     [record.amount, isRedeem, departure]
   );
+
   const progresses = [transactionSend, originLocked, bridgeDelivered, originConfirmed];
 
   useEffect(() => {

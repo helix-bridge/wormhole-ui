@@ -11,7 +11,7 @@ import {
   S2S_ISSUING_RECORDS_QUERY,
   S2S_REDEEM_RECORDS_QUERY,
   S2S_REDEEM_RECORD_QUERY,
-  S2S_UNLOCK_RECORD_QUERY,
+  S2S_ISSUING_RECORD_QUERY,
   SHORT_DURATION,
 } from '../config';
 import {
@@ -25,7 +25,7 @@ import {
   S2SBurnRecordsRes,
   S2SHistoryRecord,
   S2SIssuingRecordRes,
-  S2SLockedRecordRes,
+  S2SIssuingRecordsRes,
   SubstrateSubstrateDVMBridgeConfig,
 } from '../model';
 import {
@@ -182,7 +182,7 @@ const lockedRecordMapper = ({
   startTimestamp,
   endTimestamp,
   ...rest
-}: S2SLockedRecordRes['s2sEvents']['nodes'][number]) =>
+}: S2SIssuingRecordsRes['s2sEvents']['nodes'][number]) =>
   ({
     laneId,
     nonce,
@@ -244,11 +244,11 @@ export function useS2SRecords(
   const redeemClient = useMemo(() => new GraphQLClient({ url: api.subGraph || UNKNOWN_CLIENT }), [api.subGraph]);
   const { t } = useTranslation();
   // s2s issuing
-  const [fetchLockedRecords] = useManualQuery<S2SLockedRecordRes>(S2S_ISSUING_RECORDS_QUERY, {
+  const [fetchLockedRecords] = useManualQuery<S2SIssuingRecordsRes>(S2S_ISSUING_RECORDS_QUERY, {
     skipCache: true,
     client: issuingClient,
   });
-  const [fetchIssuingRecord] = useManualQuery<S2SIssuingRecordRes>(S2S_UNLOCK_RECORD_QUERY, {
+  const [fetchIssuingRecord] = useManualQuery<S2SIssuingRecordRes>(S2S_ISSUING_RECORD_QUERY, {
     skipCache: true,
     client: issuingClient,
   });

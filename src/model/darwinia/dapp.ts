@@ -135,13 +135,12 @@ export interface S2SBurnRecordRes {
   burnRecordEntity: S2SBurnRecord;
 }
 
-export interface S2SLockedRecordRes {
+export interface S2SIssuingRecordsRes {
   s2sEvents: {
     totalCount: number;
     nodes: (S2SHistoryRecord & { id: string })[];
   };
 }
-
 export interface S2SIssuingRecordRes {
   s2sEvent: S2SHistoryRecord;
 }

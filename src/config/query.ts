@@ -77,7 +77,7 @@ export const S2S_ISSUING_RECORDS_QUERY = `
 /**
  * subql
  */
-export const S2S_UNLOCK_RECORD_QUERY = `
+export const S2S_ISSUING_RECORD_QUERY = `
   query s2sEvent($id: String!) {
     s2sEvent(id: $id) {
       amount
