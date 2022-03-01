@@ -66,6 +66,8 @@ pangoroPangolinDVM.setRedeemComponents(
 
 /**
  * substrate <-> dvm
+ * crab <-> crab dvm
+ * pangolin <-> pangolin dvm
  */
 crabCrabDVM.setIssuingComponents(SubstrateDVM as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
 crabCrabDVM.setRedeemComponents(DVMSubstrate as FunctionComponent, SubstrateDVMRecord as FunctionComponent);

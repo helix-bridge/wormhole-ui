@@ -33,12 +33,14 @@ export function Record({
     () => items.find((item) => item.steps.find((step) => step.state === State.error)),
     [items]
   );
+
   const percent = useMemo(() => {
     const total = items.length;
     const finished = items.filter((item) => item.steps.every((step) => step.state !== State.pending));
 
     return (finished.length / total) * PERCENT_HUNDRED;
   }, [items]);
+
   const strokeColor = useMemo(() => {
     if (errorProgress) {
       return '#ef4444';
