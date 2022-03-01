@@ -226,7 +226,7 @@ export function DVMSubstrate({
         )}
       />
 
-      <Form.Item label={t('Assets')} name={FORM_CONTROL.asset} rules={[{ required: true }]}>
+      <Form.Item label={t('Asset')} name={FORM_CONTROL.asset} rules={[{ required: true }]}>
         <Select size="large" placeholder={t('Please select token to be transfer')}>
           {availableBalances.map(({ token: { symbol } }) => (
             <Select.Option value={symbol} key={symbol}>
