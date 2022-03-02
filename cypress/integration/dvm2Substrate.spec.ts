@@ -2,6 +2,7 @@
 
 describe('DVM to main net', () => {
   const { pangolinDVM: sender, pangolin: recipient } = Cypress.env('accounts');
+  const hrefRegExp = /^https:\/\/pangolin.subscan.io\/extrinsic\/0x\w+$/;
 
   before(() => {
     cy.activeMetamask();
@@ -43,20 +44,17 @@ describe('DVM to main net', () => {
     cy.react('Balance').type('1');
     cy.react('SubmitButton').click();
 
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin-Smart');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('1');
-
-    cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
+    cy.checkTxInfo('Pangolin-Smart');
+    cy.checkTxInfo('Pangolin');
+    cy.checkTxInfo(sender);
+    cy.checkTxInfo(recipient);
+    cy.checkTxInfo('1');
+    cy.confirmTxInfo();
 
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
-      .find('a')
-      .should('have.text', 'View in Subscan explorer');
+    cy.checkTxResult('View in Subscan explorer', hrefRegExp);
   });
 
   it('should launch kton tx', () => {
@@ -76,19 +74,16 @@ describe('DVM to main net', () => {
     cy.react('Balance').type('1');
     cy.react('SubmitButton').click();
 
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin-Smart');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('1');
-
-    cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
+    cy.checkTxInfo('Pangolin-Smart');
+    cy.checkTxInfo('Pangolin');
+    cy.checkTxInfo(sender);
+    cy.checkTxInfo(recipient);
+    cy.checkTxInfo('1');
+    cy.confirmTxInfo();
 
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
-      .find('a')
-      .should('have.text', 'View in Subscan explorer');
+    cy.checkTxResult('View in Subscan explorer', hrefRegExp);
   });
 });

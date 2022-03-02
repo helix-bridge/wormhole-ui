@@ -2,7 +2,7 @@
 
 describe('Ethereum to Darwinia', () => {
   const { pangolin: recipient, ropsten: sender } = Cypress.env('accounts');
-  const TX_TIME_OUT = 2 * 60 * 1000;
+  const hrefRegExp = /^https:\/\/ropsten.etherscan.io\/tx\/0x\w+$/;
 
   before(() => {
     cy.activeMetamask();
@@ -15,29 +15,25 @@ describe('Ethereum to Darwinia', () => {
 
   it('should launch ring tx', () => {
     cy.react('RecipientItem').find('input').type(recipient);
-
-    cy.get('span')
-      .contains('Cross-chain Fee')
+    cy.react('Select', { props: { placeholder: 'Select Assets' } })
+      .click()
+      .then(() => cy.get('span').contains('Cross-chain Fee'))
       .then(() => {
         cy.react('Balance').type('3.14');
       });
-
     cy.react('SubmitButton').click();
 
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Ropsten');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('1.14');
-
-    cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
+    cy.checkTxInfo('Ropsten');
+    cy.checkTxInfo('Pangolin');
+    cy.checkTxInfo(sender);
+    cy.checkTxInfo(recipient);
+    cy.checkTxInfo('1.14');
+    cy.confirmTxInfo();
 
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: TX_TIME_OUT })
-      .find('a')
-      .should('have.text', 'View in Etherscan explorer');
+    cy.checkTxResult('View in Etherscan explorer', hrefRegExp, 2 * 60 * 1000);
   });
 
   it('should launch kton tx', () => {
@@ -48,22 +44,18 @@ describe('Ethereum to Darwinia', () => {
         cy.get('.ant-select-item-option-content').contains('KTON').click();
       });
     cy.react('Balance').type('1.234');
-
     cy.react('SubmitButton').click();
 
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Ropsten');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('1.234');
-
-    cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
+    cy.checkTxInfo('Ropsten');
+    cy.checkTxInfo('Pangolin');
+    cy.checkTxInfo(sender);
+    cy.checkTxInfo(recipient);
+    cy.checkTxInfo('1.234');
+    cy.confirmTxInfo();
 
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: TX_TIME_OUT })
-      .find('a')
-      .should('have.text', 'View in Etherscan explorer');
+    cy.checkTxResult('View in Etherscan explorer', hrefRegExp, 2 * 60 * 1000);
   });
 });
