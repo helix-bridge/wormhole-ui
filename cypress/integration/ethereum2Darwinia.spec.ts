@@ -33,7 +33,7 @@ describe('Ethereum to Darwinia', () => {
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.checkTxResult('View in Etherscan explorer', hrefRegExp, 2 * 60 * 1000);
+    cy.checkTxResult('View in Etherscan explorer', hrefRegExp, 3 * 60 * 1000);
   });
 
   it('should launch kton tx', () => {
@@ -56,6 +56,6 @@ describe('Ethereum to Darwinia', () => {
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.checkTxResult('View in Etherscan explorer', hrefRegExp, 2 * 60 * 1000);
+    cy.checkTxResult('View in Etherscan explorer', hrefRegExp, 3 * 60 * 1000);
   });
 });

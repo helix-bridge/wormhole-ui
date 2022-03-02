@@ -208,16 +208,17 @@ Cypress.Commands.add('waitForReactComponent', () => {
 });
 
 // cross-chain commands
-Cypress.Commands.add('checkTxInfo', (text: string | number | RegExp) => {
-  cy.get('.ant-modal-confirm-content .ant-typography').contains(text);
+Cypress.Commands.add('checkTxInfo', (text) => {
+  return cy.get('.ant-modal-confirm-content .ant-typography').contains(text);
 });
 
 Cypress.Commands.add('confirmTxInfo', () => {
-  cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
+  return cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
 });
 
-Cypress.Commands.add('checkTxResult', (text: string | number | RegExp, href: RegExp, timeout = 60 * 1000) => {
-  cy.get('.ant-modal-confirm-content', { timeout })
+Cypress.Commands.add('checkTxResult', (text, href, timeout = 60 * 1000) => {
+  return cy
+    .get('.ant-modal-confirm-content', { timeout })
     .find('a')
     .should('have.text', text)
     .then((ele) => expect(ele.attr('href')).to.match(href));
