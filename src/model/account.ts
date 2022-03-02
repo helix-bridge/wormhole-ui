@@ -7,19 +7,19 @@ export type InjectedAccountWithMeta = ExtType.InjectedAccountWithMeta;
 
 export type IAccountMeta = WithOptional<InjectedAccountWithMeta, 'meta'>;
 
-export interface TokenChainInfo<T = string> {
+export interface Token<T = string> {
   symbol: T;
   decimal: keyof Units;
 }
 
 export interface Chain {
-  tokens: TokenChainInfo[];
+  tokens: Token[];
   ss58Format: string;
 }
 export interface AvailableBalance<T = string> {
   max: string | number | BN;
   asset: T;
-  chainInfo?: TokenChainInfo;
+  token: Token;
 }
 
 export interface DailyLimit {

@@ -46,6 +46,7 @@ interface BridgeStateProps {
 
 export function BridgeState({ className = '' }: BridgeStateProps) {
   const { isDev } = useApi();
+
   const url = useMemo(
     () =>
       isDev
@@ -53,7 +54,9 @@ export function BridgeState({ className = '' }: BridgeStateProps) {
         : 'https://kjb7q9wwny2q.statuspage.io/api/v2/incidents/unresolved.json',
     [isDev]
   );
+
   const [message, setMessage] = useState('');
+
   useEffect(() => {
     const sub$$ = ajax<IncidentResponse>({ url, method: 'GET' })
       .pipe(map((res) => res.response || null))

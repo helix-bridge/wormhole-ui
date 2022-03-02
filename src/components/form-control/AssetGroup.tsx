@@ -46,7 +46,7 @@ export function AssetGroup({
   );
   const ringBalance = useMemo(() => (balances || []).find((item) => isRing(item.asset)), [balances]);
   const feeFormatted = useMemo(() => {
-    return fromWei({ value: fee, unit: ringBalance?.chainInfo?.decimal ?? 'gwei' });
+    return fromWei({ value: fee, unit: ringBalance?.token.decimal ?? 'gwei' });
   }, [fee, ringBalance]);
   const insufficient = useMemo(
     () => new BN(feeFormatted || 0).gt(new BN(ringBalance?.max || 0)),
@@ -80,9 +80,9 @@ export function AssetGroup({
           {fields?.map((field, index) => {
             const target = (value || [])[field.fieldKey];
             const balance = balances.find(
-              (item) => target.asset && item.chainInfo?.symbol.toLowerCase().includes(target.asset)
+              (item) => target.asset && item.token.symbol.toLowerCase().includes(target.asset)
             );
-            const unit = balance?.chainInfo?.decimal || 'gwei';
+            const unit = balance?.token.decimal || 'gwei';
 
             return (
               <div className="flex items-center" key={field.key + index}>
@@ -117,13 +117,13 @@ export function AssetGroup({
                       ? {}
                       : amountLessThanFeeRule({
                           t,
-                          token: balance?.chainInfo,
+                          token: balance?.token,
                           compared: fee ?? 0,
                           asset: String(balance?.asset),
                         }),
                     insufficientBalanceRule({
                       t,
-                      token: balance?.chainInfo,
+                      token: balance?.token,
                       compared: balance?.max ?? '0',
                     }),
                   ]}
@@ -148,7 +148,7 @@ export function AssetGroup({
                       onClick={() => {
                         const max = balance?.max
                           ? new BN(balance.max).sub(
-                              new BN(Math.pow(10, getPrecisionByUnit(balance.chainInfo?.decimal || 'gwei')))
+                              new BN(Math.pow(10, getPrecisionByUnit(balance.token?.decimal || 'gwei')))
                             )
                           : new BN(0);
                         const val = {

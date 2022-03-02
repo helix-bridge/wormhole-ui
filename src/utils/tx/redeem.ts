@@ -1,22 +1,26 @@
+import { TypeRegistry } from '@polkadot/types';
 import { decodeAddress } from '@polkadot/util-crypto';
 import { memoize } from 'lodash';
-import { from as fromObs, map, Observable, switchMap } from 'rxjs';
+import { EMPTY, from as fromObs, map, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
-import { getBridge } from '..';
 import { abi } from '../../config';
 import {
+  CrossChainDirection,
+  DVMChainConfig,
   EthereumDarwiniaBridgeConfig,
   EthereumDVMBridgeConfig,
   PolkadotChainConfig,
   RedeemDarwiniaToken,
   RedeemDeposit,
   RedeemDVMToken,
+  SmartTxPayload,
   Tx,
   TxFn,
 } from '../../model';
-import { convertToDvm, fromWei, toWei } from '../helper';
+import { getBridge } from '../bridge';
+import { convertToDvm, convertToSS58, fromWei, isRing, toWei } from '../helper';
 import { entrance, waitUntilConnected } from '../network';
-import { buf2hex, getContractTxObs } from './common';
+import { buf2hex, genEthereumContractTxObs, genEthereumTransactionObs } from './common';
 
 /**
  * @description darwinia <- ethereum
@@ -29,7 +33,7 @@ export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, directi
 
   recipient = buf2hex(decodeAddress(recipient, false, (to as PolkadotChainConfig).ss58Prefix).buffer);
 
-  return getContractTxObs(contractAddress, (contract) =>
+  return genEthereumContractTxObs(contractAddress, (contract) =>
     contract.methods.transferFrom(sender, bridge.config.contracts.issuing, amount, recipient).send({ from: sender })
   );
 };
@@ -42,7 +46,7 @@ export const redeemDeposit: TxFn<RedeemDeposit> = ({ direction, recipient, sende
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   recipient = buf2hex(decodeAddress(recipient, false, (to as PolkadotChainConfig).ss58Prefix!).buffer);
 
-  return getContractTxObs(
+  return genEthereumContractTxObs(
     bridge.config.contracts.redeemDeposit,
     (contract) => contract.methods.burnAdnRedeem(deposit, recipient).send({ from: sender }),
     abi.bankABI
@@ -57,7 +61,7 @@ export const redeemErc20: TxFn<RedeemDVMToken> = (value) => {
   const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const { address } = asset;
 
-  return getContractTxObs(
+  return genEthereumContractTxObs(
     bridge.config.contracts.redeem,
     (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),
     abi.bankErc20ABI
@@ -84,7 +88,7 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
 
   return valObs.pipe(
     switchMap((val) =>
-      getContractTxObs(
+      genEthereumContractTxObs(
         mappingAddress,
         (contract) =>
           contract.methods
@@ -93,6 +97,38 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
         abi.S2SMappingTokenABI
       )
     )
+  );
+}
+
+export function redeemFromDVM2Substrate(
+  value: SmartTxPayload,
+  direction: CrossChainDirection<DVMChainConfig, PolkadotChainConfig>
+): Observable<Tx> {
+  const registry = new TypeRegistry();
+  const { recipient, asset, sender, amount } = value;
+  const { from, to } = direction;
+  const accountId = registry.createType('AccountId', convertToSS58(recipient, to.ss58Prefix)).toHex();
+
+  if (accountId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+    return EMPTY;
+  }
+
+  if (isRing(asset)) {
+    return genEthereumTransactionObs({
+      from: sender,
+      to: from.dvm.smartWithdrawRing,
+      data: accountId,
+      value: amount,
+      gas: 55000,
+    });
+  }
+
+  const withdrawalAddress = convertToDvm(recipient);
+
+  return genEthereumContractTxObs(
+    from.dvm.smartKton,
+    (contract) => contract.methods.withdraw(withdrawalAddress, amount).send({ from: sender }),
+    abi.ktonABI
   );
 }
 

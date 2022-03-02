@@ -34,7 +34,7 @@ import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR, MMRProof } from '../mmr';
 import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount } from '../network';
 import { getMPTProof } from '../record';
-import { getContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
+import { genEthereumContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
 import { getErc20Meta, getTokenBalance } from './tokenInfo';
 
 export type StoredProof = {
@@ -253,7 +253,7 @@ export function launchRegister(address: string, departure: EthereumChainConfig):
     switchMap(([sender, { isString }, has]) => {
       return has
         ? EMPTY
-        : getContractTxObs(
+        : genEthereumContractTxObs(
             bridge.config.contracts.redeem,
             (contract) => {
               const register = isString ? contract.methods.registerToken : contract.methods.registerTokenBytes32;
@@ -398,7 +398,7 @@ export function confirmRegister(proof: StoredProof, departure: EthereumChainConf
 
   return senderObs.pipe(
     switchMap((sender) =>
-      getContractTxObs(
+      genEthereumContractTxObs(
         bridge.config.contracts.redeem,
         (contract) =>
           contract.methods

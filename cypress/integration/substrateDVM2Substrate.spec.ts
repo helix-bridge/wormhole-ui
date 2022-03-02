@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 
-const TOKEN_NAME = 'xORING';
-
 describe('Substrate DVM to Substrate', () => {
+  const TOKEN_NAME = 'xORING';
   const { pangolinDVM: sender, pangoro: recipient } = Cypress.env('accounts');
+  const hrefRegExp = /^https:\/\/pangolin.subscan.io\/extrinsic\/0x\w+$/;
 
   before(() => {
     cy.activeMetamask();
@@ -15,12 +15,10 @@ describe('Substrate DVM to Substrate', () => {
   });
 
   it('approve before launch tx', () => {
-    // cy.acceptMetamaskAccess(); // allow metamask connect;
     cy.get('.ant-notification-notice-btn > .ant-btn')
       .click()
       .then(() => {
-        // metamask has may have two steps here: 1. approve  2. switch
-        cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
+        // metamask may have two steps here: 1. approve  2. switch
         cy.acceptMetamaskSwitch({ networkName: 'pangolin', networkId: 43, isTestnet: true });
       });
 
@@ -61,19 +59,16 @@ describe('Substrate DVM to Substrate', () => {
     cy.react('Balance').type('0.1');
     cy.react('SubmitButton').click();
 
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangolin-Smart');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('Pangoro');
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(sender);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains(recipient);
-    cy.get('.ant-modal-confirm-content .ant-typography').contains('0.1');
-
-    cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
+    cy.checkTxInfo('Pangolin-Smart');
+    cy.checkTxInfo('Pangoro');
+    cy.checkTxInfo(sender);
+    cy.checkTxInfo(recipient);
+    cy.checkTxInfo('0.1');
+    cy.confirmTxInfo();
 
     cy.wait(5000);
     cy.confirmMetamaskTransaction();
 
-    cy.get('.ant-modal-confirm-content', { timeout: 1 * 60 * 1000 })
-      .find('a')
-      .should('have.text', 'View in Subscan explorer');
+    cy.checkTxResult('View in Subscan explorer', hrefRegExp);
   });
 });

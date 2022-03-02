@@ -26,8 +26,7 @@ yarn-error.log*
 
 cypress/integration/1-getting-started
 cypress/integration/2-advanced-examples
-cypress/videos/**/*.mp4
-cypress/screenshots/**/*.png
-cypress/screenshots/**/*.jpg
+cypress/videos/
+cypress/screenshots/
 cypress/plugins/extensions/metamask/
 cypress/plugins/extensions/*.zip

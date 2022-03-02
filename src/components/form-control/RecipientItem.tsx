@@ -7,6 +7,7 @@ import { FORM_CONTROL } from '../../config';
 import { useLock } from '../../hooks';
 import { CrossChainComponentProps, CrossChainPayload, CrossChainParty } from '../../model';
 import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../../utils';
+import { FormItemExtra } from '../widget/facade';
 
 // eslint-disable-next-line complexity
 export function RecipientItem({
@@ -48,7 +49,7 @@ export function RecipientItem({
               : t('Please fill in a {{network}} smart address which start with 0x', { network: upperFirst(to?.name) }),
           },
         ]}
-        extra={to ? extraTip : ''}
+        extra={to ? <FormItemExtra>{extraTip}</FormItemExtra> : ''}
         className="mb-2"
       >
         <Input
@@ -58,6 +59,7 @@ export function RecipientItem({
           disabled={lock}
           suffix={lock && <LockOutlined />}
           size="large"
+          placeholder={t('Type or select the recipient address')}
         />
       </Form.Item>
       {lock && <span className="text-gray-300">{t('You must select the destination network to unlock')}</span>}

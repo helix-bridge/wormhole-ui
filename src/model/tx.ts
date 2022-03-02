@@ -5,6 +5,7 @@ import {
   Darwinia2EthereumPayload,
   DVMPayload,
   Ethereum2DarwiniaPayload,
+  Substrate2DVMPayload,
   Substrate2SubstrateDVMPayload,
 } from './bridge';
 import { DeepRequired } from './type-operator';
@@ -52,14 +53,15 @@ export type TxSuccessComponentProps<T> = {
 
 /* -----------------------------------issuing and redeem----------------------------------------------*/
 
-export type DVMToken = CrossChainPayload<DeepRequired<DVMPayload, ['sender' | 'recipient' | 'amount' | 'asset']>>;
+type CommonPayloadKeys = 'sender' | 'recipient' | 'amount' | 'asset';
+
+// TODO: rename this types; suggestion: XxxxTxPayload
+export type DVMToken = CrossChainPayload<DeepRequired<DVMPayload, [CommonPayloadKeys]>>;
 
 export type RedeemDVMToken = DVMToken;
 export type IssuingDVMToken = DVMToken;
 
-export type RedeemDarwiniaToken = CrossChainPayload<
-  DeepRequired<Ethereum2DarwiniaPayload, ['sender' | 'asset' | 'amount' | 'recipient']>
->;
+export type RedeemDarwiniaToken = CrossChainPayload<DeepRequired<Ethereum2DarwiniaPayload, [CommonPayloadKeys]>>;
 
 export type RedeemDeposit = CrossChainPayload<
   DeepRequired<Ethereum2DarwiniaPayload, ['sender' | 'deposit' | 'recipient']>
@@ -69,6 +71,6 @@ export type IssuingDarwiniaToken = CrossChainPayload<
   DeepRequired<Darwinia2EthereumPayload, ['sender' | 'assets' | 'recipient']>
 >;
 
-export type IssuingSubstrateToken = CrossChainPayload<
-  DeepRequired<Substrate2SubstrateDVMPayload, ['sender' | 'asset' | 'amount' | 'recipient']>
->;
+export type IssuingSubstrateToken = CrossChainPayload<DeepRequired<Substrate2SubstrateDVMPayload, [CommonPayloadKeys]>>;
+
+export type SmartTxPayload = CrossChainPayload<DeepRequired<Substrate2DVMPayload, [CommonPayloadKeys]>>;

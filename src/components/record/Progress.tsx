@@ -29,6 +29,7 @@ interface Step {
   mutateState?: (monitor: React.Dispatch<SetStateAction<boolean>>) => Subscription;
   state: State;
   txHash?: string;
+  blockHash?: string;
   deliverMethod?: BridgeDispatchEventRecord['method'];
 }
 
@@ -62,12 +63,15 @@ export function Progress({ steps, title, icon, className = '', network }: Progre
   const { t } = useTranslation();
   const { setCanceler } = useTx();
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
+
   const {
     txHash,
+    blockHash,
     mutateState,
     indexing,
     state: lastState,
   } = useMemo<Step>(() => last(steps) ?? { name: '', state: State.completed }, [steps]);
+
   const progressItemState = useMemo<State>(() => {
     if (steps.some((item) => item.state === State.error)) {
       return State.error;
@@ -77,11 +81,12 @@ export function Progress({ steps, title, icon, className = '', network }: Progre
       return State.pending;
     }
   }, [steps]);
+
   // eslint-disable-next-line complexity
   const finish = useMemo(() => {
-    if (progressItemState !== State.pending && txHash && network) {
+    if (progressItemState !== State.pending && (txHash || blockHash) && network) {
       return (
-        <SubscanLink txHash={txHash} network={network.name}>
+        <SubscanLink txHash={txHash} block={blockHash} network={network.name}>
           <Button size="small" className="text-xs" icon={<CheckOutlined />}>
             {t('Txhash')}
           </Button>
@@ -112,7 +117,7 @@ export function Progress({ steps, title, icon, className = '', network }: Progre
     }
 
     return null;
-  }, [indexing, network, progressItemState, t, txHash]);
+  }, [blockHash, indexing, network, progressItemState, t, txHash]);
 
   const action = useMemo(() => {
     if (mutateState) {
