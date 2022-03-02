@@ -1,9 +1,8 @@
 /// <reference types="cypress" />
 
-const TX_TIME_OUT = 2 * 60 * 1000;
-
 describe('Ethereum to Darwinia', () => {
   const { pangolin: recipient, ropsten: sender } = Cypress.env('accounts');
+  const TX_TIME_OUT = 2 * 60 * 1000;
 
   before(() => {
     cy.activeMetamask();
@@ -14,9 +13,14 @@ describe('Ethereum to Darwinia', () => {
     cy.waitForReact();
   });
 
-  it('should launch ring transfer properly', () => {
+  it('should launch ring tx', () => {
     cy.react('RecipientItem').find('input').type(recipient);
-    cy.react('Balance').type('3.14');
+
+    cy.get('span')
+      .contains('Cross-chain Fee')
+      .then(() => {
+        cy.react('Balance').type('3.14');
+      });
 
     cy.react('SubmitButton').click();
 
@@ -36,7 +40,7 @@ describe('Ethereum to Darwinia', () => {
       .should('have.text', 'View in Etherscan explorer');
   });
 
-  it('should launch kton transfer properly', () => {
+  it('should launch kton tx', () => {
     cy.react('RecipientItem').find('input').type(recipient);
     cy.react('Select', { props: { placeholder: 'Select Assets' } })
       .click()

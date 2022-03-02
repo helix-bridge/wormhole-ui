@@ -1,4 +1,5 @@
 import { QuestionCircleFilled } from '@ant-design/icons';
+import { BN_ZERO } from '@polkadot/util';
 import { Button, Descriptions, Form, Input, Progress, Select, Tooltip } from 'antd';
 import { FormInstance, Rule } from 'antd/lib/form';
 import BN from 'bn.js';
@@ -59,8 +60,6 @@ interface AmountCheckInfo {
   form?: FormInstance<Ethereum2DarwiniaPayload>;
   t: TFunction;
 }
-
-const BN_ZERO = new BN(0);
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
