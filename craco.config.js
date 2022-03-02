@@ -48,6 +48,9 @@ module.exports = {
       },
     },
   ],
+  babel: {
+    plugins: [['@babel/plugin-proposal-class-properties', { loose: true }]],
+  },
   webpack: {
     plugins: {
       add: [themePlugin],

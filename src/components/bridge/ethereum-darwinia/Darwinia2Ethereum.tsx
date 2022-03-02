@@ -7,20 +7,13 @@ import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, map, Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../../config';
-import {
-  getChainInfo,
-  useAfterSuccess,
-  useApi,
-  useDarwiniaAvailableBalances,
-  useDeparture,
-  useTx,
-} from '../../../hooks';
+import { getToken, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../../hooks';
 import {
   AvailableBalance,
   CrossChainComponentProps,
   Darwinia2EthereumPayload,
   IssuingDarwiniaToken,
-  TokenChainInfo,
+  Token,
   CrossChainPayload,
   DarwiniaAsset,
 } from '../../../model';
@@ -91,7 +84,7 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
   const hasAssetSet = useMemo(() => !!assets.filter((item) => item.checked && item?.amount).length, [assets]);
   const chainSymbol = useCallback(
     (token: DarwiniaAsset) => {
-      const info = getChainInfo(chain.tokens, token);
+      const info = getToken(chain.tokens, token);
 
       return info?.symbol || token.toUpperCase();
     },
@@ -223,10 +216,10 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
       const { assets, sender } = data;
       const assetsToSend = assets?.map((item) => {
         const { asset, amount, checked } = item as Required<Darwinia2EthereumPayload['assets'][number]>;
-        const { decimal = 'gwei', symbol = asset } = getChainInfo(
+        const { decimal = 'gwei', symbol = asset } = getToken(
           chain.tokens,
           asset as DarwiniaAsset
-        ) as TokenChainInfo<DarwiniaAsset>;
+        ) as Token<DarwiniaAsset>;
         const amountWei = checked ? toWei({ value: amount, unit: decimal }) : '0';
 
         return {

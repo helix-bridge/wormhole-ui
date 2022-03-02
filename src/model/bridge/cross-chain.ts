@@ -9,13 +9,19 @@ import { NullableFields } from '../type-operator';
 /* ---------------------------------------------------Components props--------------------------------------------------- */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type CrossChainPayload<T = any> = { direction: CrossChainDirection } & T;
+export type CrossChainPayload<C = any, F extends ChainConfig = ChainConfig, T extends ChainConfig = ChainConfig> = {
+  direction: CrossChainDirection<F, T>;
+} & C;
 
 export type SubmitFn = (value: CrossChainPayload) => Subscription;
 
-export interface CrossChainComponentProps<T extends CrossChainParty> {
-  form: FormInstance<CrossChainPayload<T>>;
-  direction: CrossChainDirection;
+export interface CrossChainComponentProps<
+  C extends CrossChainParty,
+  F extends ChainConfig = ChainConfig,
+  T extends ChainConfig = ChainConfig
+> {
+  form: FormInstance<CrossChainPayload<C>>;
+  direction: CrossChainDirection<F, T>;
   setSubmit: React.Dispatch<React.SetStateAction<SubmitFn>>;
 }
 
@@ -53,6 +59,7 @@ export interface Ethereum2DarwiniaPayload extends CrossChainParty, CrossChainAss
 export enum DarwiniaAsset {
   ring = 'ring',
   kton = 'kton',
+  crab = 'crab',
 }
 
 export interface Darwinia2EthereumPayload extends CrossChainParty {
@@ -70,3 +77,7 @@ export interface DVMPayload extends CrossChainParty, CrossChainAsset<DVMAsset> {
 export type SubstrateAsset = string | Erc20Token;
 
 export interface Substrate2SubstrateDVMPayload extends CrossChainParty, CrossChainAsset<SubstrateAsset> {}
+
+/* ---------------------------------------------------S2DVM--------------------------------------------------- */
+
+export interface Substrate2DVMPayload extends CrossChainParty, CrossChainAsset<DarwiniaAsset> {}

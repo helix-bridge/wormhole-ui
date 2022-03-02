@@ -34,6 +34,7 @@ export function useNetworks(type: CrossType = 'cross-chain') {
   const [fromNetworks, setFromNetworks] = useState<ChainConfig[]>(CROSS_CHAIN_NETWORKS);
   const [toFilters, setToFilters] = useState<NetworkFilter[]>([]);
   const [toNetworks, setToNetworks] = useState<ChainConfig[]>(CROSS_CHAIN_NETWORKS);
+
   const getNetworks = useCallback(
     (filters: NetworkFilter[]) => {
       return [...getGlobalFilters(enableTestNetworks), ...filters].reduce(

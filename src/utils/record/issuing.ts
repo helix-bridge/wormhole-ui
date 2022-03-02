@@ -19,7 +19,7 @@ import { getBridge } from '../bridge';
 import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR } from '../mmr';
 import { connect, entrance, waitUntilConnected } from '../network';
-import { buf2hex, getContractTxObs } from '../tx';
+import { buf2hex, genEthereumContractTxObs } from '../tx';
 
 /* -------------------------------------------Inner Helper Fn---------------------------------------------- */
 
@@ -178,6 +178,6 @@ export function claimToken({
             })
           );
     }),
-    switchMap((txFn) => getContractTxObs(bridge.config.contracts.redeem || '', txFn, abi.tokenIssuingABI))
+    switchMap((txFn) => genEthereumContractTxObs(bridge.config.contracts.redeem || '', txFn, abi.tokenIssuingABI))
   );
 }

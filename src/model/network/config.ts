@@ -5,6 +5,10 @@ import { Network, NetworkCategory } from './network';
 interface DVMTokenConfig {
   ring: string;
   kton: string;
+  smartKton: string;
+  smartRing: string;
+  smartWithdrawRing: string;
+  smartWithdrawKton: string;
   [key: string]: string;
 }
 
