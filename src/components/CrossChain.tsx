@@ -142,6 +142,7 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
             },
           },
         ]}
+        className="mb-0"
       >
         <Direction
           onChange={(value) => {
