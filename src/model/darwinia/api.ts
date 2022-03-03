@@ -1,4 +1,4 @@
-export interface DListRes<T> {
+export interface DarwiniaListRes<T> {
   count: number;
   list: T[];
 }

@@ -13,3 +13,4 @@ export * from './storage';
 export * from './subscan';
 export * from './tx';
 export * from './type-operator';
+export * from './camelCaseKeys';

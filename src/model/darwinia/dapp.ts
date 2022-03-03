@@ -1,6 +1,6 @@
-import { Arrival, Departure } from '..';
+import { Arrival, Departure } from '../bridge';
 import { Network } from '../network/network';
-import { DListRes } from './api';
+import { DarwiniaListRes } from './api';
 
 export interface Paginator {
   row: number;
@@ -15,13 +15,8 @@ export interface HistoryReq {
 }
 
 /* ------------------------------------E2D section-------------------------------------------- */
-export interface RingBurnHistory extends E2DHistory {
-  id: number;
-}
 
-export type RingBurnHistoryRes = DListRes<RingBurnHistory>;
-
-export interface E2DHistory {
+export interface Ethereum2DarwiniaRecord {
   address: string;
   amount: string;
   block_num: number;
@@ -32,18 +27,23 @@ export interface E2DHistory {
   target: string;
   tx: string;
 }
+export interface Ethereum2DarwiniaRingBurnRecord extends Ethereum2DarwiniaRecord {
+  id: number;
+}
 
-export interface RedeemHistory extends E2DHistory {
+export type Ethereum2DarwiniaRingBurnHistoryRes<R = Ethereum2DarwiniaRingBurnRecord> = DarwiniaListRes<R>;
+
+export interface Ethereum2DarwiniaRedeemRecord extends Ethereum2DarwiniaRecord {
   darwinia_tx: string;
   deposit: string; // json string
   is_relayed: boolean;
 }
 
-export type RedeemHistoryRes = DListRes<RedeemHistory>;
+export type Ethereum2DarwiniaRedeemHistoryRes<R = Ethereum2DarwiniaRedeemRecord> = DarwiniaListRes<R>;
 
 /* ------------------------------------D2E section-------------------------------------------- */
 
-export interface D2EHistory {
+export interface Darwinia2EthereumRecord {
   account_id: string;
   block_hash: string;
   block_header: string;
@@ -59,13 +59,13 @@ export interface D2EHistory {
   tx: string;
 }
 
-export type D2EHistoryRes = DListRes<D2EHistory> & {
+export type Darwinia2EthereumHistoryRes<R = Darwinia2EthereumRecord> = DarwiniaListRes<R> & {
   implName: string;
   best: number;
   MMRRoot: string;
 };
 
-export type D2EMeta = Pick<D2EHistoryRes, 'best' | 'MMRRoot'>;
+export type Darwinia2EthereumMeta = Pick<Darwinia2EthereumHistoryRes, 'best' | 'MMRRoot'>;
 
 /* ------------------------------------ERC20 section-------------------------------------------- */
 
@@ -97,7 +97,7 @@ export interface SimpleBlock {
   specVersion: number;
 }
 
-export interface S2SBurnRecord {
+export interface SubstrateDVM2SubstrateRecord {
   lane_id: string;
   nonce: string;
   request_transaction: string;
@@ -112,7 +112,7 @@ export interface S2SBurnRecord {
   end_timestamp: string;
 }
 
-export interface S2SHistoryRecord {
+export interface Substrate2SubstrateDVMRecord {
   laneId: string;
   nonce: string;
   requestTxHash: string;
@@ -127,22 +127,22 @@ export interface S2SHistoryRecord {
   endTimestamp: string;
 }
 
-export interface S2SBurnRecordsRes {
-  burnRecordEntities: S2SBurnRecord[];
+export interface SubstrateDVM2SubstrateRecordsRes {
+  burnRecordEntities: SubstrateDVM2SubstrateRecord[];
 }
 
-export interface S2SBurnRecordRes {
-  burnRecordEntity: S2SBurnRecord;
+export interface SubstrateDVM2SubstrateRecordRes {
+  burnRecordEntity: SubstrateDVM2SubstrateRecord;
 }
 
-export interface S2SIssuingRecordsRes {
+export interface Substrate2SubstrateDVMRecordsRes {
   s2sEvents: {
     totalCount: number;
-    nodes: (S2SHistoryRecord & { id: string })[];
+    nodes: (Substrate2SubstrateDVMRecord & { id: string })[];
   };
 }
-export interface S2SIssuingRecordRes {
-  s2sEvent: S2SHistoryRecord;
+export interface Substrate2SubstrateDVMRecordRes {
+  s2sEvent: Substrate2SubstrateDVMRecord;
 }
 
 export interface BridgeDispatchEventRecord {

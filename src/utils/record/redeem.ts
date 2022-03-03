@@ -1,4 +1,5 @@
 import { catchError, Observable, of } from 'rxjs';
+import camelCaseKeys from 'camelcase-keys';
 import { map } from 'rxjs/operators';
 import { getBridge } from '..';
 import { DarwiniaApiPath } from '../../config';
@@ -6,8 +7,11 @@ import {
   EthereumDarwiniaBridgeConfig,
   EthereumDVMBridgeConfig,
   HistoryReq,
-  RedeemHistoryRes,
-  RingBurnHistoryRes,
+  Ethereum2DarwiniaRedeemHistoryRes,
+  Ethereum2DarwiniaRingBurnHistoryRes,
+  ICamelCaseKeys,
+  Ethereum2DarwiniaRingBurnRecord,
+  Ethereum2DarwiniaRedeemRecord,
 } from '../../model';
 import { apiUrl, rxGet } from '../helper';
 
@@ -21,11 +25,11 @@ export function queryEthereum2DarwiniaRedeemRecords({
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<RedeemHistoryRes | null> {
+}: HistoryReq): Observable<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>> | null> {
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
-  return rxGet<RedeemHistoryRes>({
+  return rxGet<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>>>({
     url: apiUrl(api, DarwiniaApiPath.redeem),
     params: { address, confirmed, ...paginator },
   }).pipe(
@@ -48,11 +52,13 @@ export function queryEthereum2DarwiniaGenesisRecords({
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<RingBurnHistoryRes | null> {
+}: HistoryReq): Observable<Ethereum2DarwiniaRingBurnHistoryRes<
+  ICamelCaseKeys<Ethereum2DarwiniaRingBurnRecord>
+> | null> {
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
-  return rxGet<RingBurnHistoryRes & { isGenesis: boolean }>({
+  return rxGet<Ethereum2DarwiniaRingBurnHistoryRes & { isGenesis: boolean }>({
     url: apiUrl(api, DarwiniaApiPath.ringBurn),
     params: { address, confirmed, ...paginator },
   }).pipe(
@@ -61,7 +67,7 @@ export function queryEthereum2DarwiniaGenesisRecords({
 
       return {
         count,
-        list: (list || []).map((item) => ({ ...item, isGenesis: true })),
+        list: (list || []).map((item) => camelCaseKeys({ ...item, isGenesis: true })),
       };
     }),
     catchError((err) => {
@@ -81,11 +87,11 @@ export function queryEthereum2DarwiniaDVMRedeemRecords({
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<RedeemHistoryRes | null> {
+}: HistoryReq): Observable<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>> | null> {
   const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
-  return rxGet<RedeemHistoryRes>({
+  return rxGet<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>>>({
     url: apiUrl(api, DarwiniaApiPath.tokenLock),
     params: { sender: address, ...paginator, confirmed },
   }).pipe(
