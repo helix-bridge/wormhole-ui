@@ -29,10 +29,11 @@ export function queryEthereum2DarwiniaRedeemRecords({
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
-  return rxGet<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>>>({
+  return rxGet<Ethereum2DarwiniaRedeemHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.redeem),
     params: { address, confirmed, ...paginator },
   }).pipe(
+    map((res) => ({ count: res?.count ?? 0, list: (res?.list ?? []).map((item) => camelCaseKeys(item)) })),
     catchError((err) => {
       console.error(
         '%c [ e2d cross chain api request error: ]',
@@ -62,14 +63,10 @@ export function queryEthereum2DarwiniaGenesisRecords({
     url: apiUrl(api, DarwiniaApiPath.ringBurn),
     params: { address, confirmed, ...paginator },
   }).pipe(
-    map((res) => {
-      const { count, list } = res!;
-
-      return {
-        count,
-        list: (list || []).map((item) => camelCaseKeys({ ...item, isGenesis: true })),
-      };
-    }),
+    map((res) => ({
+      count: res?.count ?? 0,
+      list: (res?.list ?? []).map((item) => camelCaseKeys({ ...item, isGenesis: true })),
+    })),
     catchError((err) => {
       console.error('%c [ genesis api request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
       return of(null);
@@ -95,6 +92,7 @@ export function queryEthereum2DarwiniaDVMRedeemRecords({
     url: apiUrl(api, DarwiniaApiPath.tokenLock),
     params: { sender: address, ...paginator, confirmed },
   }).pipe(
+    map((res) => ({ count: res?.count ?? 0, list: (res?.list ?? []).map((item) => camelCaseKeys(item)) })),
     catchError((err) => {
       console.error(
         '%c [ e2dvm cross chain api request error: ]',
