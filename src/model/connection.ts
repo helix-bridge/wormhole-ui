@@ -1,5 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { IAccountMeta } from './account';
+import { PolkadotTypeNetwork } from './network';
 
 /**
  * pending: initial state, indicate that the connection never launched.
@@ -24,6 +25,7 @@ export interface Connection {
 
 export interface PolkadotConnection extends Connection {
   api: ApiPromise | null;
+  network: PolkadotTypeNetwork;
 }
 
 export interface EthereumConnection extends Connection {

@@ -1,15 +1,21 @@
 import { ApiPromise } from '@polkadot/api';
+import { negate } from 'lodash';
 import { createContext, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { EMPTY, Subscription } from 'rxjs';
+import { EMPTY, iif, of, Subscription } from 'rxjs';
+import Web3 from 'web3';
 import {
   Action,
-  Chain,
   ChainConfig,
   Connection,
   ConnectionStatus,
+  EthereumChainConfig,
+  EthereumConnection,
   Network,
   NetworkMode,
+  NoNullFields,
+  PolkadotChain,
   PolkadotConnection,
+  TronConnection,
 } from '../model';
 import {
   connect,
@@ -25,12 +31,19 @@ import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
   mainConnection: Connection;
+  connections: (NoNullFields<PolkadotConnection> | EthereumConnection | TronConnection)[];
   network: ChainConfig | null;
   isDev: boolean;
   enableTestNetworks: boolean;
 }
 
-type ActionType = 'setNetwork' | 'setMainConnection' | 'setEnableTestNetworks';
+type SetNetworkAction = Action<'setNetwork', ChainConfig | null>;
+type SetMainConnection = Action<'setMainConnection', Connection>;
+type SetEnableTestNetworks = Action<'setEnableTestNetworks', boolean>;
+type AddConnection = Action<'addConnection', Connection>;
+type RemoveConnection = Action<'removeConnection', Connection>;
+
+type Actions = SetNetworkAction | SetMainConnection | SetEnableTestNetworks | AddConnection | RemoveConnection;
 
 const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
@@ -46,17 +59,41 @@ const initialConnection: Connection = {
   type: 'unknown',
   accounts: [],
   chainId: '',
+  network: null,
 };
 
 const initialState: StoreState = {
   mainConnection: initialConnection,
+  connections: [],
   network: initialNetworkConfig(),
   isDev,
   enableTestNetworks: !!getInitialSetting('enableTestNetworks', isDev),
 };
 
-// eslint-disable-next-line complexity, @typescript-eslint/no-explicit-any
-function accountReducer(state: StoreState, action: Action<ActionType, any>): StoreState {
+const isConnectionOfChain = (chain: ChainConfig) => {
+  const isConnectToMetamask = isDVM(chain) || isEthereumNetwork(chain.name);
+
+  return (target: Connection | NoNullFields<PolkadotConnection> | EthereumConnection) => {
+    const { network, chainId } = target;
+
+    return isConnectToMetamask
+      ? chainId === Web3.utils.toHex((chain as EthereumChainConfig).ethereumChain.chainId)
+      : network === chain.name;
+  };
+};
+
+const isSameConnection = (origin: Connection) => {
+  return (item: Connection) => {
+    return (
+      item.type === origin.type &&
+      ((item.network === (origin as PolkadotConnection).network && !!item.network) ||
+        (item.chainId === (origin as EthereumConnection).chainId && !!item.chainId))
+    );
+  };
+};
+
+// eslint-disable-next-line complexity
+function reducer(state: StoreState, action: Actions): StoreState {
   switch (action.type) {
     case 'setNetwork': {
       return { ...state, network: action.payload };
@@ -68,6 +105,20 @@ function accountReducer(state: StoreState, action: Action<ActionType, any>): Sto
 
     case 'setEnableTestNetworks': {
       return { ...state, enableTestNetworks: action.payload };
+    }
+
+    case 'addConnection': {
+      return {
+        ...state,
+        connections: state.connections.filter(negate(isSameConnection(action.payload))).concat([action.payload]),
+      };
+    }
+
+    case 'removeConnection': {
+      return {
+        ...state,
+        connections: state.connections.filter(negate(isSameConnection(action.payload))),
+      };
     }
 
     default:
@@ -82,7 +133,7 @@ export type ApiCtx = StoreState & {
   setNetwork: (network: ChainConfig | null) => void;
   setEnableTestNetworks: (enable: boolean) => void;
   setApi: (api: ApiPromise) => void;
-  chain: Chain;
+  chain: PolkadotChain;
 };
 
 export const ApiContext = createContext<ApiCtx | null>(null);
@@ -90,9 +141,11 @@ export const ApiContext = createContext<ApiCtx | null>(null);
 let subscription: Subscription = EMPTY.subscribe();
 
 export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
-  const [state, dispatch] = useReducer(accountReducer, initialState);
+  const [state, dispatch] = useReducer(reducer, initialState);
   const setNetwork = useCallback((payload: ChainConfig | null) => dispatch({ type: 'setNetwork', payload }), []);
-  const setConnection = useCallback((payload: Connection) => dispatch({ type: 'setMainConnection', payload }), []);
+  const setMainConnection = useCallback((payload: Connection) => dispatch({ type: 'setMainConnection', payload }), []);
+  const removeConnection = useCallback((payload: Connection) => dispatch({ type: 'removeConnection', payload }), []);
+  const addConnection = useCallback((payload: Connection) => dispatch({ type: 'addConnection', payload }), []);
 
   const setEnableTestNetworks = useCallback((payload: boolean) => {
     dispatch({ type: 'setEnableTestNetworks', payload });
@@ -100,40 +153,57 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   }, []);
 
   const [api, setApi] = useState<ApiPromise | null>(null);
-  const [chain, setChain] = useState<Chain>({ ss58Format: '', tokens: [] });
+  const [chain, setChain] = useState<PolkadotChain>({ ss58Format: '', tokens: [] });
 
   const observer = useMemo(
     () => ({
       next: (connection: Connection) => {
-        setConnection(connection);
+        setMainConnection(connection);
 
         const nApi = (connection as PolkadotConnection).api;
 
-        if (nApi) {
-          nApi?.isReady.then(() => {
-            setApi(nApi);
-          });
+        if (nApi && connection.status === ConnectionStatus.success) {
+          setApi(nApi);
+          addConnection(connection);
+        } else if (connection.status === ConnectionStatus.success) {
+          addConnection(connection);
         }
       },
       error: (err: unknown) => {
-        setConnection({ status: ConnectionStatus.error, accounts: [], type: 'unknown', api: null });
+        setMainConnection({ ...initialConnection, status: ConnectionStatus.error });
         console.error('%c connection error ', 'font-size:13px; background:pink; color:#bf2c9f;', err);
       },
       complete: () => {
         console.info('Connection life is over');
       },
     }),
-    [setConnection]
+    [addConnection, setMainConnection]
   );
 
   const connectNetwork = useCallback(
-    (config: ChainConfig) => {
+    (chainConfig: ChainConfig) => {
+      const connection = state.connections.find(isConnectionOfChain(chainConfig));
+
       subscription.unsubscribe();
 
-      setNetwork(config);
-      subscription = connect(config).subscribe(observer);
+      setNetwork(chainConfig);
+
+      subscription = iif(
+        () => {
+          const existAvailableConnection = !!connection && connection.status === ConnectionStatus.success;
+
+          // !FIXME: better to wait for reconnecting?
+          if (connection && connection.status !== ConnectionStatus.success) {
+            removeConnection(connection);
+          }
+
+          return existAvailableConnection;
+        },
+        of(connection!),
+        connect(chainConfig)
+      ).subscribe(observer);
     },
-    [observer, setNetwork]
+    [observer, removeConnection, setNetwork, state.connections]
   );
 
   // eslint-disable-next-line complexity
@@ -145,7 +215,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     if (isPolkadot && api && api.isConnected) {
       subscription.unsubscribe();
 
-      setConnection(initialConnection);
+      setMainConnection(initialConnection);
       setApi(null);
       setNetwork(null);
 
@@ -155,15 +225,15 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     const isEthereum = isEthereumNetwork(state.network?.name) || isDvm;
 
     if ((isEthereum && window.ethereum.isConnected()) || state.network?.name === 'tron') {
-      setConnection(initialConnection);
+      setMainConnection(initialConnection);
       setNetwork(null);
       return;
     }
-  }, [api, setConnection, setNetwork, state.network]);
+  }, [api, setMainConnection, setNetwork, state.network]);
 
   useEffect(() => {
     if (!state.network) {
-      setConnection(initialConnection);
+      setMainConnection(initialConnection);
     } else {
       subscription = connect(state.network).subscribe(observer);
     }
@@ -172,7 +242,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       console.info('[Api provider] Cancel network subscription of network', state.network?.name);
       subscription.unsubscribe();
     };
-  }, [observer, setConnection, state.network]);
+  }, [observer, setMainConnection, state.network]);
 
   useEffect(() => {
     if (!api) {
@@ -187,13 +257,13 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
       const chainInfo = tokenDecimals.reduce(
-        (acc: Chain, decimal: string, index: number) => {
+        (acc: PolkadotChain, decimal: string, index: number) => {
           const unit = getUnit(+decimal);
           const token = { decimal: unit, symbol: tokenSymbol[index] };
 
           return { ...acc, tokens: [...acc.tokens, token] };
         },
-        { ss58Format, tokens: [] } as Chain
+        { ss58Format, tokens: [] } as PolkadotChain
       );
 
       setChain(chainInfo);

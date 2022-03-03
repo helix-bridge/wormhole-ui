@@ -10,7 +10,7 @@ import { abi, FORM_CONTROL } from '../../../config';
 import { useAfterSuccess, useApi, useTx } from '../../../hooks';
 import {
   AvailableBalance,
-  Chain,
+  PolkadotChain,
   ConnectionStatus,
   CrossChainComponentProps,
   CrossChainPayload,
@@ -109,14 +109,14 @@ export function DVMSubstrate({
         const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
 
         return tokenDecimals.reduce(
-          (acc: Chain, decimal: string, index: number) => {
+          (acc: PolkadotChain, decimal: string, index: number) => {
             const unit = getUnit(+decimal);
             const token = { decimal: unit, symbol: tokenSymbol[index] };
 
             return { ...acc, tokens: [...acc.tokens, token] };
           },
           { ss58Format, tokens: [] }
-        ) as Chain;
+        ) as PolkadotChain;
       })
     );
 
@@ -167,15 +167,15 @@ export function DVMSubstrate({
   useEffect(() => {
     (async () => {
       const account = accounts[0]?.address;
+
       if (!network || !account || !apiPromise) {
         return;
       }
 
-      const address = dvmAddressToAccountId(account).toHuman();
-
       await waitUntilConnected(apiPromise);
 
       try {
+        const address = dvmAddressToAccountId(account).toHuman();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const ktonUsableBalance = await (apiPromise.rpc as any).balances.usableBalance(1, address);
         const usableBalance: string = ktonUsableBalance.usableBalance.toString();
