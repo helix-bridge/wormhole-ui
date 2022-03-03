@@ -23,7 +23,6 @@ import {
   getUnit,
   isDVM,
   isEthereumNetwork,
-  isPolkadotNetwork,
   verticesToChainConfig,
   waitUntilConnected,
 } from '../utils';
@@ -31,6 +30,7 @@ import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
   mainConnection: Connection;
+  assistantConnection: Connection;
   connections: (NoNullFields<PolkadotConnection> | EthereumConnection | TronConnection)[];
   network: ChainConfig | null;
   isDev: boolean;
@@ -39,11 +39,18 @@ interface StoreState {
 
 type SetNetworkAction = Action<'setNetwork', ChainConfig | null>;
 type SetMainConnection = Action<'setMainConnection', Connection>;
+type SetAssistantConnection = Action<'setAssistantConnection', Connection>;
 type SetEnableTestNetworks = Action<'setEnableTestNetworks', boolean>;
 type AddConnection = Action<'addConnection', Connection>;
 type RemoveConnection = Action<'removeConnection', Connection>;
 
-type Actions = SetNetworkAction | SetMainConnection | SetEnableTestNetworks | AddConnection | RemoveConnection;
+type Actions =
+  | SetNetworkAction
+  | SetMainConnection
+  | SetAssistantConnection
+  | SetEnableTestNetworks
+  | AddConnection
+  | RemoveConnection;
 
 const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
@@ -64,6 +71,7 @@ const initialConnection: Connection = {
 
 const initialState: StoreState = {
   mainConnection: initialConnection,
+  assistantConnection: initialConnection,
   connections: [],
   network: initialNetworkConfig(),
   isDev,
@@ -103,6 +111,10 @@ function reducer(state: StoreState, action: Actions): StoreState {
       return { ...state, mainConnection: action.payload };
     }
 
+    case 'setAssistantConnection': {
+      return { ...state, mainConnection: action.payload };
+    }
+
     case 'setEnableTestNetworks': {
       return { ...state, enableTestNetworks: action.payload };
     }
@@ -129,6 +141,7 @@ function reducer(state: StoreState, action: Actions): StoreState {
 export type ApiCtx = StoreState & {
   api: ApiPromise | null;
   connectNetwork: (network: ChainConfig) => void;
+  connectAssistantNetwork: (network: ChainConfig) => void;
   disconnect: () => void;
   setNetwork: (network: ChainConfig | null) => void;
   setEnableTestNetworks: (enable: boolean) => void;
@@ -144,6 +157,12 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const setNetwork = useCallback((payload: ChainConfig | null) => dispatch({ type: 'setNetwork', payload }), []);
   const setMainConnection = useCallback((payload: Connection) => dispatch({ type: 'setMainConnection', payload }), []);
+
+  const setAssistantConnection = useCallback(
+    (payload: Connection) => dispatch({ type: 'setAssistantConnection', payload }),
+    []
+  );
+
   const removeConnection = useCallback((payload: Connection) => dispatch({ type: 'removeConnection', payload }), []);
   const addConnection = useCallback((payload: Connection) => dispatch({ type: 'addConnection', payload }), []);
 
@@ -180,60 +199,70 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     [addConnection, setMainConnection]
   );
 
+  const isConnectionAvailable = useCallback(
+    (connection) => {
+      const availableStatus = [ConnectionStatus.success, ConnectionStatus.connecting, ConnectionStatus];
+      const existAvailableConnection = !!connection && availableStatus.includes(connection.status);
+
+      if (connection && !existAvailableConnection) {
+        removeConnection(connection);
+      }
+
+      return existAvailableConnection;
+    },
+    [removeConnection]
+  );
+
   const connectNetwork = useCallback(
     (chainConfig: ChainConfig) => {
-      const connection = state.connections.find(isConnectionOfChain(chainConfig));
+      const target = state.connections.find(isConnectionOfChain(chainConfig));
 
       subscription.unsubscribe();
 
       setNetwork(chainConfig);
 
-      subscription = iif(
-        () => {
-          const existAvailableConnection = !!connection && connection.status === ConnectionStatus.success;
-
-          // !FIXME: better to wait for reconnecting?
-          if (connection && connection.status !== ConnectionStatus.success) {
-            removeConnection(connection);
-          }
-
-          return existAvailableConnection;
-        },
-        of(connection!),
-        connect(chainConfig)
-      ).subscribe(observer);
+      subscription = iif(() => isConnectionAvailable(target), of(target!), connect(chainConfig)).subscribe(observer);
     },
-    [observer, removeConnection, setNetwork, state.connections]
+    [isConnectionAvailable, observer, setNetwork, state.connections]
   );
 
-  // eslint-disable-next-line complexity
-  const disconnect = useCallback(() => {
-    const isDvm = state.network && isDVM(state.network);
-    const isPolkadot = isPolkadotNetwork(state.network?.name) && !isDvm;
+  const connectAssistantNetwork = useCallback(
+    (chainConfig: ChainConfig) => {
+      const target = state.connections.find(isConnectionOfChain(chainConfig));
 
-    // !FIXME
-    if (isPolkadot && api && api.isConnected) {
+      const sub$$ = iif(() => isConnectionAvailable(target), of(target!), connect(chainConfig)).subscribe({
+        next: (cur: Connection) => {
+          if (cur.status === ConnectionStatus.success) {
+            addConnection(cur);
+            setAssistantConnection(cur);
+          }
+        },
+        error: (err: unknown) => {
+          console.log('%c [ err ]-224', 'font-size:13px; background:pink; color:#bf2c9f;', err);
+        },
+      });
+
+      subscription.add(sub$$);
+    },
+    [addConnection, isConnectionAvailable, setAssistantConnection, state.connections]
+  );
+
+  const disconnect = useCallback(() => {
+    if (api && api.isConnected) {
       subscription.unsubscribe();
 
-      setMainConnection(initialConnection);
       setApi(null);
-      setNetwork(null);
-
-      return;
     }
 
-    const isEthereum = isEthereumNetwork(state.network?.name) || isDvm;
-
-    if ((isEthereum && window.ethereum.isConnected()) || state.network?.name === 'tron') {
-      setMainConnection(initialConnection);
-      setNetwork(null);
-      return;
-    }
-  }, [api, setMainConnection, setNetwork, state.network]);
+    setMainConnection(initialConnection);
+    setAssistantConnection(initialConnection);
+    setNetwork(null);
+  }, [api, setAssistantConnection, setMainConnection, setNetwork]);
 
   useEffect(() => {
     if (!state.network) {
       setMainConnection(initialConnection);
+      setAssistantConnection(initialConnection);
     } else {
       subscription = connect(state.network).subscribe(observer);
     }
@@ -242,7 +271,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       console.info('[Api provider] Cancel network subscription of network', state.network?.name);
       subscription.unsubscribe();
     };
-  }, [observer, setMainConnection, state.network]);
+  }, [observer, setAssistantConnection, setMainConnection, state.network]);
 
   useEffect(() => {
     if (!api) {
@@ -275,6 +304,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
       value={{
         ...state,
         connectNetwork,
+        connectAssistantNetwork,
         disconnect,
         setNetwork,
         setEnableTestNetworks,
