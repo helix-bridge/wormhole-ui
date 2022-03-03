@@ -374,7 +374,7 @@ export function DVM({
       >
         <Balance
           size="large"
-          placeholder={t('Balance {{balance}}', {
+          placeholder={t('Available Balance {{balance}}', {
             balance: isNull(availableBalance) ? t('Querying') : availableBalance,
           })}
           onChange={setCurAmount}

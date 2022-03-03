@@ -499,7 +499,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
         >
           <Balance
             size="large"
-            placeholder={t('Balance {{balance}}', {
+            placeholder={t('Available Balance {{balance}}', {
               balance: isBalanceQuerying ? t('Querying') : availableBalance,
             })}
             className="flex-1"

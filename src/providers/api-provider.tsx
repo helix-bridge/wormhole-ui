@@ -112,7 +112,7 @@ function reducer(state: StoreState, action: Actions): StoreState {
     }
 
     case 'setAssistantConnection': {
-      return { ...state, mainConnection: action.payload };
+      return { ...state, assistantConnection: action.payload };
     }
 
     case 'setEnableTestNetworks': {

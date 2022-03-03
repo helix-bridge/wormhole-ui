@@ -21,7 +21,7 @@ import { RecipientItem } from '../../form-control/RecipientItem';
 import { TransferConfirm } from '../../modal/TransferConfirm';
 import { TransferSuccess } from '../../modal/TransferSuccess';
 
-export function SubstrateDVM({
+export function Substrate2DVM({
   form,
   direction,
   setSubmit,
@@ -42,14 +42,10 @@ export function SubstrateDVM({
 
       const { sender, asset, amount } = data;
       const unit = availableBalances.find((item) => item.token.symbol === asset)?.token.decimal || 'gwei';
-      const value = {
-        ...data,
-        amount: toWei({ value: amount, unit }),
-      };
-      const beforeTransfer = applyModalObs({
-        content: <TransferConfirm value={value} unit={unit} />,
-      });
+      const value = { ...data, amount: toWei({ value: amount, unit }) };
+      const beforeTransfer = applyModalObs({ content: <TransferConfirm value={value} unit={unit} /> });
       const obs = issuingFromSubstrate2DVM(value, api);
+
       const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'block',
         onDisappear: () => {

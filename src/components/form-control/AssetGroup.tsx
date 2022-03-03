@@ -130,7 +130,7 @@ export function AssetGroup({
                 >
                   <Balance
                     disabled={!target.checked || insufficient}
-                    placeholder={t('Balance {{balance}}', {
+                    placeholder={t('Available Balance {{balance}}', {
                       balance: balance?.max ? fromWei({ value: balance.max, unit }) : t('Querying'),
                     })}
                     onChange={(amount) => {

@@ -40,9 +40,14 @@ import { FormItemExtra } from '../../widget/facade';
 import { KtonDraw } from './KtonDraw';
 
 async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<[string, string]> {
-  const web3 = new Web3(window.ethereum);
   let ring = '0';
   let kton = '0';
+
+  if (!Web3.utils.isAddress(account)) {
+    return [ring, kton];
+  }
+
+  const web3 = new Web3(window.ethereum);
 
   try {
     ring = await web3.eth.getBalance(account);
@@ -70,7 +75,7 @@ async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<[s
   return [ring, kton];
 }
 
-export function DVMSubstrate({
+export function DVM2Substrate({
   form,
   direction,
   setSubmit,
