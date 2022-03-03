@@ -252,7 +252,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
   const [tokens, setTokens] = useState<TokenCache[]>([]);
   const {
-    connection: { accounts },
+    mainConnection: { accounts },
   } = useApi();
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();

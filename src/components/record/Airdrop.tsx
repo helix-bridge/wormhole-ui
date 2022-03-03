@@ -21,7 +21,7 @@ const CLAIM_ENDPOINT = 'https://crab.subscan.io';
 export function AirdropRecord() {
   const { t } = useTranslation();
   const {
-    connection: { accounts, status },
+    mainConnection: { accounts, status },
     network,
   } = useApi();
   const [claimAmount, setClaimAmount] = useState(new BN(0));

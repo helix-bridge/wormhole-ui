@@ -62,7 +62,7 @@ export const useMappingTokens = (
   const [state, dispatch] = useReducer(reducer, initialState);
   const addKnownProof = useCallback((proofs: StoredProof) => dispatch({ payload: proofs, type: 'updateProof' }), []);
   const switchToConfirmed = useCallback((token: string) => dispatch({ payload: token, type: 'switchToConfirmed' }), []);
-  const { connection } = useApi();
+  const { mainConnection: connection } = useApi();
   const { address: currentAccount } = useMemo(() => (connection.accounts || [])[0] ?? '', [connection.accounts]);
   const refreshTokenBalance = useCallback(
     async (tokenAddress: string) => {

@@ -24,13 +24,13 @@ import {
 import { updateStorage } from '../utils/helper/storage';
 
 interface StoreState {
-  connection: Connection;
+  mainConnection: Connection;
   network: ChainConfig | null;
   isDev: boolean;
   enableTestNetworks: boolean;
 }
 
-type ActionType = 'setNetwork' | 'setConnection' | 'setEnableTestNetworks';
+type ActionType = 'setNetwork' | 'setMainConnection' | 'setEnableTestNetworks';
 
 const isDev = process.env.REACT_APP_HOST_TYPE === 'dev';
 
@@ -49,7 +49,7 @@ const initialConnection: Connection = {
 };
 
 const initialState: StoreState = {
-  connection: initialConnection,
+  mainConnection: initialConnection,
   network: initialNetworkConfig(),
   isDev,
   enableTestNetworks: !!getInitialSetting('enableTestNetworks', isDev),
@@ -62,8 +62,8 @@ function accountReducer(state: StoreState, action: Action<ActionType, any>): Sto
       return { ...state, network: action.payload };
     }
 
-    case 'setConnection': {
-      return { ...state, connection: action.payload };
+    case 'setMainConnection': {
+      return { ...state, mainConnection: action.payload };
     }
 
     case 'setEnableTestNetworks': {
@@ -92,13 +92,16 @@ let subscription: Subscription = EMPTY.subscribe();
 export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
   const [state, dispatch] = useReducer(accountReducer, initialState);
   const setNetwork = useCallback((payload: ChainConfig | null) => dispatch({ type: 'setNetwork', payload }), []);
-  const setConnection = useCallback((payload: Connection) => dispatch({ type: 'setConnection', payload }), []);
+  const setConnection = useCallback((payload: Connection) => dispatch({ type: 'setMainConnection', payload }), []);
+
   const setEnableTestNetworks = useCallback((payload: boolean) => {
     dispatch({ type: 'setEnableTestNetworks', payload });
     updateStorage({ enableTestNetworks: payload });
   }, []);
+
   const [api, setApi] = useState<ApiPromise | null>(null);
   const [chain, setChain] = useState<Chain>({ ss58Format: '', tokens: [] });
+
   const observer = useMemo(
     () => ({
       next: (connection: Connection) => {
@@ -122,6 +125,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     }),
     [setConnection]
   );
+
   const connectNetwork = useCallback(
     (config: ChainConfig) => {
       subscription.unsubscribe();
@@ -137,6 +141,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     const isDvm = state.network && isDVM(state.network);
     const isPolkadot = isPolkadotNetwork(state.network?.name) && !isDvm;
 
+    // !FIXME
     if (isPolkadot && api && api.isConnected) {
       subscription.unsubscribe();
 
@@ -171,6 +176,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
 
   useEffect(() => {
     if (!api) {
+      setChain({ ss58Format: '', tokens: [] });
       return;
     }
 

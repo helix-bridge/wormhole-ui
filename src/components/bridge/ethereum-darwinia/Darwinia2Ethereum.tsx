@@ -174,7 +174,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
   const { t } = useTranslation();
 
   const {
-    connection: { accounts },
+    mainConnection: { accounts },
     api,
     chain,
   } = useApi();

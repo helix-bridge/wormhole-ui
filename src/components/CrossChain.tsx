@@ -64,7 +64,7 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
   const [form] = useForm<CrossChainPayload>();
   const {
     network,
-    connection: { status },
+    mainConnection: { status },
     disconnect,
   } = useApi();
   const [direction, setDirection] = useState(() => validateDirection(getDirectionFromSettings(), type));

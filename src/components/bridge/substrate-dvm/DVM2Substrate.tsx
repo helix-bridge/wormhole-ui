@@ -78,7 +78,7 @@ export function DVMSubstrate({
   const { t } = useTranslation();
   const {
     network,
-    connection: { accounts },
+    mainConnection: { accounts },
   } = useApi();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload>>();
