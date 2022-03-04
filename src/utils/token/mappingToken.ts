@@ -16,7 +16,10 @@ import {
 } from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
-import { abi, DarwiniaApiPath, LONG_DURATION, RegisterStatus, SHORT_DURATION } from '../../config';
+import { abi } from '../../config/abi';
+import { DarwiniaApiPath } from '../../config/api';
+import { LONG_DURATION, SHORT_DURATION } from '../../config/constant';
+import { RegisterStatus } from '../../config/erc20';
 import {
   ChainConfig,
   CrossChainDirection,
@@ -34,7 +37,8 @@ import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR, MMRProof } from '../mmr';
 import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount } from '../network';
 import { getMPTProof } from '../record';
-import { genEthereumContractTxObs, getErc20MappingPrams, getS2SMappingParams } from '../tx';
+import { getErc20MappingPrams, getS2SMappingParams } from '../tx/redeem';
+import { genEthereumContractTxObs } from '../tx/common';
 import { getErc20Meta, getTokenBalance } from './tokenInfo';
 
 export type StoredProof = {

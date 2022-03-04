@@ -2,7 +2,7 @@ import { message } from 'antd';
 import { useCallback, useMemo, useReducer, useState } from 'react';
 import { map } from 'rxjs';
 import useDeepCompareEffect from 'use-deep-compare-effect';
-import { RegisterStatus } from '../config';
+import { RegisterStatus } from '../config/erc20';
 import { Action, Erc20RegisterStatus, Erc20Token, NullableCrossChainDirection, RequiredPartial } from '../model';
 import { isDVM, isEthereumNetwork } from '../utils';
 import { getTokenBalance } from '../utils/token/tokenInfo';

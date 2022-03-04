@@ -1,8 +1,8 @@
 import { catchError, Observable, of } from 'rxjs';
 import camelCaseKeys from 'camelcase-keys';
 import { map } from 'rxjs/operators';
-import { getBridge } from '..';
-import { DarwiniaApiPath } from '../../config';
+import { getBridge } from '../bridge';
+import { DarwiniaApiPath } from '../../config/api';
 import {
   EthereumDarwiniaBridgeConfig,
   EthereumDVMBridgeConfig,

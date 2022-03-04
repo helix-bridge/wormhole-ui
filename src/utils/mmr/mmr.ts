@@ -3,7 +3,7 @@ import { TypeRegistry } from '@polkadot/types';
 import { hexToU8a } from '@polkadot/util';
 import { lastValueFrom, map } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
-import { MMR_QUERY } from '../../config';
+import { MMR_QUERY } from '../../config/query';
 import { Network, PolkadotChainConfig } from '../../model';
 import { remove0x } from '../helper';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';

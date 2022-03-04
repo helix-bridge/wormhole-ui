@@ -1,6 +1,6 @@
 import { FormInstance } from 'antd';
 import { useEffect, useState } from 'react';
-import { FORM_CONTROL } from '../config';
+import { FORM_CONTROL } from '../config/constant';
 import { CrossChainPayload, CrossChainDirection } from '../model';
 
 export function useLock(form: FormInstance<CrossChainPayload<{ recipient: string }>>) {

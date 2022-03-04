@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { catchError, EMPTY, from, map, Observable, of } from 'rxjs';
 import Web3 from 'web3';
-import { DATE_TIME_FORMATE, FORM_CONTROL } from '../config';
 import { useApi } from '../hooks';
 import { CrossChainComponentProps, CrossChainPayload, CrossChainDirection } from '../model';
 import { buf2hex, entrance, getAirdropData, isValidAddress } from '../utils';
@@ -97,7 +96,7 @@ export function Airport({
   }, [setSubmit, t]);
 
   useEffect(() => {
-    form.setFieldsValue({ [FORM_CONTROL.sender]: account });
+    form.setFieldsValue({ sender: account });
   }, [form, account]);
 
   return (
@@ -105,17 +104,17 @@ export function Airport({
       <Form.Item
         label={
           <span className="capitalize">
-            {t('Connected to {{network}}', { network: form.getFieldValue(FORM_CONTROL.direction)?.from?.name ?? '' })}
+            {t('Connected to {{network}}', { network: form.getFieldValue('direction')?.from?.name ?? '' })}
           </span>
         }
-        name={FORM_CONTROL.sender}
+        name="sender"
         rules={[{ required: true }]}
       >
         <Input size="large" disabled value={account} />
       </Form.Item>
 
       <Form.Item
-        name={FORM_CONTROL.amount}
+        name="amount"
         label={<span className="capitalize">{t('Snapshot data')}</span>}
         rules={[
           { required: true },
@@ -129,12 +128,12 @@ export function Airport({
       >
         <div className="flex flex-col px-4 py-2 rounded-lg bg-gray-900">
           <span>{amount} RING</span>
-          <span>{format(fromUnixTime(SNAPSHOT_TIMESTAMP), DATE_TIME_FORMATE + ' zz')}</span>
+          <span>{format(fromUnixTime(SNAPSHOT_TIMESTAMP), 'yyyy/MM/dd HH:mm:ss zz')}</span>
         </div>
       </Form.Item>
 
       <Form.Item
-        name={FORM_CONTROL.recipient}
+        name="recipient"
         label={t('Recipient')}
         validateFirst
         rules={[

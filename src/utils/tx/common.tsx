@@ -6,7 +6,7 @@ import Web3 from 'web3';
 import { PromiEvent, TransactionConfig, TransactionReceipt } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
-import { abi } from '../../config';
+import { abi } from '../../config/abi';
 import {
   CrossChainPayload,
   DVMPayload,

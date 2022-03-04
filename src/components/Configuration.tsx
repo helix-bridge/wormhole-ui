@@ -4,7 +4,7 @@ import { useForm } from 'antd/lib/form/Form';
 import { isArray, isBoolean, isEqual, isNumber, isObject, isString, last } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { DESCRIPTIONS, SYSTEM_NETWORK_CONFIGURATIONS } from '../config';
+import { DESCRIPTIONS, SYSTEM_NETWORK_CONFIGURATIONS } from '../config/network';
 import { Network } from '../model';
 import { addCustomChain, readStorage, removeCustomChain, saveNetworkConfig, getNetworkByName } from '../utils';
 

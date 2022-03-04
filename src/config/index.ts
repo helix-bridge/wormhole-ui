@@ -6,5 +6,6 @@ export * from './erc20';
 export * from './i18n';
 export * from './network';
 export * from './query';
+export * from './routes';
 export * from './theme';
 export * from './validate-msg';

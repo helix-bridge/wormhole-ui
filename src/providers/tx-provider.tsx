@@ -2,7 +2,7 @@ import { message } from 'antd';
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { delay, Observer, of } from 'rxjs';
 import { TxStatus } from '../components/widget/TxStatus';
-import { LONG_DURATION } from '../config';
+import { LONG_DURATION } from '../config/constant';
 import { RequiredPartial, Tx } from '../model';
 
 export interface TxCtx {

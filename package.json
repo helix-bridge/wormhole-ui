@@ -84,6 +84,7 @@
     "await-timeout": "^1.1.1",
     "axios": "^0.23.0",
     "bytes32": "^0.0.3",
+    "circular-dependency-plugin": "^5.2.2",
     "codelyzer": "^6.0.1",
     "cross-env": "^7.0.3",
     "cross-zip": "^4.0.0",

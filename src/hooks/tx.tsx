@@ -3,7 +3,7 @@ import { FunctionComponent, useCallback, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
 import { useHistory } from 'react-router-dom';
-import { Path } from '../config/routes';
+import { Path } from '../config/constant';
 import { CrossChainPayload, Tx, TxHashType, TxSuccessComponentProps } from '../model';
 import { TxContext, TxCtx } from '../providers';
 import { applyModal, convertToSS58, genHistoryRouteParams, getNetworkMode, isEthereumNetwork } from '../utils';

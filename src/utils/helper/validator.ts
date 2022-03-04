@@ -5,7 +5,7 @@ import type { ValidatorRule } from 'rc-field-form/lib/interface';
 import { TFunction } from 'react-i18next';
 import Web3 from 'web3';
 import { Network, NetworkCategory, PolkadotChainConfig, PolkadotTypeNetwork, Token } from '../../model';
-import { isPolkadotNetwork, NETWORK_CONFIGURATIONS } from '../network';
+import { isPolkadotNetwork, NETWORK_CONFIGURATIONS } from '../network/network';
 import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
 import { toWei } from './balance';
 

@@ -13,9 +13,9 @@ import {
   S2S_ISSUING_RECORD_QUERY,
   S2S_REDEEM_RECORDS_QUERY,
   S2S_REDEEM_RECORD_QUERY,
-  SHORT_DURATION,
   TRANSFERS_QUERY,
-} from '../config';
+} from '../config/query';
+import { SHORT_DURATION } from '../config/constant';
 import {
   BridgeDispatchEventRecord,
   BridgeDispatchEventRes,

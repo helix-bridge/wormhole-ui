@@ -5,8 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { from, Observable, of, Subscription, switchMap, takeWhile } from 'rxjs';
-import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
-import { Path } from '../../config/routes';
+import { FORM_CONTROL, LONG_DURATION, Path, RegisterStatus } from '../../config';
 import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappingTokens, useTx } from '../../hooks';
 import {
   ChainConfig,

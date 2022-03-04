@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { EMPTY, takeWhile } from 'rxjs';
-import { darwiniaCrabDVM } from '../../config';
+import { darwiniaCrabDVM } from '../../config/bridge';
 import { useIsMounted, useNetworks, useRecords } from '../../hooks';
 import { ChainConfig, HistoryRouteParam, Paginator, Vertices } from '../../model';
 import {

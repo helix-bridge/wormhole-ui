@@ -5,7 +5,8 @@ import camelCaseKeys from 'camelcase-keys';
 import { upperFirst } from 'lodash';
 import { catchError, filter, from, map, Observable, of, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
-import { abi, DarwiniaApiPath } from '../../config';
+import { abi } from '../../config/abi';
+import { DarwiniaApiPath } from '../../config/api';
 import {
   CrossChainDirection,
   Darwinia2EthereumHistoryRes,
@@ -22,7 +23,7 @@ import { getBridge } from '../bridge';
 import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR } from '../mmr';
 import { connect, entrance, waitUntilConnected } from '../network';
-import { buf2hex, genEthereumContractTxObs } from '../tx';
+import { buf2hex, genEthereumContractTxObs } from '../tx/common';
 
 /* -------------------------------------------Inner Helper Fn---------------------------------------------- */
 

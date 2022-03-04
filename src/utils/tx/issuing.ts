@@ -3,7 +3,7 @@ import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import BN from 'bn.js';
 import { from, Observable, Observer, switchMap, switchMapTo, tap } from 'rxjs';
-import { abi } from '../../config';
+import { abi } from '../../config/abi';
 import {
   IssuingDarwiniaToken,
   IssuingDVMToken,

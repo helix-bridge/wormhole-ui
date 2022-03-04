@@ -1,6 +1,6 @@
 import { has, isEqual, pick } from 'lodash';
 import { ComingSoon } from '../../components/widget/ComingSoon';
-import { BRIDGES } from '../../config';
+import { BRIDGES } from '../../config/bridge';
 import {
   ChainConfig,
   Departure,
@@ -10,7 +10,7 @@ import {
   BridgeConfig,
   EthereumDVMBridgeConfig,
 } from '../../model';
-import { chainConfigToVertices, isDVM, isEthereumNetwork, isPolkadotNetwork } from '../network';
+import { chainConfigToVertices, isDVM, isEthereumNetwork, isPolkadotNetwork } from '../network/network';
 
 type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => boolean;
 

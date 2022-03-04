@@ -3,7 +3,7 @@ import { decodeAddress } from '@polkadot/util-crypto';
 import { memoize } from 'lodash';
 import { EMPTY, from as fromObs, map, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
-import { abi } from '../../config';
+import { abi } from '../../config/abi';
 import {
   CrossChainDirection,
   DVMChainConfig,
