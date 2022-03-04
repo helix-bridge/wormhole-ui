@@ -123,7 +123,7 @@ export function Substrate2SubstrateDVM({
   const { t } = useTranslation();
 
   const {
-    connection: { accounts },
+    mainConnection: { accounts },
     api,
     chain,
   } = useApi();

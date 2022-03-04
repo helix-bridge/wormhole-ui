@@ -12,7 +12,7 @@ interface EthereumAccountItemProps extends FormItemProps {
 export function EthereumAccountItem({ form, ...rest }: EthereumAccountItemProps) {
   const { t } = useTranslation();
   const {
-    connection: { accounts },
+    mainConnection: { accounts },
   } = useApi();
   const { updateDeparture } = useDeparture();
   const account = useMemo(() => {

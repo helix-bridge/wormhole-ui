@@ -12,9 +12,10 @@ export const getToken: (tokens: Token[], target: DarwiniaAsset) => Token = (toke
 
 export function useDarwiniaAvailableBalances() {
   const { api, chain, network } = useApi();
+
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
-    async (account: string) => {
-      if (!api) {
+    async (account: string | undefined | null) => {
+      if (!api || !account) {
         return [];
       }
 

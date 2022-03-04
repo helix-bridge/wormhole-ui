@@ -139,11 +139,11 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
 // eslint-disable-next-line complexity
 function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountCheckInfo) {
   const value = new BN(toWei({ value: amount || '0' }));
+  const animationCount = 5;
 
   if (!fee || !ringBalance || !balance) {
     return (
-      // eslint-disable-next-line no-magic-numbers
-      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
+      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : animationCount }}>
         {t('Transfer information querying')}
       </p>
     );
@@ -156,6 +156,7 @@ function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountChe
           {fromWei({ value: value.sub(fee) })} RING
         </Descriptions.Item>
       )}
+
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
         <span className="flex items-center">
           {fromWei({ value: fee })} RING
@@ -251,24 +252,26 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
   const [asset, setAsset] = useState<string>(() => form.getFieldValue(FORM_CONTROL.asset) ?? 'RING');
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
   const [tokens, setTokens] = useState<TokenCache[]>([]);
+
   const {
-    connection: { accounts },
+    mainConnection: { accounts },
+    assistantConnection,
   } = useApi();
+
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();
   const { afterTx, afterApprove } = useAfterSuccess<ApproveValue>();
+
   const account = useMemo(() => {
     const acc = (accounts || [])[0];
 
     return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
   }, [accounts]);
+
   const availableBalance = useMemo(() => {
     return max === null ? null : fromWei({ value: max }, prettyNumber);
   }, [max]);
-  const amountRules = useMemo(
-    () => getAmountRules({ fee, balance: max, ringBalance, asset, t }),
-    [asset, fee, max, ringBalance, t]
-  );
+
   const contracts = useMemo(() => {
     const bridget = getBridge<EthereumDarwiniaBridgeConfig>(direction);
 
@@ -333,6 +336,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
         const fn = () => (value: RedeemDarwiniaToken) => {
           const { amount, asset: iAsset, ...rest } = value;
           const sum = Web3.utils.toBN(toWei({ value: amount }));
+
           const actual = {
             ...rest,
             asset: iAsset,
@@ -351,7 +355,6 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
     [afterTx, fee, observer, refreshBalance, refreshDeposit, setSubmit]
   );
 
-  // eslint-disable-next-line complexity
   useEffect(() => {
     if (!account) {
       return;
@@ -395,6 +398,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
       <RecipientItem
         form={form}
         direction={direction}
+        accounts={assistantConnection.accounts}
         extraTip={
           <span className="inline-block mt-2 px-2">
             <Trans>
@@ -405,7 +409,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
         }
       />
 
-      <Form.Item name={FORM_CONTROL.asset} initialValue="ring" label={t('Asset')}>
+      <Form.Item name={FORM_CONTROL.asset} initialValue="RING" label={t('Asset')}>
         <Select
           size="large"
           placeholder="Select Assets"
@@ -445,6 +449,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
           </Select.Option>
         </Select>
       </Form.Item>
+
       {!tokens.length && (
         <Progress
           percent={100}
@@ -456,16 +461,20 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
       )}
 
       {isDeposit(asset) ? (
-        <DepositItem address={account} direction={direction} removedIds={removedDepositIds} rules={amountRules} />
+        <DepositItem
+          address={account}
+          direction={direction}
+          removedIds={removedDepositIds}
+          rules={getAmountRules({ fee, balance: max, ringBalance, asset, t })}
+        />
       ) : (
         <Form.Item
           name={FORM_CONTROL.amount}
           validateFirst
           label={t('Amount')}
           rules={[
-            ...amountRules,
+            ...getAmountRules({ fee, balance: max, ringBalance, asset, t }),
             {
-              // eslint-disable-next-line complexity
               validator: (_, value: string) => {
                 const val = !isRing(form.getFieldValue(FORM_CONTROL.asset)) ? fee ?? BN_ZERO : new BN(toWei({ value }));
 
@@ -499,7 +508,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
         >
           <Balance
             size="large"
-            placeholder={t('Balance {{balance}}', {
+            placeholder={t('Available Balance {{balance}}', {
               balance: isBalanceQuerying ? t('Querying') : availableBalance,
             })}
             className="flex-1"

@@ -1,3 +1,4 @@
+import { BN_ZERO } from '@polkadot/util';
 import { message } from 'antd';
 import BN from 'bn.js';
 import { useCallback, useMemo, useState } from 'react';
@@ -7,16 +8,14 @@ import { abi } from '../../../config';
 import { useTx } from '../../../hooks';
 import {
   ConnectionStatus,
-  D2EHistory as D2ERecordType,
-  D2EMeta,
+  Darwinia2EthereumRecord as D2ERecord,
+  Darwinia2EthereumMeta,
   EthereumDarwiniaBridgeConfig,
   RecordComponentProps,
 } from '../../../model';
 import { claimToken, connect, entrance, getBridge } from '../../../utils';
 import { Progresses, ProgressProps, State } from '../Progress';
 import { Record } from '../Record';
-
-const BN_ZERO = new BN(0);
 
 function isSufficient(
   config: EthereumDarwiniaBridgeConfig,
@@ -32,27 +31,27 @@ function isSufficient(
   return zip([limit, toadySpent]).pipe(map(([total, spent]) => new BN(total).sub(new BN(spent)).gte(amount)));
 }
 
-// eslint-disable-next-line complexity
 export function Darwinia2EthereumRecord({
   departure,
   arrival,
   record,
-}: RecordComponentProps<D2ERecordType & { meta: D2EMeta }>) {
+}: RecordComponentProps<D2ERecord & { meta: Darwinia2EthereumMeta }>) {
   const { t } = useTranslation();
   const { observer, setTx } = useTx();
-  const { block_timestamp, signatures, target, ring_value, kton_value, extrinsic_index, tx } = record;
+  const { blockTimestamp, signatures, target, ringValue, ktonValue, extrinsicIndex, tx } = record;
   const [hash, setHash] = useState(tx);
+
   const claim = useCallback(
     (monitor) => {
       const {
         signatures: sign,
-        ring_value: ring,
-        kton_value: kton,
-        mmr_index,
-        mmr_root,
-        block_header,
-        block_num,
-        block_hash,
+        ringValue: ring,
+        ktonValue: kton,
+        mmrIndex,
+        mmrRoot,
+        blockHeader,
+        blockNum,
+        blockHash,
         meta,
       } = record;
       setTx({ status: 'sending' });
@@ -92,12 +91,12 @@ export function Darwinia2EthereumRecord({
             isRingSuf && isKtonSuf
               ? claimToken({
                   direction: { from: departure!, to: arrival! },
-                  mmrIndex: mmr_index,
-                  mmrRoot: mmr_root,
+                  mmrIndex,
+                  mmrRoot,
                   mmrSignatures: sign,
-                  blockNumber: block_num,
-                  blockHeaderStr: block_header,
-                  blockHash: block_hash,
+                  blockNumber: blockNum,
+                  blockHeaderStr: blockHeader,
+                  blockHash,
                   meta,
                 })
               : EMPTY
@@ -124,24 +123,31 @@ export function Darwinia2EthereumRecord({
     [arrival, departure, observer, record, setTx, t]
   );
 
-  // eslint-disable-next-line complexity
-  const progresses = useMemo<ProgressProps[]>(() => {
-    const transactionSend: ProgressProps = {
+  const transactionSend: ProgressProps = useMemo(
+    () => ({
       title: t('{{chain}} Sent', { chain: departure?.name }),
       steps: [{ state: State.completed }],
       network: departure,
-    };
-    const originLocked: ProgressProps = {
+    }),
+    [departure, t]
+  );
+
+  const originLocked: ProgressProps = useMemo(
+    () => ({
       title: t('{{chain}} Confirmed', { chain: departure?.name }),
       steps: [
         {
-          state: extrinsic_index ? State.completed : State.pending,
-          txHash: extrinsic_index,
+          state: extrinsicIndex ? State.completed : State.pending,
+          txHash: extrinsicIndex,
         },
       ],
       network: departure,
-    };
-    const relayerConfirmed: ProgressProps = {
+    }),
+    [departure, extrinsicIndex, t]
+  );
+
+  const relayerConfirmed: ProgressProps = useMemo(
+    () => ({
       title: t('ChainRelay Confirmed'),
       steps: [
         {
@@ -151,28 +157,31 @@ export function Darwinia2EthereumRecord({
       ],
       icon: 'relayer.svg',
       network: null,
-    };
-    const targetConfirmedHash = hash;
-    const targetConfirmedState = targetConfirmedHash ? State.completed : State.pending;
-    const targetConfirmed: ProgressProps = {
-      title: t('{{chain}} Confirmed', { chain: arrival?.name }),
-      steps: [{ state: targetConfirmedState, txHash: targetConfirmedHash }],
-      network: arrival,
-    };
+    }),
+    [claim, hash, signatures, t]
+  );
 
-    return [transactionSend, originLocked, relayerConfirmed, targetConfirmed];
-  }, [arrival, claim, departure, extrinsic_index, hash, signatures, t]);
+  const targetConfirmed = useMemo<ProgressProps>(
+    () => ({
+      title: t('{{chain}} Confirmed', { chain: arrival?.name }),
+      steps: [{ state: hash ? State.completed : State.pending, txHash: hash }],
+      network: arrival,
+    }),
+    [arrival, hash, t]
+  );
+
+  const progresses = [transactionSend, originLocked, relayerConfirmed, targetConfirmed];
 
   return (
     <Record
       departure={departure}
       arrival={arrival}
       assets={[
-        { amount: ring_value, unit: 'gwei', currency: departure?.isTest ? 'PRING' : 'RING' },
-        { amount: kton_value, unit: 'gwei', currency: departure?.isTest ? 'PKTON' : 'KTON' },
+        { amount: ringValue, unit: 'gwei', currency: departure?.isTest ? 'PRING' : 'RING' },
+        { amount: ktonValue, unit: 'gwei', currency: departure?.isTest ? 'PKTON' : 'KTON' },
       ]}
       recipient={target}
-      blockTimestamp={block_timestamp}
+      blockTimestamp={blockTimestamp}
       items={progresses}
     >
       <Progresses items={progresses} />

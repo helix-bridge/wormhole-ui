@@ -12,4 +12,9 @@ const crabCrabDVMConfig: SubstrateDVMBridgeConfig = {
 /**
  * smart app: crab
  */
-export const crabCrabDVM = new Bridge<SubstrateDVMBridgeConfig>(omit(crabConfig, 'dvm'), crabConfig, crabCrabDVMConfig);
+export const crabCrabDVM = new Bridge<SubstrateDVMBridgeConfig>(
+  omit(crabConfig, 'dvm'),
+  crabConfig,
+  crabCrabDVMConfig,
+  { activeAssistantConnection: true }
+);

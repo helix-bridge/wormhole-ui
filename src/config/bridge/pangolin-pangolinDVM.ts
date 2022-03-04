@@ -15,5 +15,6 @@ const pangolinPangolinDVMConfig: SubstrateDVMBridgeConfig = {
 export const pangolinPangolinDVM = new Bridge<SubstrateDVMBridgeConfig>(
   omit(pangolinConfig, 'dvm'),
   pangolinConfig,
-  pangolinPangolinDVMConfig
+  pangolinPangolinDVMConfig,
+  { activeAssistantConnection: true }
 );

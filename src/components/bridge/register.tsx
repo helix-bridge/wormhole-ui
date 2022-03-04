@@ -17,7 +17,7 @@ import { Darwinia2Ethereum } from './ethereum-darwinia/Darwinia2Ethereum';
 import { Ethereum2Darwinia } from './ethereum-darwinia/Ethereum2Darwinia';
 import { DarwiniaDVM2Ethereum } from './ethereum-dvm/DarwiniaDVM2Ethereum';
 import { Ethereum2DarwiniaDVM } from './ethereum-dvm/Ethereum2DarwiniaDVM';
-import { DVMSubstrate, SubstrateDVM } from './substrate-dvm';
+import { DVM2Substrate, Substrate2DVM } from './substrate-dvm';
 import { Substrate2SubstrateDVM } from './substrate-substrateDVM/Substrate2SubstrateDVM';
 import { SubstrateDVM2Substrate } from './substrate-substrateDVM/SubstrateDVM2Substrate';
 
@@ -69,10 +69,10 @@ pangoroPangolinDVM.setRedeemComponents(
  * crab <-> crab dvm
  * pangolin <-> pangolin dvm
  */
-crabCrabDVM.setIssuingComponents(SubstrateDVM as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
-crabCrabDVM.setRedeemComponents(DVMSubstrate as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
-pangolinPangolinDVM.setIssuingComponents(SubstrateDVM as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
-pangolinPangolinDVM.setRedeemComponents(DVMSubstrate as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
+crabCrabDVM.setIssuingComponents(Substrate2DVM as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
+crabCrabDVM.setRedeemComponents(DVM2Substrate as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
+pangolinPangolinDVM.setIssuingComponents(Substrate2DVM as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
+pangolinPangolinDVM.setRedeemComponents(DVM2Substrate as FunctionComponent, SubstrateDVMRecord as FunctionComponent);
 
 /**
  * ethereum <-> crab dvm

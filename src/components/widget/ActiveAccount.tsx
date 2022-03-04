@@ -24,7 +24,7 @@ export function ActiveAccount({
 }: ActiveAccountProps) {
   const {
     network,
-    connection: { status, accounts },
+    mainConnection: { status, accounts },
   } = useApi();
   const containerCls = useMemo(
     () =>

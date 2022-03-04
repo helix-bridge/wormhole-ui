@@ -29,7 +29,7 @@ import { buf2hex, genEthereumContractTxObs, genEthereumTransactionObs } from './
 export const redeemDarwiniaToken: TxFn<RedeemDarwiniaToken> = ({ sender, direction, asset, amount, recipient }) => {
   const { to } = direction;
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
-  const contractAddress = bridge.config.contracts[asset as 'ring' | 'kton'] as string;
+  const contractAddress = bridge.config.contracts[asset.toLowerCase() as 'ring' | 'kton'] as string;
 
   recipient = buf2hex(decodeAddress(recipient, false, (to as PolkadotChainConfig).ss58Prefix).buffer);
 
@@ -101,7 +101,7 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
 }
 
 export function redeemFromDVM2Substrate(
-  value: SmartTxPayload,
+  value: SmartTxPayload<DVMChainConfig>,
   direction: CrossChainDirection<DVMChainConfig, PolkadotChainConfig>
 ): Observable<Tx> {
   const registry = new TypeRegistry();

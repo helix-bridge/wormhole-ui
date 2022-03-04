@@ -1,5 +1,3 @@
 import { FunctionComponent } from 'react';
 
-export function ComingSoon() {
-  return (() => <span>Coming Soon...</span>) as FunctionComponent;
-}
+export const ComingSoon: FunctionComponent = () => <div className="text-center">Coming Soon...</div>;

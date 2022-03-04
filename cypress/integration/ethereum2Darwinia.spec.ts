@@ -15,12 +15,8 @@ describe('Ethereum to Darwinia', () => {
 
   it('should launch ring tx', () => {
     cy.react('RecipientItem').find('input').type(recipient);
-    cy.react('Select', { props: { placeholder: 'Select Assets' } })
-      .click()
-      .then(() => cy.get('span').contains('Cross-chain Fee'))
-      .then(() => {
-        cy.react('Balance').type('3.14');
-      });
+    cy.react('TransferInfo').contains('Cross-chain Fee', { timeout: 1 * 60 * 1000 });
+    cy.react('Balance').type('3.14');
     cy.react('SubmitButton').click();
 
     cy.checkTxInfo('Ropsten');
@@ -38,11 +34,9 @@ describe('Ethereum to Darwinia', () => {
 
   it('should launch kton tx', () => {
     cy.react('RecipientItem').find('input').type(recipient);
-    cy.react('Select', { props: { placeholder: 'Select Assets' } })
-      .click()
-      .then(() => {
-        cy.get('.ant-select-item-option-content').contains('KTON').click();
-      });
+    cy.react('Progress').should('not.exist');
+    cy.react('Select', { props: { placeholder: 'Select Assets' } }).click();
+    cy.get('.ant-select-item-option-content').contains('KTON').click();
     cy.react('Balance').type('1.234');
     cy.react('SubmitButton').click();
 
