@@ -141,7 +141,7 @@ export function Direction({ value, onChange, type = 'cross-chain', mode = 'defau
         }}
         animationRandom={random}
         mode={mode}
-        className="pr-4 mb-0"
+        className="pr-4"
       />
 
       <Tooltip title={t('Reset Networks')}>

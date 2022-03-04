@@ -14,7 +14,6 @@
   "Available Balance {{balance}}": "Available Balance {{balance}}",
   "Available balance {{amount0}} {{symbol0}} {{amount1}} {{symbol1}}": "Available balance: {{amount0}} {{symbol0}} {{amount1}} {{symbol1}}",
   "Balance ": "Balance ",
-  "Balance {{balance}}": "balance: {{balance}}",
   "Both send and receive network are all required": "Both send and receive network are all required",
   "Bridge is not healthy, try it again later": "Bridge is not healthy, try it again later",
   "Can not verify amount because of invalid fee": "Can not verify amount because of invalid fee",

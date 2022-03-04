@@ -13,13 +13,7 @@ describe('DVM to main net', () => {
     cy.waitForReact();
   });
 
-  it('just to accept metamask access', () => {
-    cy.acceptMetamaskAccess(); // allow metamask connect;
-    expect(true).to.true;
-  });
-
   it('should launch ring tx', () => {
-    // cy.acceptMetamaskAccess(); // allow metamask connect;
     cy.get('.ant-notification-notice-btn > .ant-btn')
       .click()
       .then(() => {

@@ -148,7 +148,7 @@ export function DVM({
 }: CrossChainComponentProps<DVMPayload> & DVMProps) {
   const { t } = useTranslation();
   const {
-    connection: { accounts },
+    mainConnection: { accounts },
   } = useApi();
   const { total, tokens, refreshTokenBalance } = useMappingTokens(
     form.getFieldValue(FORM_CONTROL.direction),
@@ -374,7 +374,7 @@ export function DVM({
       >
         <Balance
           size="large"
-          placeholder={t('Balance {{balance}}', {
+          placeholder={t('Available Balance {{balance}}', {
             balance: isNull(availableBalance) ? t('Querying') : availableBalance,
           })}
           onChange={setCurAmount}

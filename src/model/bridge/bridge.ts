@@ -101,6 +101,8 @@ export class Bridge<C = BridgeConfig> {
 
   readonly stable: boolean;
 
+  readonly activeAssistantConnection: boolean;
+
   readonly departure: ChainConfig;
 
   readonly arrival: ChainConfig;
@@ -122,6 +124,7 @@ export class Bridge<C = BridgeConfig> {
     options?: {
       status?: BridgeStatus;
       stable?: boolean;
+      activeAssistantConnection?: boolean;
     }
   ) {
     const dep = this.toVertices(departure);
@@ -134,6 +137,7 @@ export class Bridge<C = BridgeConfig> {
     this._config = config;
     this.status = options?.status ?? 'available';
     this.stable = options?.stable ?? true;
+    this.activeAssistantConnection = options?.activeAssistantConnection ?? false;
   }
 
   get config() {

@@ -1,17 +1,20 @@
 import { ApiPromise } from '@polkadot/api';
 import { TypeRegistry } from '@polkadot/types';
 import { decodeAddress } from '@polkadot/util-crypto';
+import camelCaseKeys from 'camelcase-keys';
 import { upperFirst } from 'lodash';
 import { catchError, filter, from, map, Observable, of, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
 import { abi, DarwiniaApiPath } from '../../config';
 import {
   CrossChainDirection,
-  D2EHistoryRes,
-  D2EMeta,
+  Darwinia2EthereumHistoryRes,
+  Darwinia2EthereumMeta,
+  Darwinia2EthereumRecord,
   EthereumDarwiniaBridgeConfig,
   EthereumDVMBridgeConfig,
   HistoryReq,
+  ICamelCaseKeys,
   LockEventsStorage,
   Tx,
 } from '../../model';
@@ -41,14 +44,22 @@ export function queryDarwinia2EthereumIssuingRecords({
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<D2EHistoryRes | null> {
+}: HistoryReq): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
-  return rxGet<D2EHistoryRes>({
+  return rxGet<Darwinia2EthereumHistoryRes>({
     url: apiUrl(api, DarwiniaApiPath.locks),
     params: { address: buf2hex(decodeAddress(address).buffer), confirmed, ...paginator },
   }).pipe(
+    map((res) => {
+      if (!res) {
+        return res;
+      }
+      const { list, ...rest } = res;
+
+      return { ...rest, list: list.map((item) => camelCaseKeys(item)) };
+    }),
     catchError((err) => {
       console.error('%c [ d2e records request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
       return of(null);
@@ -66,11 +77,11 @@ export function queryDarwiniaDVM2EthereumIssuingRecords({
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<D2EHistoryRes | null> {
+}: HistoryReq): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
   const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
-  return rxGet<D2EHistoryRes>({
+  return rxGet<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>>>({
     url: apiUrl(api, DarwiniaApiPath.issuingBurns),
     params: { sender: address, confirmed, ...paginator },
   }).pipe(
@@ -91,7 +102,7 @@ interface ClaimInfo {
   blockNumber: number;
   blockHeaderStr: string;
   blockHash: string;
-  meta: D2EMeta;
+  meta: Darwinia2EthereumMeta;
 }
 
 export async function getMPTProof(

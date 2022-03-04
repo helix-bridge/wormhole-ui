@@ -1,7 +1,7 @@
 import { ApiPromise } from '@polkadot/api';
 import { chain as lodashChain, curry, curryRight, has, isEqual, isNull, omit, once, pick, upperFirst } from 'lodash';
 import Web3 from 'web3';
-import { getCustomNetworkConfig } from '../helper';
+import { getCustomNetworkConfig, getUnit } from '../helper';
 import { SYSTEM_NETWORK_CONFIGURATIONS, NETWORK_SIMPLE, tronConfig } from '../../config';
 import {
   Arrival,
@@ -17,6 +17,7 @@ import {
   NetworkCategory,
   NetworkMode,
   NoNullFields,
+  PolkadotChain,
   PolkadotConnection,
   Vertices,
 } from '../../model';
@@ -381,4 +382,20 @@ export function findNetworkConfig(network: Network | string): ChainConfig {
   }
 
   return target;
+}
+
+export async function getPolkadotChainProperties(api: ApiPromise): Promise<PolkadotChain> {
+  const chainState = await api?.rpc.system.properties();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
+
+  return tokenDecimals.reduce(
+    (acc: PolkadotChain, decimal: string, index: number) => {
+      const unit = getUnit(+decimal);
+      const token = { decimal: unit, symbol: tokenSymbol[index] };
+
+      return { ...acc, tokens: [...acc.tokens, token] };
+    },
+    { ss58Format, tokens: [] } as PolkadotChain
+  );
 }

@@ -22,6 +22,7 @@ import {
   isReachable,
   isSameNetConfig,
   getBridgeComponent,
+  getBridge,
 } from '../utils';
 import { Airport } from './Airport';
 import { Direction } from './form-control/Direction';
@@ -62,18 +63,38 @@ const validateDirection: (dir: NullableCrossChainDirection, type: CrossType) => 
 export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
   const { t, i18n } = useTranslation();
   const [form] = useForm<CrossChainPayload>();
+
   const {
     network,
-    connection: { status },
+    mainConnection: { status },
     disconnect,
+    connectAssistantNetwork,
   } = useApi();
+
   const [direction, setDirection] = useState(() => validateDirection(getDirectionFromSettings(), type));
   const [isReady, setIsReady] = useState(false);
   const [submitFn, setSubmit] = useState<SubmitFn>(emptyObsFactory);
   const { tx } = useTx();
+
   const launch = useCallback(() => {
     form.validateFields().then((values) => submitFn(values));
   }, [form, submitFn]);
+
+  const launchAssistantConnection = useCallback(
+    (data: NullableCrossChainDirection) => {
+      const { from: departure, to } = data;
+
+      if (departure && to) {
+        const bridge = getBridge({ from: departure, to });
+
+        if (bridge.activeAssistantConnection) {
+          connectAssistantNetwork(to);
+        }
+      }
+    },
+    [connectAssistantNetwork]
+  );
+
   const Content = useMemo(() => {
     if (type === 'airdrop') {
       return Airport;
@@ -97,6 +118,11 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
     setIsReady(fromReady && !!to);
   }, [network, status, direction]);
 
+  useEffect(() => {
+    launchAssistantConnection(direction);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Form
       name={FORM_CONTROL.direction}
@@ -116,6 +142,7 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
             },
           },
         ]}
+        className="mb-0"
       >
         <Direction
           onChange={(value) => {
@@ -128,6 +155,7 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
               FORM_CONTROL.assets,
               FORM_CONTROL.deposit,
             ]);
+            launchAssistantConnection(value);
           }}
           type={type}
         />

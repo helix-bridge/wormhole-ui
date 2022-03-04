@@ -115,7 +115,7 @@ export function getBridgeComponent(type: 'crossChain' | 'record') {
     const direction = [departure, arrival] as [Departure, Departure];
     const bridge = getBridge(direction);
 
-    if (!bridge) {
+    if (!bridge || bridge.status === 'pending') {
       return ComingSoon;
     }
 

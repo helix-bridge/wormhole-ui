@@ -75,7 +75,7 @@ export function Airport({
   const { t } = useTranslation();
   const [signature] = useState<string>('');
   const {
-    connection: { accounts },
+    mainConnection: { accounts },
   } = useApi();
   const [amount, setAmount] = useState('0');
   const { address: account } = useMemo(() => (accounts || [])[0] ?? { address: '' }, [accounts]);

@@ -8,6 +8,7 @@ import {
   Substrate2DVMPayload,
   Substrate2SubstrateDVMPayload,
 } from './bridge';
+import { DVMChainConfig, PolkadotChainConfig } from './network';
 import { DeepRequired } from './type-operator';
 
 export type TxStatus =
@@ -73,4 +74,8 @@ export type IssuingDarwiniaToken = CrossChainPayload<
 
 export type IssuingSubstrateToken = CrossChainPayload<DeepRequired<Substrate2SubstrateDVMPayload, [CommonPayloadKeys]>>;
 
-export type SmartTxPayload = CrossChainPayload<DeepRequired<Substrate2DVMPayload, [CommonPayloadKeys]>>;
+export type SmartTxPayload<F extends PolkadotChainConfig = PolkadotChainConfig> = CrossChainPayload<
+  DeepRequired<Substrate2DVMPayload, [CommonPayloadKeys]>,
+  F,
+  F extends DVMChainConfig ? PolkadotChainConfig : DVMChainConfig
+>;

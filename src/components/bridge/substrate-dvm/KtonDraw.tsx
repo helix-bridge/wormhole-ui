@@ -22,7 +22,7 @@ interface KtonDrawProps {
 export function KtonDraw({ direction, kton, pendingClaimAmount, onSuccess }: KtonDrawProps) {
   const {
     network,
-    connection: { accounts },
+    mainConnection: { accounts },
   } = useApi();
   const [isDisable, setIsDisable] = useState(false);
   const { observer } = useTx();

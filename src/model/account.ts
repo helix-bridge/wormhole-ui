@@ -12,10 +12,11 @@ export interface Token<T = string> {
   decimal: keyof Units;
 }
 
-export interface Chain {
+export interface PolkadotChain {
   tokens: Token[];
   ss58Format: string;
 }
+
 export interface AvailableBalance<T = string> {
   max: string | number | BN;
   asset: T;
