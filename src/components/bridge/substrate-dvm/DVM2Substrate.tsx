@@ -113,7 +113,7 @@ export function DVM2Substrate({
   }, []);
 
   useEffect(() => {
-    if (!apiPromise) {
+    if (!apiPromise || !accounts[0]) {
       return;
     }
 
@@ -210,6 +210,7 @@ export function DVM2Substrate({
       <RecipientItem
         form={form}
         direction={direction}
+        accounts={assistantConnection.accounts}
         extraTip={t(
           'Please make sure you have entered the correct {{type}} address. Entering wrong address will cause asset loss and cannot be recovered!',
           { type: 'Substrate' }

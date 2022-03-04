@@ -1,12 +1,13 @@
 import { LockOutlined } from '@ant-design/icons';
-import { Form, FormInstance, Input } from 'antd';
+import { AutoComplete, Form, FormInstance, Input } from 'antd';
 import { upperFirst } from 'lodash';
 import { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
 import { useLock } from '../../hooks';
-import { CrossChainComponentProps, CrossChainPayload, CrossChainParty } from '../../model';
+import { CrossChainComponentProps, CrossChainParty, CrossChainPayload, IAccountMeta } from '../../model';
 import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../../utils';
+import { IdentAccountAddress } from '../widget/account';
 import { FormItemExtra } from '../widget/facade';
 
 // eslint-disable-next-line complexity
@@ -14,8 +15,13 @@ export function RecipientItem({
   form,
   extraTip,
   direction,
+  accounts,
   isDvm = false,
-}: Omit<CrossChainComponentProps<CrossChainParty>, 'setSubmit'> & { extraTip?: string | ReactNode; isDvm?: boolean }) {
+}: Omit<CrossChainComponentProps<CrossChainParty>, 'setSubmit'> & {
+  extraTip?: string | ReactNode;
+  isDvm?: boolean;
+  accounts?: IAccountMeta[];
+}) {
   const { t } = useTranslation();
   const [lock] = useLock(form as FormInstance<CrossChainPayload<CrossChainParty>>);
 
@@ -52,15 +58,30 @@ export function RecipientItem({
         extra={to ? <FormItemExtra>{extraTip}</FormItemExtra> : ''}
         className="mb-2"
       >
-        <Input
-          onBlur={(event) => {
-            patchUrl({ recipient: event.target.value });
-          }}
-          disabled={lock}
-          suffix={lock && <LockOutlined />}
-          size="large"
-          placeholder={t('Type or select the recipient address')}
-        />
+        {isDvm || !accounts?.length ? (
+          <Input
+            onBlur={(event) => {
+              patchUrl({ recipient: event.target.value });
+            }}
+            disabled={lock}
+            suffix={lock && <LockOutlined />}
+            size="large"
+            placeholder={t('Type or select the recipient address')}
+          />
+        ) : (
+          <AutoComplete
+            disabled={lock}
+            placeholder={t('Type or select the recipient address')}
+            size="large"
+            className="flex-1"
+          >
+            {accounts.map((item) => (
+              <AutoComplete.Option value={item.address} key={item.address}>
+                <IdentAccountAddress account={item} />
+              </AutoComplete.Option>
+            ))}
+          </AutoComplete>
+        )}
       </Form.Item>
       {lock && <span className="text-gray-300">{t('You must select the destination network to unlock')}</span>}
     </Form.Item>

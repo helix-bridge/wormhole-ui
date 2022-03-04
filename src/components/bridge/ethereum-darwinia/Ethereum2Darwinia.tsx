@@ -251,24 +251,31 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
   const [asset, setAsset] = useState<string>(() => form.getFieldValue(FORM_CONTROL.asset) ?? 'RING');
   const [removedDepositIds, setRemovedDepositIds] = useState<number[]>([]);
   const [tokens, setTokens] = useState<TokenCache[]>([]);
+
   const {
     mainConnection: { accounts },
+    assistantConnection,
   } = useApi();
+
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();
   const { afterTx, afterApprove } = useAfterSuccess<ApproveValue>();
+
   const account = useMemo(() => {
     const acc = (accounts || [])[0];
 
     return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
   }, [accounts]);
+
   const availableBalance = useMemo(() => {
     return max === null ? null : fromWei({ value: max }, prettyNumber);
   }, [max]);
+
   const amountRules = useMemo(
     () => getAmountRules({ fee, balance: max, ringBalance, asset, t }),
     [asset, fee, max, ringBalance, t]
   );
+
   const contracts = useMemo(() => {
     const bridget = getBridge<EthereumDarwiniaBridgeConfig>(direction);
 
@@ -395,6 +402,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
       <RecipientItem
         form={form}
         direction={direction}
+        accounts={assistantConnection.accounts}
         extraTip={
           <span className="inline-block mt-2 px-2">
             <Trans>

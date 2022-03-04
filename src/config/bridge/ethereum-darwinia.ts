@@ -30,4 +30,6 @@ const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
 /**
  * ethereum <-> darwinia
  */
-export const ethereumDarwinia = new Bridge(ethereumConfig, darwiniaConfig, ethereumDarwiniaConfig);
+export const ethereumDarwinia = new Bridge(ethereumConfig, darwiniaConfig, ethereumDarwiniaConfig, {
+  activeAssistantConnection: true,
+});

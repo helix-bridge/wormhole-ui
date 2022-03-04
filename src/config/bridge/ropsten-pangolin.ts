@@ -29,4 +29,6 @@ const ropstenDVMChainConfig: EthereumDarwiniaBridgeConfig = {
 /**
  * ethereum <-> darwinia testnet
  */
-export const ropstenPangolin = new Bridge(ropstenConfig, omit(pangolinConfig, 'dvm'), ropstenDVMChainConfig);
+export const ropstenPangolin = new Bridge(ropstenConfig, omit(pangolinConfig, 'dvm'), ropstenDVMChainConfig, {
+  activeAssistantConnection: true,
+});
