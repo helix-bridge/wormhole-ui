@@ -1,6 +1,6 @@
 import { Form, Select } from 'antd';
 import BN from 'bn.js';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EMPTY, from } from 'rxjs';
 import { FORM_CONTROL } from '../../../config';
@@ -14,7 +14,14 @@ import {
   SmartTxPayload,
   Substrate2DVMPayload,
 } from '../../../model';
-import { applyModalObs, createTxWorkflow, issuingFromSubstrate2DVM, toWei } from '../../../utils';
+import {
+  applyModalObs,
+  createTxWorkflow,
+  fromWei,
+  issuingFromSubstrate2DVM,
+  prettyNumber,
+  toWei,
+} from '../../../utils';
 import { Balance } from '../../form-control/Balance';
 import { PolkadotAccountsItem } from '../../form-control/PolkadotAccountsItem';
 import { RecipientItem } from '../../form-control/RecipientItem';
@@ -29,10 +36,19 @@ export function Substrate2DVM({
   const { t } = useTranslation();
   const { api } = useApi();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
+  const [selectedToken, setSelectedToken] = useState<string>(form.getFieldValue(FORM_CONTROL.asset));
   const getBalances = useDarwiniaAvailableBalances();
   const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload>>();
   const { observer } = useTx();
   const { takeWhileIsMounted } = useIsMountedOperator();
+
+  const availableBalance = useMemo(() => {
+    if (selectedToken && availableBalances.length) {
+      return availableBalances.find((item) => item.token.symbol === selectedToken);
+    }
+
+    return null;
+  }, [availableBalances, selectedToken]);
 
   useEffect(() => {
     const fn = () => (data: SmartTxPayload) => {
@@ -67,7 +83,20 @@ export function Substrate2DVM({
     <>
       <PolkadotAccountsItem
         availableBalances={availableBalances}
-        onChange={(value) => from(getBalances(value)).pipe(takeWhileIsMounted()).subscribe(setAvailableBalances)}
+        onChange={(value) =>
+          from(getBalances(value))
+            .pipe(takeWhileIsMounted())
+            .subscribe((data) => {
+              if (!form.getFieldValue(FORM_CONTROL.asset) && data.length) {
+                const symbol = data[0].token.symbol;
+
+                form.setFieldsValue({ [FORM_CONTROL.asset as string]: symbol });
+                setSelectedToken(symbol);
+              }
+
+              setAvailableBalances(data);
+            })
+        }
         form={form}
       />
 
@@ -81,7 +110,13 @@ export function Substrate2DVM({
       />
 
       <Form.Item label={t('Asset')} name={FORM_CONTROL.asset} rules={[{ required: true }]}>
-        <Select size="large" placeholder={t('Please select token to be transfer')}>
+        <Select
+          onSelect={(symbol: string) => {
+            setSelectedToken(symbol);
+          }}
+          size="large"
+          placeholder={t('Please select token to be transfer')}
+        >
           {availableBalances.map(({ token: { symbol } }) => (
             <Select.Option value={symbol} key={symbol}>
               <span className="uppercase">{symbol}</span>
@@ -93,7 +128,7 @@ export function Substrate2DVM({
       <Form.Item
         validateFirst
         label={t('Amount')}
-        name="amount"
+        name={FORM_CONTROL.amount}
         rules={[
           { required: true },
           ({ getFieldValue }) => ({
@@ -111,7 +146,15 @@ export function Substrate2DVM({
           }),
         ]}
       >
-        <Balance size="large" className="flex-1"></Balance>
+        <Balance
+          placeholder={t('Available Balance {{balance}}', {
+            balance: !availableBalance
+              ? t('Querying')
+              : fromWei({ value: availableBalance?.max, unit: availableBalance?.token.decimal }, prettyNumber),
+          })}
+          size="large"
+          className="flex-1"
+        ></Balance>
       </Form.Item>
     </>
   );

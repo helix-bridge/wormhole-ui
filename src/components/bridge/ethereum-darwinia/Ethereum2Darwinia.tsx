@@ -413,7 +413,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
         }
       />
 
-      <Form.Item name={FORM_CONTROL.asset} initialValue="ring" label={t('Asset')}>
+      <Form.Item name={FORM_CONTROL.asset} initialValue="RING" label={t('Asset')}>
         <Select
           size="large"
           placeholder="Select Assets"
@@ -453,6 +453,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
           </Select.Option>
         </Select>
       </Form.Item>
+
       {!tokens.length && (
         <Progress
           percent={100}

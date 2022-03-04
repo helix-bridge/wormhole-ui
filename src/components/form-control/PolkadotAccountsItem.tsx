@@ -5,7 +5,7 @@ import { Unit } from 'web3-utils';
 import { FORM_CONTROL } from '../../config';
 import { useApi } from '../../hooks';
 import { AvailableBalance } from '../../model';
-import { fromWei } from '../../utils';
+import { fromWei, prettyNumber } from '../../utils';
 import { IdentAccountAddress } from '../widget/account';
 import { FormItemExtra } from '../widget/facade';
 
@@ -42,7 +42,7 @@ export function PolkadotAccountsItem({ onChange, availableBalances, form }: Polk
             {availableBalances.length
               ? availableBalances.map(({ asset, max, token }, index) => (
                   <span key={asset || index} className="mr-2">
-                    {fromWei({ value: max, unit: (token.decimal as Unit) || 'gwei' })} {token.symbol}
+                    {fromWei({ value: max, unit: (token.decimal as Unit) || 'gwei' }, prettyNumber)} {token.symbol}
                   </span>
                 ))
               : '-'}

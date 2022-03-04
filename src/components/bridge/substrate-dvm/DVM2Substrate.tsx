@@ -26,6 +26,7 @@ import {
   fromWei,
   getPolkadotChainProperties,
   isKton,
+  prettyNumber,
   redeemFromDVM2Substrate,
   toWei,
   waitUntilConnected,
@@ -90,6 +91,7 @@ export function DVM2Substrate({
   const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload<DVMChainConfig>>>();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
   const [pendingClaimAmount, setPendingClaimAmount] = useState<BN>(BN_ZERO);
+  const [selectedToken, setSelectedToken] = useState<string>(form.getFieldValue(FORM_CONTROL.asset));
   const kton = useMemo(() => availableBalances.find((item) => isKton(item.asset)), [availableBalances]);
 
   const apiPromise = useMemo<ApiPromise | null>(
@@ -97,20 +99,38 @@ export function DVM2Substrate({
     [assistantConnection]
   );
 
-  const getBalances = useCallback((api: ApiPromise, account: string, ktonContract: string) => {
-    const balancesObs = from(getTokenBalanceEth(ktonContract, account));
-    const chainInfoObs = from(getPolkadotChainProperties(api));
+  const availableBalance = useMemo(() => {
+    if (selectedToken && availableBalances.length) {
+      return availableBalances.find((item) => item.token.symbol === selectedToken);
+    }
 
-    return combineLatest([chainInfoObs, balancesObs]).subscribe(([{ tokens }, balances]) => {
-      const res: AvailableBalance[] = tokens.map((token, index) => ({
-        max: balances[index],
-        asset: token.symbol,
-        token,
-      }));
+    return null;
+  }, [availableBalances, selectedToken]);
 
-      setAvailableBalances(res);
-    });
-  }, []);
+  const getBalances = useCallback(
+    (api: ApiPromise, account: string, ktonContract: string) => {
+      const balancesObs = from(getTokenBalanceEth(ktonContract, account));
+      const chainInfoObs = from(getPolkadotChainProperties(api));
+
+      return combineLatest([chainInfoObs, balancesObs]).subscribe(([{ tokens }, balances]) => {
+        const data: AvailableBalance[] = tokens.map((token, index) => ({
+          max: balances[index],
+          asset: token.symbol,
+          token,
+        }));
+
+        if (!form.getFieldValue(FORM_CONTROL.asset) && data.length) {
+          const symbol = data[0].token.symbol;
+
+          form.setFieldsValue({ [FORM_CONTROL.asset as string]: symbol });
+          setSelectedToken(symbol);
+        }
+
+        setAvailableBalances(data);
+      });
+    },
+    [form]
+  );
 
   useEffect(() => {
     if (!apiPromise || !accounts[0]) {
@@ -197,8 +217,8 @@ export function DVM2Substrate({
           availableBalances.length && (
             <FormItemExtra>
               {t('Available balance {{amount0}} {{symbol0}} {{amount1}} {{symbol1}}', {
-                amount0: fromWei({ value: availableBalances[0].max }),
-                amount1: fromWei({ value: availableBalances[1].max }),
+                amount0: fromWei({ value: availableBalances[0].max }, prettyNumber),
+                amount1: fromWei({ value: availableBalances[1].max }, prettyNumber),
                 symbol0: availableBalances[0].token.symbol,
                 symbol1: availableBalances[1].token.symbol,
               })}
@@ -218,7 +238,13 @@ export function DVM2Substrate({
       />
 
       <Form.Item label={t('Asset')} name={FORM_CONTROL.asset} rules={[{ required: true }]}>
-        <Select size="large" placeholder={t('Please select token to be transfer')}>
+        <Select
+          onSelect={(symbol: string) => {
+            setSelectedToken(symbol);
+          }}
+          size="large"
+          placeholder={t('Please select token to be transfer')}
+        >
           {availableBalances.map(({ token: { symbol } }) => (
             <Select.Option value={symbol} key={symbol}>
               <span className="uppercase">{symbol}</span>
@@ -229,7 +255,7 @@ export function DVM2Substrate({
 
       <Form.Item
         label={t('Amount')}
-        name="amount"
+        name={FORM_CONTROL.amount}
         rules={[
           { required: true },
           ({ getFieldValue }) => ({
@@ -247,7 +273,13 @@ export function DVM2Substrate({
           }),
         ]}
       >
-        <Balance size="large" className="flex-1" />
+        <Balance
+          placeholder={t('Available Balance {{balance}}', {
+            balance: !availableBalance ? t('Querying') : fromWei({ value: availableBalance?.max }, prettyNumber),
+          })}
+          size="large"
+          className="flex-1"
+        />
       </Form.Item>
     </>
   );
