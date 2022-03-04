@@ -5,7 +5,7 @@ describe('Ethereum to Darwinia', () => {
   const hrefRegExp = /^https:\/\/ropsten.etherscan.io\/tx\/0x\w+$/;
 
   before(() => {
-    cy.activeMetamask();
+    // cy.activeMetamask();
   });
 
   beforeEach(() => {
@@ -13,11 +13,16 @@ describe('Ethereum to Darwinia', () => {
     cy.waitForReact();
   });
 
-  it('should launch ring tx', () => {
+  it.only('should launch ring tx', () => {
     cy.react('RecipientItem').find('input').type(recipient);
     cy.react('Select', { props: { placeholder: 'Select Assets' } })
       .click()
-      .then(() => cy.get('span').contains('Cross-chain Fee'))
+      .then(() =>
+        cy
+          .react('TransferInfo')
+          .get('span')
+          .contains('Cross-chain Fee', { timeout: 1 * 60 * 1000 })
+      )
       .then(() => {
         cy.react('Balance').type('3.14');
       });

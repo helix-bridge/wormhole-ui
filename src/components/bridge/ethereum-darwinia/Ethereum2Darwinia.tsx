@@ -139,11 +139,11 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
 // eslint-disable-next-line complexity
 function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountCheckInfo) {
   const value = new BN(toWei({ value: amount || '0' }));
+  const animationCount = 5;
 
   if (!fee || !ringBalance || !balance) {
     return (
-      // eslint-disable-next-line no-magic-numbers
-      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : 5 }}>
+      <p className="text-red-400 animate-pulse" style={{ animationIterationCount: !fee ? 'infinite' : animationCount }}>
         {t('Transfer information querying')}
       </p>
     );
@@ -156,6 +156,7 @@ function TransferInfo({ fee, balance, ringBalance, amount, asset, t }: AmountChe
           {fromWei({ value: value.sub(fee) })} RING
         </Descriptions.Item>
       )}
+
       <Descriptions.Item label={<Trans>Cross-chain Fee</Trans>} contentStyle={{ color: 'inherit' }}>
         <span className="flex items-center">
           {fromWei({ value: fee })} RING
@@ -340,6 +341,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
         const fn = () => (value: RedeemDarwiniaToken) => {
           const { amount, asset: iAsset, ...rest } = value;
           const sum = Web3.utils.toBN(toWei({ value: amount }));
+
           const actual = {
             ...rest,
             asset: iAsset,
@@ -358,7 +360,6 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
     [afterTx, fee, observer, refreshBalance, refreshDeposit, setSubmit]
   );
 
-  // eslint-disable-next-line complexity
   useEffect(() => {
     if (!account) {
       return;
@@ -474,7 +475,6 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
           rules={[
             ...amountRules,
             {
-              // eslint-disable-next-line complexity
               validator: (_, value: string) => {
                 const val = !isRing(form.getFieldValue(FORM_CONTROL.asset)) ? fee ?? BN_ZERO : new BN(toWei({ value }));
 
