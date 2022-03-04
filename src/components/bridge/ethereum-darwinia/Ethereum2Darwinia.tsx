@@ -272,11 +272,6 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
     return max === null ? null : fromWei({ value: max }, prettyNumber);
   }, [max]);
 
-  const amountRules = useMemo(
-    () => getAmountRules({ fee, balance: max, ringBalance, asset, t }),
-    [asset, fee, max, ringBalance, t]
-  );
-
   const contracts = useMemo(() => {
     const bridget = getBridge<EthereumDarwiniaBridgeConfig>(direction);
 
@@ -466,14 +461,19 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
       )}
 
       {isDeposit(asset) ? (
-        <DepositItem address={account} direction={direction} removedIds={removedDepositIds} rules={amountRules} />
+        <DepositItem
+          address={account}
+          direction={direction}
+          removedIds={removedDepositIds}
+          rules={getAmountRules({ fee, balance: max, ringBalance, asset, t })}
+        />
       ) : (
         <Form.Item
           name={FORM_CONTROL.amount}
           validateFirst
           label={t('Amount')}
           rules={[
-            ...amountRules,
+            ...getAmountRules({ fee, balance: max, ringBalance, asset, t }),
             {
               validator: (_, value: string) => {
                 const val = !isRing(form.getFieldValue(FORM_CONTROL.asset)) ? fee ?? BN_ZERO : new BN(toWei({ value }));
