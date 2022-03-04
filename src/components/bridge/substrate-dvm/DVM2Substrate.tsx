@@ -2,20 +2,19 @@ import { ApiPromise } from '@polkadot/api';
 import { BN_ZERO } from '@polkadot/util';
 import { Form, Select } from 'antd';
 import BN from 'bn.js';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { combineLatest, EMPTY, filter, from, map, switchMap, tap } from 'rxjs';
+import { combineLatest, from } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../../config';
 import { useAfterSuccess, useApi, useTx } from '../../../hooks';
 import {
   AvailableBalance,
-  PolkadotChain,
-  ConnectionStatus,
   CrossChainComponentProps,
   CrossChainPayload,
   DVMChainConfig,
   PolkadotChainConfig,
+  PolkadotConnection,
   SmartTxPayload,
   Substrate2DVMPayload,
 } from '../../../model';
@@ -23,9 +22,9 @@ import {
   applyModalObs,
   createTxWorkflow,
   dvmAddressToAccountId,
+  entrance,
   fromWei,
-  getPolkadotConnection,
-  getUnit,
+  getPolkadotChainProperties,
   isKton,
   redeemFromDVM2Substrate,
   toWei,
@@ -47,7 +46,7 @@ async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<[s
     return [ring, kton];
   }
 
-  const web3 = new Web3(window.ethereum);
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
 
   try {
     ring = await web3.eth.getBalance(account);
@@ -60,8 +59,7 @@ async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<[s
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ktonContract = new web3.eth.Contract(abi.ktonABI as any, ktonAddress, { gas: 55000 });
+    const ktonContract = new web3.eth.Contract(abi.ktonABI, ktonAddress, { gas: 55000 });
 
     kton = await ktonContract.methods.balanceOf(account).call();
   } catch (error) {
@@ -81,51 +79,29 @@ export function DVM2Substrate({
   setSubmit,
 }: CrossChainComponentProps<Substrate2DVMPayload, DVMChainConfig, PolkadotChainConfig>) {
   const { t } = useTranslation();
+
   const {
     network,
     mainConnection: { accounts },
+    assistantConnection,
   } = useApi();
+
   const { observer } = useTx();
-  const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload>>();
+  const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload<DVMChainConfig>>>();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
-  const [apiPromise, setApiPromise] = useState<ApiPromise | null>(null);
   const [pendingClaimAmount, setPendingClaimAmount] = useState<BN>(BN_ZERO);
   const kton = useMemo(() => availableBalances.find((item) => isKton(item.asset)), [availableBalances]);
 
-  /**
-   * TODO: remove this after api refactor
-   */
-  useEffect(() => {
-    const { to, from: departure } = direction;
-    const account = accounts[0]?.address;
-    const balancesObs = from(getTokenBalanceEth(departure.dvm.smartKton, account));
+  const apiPromise = useMemo<ApiPromise | null>(
+    () => (assistantConnection as PolkadotConnection).api,
+    [assistantConnection]
+  );
 
-    const chainInfoObs = getPolkadotConnection(to).pipe(
-      filter((connection) => connection.status === ConnectionStatus.success),
-      tap((connection) => {
-        setApiPromise(connection.api);
-      }),
-      switchMap((connection) => {
-        const { api } = connection;
-        return api ? from(api.rpc.system.properties()) : EMPTY;
-      }),
-      map((chainState) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
+  const getBalances = useCallback((api: ApiPromise, account: string, ktonContract: string) => {
+    const balancesObs = from(getTokenBalanceEth(ktonContract, account));
+    const chainInfoObs = from(getPolkadotChainProperties(api));
 
-        return tokenDecimals.reduce(
-          (acc: PolkadotChain, decimal: string, index: number) => {
-            const unit = getUnit(+decimal);
-            const token = { decimal: unit, symbol: tokenSymbol[index] };
-
-            return { ...acc, tokens: [...acc.tokens, token] };
-          },
-          { ss58Format, tokens: [] }
-        ) as PolkadotChain;
-      })
-    );
-
-    const sub$$ = combineLatest([chainInfoObs, balancesObs]).subscribe(([{ tokens }, balances]) => {
+    return combineLatest([chainInfoObs, balancesObs]).subscribe(([{ tokens }, balances]) => {
       const res: AvailableBalance[] = tokens.map((token, index) => ({
         max: balances[index],
         asset: token.symbol,
@@ -134,13 +110,22 @@ export function DVM2Substrate({
 
       setAvailableBalances(res);
     });
-
-    return () => sub$$.unsubscribe();
-  }, [accounts, direction]);
+  }, []);
 
   useEffect(() => {
-    const fn = () => (data: SmartTxPayload) => {
-      const { sender, amount } = data;
+    if (!apiPromise) {
+      return;
+    }
+
+    const sub$$ = getBalances(apiPromise, accounts[0].address, direction.from.dvm.smartKton);
+
+    return () => sub$$.unsubscribe();
+  }, [accounts, apiPromise, direction.from.dvm.smartKton, getBalances]);
+
+  useEffect(() => {
+    const fn = () => (data: SmartTxPayload<DVMChainConfig>) => {
+      const { sender, amount, direction: crossChain } = data;
+      const { from: departure } = crossChain;
 
       const value = {
         ...data,
@@ -151,7 +136,7 @@ export function DVM2Substrate({
         content: <TransferConfirm value={value} />,
       });
 
-      const obs = redeemFromDVM2Substrate(value, direction);
+      const obs = redeemFromDVM2Substrate(value, crossChain);
 
       const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'txHash',
@@ -159,7 +144,7 @@ export function DVM2Substrate({
           form.setFieldsValue({
             [FORM_CONTROL.sender]: sender,
           });
-          // getBalances(sender).then(setAvailableBalances);
+          getBalances(apiPromise!, sender, (departure as DVMChainConfig).dvm.smartKton);
         },
       })(value);
 
@@ -167,7 +152,7 @@ export function DVM2Substrate({
     };
 
     setSubmit(fn);
-  }, [afterTx, availableBalances, direction, form, observer, setSubmit]);
+  }, [afterTx, apiPromise, form, getBalances, observer, setSubmit]);
 
   useEffect(() => {
     (async () => {

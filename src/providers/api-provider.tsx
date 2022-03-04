@@ -20,7 +20,7 @@ import {
 import {
   connect,
   getInitialSetting,
-  getUnit,
+  getPolkadotChainProperties,
   isDVM,
   isEthereumNetwork,
   verticesToChainConfig,
@@ -120,9 +120,14 @@ function reducer(state: StoreState, action: Actions): StoreState {
     }
 
     case 'addConnection': {
+      const omitMetamask = (connection: Connection) =>
+        action.payload.type === 'metamask' ? connection.type !== 'metamask' : true;
+
       return {
         ...state,
-        connections: state.connections.filter(negate(isSameConnection(action.payload))).concat([action.payload]),
+        connections: state.connections
+          .filter((item) => negate(isSameConnection(action.payload))(item) && omitMetamask(item))
+          .concat([action.payload]),
       };
     }
 
@@ -282,18 +287,7 @@ export const ApiProvider = ({ children }: React.PropsWithChildren<unknown>) => {
     (async () => {
       await waitUntilConnected(api);
 
-      const chainState = await api?.rpc.system.properties();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
-      const chainInfo = tokenDecimals.reduce(
-        (acc: PolkadotChain, decimal: string, index: number) => {
-          const unit = getUnit(+decimal);
-          const token = { decimal: unit, symbol: tokenSymbol[index] };
-
-          return { ...acc, tokens: [...acc.tokens, token] };
-        },
-        { ss58Format, tokens: [] } as PolkadotChain
-      );
+      const chainInfo = await getPolkadotChainProperties(api);
 
       setChain(chainInfo);
     })();

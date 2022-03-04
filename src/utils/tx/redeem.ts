@@ -101,7 +101,7 @@ export function redeemSubstrate(value: RedeemDVMToken, mappingAddress: string, s
 }
 
 export function redeemFromDVM2Substrate(
-  value: SmartTxPayload,
+  value: SmartTxPayload<DVMChainConfig>,
   direction: CrossChainDirection<DVMChainConfig, PolkadotChainConfig>
 ): Observable<Tx> {
   const registry = new TypeRegistry();
