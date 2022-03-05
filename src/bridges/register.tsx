@@ -1,33 +1,27 @@
 import { FunctionComponent } from 'react';
 import {
-  crabCrabDVM,
-  darwiniaCrabDVM,
-  ethereumCrabDVM,
-  ethereumDarwinia,
-  pangolinPangolinDVM,
-  pangoroPangolinDVM,
-  ropstenPangolin,
-  ropstenPangolinDVM,
-} from '../config';
-import {
   Darwinia2Ethereum,
   Darwinia2EthereumRecord,
   Ethereum2Darwinia,
   Ethereum2DarwiniaRecord,
 } from './ethereum-darwinia';
+import { ethereumDarwinia, ropstenPangolin } from './ethereum-darwinia/config/bridge';
 import {
   DarwiniaDVM2Ethereum,
   DarwiniaDVM2EthereumRecord,
   Ethereum2DarwiniaDVM,
   Ethereum2DarwiniaDVMRecord,
 } from './ethereum-darwiniaDVM';
-import { DVM2Substrate, Substrate2DVM, Substrate2DVMRecord, DVM2SubstrateRecord } from './substrate-dvm';
+import { ethereumCrabDVM, ropstenPangolinDVM } from './ethereum-darwiniaDVM/config';
+import { DVM2Substrate, DVM2SubstrateRecord, Substrate2DVM, Substrate2DVMRecord } from './substrate-dvm';
+import { crabCrabDVM, pangolinPangolinDVM } from './substrate-dvm/config';
 import {
   Substrate2SubstrateDVM,
   Substrate2SubstrateDVMRecord,
   SubstrateDVM2Substrate,
   SubstrateDVM2SubstrateRecord,
 } from './substrate-substrateDVM';
+import { darwiniaCrabDVM, pangoroPangolinDVM } from './substrate-substrateDVM/config';
 
 /**
  * ethereum <-> darwinia

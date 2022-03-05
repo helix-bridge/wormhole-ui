@@ -264,6 +264,7 @@ export function DVM({
     <>
       <EthereumAccountItem form={form} />
 
+      {/* TODO: add accounts prop for better UX */}
       <RecipientItem
         form={form}
         direction={direction}

@@ -27,3 +27,9 @@ export enum Path {
   register = '/register',
   configure = '/configure',
 }
+
+export enum RegisterStatus {
+  unregister,
+  registered,
+  registering,
+}

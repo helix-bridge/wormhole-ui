@@ -5,9 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { EMPTY, takeWhile } from 'rxjs';
-import { darwiniaCrabDVM } from '../../config/bridge';
 import { useIsMounted, useNetworks, useRecords } from '../../hooks';
-import { ChainConfig, HistoryRouteParam, Paginator, Vertices } from '../../model';
+import { Arrival, ChainConfig, Departure, HistoryRouteParam, Paginator, Vertices } from '../../model';
 import {
   getCrossChainArrivals,
   getDisplayName,
@@ -27,7 +26,14 @@ import { RecordList } from './RecordList';
 
 const SOURCE_DATA_DEFAULT = { count: 0, list: [] };
 const PAGINATOR_DEFAULT = { row: 10, page: 0 };
-const defaultSelect = darwiniaCrabDVM.issuing;
+
+const defaultSelect: [Departure, Arrival] = [
+  {
+    network: 'darwinia',
+    mode: 'native',
+  },
+  { network: 'crab', mode: 'dvm' },
+];
 
 // eslint-disable-next-line complexity
 const isAddressValid = (addr: string | null, departure: Vertices) => {

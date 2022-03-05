@@ -1,6 +1,6 @@
 import { has, isEqual, pick } from 'lodash';
 import { ComingSoon } from '../../components/widget/ComingSoon';
-import { BRIDGES } from '../../config/bridge';
+import { BRIDGES } from '../../config/bridges';
 import {
   ChainConfig,
   Departure,

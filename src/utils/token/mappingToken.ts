@@ -18,8 +18,7 @@ import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { abi } from '../../config/abi';
 import { DarwiniaApiPath } from '../../config/api';
-import { LONG_DURATION, SHORT_DURATION } from '../../config/constant';
-import { RegisterStatus } from '../../config/erc20';
+import { LONG_DURATION, SHORT_DURATION, RegisterStatus } from '../../config/constant';
 import {
   ChainConfig,
   CrossChainDirection,

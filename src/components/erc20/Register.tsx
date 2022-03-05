@@ -5,9 +5,8 @@ import { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState
 import { Trans, useTranslation } from 'react-i18next';
 import { from, mergeMap } from 'rxjs';
 import Web3 from 'web3';
-import { FORM_CONTROL } from '../../config/constant';
+import { FORM_CONTROL, RegisterStatus } from '../../config/constant';
 import { validateMessages } from '../../config/validate-msg';
-import { RegisterStatus } from '../../config/erc20';
 import { ropstenConfig } from '../../config/network';
 import i18n from '../../config/i18n';
 import { MemoedTokenInfo, useApi, useLocalSearch, useMappingTokens, useTx } from '../../hooks';
