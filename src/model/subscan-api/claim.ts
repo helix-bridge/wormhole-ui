@@ -5,3 +5,7 @@ export interface SubscanResponse<T = any> {
   data?: T;
   generated_at: number; // timestamp
 }
+
+export interface ClaimsRes {
+  info: Record<string, unknown>[];
+}

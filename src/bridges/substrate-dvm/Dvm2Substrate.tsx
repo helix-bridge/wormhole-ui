@@ -15,8 +15,6 @@ import {
   DVMChainConfig,
   PolkadotChainConfig,
   PolkadotConnection,
-  SmartTxPayload,
-  Substrate2DVMPayload,
 } from '../../model';
 import {
   applyModalObs,
@@ -27,7 +25,6 @@ import {
   getPolkadotChainProperties,
   isKton,
   prettyNumber,
-  redeemFromDVM2Substrate,
   toWei,
   waitUntilConnected,
 } from '../../utils';
@@ -38,6 +35,8 @@ import { TransferConfirm } from '../../components/modal/TransferConfirm';
 import { TransferSuccess } from '../../components/modal/TransferSuccess';
 import { FormItemExtra } from '../../components/widget/facade';
 import { KtonDraw } from './KtonDraw';
+import { SmartTxPayload, Substrate2DVMPayload } from './model/cross-chain';
+import { redeemFromDVM2Substrate } from './utils';
 
 async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<[string, string]> {
   let ring = '0';

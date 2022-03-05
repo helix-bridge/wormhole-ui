@@ -1,15 +1,8 @@
 import { has, isEqual, pick } from 'lodash';
+import { EthereumDVMBridgeConfig } from '../../bridges/ethereum-darwiniaDVM/model';
 import { ComingSoon } from '../../components/widget/ComingSoon';
 import { BRIDGES } from '../../config/bridges';
-import {
-  ChainConfig,
-  Departure,
-  CrossChainDirection,
-  Vertices,
-  Bridge,
-  BridgeConfig,
-  EthereumDVMBridgeConfig,
-} from '../../model';
+import { ChainConfig, Departure, CrossChainDirection, Vertices, Bridge, BridgeConfig } from '../../model';
 import { chainConfigToVertices, isDVM, isEthereumNetwork, isPolkadotNetwork } from '../network/network';
 
 type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => boolean;

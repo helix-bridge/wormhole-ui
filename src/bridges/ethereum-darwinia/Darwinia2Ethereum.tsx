@@ -7,31 +7,17 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, map, Observable } from 'rxjs';
 import Web3 from 'web3';
-import { FORM_CONTROL } from '../../config/constant';
-import { getToken, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
-import {
-  AvailableBalance,
-  CrossChainComponentProps,
-  CrossChainPayload,
-  Darwinia2EthereumPayload,
-  DarwiniaAsset,
-  IssuingDarwiniaToken,
-  Token,
-} from '../../model';
-import {
-  applyModalObs,
-  createTxWorkflow,
-  fromWei,
-  getInfoFromHash,
-  isRing,
-  issuingDarwiniaTokens,
-  toWei,
-} from '../../utils';
 import { AssetGroup, AssetGroupValue } from '../../components/form-control/AssetGroup';
 import { PolkadotAccountsItem } from '../../components/form-control/PolkadotAccountsItem';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { TransferConfirm } from '../../components/modal/TransferConfirm';
 import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { FORM_CONTROL } from '../../config/constant';
+import { getToken, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
+import { AvailableBalance, CrossChainComponentProps, CrossChainPayload, DarwiniaAsset, Token } from '../../model';
+import { applyModalObs, createTxWorkflow, fromWei, getInfoFromHash, isRing, toWei } from '../../utils';
+import { Darwinia2EthereumPayload, IssuingDarwiniaTxPayload } from './model';
+import { issuingDarwiniaTokens } from './utils';
 
 interface AmountCheckInfo {
   fee: BN | null;
@@ -207,7 +193,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
   );
 
   useEffect(() => {
-    const fn = () => (data: IssuingDarwiniaToken) => {
+    const fn = () => (data: IssuingDarwiniaTxPayload) => {
       if (!api || !fee) {
         return EMPTY.subscribe();
       }

@@ -6,3 +6,9 @@ export interface Action<U, T = string> {
 export type Config<T extends string, U> = { [key in T]: U };
 
 export type CrossType = 'cross-chain' | 'airdrop';
+
+export enum DarwiniaAsset {
+  ring = 'ring',
+  kton = 'kton',
+  crab = 'crab',
+}

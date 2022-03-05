@@ -1,29 +1,16 @@
 import { ApiPromise } from '@polkadot/api';
 import { TypeRegistry } from '@polkadot/types';
-import { decodeAddress } from '@polkadot/util-crypto';
-import camelCaseKeys from 'camelcase-keys';
 import { upperFirst } from 'lodash';
-import { catchError, filter, from, map, Observable, of, switchMap, take, zip } from 'rxjs';
+import { filter, from, map, Observable, switchMap, take, zip } from 'rxjs';
 import { Contract } from 'web3-eth-contract';
+import { EthereumDarwiniaBridgeConfig } from '../../bridges/ethereum-darwinia/model';
 import { abi } from '../../config/abi';
-import { DarwiniaApiPath } from '../../config/api';
-import {
-  CrossChainDirection,
-  Darwinia2EthereumHistoryRes,
-  Darwinia2EthereumMeta,
-  Darwinia2EthereumRecord,
-  EthereumDarwiniaBridgeConfig,
-  EthereumDVMBridgeConfig,
-  HistoryReq,
-  ICamelCaseKeys,
-  LockEventsStorage,
-  Tx,
-} from '../../model';
+import { CrossChainDirection, LockEventsStorage, Tx } from '../../model';
 import { getBridge } from '../bridge';
-import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
+import { encodeBlockHeader } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR } from '../mmr';
 import { connect, entrance, waitUntilConnected } from '../network';
-import { buf2hex, genEthereumContractTxObs } from '../tx/common';
+import { genEthereumContractTxObs } from '../tx/common';
 
 /* -------------------------------------------Inner Helper Fn---------------------------------------------- */
 
@@ -33,64 +20,6 @@ function getD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsS
   );
 
   return matchedStorageKey?.key;
-}
-
-/* -------------------------------------------D2E---------------------------------------------- */
-
-/**
- * @description darwinia -> ethereum
- */
-export function queryDarwinia2EthereumIssuingRecords({
-  address,
-  confirmed,
-  direction,
-  paginator,
-}: HistoryReq): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
-  const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
-  const api = bridge.config.api.dapp;
-
-  return rxGet<Darwinia2EthereumHistoryRes>({
-    url: apiUrl(api, DarwiniaApiPath.locks),
-    params: { address: buf2hex(decodeAddress(address).buffer), confirmed, ...paginator },
-  }).pipe(
-    map((res) => {
-      if (!res) {
-        return res;
-      }
-      const { list, ...rest } = res;
-
-      return { ...rest, list: list.map((item) => camelCaseKeys(item)) };
-    }),
-    catchError((err) => {
-      console.error('%c [ d2e records request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
-      return of(null);
-    })
-  );
-}
-
-/* -------------------------------------------DVM2E---------------------------------------------- */
-
-/**
- * @description darwinia DVM -> ethereum
- */
-export function queryDarwiniaDVM2EthereumIssuingRecords({
-  address,
-  confirmed,
-  direction,
-  paginator,
-}: HistoryReq): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
-  const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
-  const api = bridge.config.api.dapp;
-
-  return rxGet<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>>>({
-    url: apiUrl(api, DarwiniaApiPath.issuingBurns),
-    params: { sender: address, confirmed, ...paginator },
-  }).pipe(
-    catchError((err) => {
-      console.error('%c [ dvm2e records request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
-      return of(null);
-    })
-  );
 }
 
 /* -------------------------------------------Claim Token---------------------------------------------- */
@@ -103,7 +32,10 @@ interface ClaimInfo {
   blockNumber: number;
   blockHeaderStr: string;
   blockHash: string;
-  meta: Darwinia2EthereumMeta;
+  meta: {
+    best: number;
+    MMRRoot: string;
+  };
 }
 
 export async function getMPTProof(

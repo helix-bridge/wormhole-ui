@@ -1,21 +1,18 @@
-import { catchError, Observable, of } from 'rxjs';
+import { decodeAddress } from '@polkadot/util-crypto';
 import camelCaseKeys from 'camelcase-keys';
-import { map } from 'rxjs/operators';
-import { getBridge } from '../bridge';
-import { DarwiniaApiPath } from '../../config/api';
+import { catchError, map, Observable, of } from 'rxjs';
+import { DarwiniaApiPath } from '../../../config/api';
+import { HistoryReq, ICamelCaseKeys } from '../../../model';
+import { apiUrl, buf2hex, getBridge, rxGet } from '../../../utils';
 import {
-  EthereumDarwiniaBridgeConfig,
-  EthereumDVMBridgeConfig,
-  HistoryReq,
+  Darwinia2EthereumHistoryRes,
+  Darwinia2EthereumRecord,
   Ethereum2DarwiniaRedeemHistoryRes,
-  Ethereum2DarwiniaRingBurnHistoryRes,
-  ICamelCaseKeys,
-  Ethereum2DarwiniaRingBurnRecord,
   Ethereum2DarwiniaRedeemRecord,
-} from '../../model';
-import { apiUrl, rxGet } from '../helper';
-
-/* -------------------------------------------E2D---------------------------------------------- */
+  Ethereum2DarwiniaRingBurnHistoryRes,
+  Ethereum2DarwiniaRingBurnRecord,
+  EthereumDarwiniaBridgeConfig,
+} from '../model';
 
 /**
  * @description darwinia <- ethereum
@@ -74,31 +71,32 @@ export function queryEthereum2DarwiniaGenesisRecords({
   );
 }
 
-/* -------------------------------------------E2DVM---------------------------------------------- */
-
 /**
- * @description darwinia DVM <- ethereum
+ * @description darwinia -> ethereum
  */
-export function queryEthereum2DarwiniaDVMRedeemRecords({
+export function queryDarwinia2EthereumIssuingRecords({
   address,
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>> | null> {
-  const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
+}: HistoryReq): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
+  const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
-  return rxGet<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>>>({
-    url: apiUrl(api, DarwiniaApiPath.tokenLock),
-    params: { sender: address, ...paginator, confirmed },
+  return rxGet<Darwinia2EthereumHistoryRes>({
+    url: apiUrl(api, DarwiniaApiPath.locks),
+    params: { address: buf2hex(decodeAddress(address).buffer), confirmed, ...paginator },
   }).pipe(
-    map((res) => ({ count: res?.count ?? 0, list: (res?.list ?? []).map((item) => camelCaseKeys(item)) })),
+    map((res) => {
+      if (!res) {
+        return res;
+      }
+      const { list, ...rest } = res;
+
+      return { ...rest, list: list.map((item) => camelCaseKeys(item)) };
+    }),
     catchError((err) => {
-      console.error(
-        '%c [ e2dvm cross chain api request error: ]',
-        'font-size:13px; background:pink; color:#bf2c9f;',
-        err
-      );
+      console.error('%c [ d2e records request error: ]', 'font-size:13px; background:pink; color:#bf2c9f;', err);
       return of(null);
     })
   );

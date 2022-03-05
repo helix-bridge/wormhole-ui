@@ -8,19 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Observable, from, map, catchError, of, switchMap, tap, EMPTY } from 'rxjs';
 import Web3 from 'web3';
 import { SHORT_DURATION } from '../../../config/constant';
-import {
-  HistoryReq,
-  Substrate2SubstrateDVMRecord,
-  ChainConfig,
-  Substrate2SubstrateDVMRecordRes,
-  SubstrateDVM2SubstrateRecordRes,
-  BridgeDispatchEventRes,
-  BridgeDispatchEventRecord,
-  SubstrateSubstrateDVMBridgeConfig,
-  Substrate2SubstrateDVMRecordsRes,
-  SubstrateDVM2SubstrateRecordsRes,
-  SubstrateDVM2SubstrateRecord,
-} from '../../../model';
+import { HistoryReq, ChainConfig } from '../../../model';
 import { getBridge, pollWhile } from '../../../utils';
 import {
   BRIDGE_DISPATCH_EVENTS,
@@ -29,6 +17,17 @@ import {
   S2S_REDEEM_RECORDS_QUERY,
   S2S_REDEEM_RECORD_QUERY,
 } from '../config';
+import {
+  Substrate2SubstrateDVMRecord,
+  Substrate2SubstrateDVMRecordRes,
+  SubstrateDVM2SubstrateRecordRes,
+  BridgeDispatchEventRes,
+  BridgeDispatchEventRecord,
+  Substrate2SubstrateDVMRecordsRes,
+  SubstrateDVM2SubstrateRecordsRes,
+  SubstrateDVM2SubstrateRecord,
+} from '../model';
+import { SubstrateSubstrateDVMBridgeConfig } from '../model/bridge';
 
 enum S2SRecordResult {
   locked,

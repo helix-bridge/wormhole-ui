@@ -6,16 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { EMPTY, filter, from, iif, map, Observable, of, switchMap, take, tap, zip } from 'rxjs';
 import { abi } from '../../config';
 import { useTx } from '../../hooks';
-import {
-  ConnectionStatus,
-  Darwinia2EthereumRecord as D2ERecord,
-  Darwinia2EthereumMeta,
-  EthereumDarwiniaBridgeConfig,
-  RecordComponentProps,
-} from '../../model';
+import { ConnectionStatus, RecordComponentProps } from '../../model';
 import { claimToken, connect, entrance, getBridge } from '../../utils';
 import { Progresses, ProgressProps, State } from '../../components/record/Progress';
 import { Record } from '../../components/record/Record';
+import { EthereumDarwiniaBridgeConfig, Darwinia2EthereumRecord as D2ERecord, Darwinia2EthereumMeta } from './model';
 
 function isSufficient(
   config: EthereumDarwiniaBridgeConfig,

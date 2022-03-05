@@ -9,19 +9,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
+import { Balance } from '../../components/form-control/Balance';
+import { DepositItem, getDepositTimeRange } from '../../components/form-control/DepositItem';
+import { MaxBalance } from '../../components/form-control/MaxBalance';
+import { RecipientItem } from '../../components/form-control/RecipientItem';
+import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
+import { ApproveSuccess } from '../../components/modal/ApproveSuccess';
+import { Des } from '../../components/modal/Des';
+import { TransferConfirm } from '../../components/modal/TransferConfirm';
+import { TransferSuccess } from '../../components/modal/TransferSuccess';
 import { abi, FORM_CONTROL } from '../../config';
 import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
-import {
-  CrossChainComponentProps,
-  CrossChainPayload,
-  Erc20Token,
-  Ethereum2DarwiniaPayload,
-  EthereumDarwiniaBridgeConfig,
-  Network,
-  RedeemDarwiniaToken,
-  RedeemDeposit,
-  Tx,
-} from '../../model';
+import { CrossChainComponentProps, CrossChainPayload, Erc20Token, Network, Tx } from '../../model';
 import {
   AfterTxCreator,
   applyModalObs,
@@ -36,20 +35,16 @@ import {
   isRing,
   isValidAddress,
   prettyNumber,
-  redeemDarwiniaToken,
-  redeemDeposit,
   toWei,
 } from '../../utils';
 import { getMappedTokenMeta, getTokenBalance, TokenCache } from '../../utils/token/tokenInfo';
-import { Balance } from '../../components/form-control/Balance';
-import { DepositItem, getDepositTimeRange } from '../../components/form-control/DepositItem';
-import { MaxBalance } from '../../components/form-control/MaxBalance';
-import { RecipientItem } from '../../components/form-control/RecipientItem';
-import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
-import { ApproveSuccess } from '../../components/modal/ApproveSuccess';
-import { Des } from '../../components/modal/Des';
-import { TransferConfirm } from '../../components/modal/TransferConfirm';
-import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import {
+  Ethereum2DarwiniaPayload,
+  EthereumDarwiniaBridgeConfig,
+  RedeemDarwiniaTxPayload,
+  RedeemDepositTxPayload,
+} from './model';
+import { redeemDarwiniaToken, redeemDeposit } from './utils';
 
 interface AmountCheckInfo {
   amount?: string;
@@ -200,7 +195,7 @@ function createApproveRingTx(value: Pick<ApproveValue, 'direction' | 'sender'>, 
   return createTxWorkflow(beforeTx, txObs, after);
 }
 
-function createCrossTokenTx(value: RedeemDarwiniaToken, after: AfterTxCreator): Observable<Tx> {
+function createCrossTokenTx(value: RedeemDarwiniaTxPayload, after: AfterTxCreator): Observable<Tx> {
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });
@@ -209,7 +204,7 @@ function createCrossTokenTx(value: RedeemDarwiniaToken, after: AfterTxCreator): 
   return createTxWorkflow(beforeTx, txObs, after);
 }
 
-function createCrossDepositTx(value: RedeemDeposit, after: AfterTxCreator): Observable<Tx> {
+function createCrossDepositTx(value: RedeemDepositTxPayload, after: AfterTxCreator): Observable<Tx> {
   const DATE_FORMAT = 'yyyy/MM/dd';
   const { start, end } = getDepositTimeRange(value.deposit);
   const beforeTx = applyModalObs({
@@ -279,7 +274,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
   }, [direction]);
 
   const refreshAllowance = useCallback(
-    (value: RedeemDarwiniaToken | ApproveValue) => {
+    (value: RedeemDarwiniaTxPayload | ApproveValue) => {
       const bridge = getBridge<EthereumDarwiniaBridgeConfig>(value.direction);
       const { ring, issuing } = bridge.config.contracts;
 
@@ -292,7 +287,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
   );
 
   const refreshBalance = useCallback(
-    (value: RedeemDarwiniaToken | ApproveValue) => {
+    (value: RedeemDarwiniaTxPayload | ApproveValue) => {
       const { kton, ring } = contracts;
 
       if (isKton(value.asset)) {
@@ -313,7 +308,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
   );
 
   const refreshDeposit = useCallback(
-    (value: RedeemDeposit) => {
+    (value: RedeemDepositTxPayload) => {
       const { ring } = contracts;
 
       setRemovedDepositIds(() => [...removedDepositIds, value.deposit.deposit_id]);
@@ -325,7 +320,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
   const updateSubmit = useCallback(
     (curAsset: string | Erc20Token | null) => {
       if (isDeposit(curAsset as string)) {
-        const fn = () => (value: RedeemDeposit) =>
+        const fn = () => (value: RedeemDepositTxPayload) =>
           createCrossDepositTx(
             value,
             afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as never })(value)
@@ -333,7 +328,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
 
         setSubmit(fn);
       } else {
-        const fn = () => (value: RedeemDarwiniaToken) => {
+        const fn = () => (value: RedeemDarwiniaTxPayload) => {
           const { amount, asset: iAsset, ...rest } = value;
           const sum = Web3.utils.toBN(toWei({ value: amount }));
 

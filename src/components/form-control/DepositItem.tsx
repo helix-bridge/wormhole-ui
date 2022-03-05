@@ -3,15 +3,10 @@ import { Rule } from 'antd/lib/form';
 import { addDays, format, fromUnixTime } from 'date-fns';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EthereumDarwiniaBridgeConfig } from '../../bridges/ethereum-darwinia/model';
 import { EvoApiPath, FORM_CONTROL } from '../../config';
 import { useRecordsQuery } from '../../hooks';
-import {
-  CrossChainDirection,
-  CustomFormControlProps,
-  Deposit,
-  DepositResponse,
-  EthereumDarwiniaBridgeConfig,
-} from '../../model';
+import { CrossChainDirection, CustomFormControlProps, Deposit, DepositResponse } from '../../model';
 import { apiUrl, empty, getBridge } from '../../utils';
 
 interface DepositItemProps {

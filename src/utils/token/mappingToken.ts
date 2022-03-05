@@ -16,18 +16,20 @@ import {
 } from 'rxjs/operators';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
+import {
+  Erc20RegisterProof,
+  Erc20RegisterProofRes,
+  EthereumDVMBridgeConfig,
+} from '../../bridges/ethereum-darwiniaDVM/model';
 import { abi } from '../../config/abi';
 import { DarwiniaApiPath } from '../../config/api';
-import { LONG_DURATION, SHORT_DURATION, RegisterStatus } from '../../config/constant';
+import { LONG_DURATION, RegisterStatus, SHORT_DURATION } from '../../config/constant';
 import {
   ChainConfig,
   CrossChainDirection,
   DVMChainConfig,
-  Erc20RegisterProof,
-  Erc20RegisterProofRes,
   Erc20Token,
   EthereumChainConfig,
-  EthereumDVMBridgeConfig,
   MappedToken,
   Tx,
 } from '../../model';
@@ -36,8 +38,8 @@ import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR, MMRProof } from '../mmr';
 import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount } from '../network';
 import { getMPTProof } from '../record';
-import { getErc20MappingPrams, getS2SMappingParams } from '../tx/redeem';
 import { genEthereumContractTxObs } from '../tx/common';
+import { getErc20MappingPrams, getS2SMappingParams } from '../tx/redeem';
 import { getErc20Meta, getTokenBalance } from './tokenInfo';
 
 export type StoredProof = {

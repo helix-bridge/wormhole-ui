@@ -1,7 +1,8 @@
 import { omit } from 'lodash';
 import { EVOLUTION_DOMAIN } from '../../../config/api';
 import { darwiniaConfig, ethereumConfig, pangolinConfig, ropstenConfig } from '../../../config/network';
-import { Bridge, EthereumDarwiniaBridgeConfig } from '../../../model';
+import { Bridge } from '../../../model';
+import { EthereumDarwiniaBridgeConfig } from '../model';
 
 const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
   specVersion: 1180,

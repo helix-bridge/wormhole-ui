@@ -1,13 +1,18 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
+import { Unit } from 'web3-utils';
 import { PropsWithChildren, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Darwinia2EthereumPayload, PolkadotChainConfig, TxConfirmComponentProps } from '../../model';
+import { CrossChainAsset, CrossChainPayload, PolkadotChainConfig, TxConfirmComponentProps } from '../../model';
 import { convertToSS58, fromWei, getDisplayName, getNetworkMode, isPolkadotNetwork } from '../../utils';
 import { Des } from './Des';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function TransferConfirm({ value, children, unit = 'ether' }: PropsWithChildren<TxConfirmComponentProps<any>>) {
+export function TransferConfirm({
+  value,
+  children,
+  unit = 'ether',
+}: PropsWithChildren<TxConfirmComponentProps<CrossChainPayload>>) {
   const { t } = useTranslation();
+
   const amountDes = useMemo(() => {
     if (children) {
       return children;
@@ -15,7 +20,7 @@ export function TransferConfirm({ value, children, unit = 'ether' }: PropsWithCh
       return (
         <Des
           title={t('Amount')}
-          content={value.assets.map((bill: Darwinia2EthereumPayload['assets'][0]) => (
+          content={value.assets.map((bill: CrossChainAsset<string> & { unit?: Unit }) => (
             <span key={bill.asset} className="mr-6">
               {fromWei({ value: bill.amount, unit: bill.unit ?? unit })}
               <span className="ml-2">{bill.asset}</span>
@@ -37,6 +42,7 @@ export function TransferConfirm({ value, children, unit = 'ether' }: PropsWithCh
       );
     }
   }, [children, t, unit, value.amount, value.asset, value.assets]);
+
   const sender = useMemo(
     () =>
       isPolkadotNetwork(value.direction.from.name) && getNetworkMode(value.direction.from) === 'native'

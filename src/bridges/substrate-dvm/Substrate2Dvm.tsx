@@ -11,15 +11,15 @@ import {
   CrossChainPayload,
   DVMChainConfig,
   PolkadotChainConfig,
-  SmartTxPayload,
-  Substrate2DVMPayload,
 } from '../../model';
-import { applyModalObs, createTxWorkflow, fromWei, issuingFromSubstrate2DVM, prettyNumber, toWei } from '../../utils';
+import { applyModalObs, createTxWorkflow, fromWei, prettyNumber, toWei } from '../../utils';
 import { Balance } from '../../components/form-control/Balance';
 import { PolkadotAccountsItem } from '../../components/form-control/PolkadotAccountsItem';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { TransferConfirm } from '../../components/modal/TransferConfirm';
 import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { Substrate2DVMPayload, SmartTxPayload } from './model/cross-chain';
+import { issuingFromSubstrate2DVM } from './utils';
 
 export function Substrate2DVM({
   form,

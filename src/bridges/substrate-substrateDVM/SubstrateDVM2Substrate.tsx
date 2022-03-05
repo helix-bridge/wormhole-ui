@@ -7,14 +7,13 @@ import {
   CrossChainDirection,
   DailyLimit,
   DVMPayload,
-  DVMToken,
+  DVMTxPayload,
   MappedToken,
-  SubstrateSubstrateDVMBridgeConfig,
 } from '../../model';
-import { entrance, fromWei, getBridge, getS2SMappingParams, redeemSubstrate, waitUntilConnected } from '../../utils';
+import { entrance, fromWei, getBridge, getS2SMappingParams, waitUntilConnected } from '../../utils';
 import { DVM } from '../DVM';
-
-/* ----------------------------------------------Base info helpers-------------------------------------------------- */
+import { SubstrateSubstrateDVMBridgeConfig } from './model';
+import { redeemSubstrate } from './utils/tx';
 
 /* ----------------------------------------------Main Section-------------------------------------------------- */
 
@@ -23,7 +22,7 @@ import { DVM } from '../DVM';
  */
 export function SubstrateDVM2Substrate({ form, setSubmit, direction }: CrossChainComponentProps<DVMPayload>) {
   const transform = useCallback(
-    (value: DVMToken) => {
+    (value: DVMTxPayload) => {
       const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
 
       return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(

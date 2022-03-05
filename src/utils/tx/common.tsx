@@ -6,16 +6,9 @@ import Web3 from 'web3';
 import { PromiEvent, TransactionConfig, TransactionReceipt } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
+import { Ethereum2DarwiniaPayload } from '../../bridges/ethereum-darwinia/model';
 import { abi } from '../../config/abi';
-import {
-  CrossChainPayload,
-  DVMPayload,
-  Erc20Token,
-  Ethereum2DarwiniaPayload,
-  RequiredPartial,
-  Tx,
-  TxFn,
-} from '../../model';
+import { CrossChainPayload, DVMPayload, Erc20Token, RequiredPartial, Tx, TxFn } from '../../model';
 import { empty } from '../helper';
 import { entrance } from '../network';
 

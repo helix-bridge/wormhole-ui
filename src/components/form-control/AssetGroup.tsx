@@ -3,8 +3,9 @@ import FormList from 'antd/lib/form/FormList';
 import BN from 'bn.js';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Darwinia2EthereumPayload } from '../../bridges/ethereum-darwinia/model';
 import { FORM_CONTROL } from '../../config';
-import { AvailableBalance, CustomFormControlProps, Darwinia2EthereumPayload, Network } from '../../model';
+import { AvailableBalance, CustomFormControlProps, Network } from '../../model';
 import {
   amountLessThanFeeRule,
   fromWei,

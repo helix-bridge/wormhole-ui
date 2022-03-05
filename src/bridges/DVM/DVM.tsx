@@ -15,12 +15,10 @@ import {
   DailyLimit,
   DVMChainConfig,
   DVMPayload,
-  DVMToken,
+  DVMTxPayload,
   Erc20Token,
-  IssuingDVMToken,
   MappedToken,
   Network,
-  RedeemDVMToken,
   RequiredPartial,
   Token,
   Tx,
@@ -60,7 +58,7 @@ interface DVMProps {
   canRegister: boolean;
   approveOptions?: Record<string, string>;
   isDVM?: boolean;
-  transform: (value: DVMToken) => Observable<Tx>;
+  transform: (value: DVMTxPayload) => Observable<Tx>;
   spenderResolver: (direction: CrossChainDirection) => Promise<string>;
   getDailyLimit?: (token: MappedToken) => Promise<DailyLimit>;
   getFee?: (departure: ChainConfig, token: MappedToken) => Promise<string>;
@@ -209,7 +207,7 @@ export function DVM({
   }, [direction, getFee, selectedErc20]);
 
   useEffect(() => {
-    const fn = () => (data: RedeemDVMToken | IssuingDVMToken) => {
+    const fn = () => (data: DVMTxPayload) => {
       const { amount } = data;
       const value = { ...data, amount: toWei({ value: data.amount, unit }) };
 

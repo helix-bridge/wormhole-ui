@@ -1,6 +1,7 @@
-import { Bridge, EthereumDVMBridgeConfig } from '../../../model';
+import { Bridge } from '../../../model';
 import { EVOLUTION_DOMAIN } from '../../../config/api';
 import { ethereumConfig, crabConfig, ropstenConfig, pangolinConfig } from '../../../config/network';
+import { EthereumDVMBridgeConfig } from '../model';
 
 const ethereumCrabDVMConfig: EthereumDVMBridgeConfig = {
   specVersion: 1180,

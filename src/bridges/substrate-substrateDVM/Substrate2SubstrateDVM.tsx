@@ -13,10 +13,8 @@ import {
   CrossChainComponentProps,
   DailyLimit,
   DVMChainConfig,
-  IssuingSubstrateToken,
   MappedToken,
   Network,
-  Substrate2SubstrateDVMPayload,
   Token,
   CrossChainPayload,
   ChainConfig,
@@ -33,7 +31,6 @@ import {
   insufficientDailyLimit,
   invalidFeeRule,
   isRing,
-  issuingSubstrateToken,
   pollWhile,
   prettyNumber,
   toWei,
@@ -47,6 +44,8 @@ import { PolkadotAccountsItem } from '../../components/form-control/PolkadotAcco
 import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { TransferConfirm } from '../../components/modal/TransferConfirm';
 import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { IssuingSubstrateTxPayload, Substrate2SubstrateDVMPayload } from './model';
+import { issuingSubstrateToken } from './utils/tx';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
@@ -189,7 +188,7 @@ export function Substrate2SubstrateDVM({
   const isMounted = useIsMounted();
 
   useEffect(() => {
-    const fn = () => (data: IssuingSubstrateToken) => {
+    const fn = () => (data: IssuingSubstrateTxPayload) => {
       if (!api || !fee) {
         return EMPTY.subscribe();
       }

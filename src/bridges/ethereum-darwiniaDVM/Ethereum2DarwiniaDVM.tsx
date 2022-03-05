@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
 import { RegisterStatus } from '../../config';
-import { CrossChainComponentProps, CrossChainDirection, DVMPayload, EthereumDVMBridgeConfig } from '../../model';
-import { getBridge, redeemErc20 } from '../../utils';
+import { CrossChainComponentProps, CrossChainDirection, DVMPayload } from '../../model';
+import { getBridge } from '../../utils';
 import { DVM } from '../DVM/DVM';
+import { EthereumDVMBridgeConfig } from './model';
+import { redeemErc20 } from './utils/tx';
 
-/**
- * @description test chain: ropsten -> pangolin dvm
- */
 export function Ethereum2DarwiniaDVM({ form, setSubmit, direction }: CrossChainComponentProps<DVMPayload>) {
   const spenderResolver = useCallback((dir: CrossChainDirection) => {
     const bridge = getBridge<EthereumDVMBridgeConfig>(dir);

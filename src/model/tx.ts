@@ -1,14 +1,6 @@
 import { Observable } from 'rxjs';
 import { Unit } from 'web3-utils';
-import {
-  CrossChainPayload,
-  Darwinia2EthereumPayload,
-  DVMPayload,
-  Ethereum2DarwiniaPayload,
-  Substrate2DVMPayload,
-  Substrate2SubstrateDVMPayload,
-} from './bridge';
-import { DVMChainConfig, PolkadotChainConfig } from './network';
+import { CrossChainPayload, DVMPayload } from './bridge';
 import { DeepRequired } from './type-operator';
 
 export type TxStatus =
@@ -52,30 +44,6 @@ export type TxSuccessComponentProps<T> = {
   unit?: Unit;
 };
 
-/* -----------------------------------issuing and redeem----------------------------------------------*/
+export type CommonPayloadKeys = 'sender' | 'recipient' | 'amount' | 'asset';
 
-type CommonPayloadKeys = 'sender' | 'recipient' | 'amount' | 'asset';
-
-// TODO: rename this types; suggestion: XxxxTxPayload
-export type DVMToken = CrossChainPayload<DeepRequired<DVMPayload, [CommonPayloadKeys]>>;
-
-export type RedeemDVMToken = DVMToken;
-export type IssuingDVMToken = DVMToken;
-
-export type RedeemDarwiniaToken = CrossChainPayload<DeepRequired<Ethereum2DarwiniaPayload, [CommonPayloadKeys]>>;
-
-export type RedeemDeposit = CrossChainPayload<
-  DeepRequired<Ethereum2DarwiniaPayload, ['sender' | 'deposit' | 'recipient']>
->;
-
-export type IssuingDarwiniaToken = CrossChainPayload<
-  DeepRequired<Darwinia2EthereumPayload, ['sender' | 'assets' | 'recipient']>
->;
-
-export type IssuingSubstrateToken = CrossChainPayload<DeepRequired<Substrate2SubstrateDVMPayload, [CommonPayloadKeys]>>;
-
-export type SmartTxPayload<F extends PolkadotChainConfig = PolkadotChainConfig> = CrossChainPayload<
-  DeepRequired<Substrate2DVMPayload, [CommonPayloadKeys]>,
-  F,
-  F extends DVMChainConfig ? PolkadotChainConfig : DVMChainConfig
->;
+export type DVMTxPayload = CrossChainPayload<DeepRequired<DVMPayload, [CommonPayloadKeys]>>;

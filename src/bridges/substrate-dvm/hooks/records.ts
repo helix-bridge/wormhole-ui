@@ -2,16 +2,10 @@ import { GraphQLClient, useManualQuery, FetchData } from 'graphql-hooks';
 import { useMemo, useCallback } from 'react';
 import { Observable, from, map, catchError, EMPTY } from 'rxjs';
 import { TRANSFERS_QUERY } from '../config';
-import {
-  HistoryReq,
-  Substrate2DVMRecord,
-  ChainConfig,
-  SubstrateSubstrateDVMBridgeConfig,
-  Substrate2DVMRecordsRes,
-  DVM2SubstrateRecordsRes,
-  PolkadotChainConfig,
-} from '../../../model';
+import { HistoryReq, ChainConfig, PolkadotChainConfig } from '../../../model';
 import { getBridge, convertToSS58, dvmAddressToAccountId } from '../../../utils';
+import { SubstrateSubstrateDVMBridgeConfig } from '../../substrate-substrateDVM/model/bridge';
+import { Substrate2DVMRecord, Substrate2DVMRecordsRes, DVM2SubstrateRecordsRes } from '../model';
 
 type FetchSubstrate2DVMRecords = (
   req: Omit<HistoryReq, 'confirmed'>

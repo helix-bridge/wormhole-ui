@@ -1,8 +1,10 @@
 import { useCallback } from 'react';
 import { RegisterStatus } from '../../config';
-import { CrossChainComponentProps, CrossChainDirection, DVMPayload, EthereumDVMBridgeConfig } from '../../model';
-import { getBridge, issuingErc20 } from '../../utils';
+import { CrossChainComponentProps, CrossChainDirection, DVMPayload } from '../../model';
+import { getBridge } from '../../utils';
 import { DVM } from '../DVM/DVM';
+import { EthereumDVMBridgeConfig } from './model';
+import { issuingErc20 } from './utils';
 
 /**
  * TODO: Functions need to implement:

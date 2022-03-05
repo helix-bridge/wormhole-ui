@@ -1,6 +1,15 @@
 import { isNull, omitBy } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
 import { EMPTY, Observable, Subscription } from 'rxjs';
+import {
+  queryDarwinia2EthereumIssuingRecords,
+  queryEthereum2DarwiniaGenesisRecords,
+  queryEthereum2DarwiniaRedeemRecords,
+} from '../bridges/ethereum-darwinia/utils';
+import {
+  queryDarwiniaDVM2EthereumIssuingRecords,
+  queryEthereum2DarwiniaDVMRedeemRecords,
+} from '../bridges/ethereum-darwiniaDVM/utils';
 import { useSubstrate2DVMRecords } from '../bridges/substrate-dvm/hooks';
 import { useS2SRecords } from '../bridges/substrate-substrateDVM/hooks';
 import { Departure, HistoryReq } from '../model';
@@ -14,11 +23,6 @@ import {
   isSubstrate2SubstrateDVM,
   isSubstrateDVM2Substrate,
   isTronNetwork,
-  queryDarwinia2EthereumIssuingRecords,
-  queryDarwiniaDVM2EthereumIssuingRecords,
-  queryEthereum2DarwiniaDVMRedeemRecords,
-  queryEthereum2DarwiniaGenesisRecords,
-  queryEthereum2DarwiniaRedeemRecords,
   RecordsQueryRequest,
   rxGet,
   verticesToChainConfig,

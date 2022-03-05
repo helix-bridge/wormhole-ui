@@ -1,7 +1,8 @@
 import { omit } from 'lodash';
 import { pangolinConfig } from '../../../config/network';
-import { Bridge, SubstrateDVMBridgeConfig } from '../../../model';
+import { Bridge } from '../../../model';
 import { crabConfig } from '../../../config/network';
+import { SubstrateDVMBridgeConfig } from '../model';
 
 const crabCrabDVMConfig: SubstrateDVMBridgeConfig = {
   specVersion: 1180,

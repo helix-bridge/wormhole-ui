@@ -11,8 +11,9 @@ import { last } from 'lodash';
 import React, { SetStateAction, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Subscription } from 'rxjs';
+import { BridgeDispatchEventRecord } from '../../bridges/substrate-substrateDVM/model';
 import { useTx } from '../../hooks';
-import { BridgeDispatchEventRecord, ChainConfig } from '../../model';
+import { ChainConfig } from '../../model';
 import { isEthereumNetwork, isPolkadotNetwork } from '../../utils';
 import { SubscanLink } from '../widget/SubscanLink';
 

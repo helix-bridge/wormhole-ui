@@ -2,15 +2,11 @@ import { getUnixTime } from 'date-fns';
 import { upperCase } from 'lodash';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  DVMChainConfig,
-  PolkadotChainConfig,
-  RecordComponentProps,
-  Substrate2DVMRecord as S2DRecord,
-} from '../../model';
-import { convertToSS58, isDVM } from '../../utils';
 import { Progresses, ProgressProps, State } from '../../components/record/Progress';
 import { Record } from '../../components/record/Record';
+import { DVMChainConfig, PolkadotChainConfig, RecordComponentProps } from '../../model';
+import { convertToSS58, isDVM } from '../../utils';
+import { Substrate2DVMRecord as S2DRecord } from './model';
 
 export function Substrate2DVMRecord({
   departure,

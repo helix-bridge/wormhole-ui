@@ -2,14 +2,7 @@ import { CheckCircleFilled } from '@ant-design/icons';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
-import {
-  Darwinia2EthereumPayload,
-  Erc20Token,
-  Network,
-  CrossChainAsset,
-  CrossChainPayload,
-  TxSuccessComponentProps,
-} from '../../model';
+import { Erc20Token, Network, CrossChainAsset, CrossChainPayload, TxSuccessComponentProps } from '../../model';
 import {
   convertToSS58,
   fromWei,
@@ -36,8 +29,7 @@ export function TransferSuccess({
   value,
   hashType = 'txHash',
   unit = 'ether',
-}: // eslint-disable-next-line @typescript-eslint/no-explicit-any
-TxSuccessComponentProps<CrossChainPayload<any>>) {
+}: TxSuccessComponentProps<CrossChainPayload>) {
   const { t } = useTranslation();
   const color = NETWORK_LIGHT_THEME[value.direction.from?.name as Network]['@project-main-bg'];
   const linkProps = { [hashType]: tx.hash };
@@ -76,7 +68,7 @@ TxSuccessComponentProps<CrossChainPayload<any>>) {
         content={
           (value.asset && value.amount && <Detail {...value} amount={fromWei({ value: value.amount, unit })} />) ||
           (value.assets &&
-            value.assets.map((item: Darwinia2EthereumPayload['assets'][0]) => (
+            value.assets.map((item: CrossChainPayload) => (
               <Detail
                 {...item}
                 amount={item.unit ? fromWei({ value: item.amount, unit: item.unit }) : item.amount}
