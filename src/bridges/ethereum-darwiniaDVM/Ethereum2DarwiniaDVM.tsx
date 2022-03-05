@@ -1,14 +1,8 @@
 import { useCallback } from 'react';
-import { RegisterStatus } from '../../../config';
-import { CrossChainComponentProps, CrossChainDirection, DVMPayload, EthereumDVMBridgeConfig } from '../../../model';
-import { getBridge, redeemErc20 } from '../../../utils';
-import { DVM } from '../DVM';
-
-/* ----------------------------------------------Base info helpers-------------------------------------------------- */
-
-/* ----------------------------------------------Tx section-------------------------------------------------- */
-
-/* ----------------------------------------------Main Section-------------------------------------------------- */
+import { RegisterStatus } from '../../config';
+import { CrossChainComponentProps, CrossChainDirection, DVMPayload, EthereumDVMBridgeConfig } from '../../model';
+import { getBridge, redeemErc20 } from '../../utils';
+import { DVM } from '../DVM/DVM';
 
 /**
  * @description test chain: ropsten -> pangolin dvm

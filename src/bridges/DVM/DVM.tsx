@@ -41,17 +41,17 @@ import {
   prettyNumber,
   toWei,
 } from '../../utils';
-import { Balance } from '../form-control/Balance';
-import { Erc20Control } from '../form-control/Erc20Control';
-import { EthereumAccountItem } from '../form-control/EthereumAccountItem';
-import { MaxBalance } from '../form-control/MaxBalance';
-import { RecipientItem } from '../form-control/RecipientItem';
-import { ApproveConfirm } from '../modal/ApproveConfirm';
-import { ApproveSuccess } from '../modal/ApproveSuccess';
-import { Des } from '../modal/Des';
-import { TransferConfirm } from '../modal/TransferConfirm';
-import { TransferSuccess } from '../modal/TransferSuccess';
-import { FormItemExtra } from '../widget/facade';
+import { Balance } from '../../components/form-control/Balance';
+import { Erc20Control } from '../../components/form-control/Erc20Control';
+import { EthereumAccountItem } from '../../components/form-control/EthereumAccountItem';
+import { MaxBalance } from '../../components/form-control/MaxBalance';
+import { RecipientItem } from '../../components/form-control/RecipientItem';
+import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
+import { ApproveSuccess } from '../../components/modal/ApproveSuccess';
+import { Des } from '../../components/modal/Des';
+import { TransferConfirm } from '../../components/modal/TransferConfirm';
+import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { FormItemExtra } from '../../components/widget/facade';
 
 type ApproveValue = CrossChainPayload<RequiredPartial<DVMPayload, 'sender'>>;
 

@@ -1,4 +1,8 @@
 import { FunctionComponent } from 'react';
+import { Darwinia2EthereumRecord, Ethereum2DarwiniaRecord } from '../components/record/ethereum-darwinia';
+import { DVM2EthereumRecord, Ethereum2DVMRecord } from '../components/record/ethereum-dvm';
+import { SubstrateDVMRecord } from '../components/record/substrate-dvm';
+import { SubstrateSubstrateDVMRecord } from '../components/record/substrate-substrateDVM';
 import {
   crabCrabDVM,
   darwiniaCrabDVM,
@@ -8,18 +12,11 @@ import {
   pangoroPangolinDVM,
   ropstenPangolin,
   ropstenPangolinDVM,
-} from '../../config';
-import { Darwinia2EthereumRecord, Ethereum2DarwiniaRecord } from '../record/ethereum-darwinia';
-import { DVM2EthereumRecord, Ethereum2DVMRecord } from '../record/ethereum-dvm';
-import { SubstrateDVMRecord } from '../record/substrate-dvm';
-import { SubstrateSubstrateDVMRecord } from '../record/substrate-substrateDVM';
-import { Darwinia2Ethereum } from './ethereum-darwinia/Darwinia2Ethereum';
-import { Ethereum2Darwinia } from './ethereum-darwinia/Ethereum2Darwinia';
-import { DarwiniaDVM2Ethereum } from './ethereum-dvm/DarwiniaDVM2Ethereum';
-import { Ethereum2DarwiniaDVM } from './ethereum-dvm/Ethereum2DarwiniaDVM';
+} from '../config';
+import { Darwinia2Ethereum, Ethereum2Darwinia } from './ethereum-darwinia';
+import { DarwiniaDVM2Ethereum, Ethereum2DarwiniaDVM } from './ethereum-darwiniaDVM';
 import { DVM2Substrate, Substrate2DVM } from './substrate-dvm';
-import { Substrate2SubstrateDVM } from './substrate-substrateDVM/Substrate2SubstrateDVM';
-import { SubstrateDVM2Substrate } from './substrate-substrateDVM/SubstrateDVM2Substrate';
+import { Substrate2SubstrateDVM, SubstrateDVM2Substrate } from './substrate-substrateDVM';
 
 /**
  * ethereum <-> darwinia

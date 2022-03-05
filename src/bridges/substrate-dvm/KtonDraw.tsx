@@ -7,10 +7,10 @@ import { upperCase } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { of } from 'rxjs';
-import { MIDDLE_DURATION } from '../../../config';
-import { useApi, useIsMountedOperator, useTx } from '../../../hooks';
-import { CrossChainDirection, DarwiniaAsset, DVMChainConfig, PolkadotChainConfig, Token, Tx } from '../../../model';
-import { createTxWorkflow, entrance, fromWei, genEthereumTransactionObs, toWei } from '../../../utils';
+import { MIDDLE_DURATION } from '../../config';
+import { useApi, useIsMountedOperator, useTx } from '../../hooks';
+import { CrossChainDirection, DarwiniaAsset, DVMChainConfig, PolkadotChainConfig, Token, Tx } from '../../model';
+import { createTxWorkflow, entrance, fromWei, genEthereumTransactionObs, toWei } from '../../utils';
 
 interface KtonDrawProps {
   direction: CrossChainDirection<DVMChainConfig, PolkadotChainConfig>;

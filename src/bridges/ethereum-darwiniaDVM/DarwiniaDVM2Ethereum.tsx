@@ -1,19 +1,13 @@
 import { useCallback } from 'react';
-import { RegisterStatus } from '../../../config';
-import { CrossChainComponentProps, CrossChainDirection, DVMPayload, EthereumDVMBridgeConfig } from '../../../model';
-import { getBridge, issuingErc20 } from '../../../utils';
-import { DVM } from '../DVM';
-
-/* ----------------------------------------------Base info helpers-------------------------------------------------- */
+import { RegisterStatus } from '../../config';
+import { CrossChainComponentProps, CrossChainDirection, DVMPayload, EthereumDVMBridgeConfig } from '../../model';
+import { getBridge, issuingErc20 } from '../../utils';
+import { DVM } from '../DVM/DVM';
 
 /**
  * TODO: Functions need to implement:
  * 1. getFee
  */
-
-/* ----------------------------------------------Tx section-------------------------------------------------- */
-
-/* ----------------------------------------------Main Section-------------------------------------------------- */
 
 /**
  * @description test chain: pangolin dvm -> ropsten

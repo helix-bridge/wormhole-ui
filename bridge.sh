@@ -47,6 +47,10 @@ function component() {
     " >> $2'/'$1'.tsx'
 }
 
+function indexEmpty() {
+    echo "export {};" >> $1'/index.ts'
+}
+
 function init() {
     local departure=`echo ${origin:0:1} | tr a-z A-Z`${origin:1}"2"`echo ${target:0:1} | tr a-z A-Z`${target:1}
     local arrival=`echo ${target:0:1} | tr a-z A-Z`${target:1}"2"`echo ${origin:0:1} | tr a-z A-Z`${origin:1}
@@ -60,15 +64,15 @@ function init() {
     
     mkdir $path
     mkdir $path'/config'
-    touch $path'/config/index.ts'
+    indexEmpty $path'/config'
     mkdir $path'/hooks'
-    touch $path'/hooks/index.ts'
+    indexEmpty $path'/hooks'
     mkdir $path'/utils'
-    touch $path'/utils/index.ts'
+    indexEmpty $path'/utils'
     mkdir $path'/providers'
-    touch $path'/providers/index.ts'
+    indexEmpty $path'/providers'
     mkdir $path'/model'
-    touch $path'/model/index.ts'
+    indexEmpty $path'/model'
     
     component $departure $path
     component $arrival $path
