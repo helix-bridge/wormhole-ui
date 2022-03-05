@@ -15,7 +15,10 @@ describe('Ethereum to Darwinia', () => {
 
   it('should launch ring tx', () => {
     cy.react('RecipientItem').find('input').type(recipient);
-    cy.react('TransferInfo').contains('Cross-chain Fee', { timeout: 1 * 60 * 1000 });
+    cy.react('Progress').should('not.exist');
+    cy.react('TransferInfo')
+      .find('.animate-pulse')
+      .should('not.exist', { timeout: 30 * 1000 });
     cy.react('Balance').type('3.14');
     cy.react('SubmitButton').click();
 

@@ -408,26 +408,26 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
         <Select
           size="large"
           placeholder="Select Assets"
-          onChange={async (value: string) => {
-            form.setFieldsValue({ amount: '' });
-
-            let balance: BN | null = null;
+          onChange={(value: string) => {
             const { ring, kton } = contracts;
 
             setIsBalanceQuerying(true);
 
             if (isRing(value)) {
-              balance = await getTokenBalance(ring, account, false);
-
-              setRingBalance(balance);
+              getTokenBalance(ring, account, false).then((balance) => {
+                setRingBalance(balance);
+                setMax(balance);
+              });
             }
 
             if (isKton(value)) {
-              balance = await getTokenBalance(kton, account, false);
+              getTokenBalance(kton, account, false).then((balance) => {
+                setMax(balance);
+              });
             }
 
+            form.setFieldsValue({ amount: '' });
             setAsset(value);
-            setMax(balance);
             setIsBalanceQuerying(false);
           }}
         >
