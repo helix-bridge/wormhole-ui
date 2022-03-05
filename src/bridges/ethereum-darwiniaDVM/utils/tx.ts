@@ -1,10 +1,10 @@
 import { Observable, from, switchMap } from 'rxjs';
 import { abi } from '../../../config/abi';
-import { DVMTxPayload, Tx, TxFn } from '../../../model';
+import { Tx, TxFn } from '../../../model';
 import { genEthereumContractTxObs, getBridge, getErc20MappingPrams } from '../../../utils';
-import { EthereumDVMBridgeConfig } from '../model';
+import { EthereumDVMBridgeConfig, Erc20TxPayload } from '../model';
 
-export const redeemErc20: TxFn<DVMTxPayload> = (value) => {
+export const redeemErc20: TxFn<Erc20TxPayload> = (value) => {
   const { asset, recipient, amount, direction, sender } = value;
   const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const { address } = asset;
@@ -16,7 +16,7 @@ export const redeemErc20: TxFn<DVMTxPayload> = (value) => {
   );
 };
 
-export function issuingErc20(value: DVMTxPayload): Observable<Tx> {
+export function issuingErc20(value: Erc20TxPayload): Observable<Tx> {
   const { asset, recipient, amount, direction: transfer, sender } = value;
   const { address } = asset;
 

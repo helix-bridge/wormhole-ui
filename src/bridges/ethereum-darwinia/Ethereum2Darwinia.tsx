@@ -10,7 +10,6 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Observable } from 'rxjs';
 import Web3 from 'web3';
 import { Balance } from '../../components/form-control/Balance';
-import { DepositItem, getDepositTimeRange } from '../../components/form-control/DepositItem';
 import { MaxBalance } from '../../components/form-control/MaxBalance';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
@@ -30,6 +29,7 @@ import {
   fromWei,
   getBridge,
   getInfoFromHash,
+  getTimeRange,
   isDeposit,
   isKton,
   isRing,
@@ -37,7 +37,8 @@ import {
   prettyNumber,
   toWei,
 } from '../../utils';
-import { getMappedTokenMeta, getTokenBalance, TokenCache } from '../../utils/mappingToken/tokenInfo';
+import { getMappingTokenMeta, getErc20TokenBalance, TokenCache } from '../../utils/mappingToken';
+import { DepositItem } from './DepositItem';
 import {
   Ethereum2DarwiniaPayload,
   EthereumDarwiniaBridgeConfig,
@@ -59,8 +60,8 @@ interface AmountCheckInfo {
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
 async function queryTokenMeta(ringContract: string, ktonContract: string) {
-  const ringMeta = await getMappedTokenMeta(ringContract);
-  const ktonMeta = await getMappedTokenMeta(ktonContract);
+  const ringMeta = await getMappingTokenMeta(ringContract);
+  const ktonMeta = await getMappingTokenMeta(ktonContract);
 
   return [ringMeta, ktonMeta];
 }
@@ -85,6 +86,7 @@ async function getFee(feeContract: string): Promise<BN> {
 
 function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo): Rule[] {
   const required: Rule = { required: true };
+
   const isExit: (target: BN | null, name: string) => Rule = (target, name) => {
     const message = t('{{name}} query failed, please wait and try again', { name: t(name) });
     return {
@@ -92,15 +94,18 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
       message,
     };
   };
+
   const isFeeExist = isExit(fee, 'Fee');
   const isBalance = isExit(balance, 'Balance');
   const isRingExist = isExit(ringBalance, 'RING');
   const ringEnoughMsg = t('The ring balance it not enough to cover the fee');
   const amountGtBalanceMsg = t('Insufficient balance');
+
   const ringGtThanFee: Rule = {
     validator: (_r, _v) => (ringBalance?.gte(fee!) ? Promise.resolve() : Promise.reject(ringEnoughMsg)),
     message: ringEnoughMsg,
   };
+
   const isLessThenMax = {
     validator: (_r: Rule, curVal: string) => {
       const value = new BN(toWei({ value: curVal }));
@@ -110,6 +115,7 @@ function getAmountRules({ fee, ringBalance, balance, asset, t }: AmountCheckInfo
     },
     message: amountGtBalanceMsg,
   };
+
   const commonRules: Rule[] = [required, isFeeExist, isBalance, isRingExist, ringGtThanFee, isLessThenMax];
 
   if (isRing(asset)) {
@@ -180,12 +186,15 @@ function createApproveRingTx(value: Pick<ApproveValue, 'direction' | 'sender'>, 
   const beforeTx = applyModalObs({
     content: <ApproveConfirm value={value} />,
   });
+
   const {
     sender,
     direction: { from, to },
   } = value;
+
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>([from, to]);
   const { ring: tokenAddress, issuing: spender } = bridge.config.contracts;
+
   const txObs = approveToken({
     sender,
     spender,
@@ -206,7 +215,8 @@ function createCrossTokenTx(value: RedeemDarwiniaTxPayload, after: AfterTxCreato
 
 function createCrossDepositTx(value: RedeemDepositTxPayload, after: AfterTxCreator): Observable<Tx> {
   const DATE_FORMAT = 'yyyy/MM/dd';
-  const { start, end } = getDepositTimeRange(value.deposit);
+  const { start, end } = getTimeRange(value.deposit.deposit_time, value.deposit.duration);
+
   const beforeTx = applyModalObs({
     content: (
       <TransferConfirm value={value}>
@@ -225,6 +235,7 @@ function createCrossDepositTx(value: RedeemDepositTxPayload, after: AfterTxCreat
       </TransferConfirm>
     ),
   });
+
   const txObs = redeemDeposit(value);
 
   return createTxWorkflow(beforeTx, txObs, after);
@@ -291,11 +302,11 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
       const { kton, ring } = contracts;
 
       if (isKton(value.asset)) {
-        getTokenBalance(kton, account, false).then((balance) => setMax(balance));
+        getErc20TokenBalance(kton, account, false).then((balance) => setMax(balance));
       }
 
       // always need to refresh ring balance, because of it is a fee token
-      getTokenBalance(ring, account, false).then((balance) => {
+      getErc20TokenBalance(ring, account, false).then((balance) => {
         if (isRing(value.asset)) {
           setMax(balance);
         }
@@ -312,7 +323,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
       const { ring } = contracts;
 
       setRemovedDepositIds(() => [...removedDepositIds, value.deposit.deposit_id]);
-      getTokenBalance(ring, account, false).then((balance) => setRingBalance(balance));
+      getErc20TokenBalance(ring, account, false).then((balance) => setRingBalance(balance));
     },
     [account, contracts, removedDepositIds]
   );
@@ -365,7 +376,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
     });
 
     Promise.all([
-      getTokenBalance(ring, account, false),
+      getErc20TokenBalance(ring, account, false),
       getFee(feeContract),
       getIssuingAllowance(account, ring, issuing),
       queryTokenMeta(ring, kton),
@@ -414,14 +425,14 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
             setIsBalanceQuerying(true);
 
             if (isRing(value)) {
-              getTokenBalance(ring, account, false).then((balance) => {
+              getErc20TokenBalance(ring, account, false).then((balance) => {
                 setRingBalance(balance);
                 setMax(balance);
               });
             }
 
             if (isKton(value)) {
-              getTokenBalance(kton, account, false).then((balance) => {
+              getErc20TokenBalance(kton, account, false).then((balance) => {
                 setMax(balance);
               });
             }

@@ -1,4 +1,9 @@
-import { DarwiniaListRes, Network } from '../../../model';
+import { Network } from '../../../model';
+
+interface DarwiniaListRes<T> {
+  count: number;
+  list: T[];
+}
 
 export interface Ethereum2DarwiniaRecord {
   address: string;

@@ -1,28 +1,19 @@
 import { useCallback } from 'react';
 import { from, switchMap } from 'rxjs';
 import { RegisterStatus } from '../../config';
-import {
-  ChainConfig,
-  CrossChainComponentProps,
-  CrossChainDirection,
-  DailyLimit,
-  DVMPayload,
-  DVMTxPayload,
-  MappedToken,
-} from '../../model';
+import { ChainConfig, CrossChainComponentProps, CrossChainDirection, DailyLimit, MappingToken } from '../../model';
 import { entrance, fromWei, getBridge, getS2SMappingParams, waitUntilConnected } from '../../utils';
 import { DVM } from '../DVM';
-import { SubstrateSubstrateDVMBridgeConfig } from './model';
+import { SubstrateDVM2SubstratePayload, SubstrateSubstrateDVMBridgeConfig, RedeemSubstrateTxPayload } from './model';
 import { redeemSubstrate } from './utils/tx';
 
-/* ----------------------------------------------Main Section-------------------------------------------------- */
-
-/**
- * @description test chain: pangolin dvm -> pangoro
- */
-export function SubstrateDVM2Substrate({ form, setSubmit, direction }: CrossChainComponentProps<DVMPayload>) {
+export function SubstrateDVM2Substrate({
+  form,
+  setSubmit,
+  direction,
+}: CrossChainComponentProps<SubstrateDVM2SubstratePayload>) {
   const transform = useCallback(
-    (value: DVMTxPayload) => {
+    (value: RedeemSubstrateTxPayload) => {
       const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
 
       return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
@@ -39,7 +30,7 @@ export function SubstrateDVM2Substrate({ form, setSubmit, direction }: CrossChai
   }, []);
 
   const getDailyLimit = useCallback(
-    async (_: MappedToken) => {
+    async (_: MappingToken) => {
       const { to: arrival } = direction;
       const api = entrance.polkadot.getInstance(arrival.provider.rpc);
 

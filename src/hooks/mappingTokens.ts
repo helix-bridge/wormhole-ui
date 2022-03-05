@@ -3,13 +3,12 @@ import { useCallback, useMemo, useReducer, useState } from 'react';
 import { map } from 'rxjs';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { RegisterStatus } from '../config/constant';
-import { Action, Erc20RegisterStatus, Erc20Token, NullableCrossChainDirection, RequiredPartial } from '../model';
-import { isDVM, isEthereumNetwork } from '../utils';
-import { getTokenBalance } from '../utils/mappingToken/tokenInfo';
+import { Action, Erc20RegisterStatus, MappingToken, NullableCrossChainDirection, RequiredPartial } from '../model';
+import { isDVM, isEthereumNetwork, getErc20TokenBalance } from '../utils';
 import { getKnownMappingTokens, StoredProof } from '../utils/mappingToken/mappingToken';
 import { useApi } from './api';
 
-export type MemoedTokenInfo = RequiredPartial<Erc20Token, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'>;
+export type MemoedTokenInfo = RequiredPartial<MappingToken, 'name' | 'logo' | 'decimals' | 'address' | 'symbol'>;
 
 export type ActionType = 'updateTokens' | 'updateProof' | 'switchToConfirmed' | 'updateTotal';
 
@@ -66,7 +65,7 @@ export const useMappingTokens = (
   const { address: currentAccount } = useMemo(() => (connection.accounts || [])[0] ?? '', [connection.accounts]);
   const refreshTokenBalance = useCallback(
     async (tokenAddress: string) => {
-      const balance = await getTokenBalance(tokenAddress, currentAccount, true);
+      const balance = await getErc20TokenBalance(tokenAddress, currentAccount, true);
       const tokens = [...state.tokens];
       const index = tokens.findIndex((item) => item.address === tokenAddress);
 

@@ -4,20 +4,40 @@ import { isNull } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { from, Observable, of, Subscription, switchMap, takeWhile } from 'rxjs';
+import { from, Observable, of, Subscription, switchMap } from 'rxjs';
+import { Balance } from '../../components/form-control/Balance';
+import { MappingTokenControl } from '../../components/form-control/MappingTokenControl';
+import { EthereumAccountItem } from '../../components/form-control/EthereumAccountItem';
+import { MaxBalance } from '../../components/form-control/MaxBalance';
+import { RecipientItem } from '../../components/form-control/RecipientItem';
+import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
+import { ApproveSuccess } from '../../components/modal/ApproveSuccess';
+import { Des } from '../../components/modal/Des';
+import { TransferConfirm } from '../../components/modal/TransferConfirm';
+import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { FormItemExtra } from '../../components/widget/facade';
 import { FORM_CONTROL, LONG_DURATION, Path, RegisterStatus } from '../../config';
-import { MemoedTokenInfo, useAfterSuccess, useApi, useIsMounted, useMappingTokens, useTx } from '../../hooks';
+import {
+  MemoedTokenInfo,
+  useAfterSuccess,
+  useApi,
+  useIsMounted,
+  useIsMountedOperator,
+  useMappingTokens,
+  useTx,
+} from '../../hooks';
 import {
   ChainConfig,
+  CommonPayloadKeys,
+  CrossChainAsset,
   CrossChainComponentProps,
   CrossChainDirection,
+  CrossChainParty,
   CrossChainPayload,
   DailyLimit,
+  DeepRequired,
   DVMChainConfig,
-  DVMPayload,
-  DVMTxPayload,
-  Erc20Token,
-  MappedToken,
+  MappingToken,
   Network,
   RequiredPartial,
   Token,
@@ -39,17 +59,10 @@ import {
   prettyNumber,
   toWei,
 } from '../../utils';
-import { Balance } from '../../components/form-control/Balance';
-import { Erc20Control } from '../../components/form-control/Erc20Control';
-import { EthereumAccountItem } from '../../components/form-control/EthereumAccountItem';
-import { MaxBalance } from '../../components/form-control/MaxBalance';
-import { RecipientItem } from '../../components/form-control/RecipientItem';
-import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
-import { ApproveSuccess } from '../../components/modal/ApproveSuccess';
-import { Des } from '../../components/modal/Des';
-import { TransferConfirm } from '../../components/modal/TransferConfirm';
-import { TransferSuccess } from '../../components/modal/TransferSuccess';
-import { FormItemExtra } from '../../components/widget/facade';
+
+interface DVMPayload extends CrossChainParty, CrossChainAsset<MappingToken> {}
+
+type DVMTxPayload = CrossChainPayload<DeepRequired<DVMPayload, [CommonPayloadKeys]>>;
 
 type ApproveValue = CrossChainPayload<RequiredPartial<DVMPayload, 'sender'>>;
 
@@ -60,8 +73,8 @@ interface DVMProps {
   isDVM?: boolean;
   transform: (value: DVMTxPayload) => Observable<Tx>;
   spenderResolver: (direction: CrossChainDirection) => Promise<string>;
-  getDailyLimit?: (token: MappedToken) => Promise<DailyLimit>;
-  getFee?: (departure: ChainConfig, token: MappedToken) => Promise<string>;
+  getDailyLimit?: (token: MappingToken) => Promise<DailyLimit>;
+  getFee?: (departure: ChainConfig, token: MappingToken) => Promise<string>;
 }
 
 interface TransferInfoProps {
@@ -79,6 +92,7 @@ function TransferInfo({ tokenInfo, amount, direction, dailyLimit, fee }: Transfe
   const [symbol, setSymbol] = useState('');
   const unit = tokenInfo ? getUnit(+tokenInfo.decimals) : 'ether';
   const value = new BN(toWei({ value: amount || '0', unit }));
+
   const isNoLimit = useMemo(() => {
     if (dailyLimit) {
       return new BN(dailyLimit.limit).isZero();
@@ -90,6 +104,7 @@ function TransferInfo({ tokenInfo, amount, direction, dailyLimit, fee }: Transfe
   useEffect(() => {
     const { to: arrival } = direction;
     const mode = getNetworkMode(arrival);
+
     (async () => {
       if (tokenInfo && isPolkadotNetwork(arrival.name) && mode === 'native') {
         const result = tokenInfo.symbol.replace('x', '');
@@ -144,46 +159,64 @@ export function DVM({
   isDVM = true,
 }: CrossChainComponentProps<DVMPayload> & DVMProps) {
   const { t } = useTranslation();
+
   const {
     mainConnection: { accounts },
+    assistantConnection,
   } = useApi();
+
   const { total, tokens, refreshTokenBalance } = useMappingTokens(
     form.getFieldValue(FORM_CONTROL.direction),
     tokenRegisterStatus
   );
+
   const [allowance, setAllowance] = useState(new BN(0));
   const [dailyLimit, setDailyLimit] = useState<DailyLimit | null>(null);
-  const [selectedErc20, setSelectedErc20] = useState<Erc20Token | null>(null);
+  const [selectedToken, setSelectedToken] = useState<MappingToken | null>(null);
+
   const tokenInfo = useMemo<Token>(
     () => ({
-      symbol: selectedErc20?.symbol ?? '',
-      decimal: getUnit(+(selectedErc20?.decimals ?? '9')),
+      symbol: selectedToken?.symbol ?? '',
+      decimal: getUnit(+(selectedToken?.decimals ?? '9')),
     }),
-    [selectedErc20]
+    [selectedToken]
   );
+
   const availableBalance = useMemo(() => {
-    return !selectedErc20
+    return !selectedToken
       ? null
-      : fromWei({ value: selectedErc20.balance, unit: getUnit(+selectedErc20.decimals) }, prettyNumber);
-  }, [selectedErc20]);
+      : fromWei({ value: selectedToken.balance, unit: getUnit(+selectedToken.decimals) }, prettyNumber);
+  }, [selectedToken]);
+
   const account = useMemo(() => {
     const acc = (accounts || [])[0];
 
     return isValidAddress(acc?.address, 'ethereum') ? acc.address : '';
   }, [accounts]);
+
+  const recipients = useMemo(
+    () =>
+      isPolkadotNetwork(direction.to.name) && assistantConnection.accounts?.length
+        ? assistantConnection.accounts
+        : undefined,
+    [assistantConnection.accounts, direction.to]
+  );
+
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
-  const unit = useMemo(() => (selectedErc20 ? getUnit(+selectedErc20.decimals) : 'ether'), [selectedErc20]);
+  const unit = useMemo(() => (selectedToken ? getUnit(+selectedToken.decimals) : 'ether'), [selectedToken]);
   const { observer } = useTx();
   const { afterTx, afterApprove } = useAfterSuccess();
   const [fee, setFee] = useState<string>('');
   const isMounted = useIsMounted();
+  const { takeWhileIsMounted } = useIsMountedOperator();
+
   const refreshAllowance = useCallback(
     (dir: CrossChainDirection) => {
       if (isMounted) {
         from(spenderResolver(dir))
           .pipe(
-            switchMap((spender) => getAllowance(account, spender, selectedErc20)),
-            takeWhile(() => isMounted)
+            switchMap((spender) => getAllowance(account, spender, selectedToken)),
+            takeWhileIsMounted()
           )
           .subscribe((num) => {
             setAllowance(num);
@@ -191,7 +224,7 @@ export function DVM({
           });
       }
     },
-    [account, form, isMounted, selectedErc20, spenderResolver]
+    [account, form, isMounted, selectedToken, spenderResolver, takeWhileIsMounted]
   );
 
   useEffect(() => {
@@ -200,11 +233,11 @@ export function DVM({
     if (getFee) {
       const { from: departure } = direction;
 
-      sub$$ = from(getFee(departure, selectedErc20!)).subscribe(setFee);
+      sub$$ = from(getFee(departure, selectedToken!)).subscribe(setFee);
     }
 
     return () => sub$$?.unsubscribe();
-  }, [direction, getFee, selectedErc20]);
+  }, [direction, getFee, selectedToken]);
 
   useEffect(() => {
     const fn = () => (data: DVMTxPayload) => {
@@ -225,6 +258,7 @@ export function DVM({
           </TransferConfirm>
         ),
       });
+
       const txObs = transform(value);
 
       return createTxWorkflow(
@@ -241,31 +275,31 @@ export function DVM({
     };
 
     setSubmit(fn);
-  }, [afterTx, observer, refreshAllowance, refreshTokenBalance, selectedErc20, setSubmit, transform, unit]);
+  }, [afterTx, observer, refreshAllowance, refreshTokenBalance, selectedToken, setSubmit, transform, unit]);
 
   useEffect(() => {
     let sub$$: Subscription | null = null;
 
-    if (getDailyLimit && selectedErc20?.address) {
+    if (getDailyLimit && selectedToken?.address) {
       sub$$ = of(null)
         .pipe(
-          switchMap(() => from(getDailyLimit(selectedErc20))),
+          switchMap(() => from(getDailyLimit(selectedToken))),
           pollWhile(LONG_DURATION, () => isMounted)
         )
         .subscribe(setDailyLimit);
     }
 
     return () => sub$$?.unsubscribe();
-  }, [getDailyLimit, isMounted, selectedErc20]);
+  }, [getDailyLimit, isMounted, selectedToken]);
 
   return (
     <>
       <EthereumAccountItem form={form} />
 
-      {/* TODO: add accounts prop for better UX */}
       <RecipientItem
         form={form}
         direction={direction}
+        accounts={recipients}
         extraTip={t(
           'After the transaction is confirmed, the account cannot be changed. Please do not fill in the exchange account.'
         )}
@@ -289,11 +323,11 @@ export function DVM({
         rules={[{ required: true }]}
         className="mb-2"
       >
-        <Erc20Control
+        <MappingTokenControl
           tokens={tokens}
           total={total}
           onChange={async (erc20) => {
-            setSelectedErc20(erc20);
+            setSelectedToken(erc20);
 
             const spender = await spenderResolver(direction);
             const allow = await getAllowance(account, spender, erc20);
@@ -315,7 +349,7 @@ export function DVM({
           { required: true },
           insufficientBalanceRule({
             t,
-            compared: selectedErc20?.balance,
+            compared: selectedToken?.balance,
             token: tokenInfo,
           }),
           insufficientDailyLimit({
@@ -341,7 +375,7 @@ export function DVM({
                     const value: Pick<ApproveValue, 'direction' | 'sender' | 'asset'> = {
                       sender: account,
                       direction,
-                      asset: selectedErc20,
+                      asset: selectedToken,
                     };
                     const spender = await spenderResolver(direction);
                     const beforeTx = applyModalObs({
@@ -350,7 +384,7 @@ export function DVM({
                     const txObs = approveToken({
                       sender: account,
                       direction,
-                      tokenAddress: selectedErc20?.address,
+                      tokenAddress: selectedToken?.address,
                       spender,
                     });
 
@@ -381,7 +415,7 @@ export function DVM({
           <MaxBalance
             network={form.getFieldValue(FORM_CONTROL.direction).from?.name as Network}
             onClick={() => {
-              const amount = fromWei({ value: selectedErc20?.balance, unit }, prettyNumber);
+              const amount = fromWei({ value: selectedToken?.balance, unit }, prettyNumber);
 
               form.setFieldsValue({ [FORM_CONTROL.amount]: amount });
               setCurAmount(amount);
@@ -393,7 +427,7 @@ export function DVM({
 
       <TransferInfo
         amount={curAmount}
-        tokenInfo={selectedErc20}
+        tokenInfo={selectedToken}
         direction={form.getFieldValue(FORM_CONTROL.direction)}
         fee={fee}
         dailyLimit={dailyLimit}

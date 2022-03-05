@@ -3,7 +3,6 @@ import { TypeRegistry } from '@polkadot/types';
 import { hexToU8a } from '@polkadot/util';
 import { lastValueFrom, map } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
-import { MMR_QUERY } from '../../config/query';
 import { Network, PolkadotChainConfig } from '../../model';
 import { remove0x } from '../helper';
 import { convert } from '../mmrConvert/ckb_merkle_mountain_range_bg';
@@ -24,6 +23,20 @@ export interface MMRProof {
 }
 
 export type ClaimNetworkPrefix = 'Darwinia' | 'Pangolin';
+
+/**
+ * subql subql-darwinia-mmr subql-pangolin-mmr
+ */
+const MMR_QUERY = `
+  query nodeEntities($ids: [String!]) {
+    nodeEntities(filter: { id: { in: $ids } }) {
+      nodes {
+        id
+        hash
+      }
+    }
+  }
+`;
 
 async function getMMRProofByRPC(api: ApiPromise, blockNumber: number, mmrBlockNumber: number) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

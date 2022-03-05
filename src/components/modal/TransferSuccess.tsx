@@ -2,7 +2,7 @@ import { CheckCircleFilled } from '@ant-design/icons';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME } from '../../config';
-import { Erc20Token, Network, CrossChainAsset, CrossChainPayload, TxSuccessComponentProps } from '../../model';
+import { MappingToken, Network, CrossChainAsset, CrossChainPayload, TxSuccessComponentProps } from '../../model';
 import {
   convertToSS58,
   fromWei,
@@ -14,7 +14,7 @@ import {
 import { SubscanLink } from '../widget/SubscanLink';
 import { Des } from './Des';
 
-function Detail({ amount, asset }: CrossChainAsset<string | Erc20Token>) {
+function Detail({ amount, asset }: CrossChainAsset<string | MappingToken>) {
   return (
     <div>
       <span>{amount}</span>

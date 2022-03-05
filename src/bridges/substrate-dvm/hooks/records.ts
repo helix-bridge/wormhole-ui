@@ -2,13 +2,13 @@ import { GraphQLClient, useManualQuery, FetchData } from 'graphql-hooks';
 import { useMemo, useCallback } from 'react';
 import { Observable, from, map, catchError, EMPTY } from 'rxjs';
 import { TRANSFERS_QUERY } from '../config';
-import { HistoryReq, ChainConfig, PolkadotChainConfig } from '../../../model';
+import { RecordRequestParams, ChainConfig, PolkadotChainConfig } from '../../../model';
 import { getBridge, convertToSS58, dvmAddressToAccountId } from '../../../utils';
 import { SubstrateSubstrateDVMBridgeConfig } from '../../substrate-substrateDVM/model/bridge';
 import { Substrate2DVMRecord, Substrate2DVMRecordsRes, DVM2SubstrateRecordsRes } from '../model';
 
 type FetchSubstrate2DVMRecords = (
-  req: Omit<HistoryReq, 'confirmed'>
+  req: Omit<RecordRequestParams, 'confirmed'>
 ) => Observable<{ count: number; list: Substrate2DVMRecord[] }>;
 
 const UNKNOWN_CLIENT = 'unknown';
@@ -49,7 +49,7 @@ export function useSubstrate2DVMRecords(
 
   const fetchRecords = useCallback(
     (
-      req: Omit<HistoryReq, 'confirmed'>,
+      req: Omit<RecordRequestParams, 'confirmed'>,
       fetch: FetchData<Substrate2DVMRecordsRes, Record<string, unknown>, unknown>
     ) => {
       const {
@@ -79,13 +79,13 @@ export function useSubstrate2DVMRecords(
   );
 
   const fetchSubstrate2DVMRecords = useCallback(
-    (req: Omit<HistoryReq, 'confirmed'>) =>
+    (req: Omit<RecordRequestParams, 'confirmed'>) =>
       fetchRecords({ ...req, address: convertToSS58(req.address, ss58Prefix) }, fetchIssuingRecords),
     [ss58Prefix, fetchIssuingRecords, fetchRecords]
   );
 
   const fetchDVM2SubstrateRecords = useCallback(
-    (req: Omit<HistoryReq, 'confirmed'>) =>
+    (req: Omit<RecordRequestParams, 'confirmed'>) =>
       fetchRecords(
         {
           ...req,

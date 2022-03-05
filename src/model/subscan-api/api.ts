@@ -6,6 +6,6 @@ export interface SubscanResponse<T = any> {
   generated_at: number; // timestamp
 }
 
-export interface ClaimsRes {
+export interface AirdropClaimRes {
   info: Record<string, unknown>[];
 }

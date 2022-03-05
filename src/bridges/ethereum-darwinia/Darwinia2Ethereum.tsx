@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, map, Observable } from 'rxjs';
 import Web3 from 'web3';
-import { AssetGroup, AssetGroupValue } from '../../components/form-control/AssetGroup';
+import { AssetGroup } from '../../components/form-control/AssetGroup';
 import { PolkadotAccountsItem } from '../../components/form-control/PolkadotAccountsItem';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { TransferConfirm } from '../../components/modal/TransferConfirm';
@@ -21,11 +21,11 @@ import { issuingDarwiniaTokens } from './utils';
 
 interface AmountCheckInfo {
   fee: BN | null;
-  assets: AssetGroupValue;
+  assets: Darwinia2EthereumPayload['assets'];
   availableBalance: AvailableBalance[];
 }
 
-const INITIAL_ASSETS: AssetGroupValue = [
+const INITIAL_ASSETS: Darwinia2EthereumPayload['assets'] = [
   { asset: DarwiniaAsset.ring, amount: '', checked: true },
   { asset: DarwiniaAsset.kton, amount: '' },
 ];
@@ -170,7 +170,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
   const [txFee, setTxFee] = useState<BN | null>(null);
   const [isFeeCalculating, setIsFeeCalculating] = useState<boolean>(false);
   const fee = useMemo(() => (crossChainFee && txFee ? crossChainFee.add(txFee) : null), [crossChainFee, txFee]);
-  const [currentAssets, setCurAssets] = useState<AssetGroupValue>([]);
+  const [currentAssets, setCurAssets] = useState<Darwinia2EthereumPayload['assets']>([]);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<CrossChainPayload<Darwinia2EthereumPayload>>();

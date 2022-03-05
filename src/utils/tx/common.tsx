@@ -2,29 +2,16 @@ import { ApiPromise } from '@polkadot/api';
 import { TypeRegistry } from '@polkadot/types';
 import { Modal, ModalFuncProps, ModalProps } from 'antd';
 import BN from 'bn.js';
-import { upperFirst } from 'lodash';
 import { Trans } from 'react-i18next';
-import { EMPTY, filter, finalize, from, map, Observable, Observer, switchMap, take, tap, zip } from 'rxjs';
+import { EMPTY, finalize, Observable, Observer, switchMap, tap } from 'rxjs';
 import Web3 from 'web3';
 import { PromiEvent, TransactionConfig, TransactionReceipt } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
-import { Ethereum2DarwiniaPayload, EthereumDarwiniaBridgeConfig } from '../../bridges/ethereum-darwinia/model';
 import { abi } from '../../config/abi';
-import {
-  CrossChainDirection,
-  CrossChainPayload,
-  DVMPayload,
-  Erc20Token,
-  LockEventsStorage,
-  RequiredPartial,
-  Tx,
-  TxFn,
-} from '../../model';
-import { getBridge } from '../bridge';
-import { empty, encodeBlockHeader } from '../helper';
-import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR } from '../mmr';
-import { connect, entrance, waitUntilConnected } from '../network';
+import { CrossChainPayload, MappingToken, RequiredPartial, Tx, TxFn } from '../../model';
+import { empty } from '../helper';
+import { entrance, waitUntilConnected } from '../network';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModalSpyFn<T = any> = (observer: Observer<T>, closeFn: () => void) => void;
@@ -174,7 +161,7 @@ export function genEthereumTransactionObs(params: TransactionConfig): Observable
 }
 
 export const approveToken: TxFn<
-  RequiredPartial<CrossChainPayload<Ethereum2DarwiniaPayload & DVMPayload>, 'sender'> & {
+  RequiredPartial<CrossChainPayload, 'sender'> & {
     tokenAddress?: string;
     spender?: string;
     sendOptions?: { gas: string; gasPrice: string };
@@ -196,7 +183,7 @@ export const approveToken: TxFn<
   );
 };
 
-export async function getAllowance(sender: string, spender: string, token: Erc20Token | null): Promise<BN> {
+export async function getAllowance(sender: string, spender: string, token: MappingToken | null): Promise<BN> {
   if (!token) {
     return Web3.utils.toBN(0);
   }
@@ -208,31 +195,7 @@ export async function getAllowance(sender: string, spender: string, token: Erc20
   return Web3.utils.toBN(allowanceAmount || 0);
 }
 
-/* -------------------------------------------Inner Helper Fn---------------------------------------------- */
-
-function getD2ELockEventsStorageKey(blockNumber: number, lockEvents: LockEventsStorage[] = []) {
-  const matchedStorageKey = lockEvents?.find(
-    (item) => item.min <= blockNumber && (item.max === null || item?.max >= blockNumber)
-  );
-
-  return matchedStorageKey?.key;
-}
-
 /* -------------------------------------------Claim Token---------------------------------------------- */
-
-interface ClaimInfo {
-  direction: CrossChainDirection;
-  mmrIndex: number;
-  mmrRoot: string;
-  mmrSignatures: string;
-  blockNumber: number;
-  blockHeaderStr: string;
-  blockHash: string;
-  meta: {
-    best: number;
-    MMRRoot: string;
-  };
-}
 
 export async function getMPTProof(
   api: ApiPromise,
@@ -245,79 +208,4 @@ export async function getMPTProof(
   const registry = new TypeRegistry();
 
   return registry.createType('Vec<Bytes>', proof.proof.toJSON());
-}
-
-/**
- * @description darwinia -> ethereum & darwinia DVM -> ethereum  needs claim action
- */
-export function claimToken({
-  direction,
-  mmrIndex,
-  mmrRoot,
-  mmrSignatures,
-  blockNumber,
-  blockHeaderStr,
-  blockHash,
-  meta: { MMRRoot, best },
-}: ClaimInfo): Observable<Tx> {
-  const { from: departure, to: arrival } = direction;
-  const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
-  const networkPrefix = upperFirst(departure.name) as ClaimNetworkPrefix;
-  const apiObs = from(entrance.polkadot.getInstance(departure.provider.rpc).isReady);
-  const header = encodeBlockHeader(blockHeaderStr);
-  const storageKey = getD2ELockEventsStorageKey(blockNumber, bridge.config.lockEvents);
-  const accountObs = connect(arrival).pipe(
-    filter(({ status }) => status === 'success'),
-    map(({ accounts }) => accounts[0].address),
-    take(1)
-  );
-
-  return apiObs.pipe(
-    switchMap((api) => {
-      const eventsProofObs = from(getMPTProof(api, blockHash, storageKey)).pipe(map((str) => str.toHex()));
-
-      return MMRRoot && best && best > blockNumber
-        ? zip([from(getMMR(api, blockNumber, best, blockHash)), eventsProofObs, accountObs]).pipe(
-            map(
-              ([mmrProof, eventsProofStr, account]) =>
-                (contract: Contract) =>
-                  contract.methods
-                    .verifyProof(
-                      '0x' + MMRRoot,
-                      best,
-                      header.toHex(),
-                      mmrProof.peaks,
-                      mmrProof.siblings,
-                      eventsProofStr
-                    )
-                    .send({ from: account })
-            )
-          )
-        : zip([from(getMMR(api, blockNumber, mmrIndex, blockHash)), eventsProofObs, accountObs]).pipe(
-            map(([mmrProof, eventsProofStr, account]) => {
-              const mmrRootMessage = encodeMMRRootMessage({
-                prefix: networkPrefix,
-                methodID: '0x479fbdf9',
-                index: mmrIndex,
-                root: mmrRoot,
-              });
-
-              return (contract: Contract) =>
-                contract.methods
-                  .appendRootAndVerifyProof(
-                    mmrRootMessage.toHex(),
-                    mmrSignatures.split(','),
-                    mmrRoot,
-                    mmrIndex,
-                    header.toHex(),
-                    mmrProof.peaks,
-                    mmrProof.siblings,
-                    eventsProofStr
-                  )
-                  .send({ from: account });
-            })
-          );
-    }),
-    switchMap((txFn) => genEthereumContractTxObs(bridge.config.contracts.redeem || '', txFn, abi.tokenIssuingABI))
-  );
 }

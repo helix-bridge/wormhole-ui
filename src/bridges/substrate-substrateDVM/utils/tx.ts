@@ -3,7 +3,7 @@ import BN from 'bn.js';
 import { from, map, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../../config';
-import { DVMTxPayload, Tx } from '../../../model/tx';
+import { Tx } from '../../../model/tx';
 import {
   convertToDvm,
   entrance,
@@ -14,7 +14,7 @@ import {
   toWei,
   waitUntilConnected,
 } from '../../../utils';
-import { IssuingSubstrateTxPayload, SubstrateSubstrateDVMBridgeConfig } from '../model';
+import { IssuingSubstrateTxPayload, RedeemSubstrateTxPayload, SubstrateSubstrateDVMBridgeConfig } from '../model';
 
 export function issuingSubstrateToken(value: IssuingSubstrateTxPayload, api: ApiPromise, fee: BN): Observable<Tx> {
   const { sender, recipient, amount, direction } = value;
@@ -32,7 +32,11 @@ export function issuingSubstrateToken(value: IssuingSubstrateTxPayload, api: Api
   return signAndSendExtrinsic(api, sender, extrinsic);
 }
 
-export function redeemSubstrate(value: DVMTxPayload, mappingAddress: string, specVersion: string): Observable<Tx> {
+export function redeemSubstrate(
+  value: RedeemSubstrateTxPayload,
+  mappingAddress: string,
+  specVersion: string
+): Observable<Tx> {
   const { asset, amount, sender, recipient, direction: transfer } = value;
   const receiver = Web3.utils.hexToBytes(convertToDvm(recipient));
   const weight = '690133000';

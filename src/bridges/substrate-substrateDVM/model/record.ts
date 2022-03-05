@@ -1,10 +1,4 @@
-export interface SimpleBlock {
-  blockHash: string;
-  extrinsicHash: string;
-  // eslint-disable-next-line id-denylist
-  number: number;
-  specVersion: number;
-}
+import { BridgeDispatchEventRecord } from '../../../model';
 
 export interface SubstrateDVM2SubstrateRecord {
   lane_id: string;
@@ -52,22 +46,6 @@ export interface Substrate2SubstrateDVMRecordsRes {
 }
 export interface Substrate2SubstrateDVMRecordRes {
   s2sEvent: Substrate2SubstrateDVMRecord;
-}
-
-export interface BridgeDispatchEventRecord {
-  data: string; // json string [ChainId, [LaneId, MessageNonce], DispatchResult]
-  isSuccess: boolean;
-  method:
-    | 'MessageRejected'
-    | 'MessageVersionSpecMismatch'
-    | 'MessageWeightMismatch'
-    | 'MessageSignatureMismatch'
-    | 'MessageCallDecodeFailed'
-    | 'MessageCallRejected'
-    | 'MessageDispatchPaymentFailed'
-    | 'MessageDispatched';
-  block: SimpleBlock;
-  index: number;
 }
 
 export interface BridgeDispatchEventRes {

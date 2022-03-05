@@ -7,7 +7,7 @@ export interface Token<T = string> {
   decimal: keyof Units;
 }
 
-export interface MappedToken {
+export interface MappingToken {
   address: string;
   source: string;
   backing: string;
@@ -19,4 +19,4 @@ export interface MappedToken {
   balance: BN;
 }
 
-export type Erc20Token = MappedToken;
+export type Erc20Token = MappingToken;

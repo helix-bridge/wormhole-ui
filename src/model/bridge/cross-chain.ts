@@ -1,6 +1,5 @@
 import { FormInstance } from 'antd';
 import { Subscription } from 'rxjs';
-import { MappedToken } from '../token';
 import { ChainConfig } from '../network';
 import { NullableFields } from '../type-operator';
 
@@ -39,13 +38,9 @@ export interface CrossChainParty {
 
 /**
  * for native token, T = string;
- * for mapped token, T = Mapped Token;
+ * for mapped token, T = Mapping Token;
  */
 export interface CrossChainAsset<T = string> {
   amount: string;
   asset: T | null;
 }
-
-/* ---------------------------------------------------DVM--------------------------------------------------- */
-
-export interface DVMPayload extends CrossChainParty, CrossChainAsset<MappedToken> {}

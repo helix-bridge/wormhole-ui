@@ -1,7 +1,7 @@
 import { catchError, map, Observable, of } from 'rxjs';
 import camelCaseKeys from 'camelcase-keys';
 import { DarwiniaApiPath } from '../../../config/api';
-import { HistoryReq, ICamelCaseKeys } from '../../../model';
+import { RecordRequestParams, ICamelCaseKeys } from '../../../model';
 import { apiUrl, getBridge, rxGet } from '../../../utils';
 import { EthereumDVMBridgeConfig } from '../model';
 import {
@@ -16,7 +16,7 @@ export function queryDarwiniaDVM2EthereumIssuingRecords({
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
+}: RecordRequestParams): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
   const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
@@ -36,7 +36,9 @@ export function queryEthereum2DarwiniaDVMRedeemRecords({
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>> | null> {
+}: RecordRequestParams): Observable<Ethereum2DarwiniaRedeemHistoryRes<
+  ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>
+> | null> {
   const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 

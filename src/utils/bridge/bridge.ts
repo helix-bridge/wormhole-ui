@@ -1,11 +1,24 @@
 import { has, isEqual, pick } from 'lodash';
-import { EthereumDVMBridgeConfig } from '../../bridges/ethereum-darwiniaDVM/model';
 import { ComingSoon } from '../../components/widget/ComingSoon';
 import { BRIDGES } from '../../config/bridges';
-import { ChainConfig, Departure, CrossChainDirection, Vertices, Bridge, BridgeConfig } from '../../model';
+import {
+  ChainConfig,
+  Departure,
+  CrossChainDirection,
+  Vertices,
+  Bridge,
+  BridgeConfig,
+  ApiKeys,
+  Api,
+  ContractConfig,
+} from '../../model';
 import { chainConfigToVertices, isDVM, isEthereumNetwork, isPolkadotNetwork } from '../network/network';
 
 type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => boolean;
+
+export type DVMBridgeConfig = Required<
+  BridgeConfig<ContractConfig & { proof: string }, Pick<Api<ApiKeys>, 'dapp' | 'evolution'>>
+>;
 
 export const isSubstrate2SubstrateDVM: BridgePredicateFn = (departure, arrival) => {
   return (
@@ -123,7 +136,7 @@ export function getBridgeComponent(type: 'crossChain' | 'record') {
   };
 }
 
-export function getAvailableDVMBridge(departure: ChainConfig): Bridge<EthereumDVMBridgeConfig> {
+export function getAvailableDVMBridge(departure: ChainConfig): Bridge<DVMBridgeConfig> {
   // FIXME: by default we use the first vertices here.
   const [bridge] = BRIDGES.filter(
     (item) => item.status === 'available' && isEqual(item.departure, departure) && isDVM(item.arrival)
@@ -135,7 +148,7 @@ export function getAvailableDVMBridge(departure: ChainConfig): Bridge<EthereumDV
     );
   }
 
-  return bridge as Bridge<EthereumDVMBridgeConfig>;
+  return bridge as Bridge<DVMBridgeConfig>;
 }
 
 export function hasAvailableDVMBridge(departure: ChainConfig): boolean {

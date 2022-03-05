@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs';
 import { Unit } from 'web3-utils';
-import { CrossChainPayload, DVMPayload } from './bridge';
-import { DeepRequired } from './type-operator';
+import { CrossChainPayload } from './bridge';
 
 export type TxStatus =
   | 'future'
@@ -45,5 +44,3 @@ export type TxSuccessComponentProps<T> = {
 };
 
 export type CommonPayloadKeys = 'sender' | 'recipient' | 'amount' | 'asset';
-
-export type DVMTxPayload = CrossChainPayload<DeepRequired<DVMPayload, [CommonPayloadKeys]>>;

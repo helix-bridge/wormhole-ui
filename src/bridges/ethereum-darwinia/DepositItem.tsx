@@ -1,30 +1,19 @@
 import { Form, Progress, Select } from 'antd';
 import { Rule } from 'antd/lib/form';
-import { addDays, format, fromUnixTime } from 'date-fns';
+import { format } from 'date-fns';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EthereumDarwiniaBridgeConfig } from '../../bridges/ethereum-darwinia/model';
 import { EvoApiPath, FORM_CONTROL } from '../../config';
 import { useRecordsQuery } from '../../hooks';
-import { CrossChainDirection, CustomFormControlProps, Deposit, DepositResponse } from '../../model';
-import { apiUrl, empty, getBridge } from '../../utils';
+import { CrossChainDirection, CustomFormControlProps } from '../../model';
+import { apiUrl, empty, getBridge, getTimeRange } from '../../utils';
+import { Deposit, DepositResponse, EthereumDarwiniaBridgeConfig } from './model';
 
 interface DepositItemProps {
   address: string;
   direction: CrossChainDirection;
   removedIds: number[];
   rules?: Rule[];
-}
-
-export function getDepositTimeRange({ deposit_time, duration }: Pick<Deposit, 'deposit_time' | 'duration'>): {
-  start: Date;
-  end: Date;
-} {
-  const base = 30;
-  const start = fromUnixTime(deposit_time);
-  const end = addDays(start, base * duration);
-
-  return { start, end };
 }
 
 // eslint-disable-next-line complexity
@@ -91,7 +80,7 @@ export function DepositItem({
           .filter((item) => !removedIds.includes(item.deposit_id))
           .map((item) => {
             const { deposit_id, amount } = item;
-            const { start, end } = getDepositTimeRange(item);
+            const { start, end } = getTimeRange(item.deposit_time, item.duration);
             const DATE_FORMAT = 'yyyy/MM/dd';
 
             return (

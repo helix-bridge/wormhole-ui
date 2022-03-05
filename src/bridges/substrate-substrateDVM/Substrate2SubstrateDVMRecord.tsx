@@ -3,11 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Subscription, switchMapTo, tap } from 'rxjs';
 import { IndexingState, Progresses, ProgressProps, State } from '../../components/record/Progress';
 import { Record } from '../../components/record/Record';
-import { PolkadotChainConfig, RecordComponentProps } from '../../model';
+import { BridgeDispatchEventRecord, PolkadotChainConfig, RecordComponentProps } from '../../model';
 import { chainConfigToVertices, convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM } from '../../utils';
 import { useS2SRecords } from './hooks';
 import {
-  BridgeDispatchEventRecord,
   Substrate2SubstrateDVMRecord as S2SDVMRecord,
   Substrate2SubstrateDVMRecordRes,
   SubstrateDVM2SubstrateRecordRes,

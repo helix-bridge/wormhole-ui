@@ -12,7 +12,7 @@ import {
 } from '../bridges/ethereum-darwiniaDVM/utils';
 import { useSubstrate2DVMRecords } from '../bridges/substrate-dvm/hooks';
 import { useS2SRecords } from '../bridges/substrate-substrateDVM/hooks';
-import { Departure, HistoryReq } from '../model';
+import { Departure, RecordRequestParams } from '../model';
 import {
   isDarwinia2Ethereum,
   isDVM2Ethereum,
@@ -79,8 +79,8 @@ export function useRecords(departure: Departure, arrival: Departure) {
     verticesToChainConfig(arrival)
   );
 
-  const genParams = useCallback((params: HistoryReq) => {
-    const req = omitBy<HistoryReq>(params, isNull) as HistoryReq;
+  const genParams = useCallback((params: RecordRequestParams) => {
+    const req = omitBy<RecordRequestParams>(params, isNull) as RecordRequestParams;
     const [dep] = params.direction;
 
     if (isTronNetwork(dep.network)) {
@@ -95,7 +95,7 @@ export function useRecords(departure: Departure, arrival: Departure) {
     verticesToChainConfig(arrival)
   );
 
-  const genQueryFn = useCallback<(isGenesis: boolean) => (req: HistoryReq) => Observable<unknown>>(
+  const genQueryFn = useCallback<(isGenesis: boolean) => (req: RecordRequestParams) => Observable<unknown>>(
     // eslint-disable-next-line complexity
     (isGenesis = false) => {
       if (isTronNetwork(departure.network) || (isEthereum2Darwinia(departure, arrival) && isGenesis)) {
@@ -134,7 +134,7 @@ export function useRecords(departure: Departure, arrival: Departure) {
         return fetchDVM2SubstrateRecords;
       }
 
-      return (_: HistoryReq) => EMPTY;
+      return (_: RecordRequestParams) => EMPTY;
     },
     [
       departure,
@@ -147,7 +147,7 @@ export function useRecords(departure: Departure, arrival: Departure) {
   );
 
   const queryRecords = useCallback(
-    (params: HistoryReq, isGenesis: boolean) => {
+    (params: RecordRequestParams, isGenesis: boolean) => {
       const { direction, address } = params;
 
       if (!direction || !address) {

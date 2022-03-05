@@ -5,7 +5,7 @@ import {
   Ethereum2Darwinia,
   Ethereum2DarwiniaRecord,
 } from './ethereum-darwinia';
-import { ethereumDarwinia, ropstenPangolin } from './ethereum-darwinia/config/bridge';
+import { ethereumDarwinia, ropstenPangolin } from './ethereum-darwinia/config';
 import {
   DarwiniaDVM2Ethereum,
   DarwiniaDVM2EthereumRecord,

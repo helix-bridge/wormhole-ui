@@ -5,29 +5,31 @@ import { PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState
 import { Trans, useTranslation } from 'react-i18next';
 import { from, mergeMap } from 'rxjs';
 import Web3 from 'web3';
+import { Destination } from '../../components/form-control/Destination';
+import { ConnectionIndicator } from '../../components/widget/ConnectionIndicator';
+import { MappingTokenInfo } from '../../components/widget/MappingTokenInfo';
+import { SubmitButton } from '../../components/widget/SubmitButton';
 import { FORM_CONTROL, RegisterStatus } from '../../config/constant';
-import { validateMessages } from '../../config/validate-msg';
-import { ropstenConfig } from '../../config/network';
 import i18n from '../../config/i18n';
+import { ropstenConfig } from '../../config/network';
+import { validateMessages } from '../../config/validate-msg';
 import { MemoedTokenInfo, useApi, useLocalSearch, useMappingTokens, useTx } from '../../hooks';
 import { Erc20Token, EthereumChainConfig } from '../../model';
 import {
   CROSS_CHAIN_NETWORKS,
+  getErc20Meta,
+  getTokenRegisterStatus,
   hasAvailableDVMBridge,
   isSameNetConfig,
   isValidAddress,
-  confirmRegister,
-  getRegisterProof,
-  getTokenRegisterStatus,
-  launchRegister,
-  StoredProof,
-  getErc20Meta,
   updateStorage,
+  StoredProof,
 } from '../../utils';
-import { Destination } from '../form-control/Destination';
-import { ConnectionIndicator } from '../widget/ConnectionIndicator';
-import { SubmitButton } from '../widget/SubmitButton';
-import { Erc20ListInfo } from './Erc20ListInfo';
+import { confirmRegister, getRegisterProof, launchRegister } from './utils';
+
+interface UpcomingProps {
+  departure: EthereumChainConfig;
+}
 
 const DEFAULT_REGISTER_NETWORK = ropstenConfig;
 
@@ -48,30 +50,165 @@ function tokenSearchFactory<T extends Pick<Erc20Token, 'address' | 'symbol'>>(to
   };
 }
 
+function Upcoming({ departure }: UpcomingProps) {
+  const { t } = useTranslation();
+  const {
+    loading,
+    tokens: allTokens,
+    proofs: knownProofs,
+    addKnownProof,
+    switchToConfirmed,
+  } = useMappingTokens({ from: departure, to: null }, RegisterStatus.registering);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
+  const { data, setSearch } = useLocalSearch<MemoedTokenInfo>(searchFn as (arg: string) => MemoedTokenInfo[]);
+  const { observer } = useTx();
+  const [inQueryingQueue, setInQueryingQueue] = useState<string[]>([]);
+  const tokens = useMemo(() => {
+    const proofs = knownProofs.map((item) => item.registerProof.source);
+
+    return allTokens.filter((item) => !proofs.includes(item.address) && !inQueryingQueue.includes(item.address));
+  }, [allTokens, inQueryingQueue, knownProofs]);
+
+  useEffect(() => {
+    if (!tokens.length) {
+      return;
+    }
+
+    from(tokens)
+      .pipe(mergeMap(({ address }) => getRegisterProof(address, departure)))
+      .subscribe((proof) => {
+        addKnownProof(proof);
+      });
+
+    setInQueryingQueue(tokens.map((item) => item.address));
+  }, [tokens, departure, addKnownProof]);
+
+  return (
+    <>
+      <Input.Search
+        size="large"
+        placeholder={t('Search name or paste address')}
+        onChange={(event) => {
+          const value = event.target.value;
+
+          setSearch(value);
+        }}
+      />
+
+      {loading ? (
+        <Spin className="mx-auto w-full mt-4"></Spin>
+      ) : (
+        <List>
+          {!data.length && <Empty />}
+          {data?.map((token) => (
+            <List.Item key={token.address}>
+              <MappingTokenInfo token={token}></MappingTokenInfo>
+              <UpcomingTokenState
+                token={token}
+                proofs={knownProofs}
+                onConfirm={() => {
+                  const proof: StoredProof = knownProofs.find((item) => item.registerProof.source === token.address)!;
+
+                  confirmRegister(proof, departure).subscribe({
+                    ...observer,
+                    next: (state) => {
+                      observer.next(state);
+                      if (state.status === 'finalized') {
+                        switchToConfirmed(token.address);
+                      }
+                    },
+                  });
+                }}
+              />
+            </List.Item>
+          ))}
+        </List>
+      )}
+      <Tip>
+        <Trans i18nKey="erc20CompletionTip">
+          After {{ type: departure.name }} network returns the result, click [Confirm] to complete the token
+          registration.
+        </Trans>
+      </Tip>
+    </>
+  );
+}
+
+/**
+ * confirmed - -1: waiting for proof; 0: confirming 1: confirmed
+ */
+interface UpcomingTokenStateProps {
+  token: MemoedTokenInfo;
+  proofs: StoredProof[];
+  animate?: boolean;
+  onConfirm: () => void;
+}
+
+function UpcomingTokenState({ token, onConfirm, proofs, animate = true }: UpcomingTokenStateProps) {
+  const { t } = useTranslation();
+
+  if (
+    token.status === RegisterStatus.registering &&
+    !proofs.map((item) => item.registerProof.source).includes(token.address)
+  ) {
+    return animate ? <LoadingOutlined /> : <Progress type="circle" percent={50} format={() => ''} />;
+  }
+
+  if (token.status === RegisterStatus.registered) {
+    return <CheckCircleOutlined />;
+  }
+
+  return (
+    <Button
+      size="small"
+      onClick={onConfirm}
+      style={{
+        pointerEvents: 'all',
+      }}
+    >
+      {t('Confirm')}
+    </Button>
+  );
+}
+
+function Tip({ children }: PropsWithChildren<string | ReactNode>) {
+  return (
+    <Form.Item className="text-xs mb-0 mt-8">
+      <span className="text-gray-600">{children}</span>
+    </Form.Item>
+  );
+}
+
 // eslint-disable-next-line complexity
-export function Register() {
+export function Erc20Register() {
   const { t } = useTranslation();
   const [form] = useForm();
   const [net, setNet] = useState<EthereumChainConfig>(DEFAULT_REGISTER_NETWORK);
+
   const {
     mainConnection: { status },
     network,
   } = useApi();
+
   const [active, setActive] = useState(TabKeys.register);
   const [inputValue, setInputValue] = useState('');
   const [registeredStatus, setRegisteredStatus] = useState(-1);
   const [token, setToken] =
     useState<Pick<Erc20Token, 'logo' | 'name' | 'symbol' | 'decimals' | 'address'> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
   const { tokens, dispatch } = useMappingTokens(
     { from: network as EthereumChainConfig, to: null },
     RegisterStatus.registering
   );
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const searchFn = useCallback(tokenSearchFactory(tokens), [tokens]);
   const { data } = useLocalSearch(searchFn as (arg: string) => Erc20Token[]);
   const { observer } = useTx();
   const networks = useMemo(() => CROSS_CHAIN_NETWORKS.filter((item) => item.type.includes('ethereum')), []);
+
   const canStart = useMemo(
     () =>
       status === 'success' &&
@@ -201,139 +338,5 @@ export function Register() {
         </Tabs.TabPane>
       </Tabs>
     </Form>
-  );
-}
-
-interface UpcomingProps {
-  departure: EthereumChainConfig;
-}
-
-function Upcoming({ departure }: UpcomingProps) {
-  const { t } = useTranslation();
-  const {
-    loading,
-    tokens: allTokens,
-    proofs: knownProofs,
-    addKnownProof,
-    switchToConfirmed,
-  } = useMappingTokens({ from: departure, to: null }, RegisterStatus.registering);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const searchFn = useCallback(tokenSearchFactory(allTokens), [allTokens]);
-  const { data, setSearch } = useLocalSearch<MemoedTokenInfo>(searchFn as (arg: string) => MemoedTokenInfo[]);
-  const { observer } = useTx();
-  const [inQueryingQueue, setInQueryingQueue] = useState<string[]>([]);
-  const tokens = useMemo(() => {
-    const proofs = knownProofs.map((item) => item.registerProof.source);
-
-    return allTokens.filter((item) => !proofs.includes(item.address) && !inQueryingQueue.includes(item.address));
-  }, [allTokens, inQueryingQueue, knownProofs]);
-
-  useEffect(() => {
-    if (!tokens.length) {
-      return;
-    }
-
-    from(tokens)
-      .pipe(mergeMap(({ address }) => getRegisterProof(address, departure)))
-      .subscribe((proof) => {
-        addKnownProof(proof);
-      });
-
-    setInQueryingQueue(tokens.map((item) => item.address));
-  }, [tokens, departure, addKnownProof]);
-
-  return (
-    <>
-      <Input.Search
-        size="large"
-        placeholder={t('Search name or paste address')}
-        onChange={(event) => {
-          const value = event.target.value;
-
-          setSearch(value);
-        }}
-      />
-
-      {loading ? (
-        <Spin className="mx-auto w-full mt-4"></Spin>
-      ) : (
-        <List>
-          {!data.length && <Empty />}
-          {data?.map((token) => (
-            <List.Item key={token.address}>
-              <Erc20ListInfo token={token}></Erc20ListInfo>
-              <UpcomingTokenState
-                token={token}
-                proofs={knownProofs}
-                onConfirm={() => {
-                  const proof: StoredProof = knownProofs.find((item) => item.registerProof.source === token.address)!;
-
-                  confirmRegister(proof, departure).subscribe({
-                    ...observer,
-                    next: (state) => {
-                      observer.next(state);
-                      if (state.status === 'finalized') {
-                        switchToConfirmed(token.address);
-                      }
-                    },
-                  });
-                }}
-              />
-            </List.Item>
-          ))}
-        </List>
-      )}
-      <Tip>
-        <Trans i18nKey="erc20CompletionTip">
-          After {{ type: departure.name }} network returns the result, click [Confirm] to complete the token
-          registration.
-        </Trans>
-      </Tip>
-    </>
-  );
-}
-
-/**
- * confirmed - -1: waiting for proof; 0: confirming 1: confirmed
- */
-interface UpcomingTokenStateProps {
-  token: MemoedTokenInfo;
-  proofs: StoredProof[];
-  animate?: boolean;
-  onConfirm: () => void;
-}
-
-function UpcomingTokenState({ token, onConfirm, proofs, animate = true }: UpcomingTokenStateProps) {
-  const { t } = useTranslation();
-
-  if (
-    token.status === RegisterStatus.registering &&
-    !proofs.map((item) => item.registerProof.source).includes(token.address)
-  ) {
-    return animate ? <LoadingOutlined /> : <Progress type="circle" percent={50} format={() => ''} />;
-  }
-
-  if (token.status === RegisterStatus.registered) {
-    return <CheckCircleOutlined />;
-  }
-
-  return (
-    <Button
-      size="small"
-      onClick={onConfirm}
-      style={{
-        pointerEvents: 'all',
-      }}
-    >
-      {t('Confirm')}
-    </Button>
-  );
-}
-
-function Tip({ children }: PropsWithChildren<string | ReactNode>) {
-  return (
-    <Form.Item className="text-xs mb-0 mt-8">
-      <span className="text-gray-600">{children}</span>
-    </Form.Item>
   );
 }

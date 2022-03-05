@@ -1,21 +1,16 @@
 import { useMemo } from 'react';
-import { Erc20Token, RequiredPartial } from '../../model';
+import { MappingToken, RequiredPartial } from '../../model';
 import { JazzIcon } from '../icons';
-import { EllipsisMiddle } from '../widget/EllipsisMiddle';
+import { EllipsisMiddle } from './EllipsisMiddle';
 
 interface Erc20SimpleProps {
-  token: RequiredPartial<Erc20Token, 'address' | 'logo' | 'name' | 'symbol'>;
+  token: RequiredPartial<MappingToken, 'address' | 'logo' | 'name' | 'symbol'>;
   className?: string;
 }
 
-export function Erc20ListInfo({ token, className }: Erc20SimpleProps) {
+export function MappingTokenInfo({ token, className }: Erc20SimpleProps) {
   const { logo, source, address, name, symbol } = token;
-  const displayName = useMemo(() => {
-    if (name?.includes('[')) {
-      return name.replace(/\[.*/g, '');
-    }
-    return name;
-  }, [name]);
+  const displayName = useMemo(() => (name?.includes('[') ? name.replace(/\[.*/g, '') : name), [name]);
 
   return (
     <div className={`flex w-2/3 ${className ?? ''}`}>

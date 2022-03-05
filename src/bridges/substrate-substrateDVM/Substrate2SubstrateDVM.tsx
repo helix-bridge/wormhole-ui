@@ -13,7 +13,7 @@ import {
   CrossChainComponentProps,
   DailyLimit,
   DVMChainConfig,
-  MappedToken,
+  MappingToken,
   Network,
   Token,
   CrossChainPayload,
@@ -143,7 +143,7 @@ export function Substrate2SubstrateDVM({
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<CrossChainPayload<Substrate2SubstrateDVMPayload>>();
   const getAvailableBalances = useDarwiniaAvailableBalances();
-  const [targetChainTokens, setTargetChainTokens] = useState<MappedToken[]>([]);
+  const [targetChainTokens, setTargetChainTokens] = useState<MappingToken[]>([]);
 
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account: string) => {

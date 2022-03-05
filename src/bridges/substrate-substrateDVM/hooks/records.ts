@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Observable, from, map, catchError, of, switchMap, tap, EMPTY } from 'rxjs';
 import Web3 from 'web3';
 import { SHORT_DURATION } from '../../../config/constant';
-import { HistoryReq, ChainConfig } from '../../../model';
+import { RecordRequestParams, ChainConfig, BridgeDispatchEventRecord } from '../../../model';
 import { getBridge, pollWhile } from '../../../utils';
 import {
   BRIDGE_DISPATCH_EVENTS,
@@ -22,7 +22,6 @@ import {
   Substrate2SubstrateDVMRecordRes,
   SubstrateDVM2SubstrateRecordRes,
   BridgeDispatchEventRes,
-  BridgeDispatchEventRecord,
   Substrate2SubstrateDVMRecordsRes,
   SubstrateDVM2SubstrateRecordsRes,
   SubstrateDVM2SubstrateRecord,
@@ -43,7 +42,10 @@ interface FetchRecordOptions<T> {
   skipCache?: boolean;
 }
 
-type FetchS2SRecords = (req: HistoryReq) => Observable<{ count: number; list: Substrate2SubstrateDVMRecord[] }>;
+type FetchS2SRecords = (
+  req: RecordRequestParams
+) => Observable<{ count: number; list: Substrate2SubstrateDVMRecord[] }>;
+
 type FetchS2SRecord<T, R> = (laneId: string, nonce: string, options: FetchRecordOptions<T>) => Observable<R>;
 
 export function useS2SRecords(
@@ -95,7 +97,7 @@ export function useS2SRecords(
   const [issuingMemo, setIssuingMemo] = useState<Record<string, Substrate2SubstrateDVMRecord>>({});
   const [burnMemo, setBurnMemo] = useState<Record<string, Substrate2SubstrateDVMRecord>>({});
 
-  const toQueryVariables = useCallback((req: HistoryReq) => {
+  const toQueryVariables = useCallback((req: RecordRequestParams) => {
     const {
       address: account,
       paginator: { row: limit, page: offset },
@@ -111,7 +113,7 @@ export function useS2SRecords(
   }, []);
 
   const fetchS2SIssuingRecords = useCallback(
-    (req: HistoryReq) =>
+    (req: RecordRequestParams) =>
       from(
         fetchIssuingRecords({
           variables: toQueryVariables(req),
@@ -136,7 +138,7 @@ export function useS2SRecords(
   );
 
   const fetchS2SRedeemRecords = useCallback(
-    (req: HistoryReq) =>
+    (req: RecordRequestParams) =>
       from(fetchBurnRecords({ variables: toQueryVariables(req) })).pipe(
         map((res) => {
           const list = res.data?.burnRecordEntities ?? [];

@@ -2,7 +2,7 @@ import { decodeAddress } from '@polkadot/util-crypto';
 import camelCaseKeys from 'camelcase-keys';
 import { catchError, map, Observable, of } from 'rxjs';
 import { DarwiniaApiPath } from '../../../config/api';
-import { HistoryReq, ICamelCaseKeys } from '../../../model';
+import { RecordRequestParams, ICamelCaseKeys } from '../../../model';
 import { apiUrl, buf2hex, getBridge, rxGet } from '../../../utils';
 import {
   Darwinia2EthereumHistoryRes,
@@ -14,15 +14,14 @@ import {
   EthereumDarwiniaBridgeConfig,
 } from '../model';
 
-/**
- * @description darwinia <- ethereum
- */
 export function queryEthereum2DarwiniaRedeemRecords({
   address,
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<Ethereum2DarwiniaRedeemHistoryRes<ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>> | null> {
+}: RecordRequestParams): Observable<Ethereum2DarwiniaRedeemHistoryRes<
+  ICamelCaseKeys<Ethereum2DarwiniaRedeemRecord>
+> | null> {
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 
@@ -42,15 +41,12 @@ export function queryEthereum2DarwiniaRedeemRecords({
   );
 }
 
-/**
- * @description darwinia <- ethereum
- */
 export function queryEthereum2DarwiniaGenesisRecords({
   address,
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<Ethereum2DarwiniaRingBurnHistoryRes<
+}: RecordRequestParams): Observable<Ethereum2DarwiniaRingBurnHistoryRes<
   ICamelCaseKeys<Ethereum2DarwiniaRingBurnRecord>
 > | null> {
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
@@ -71,15 +67,12 @@ export function queryEthereum2DarwiniaGenesisRecords({
   );
 }
 
-/**
- * @description darwinia -> ethereum
- */
 export function queryDarwinia2EthereumIssuingRecords({
   address,
   confirmed,
   direction,
   paginator,
-}: HistoryReq): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
+}: RecordRequestParams): Observable<Darwinia2EthereumHistoryRes<ICamelCaseKeys<Darwinia2EthereumRecord>> | null> {
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const api = bridge.config.api.dapp;
 

@@ -1,6 +1,7 @@
 import { Unit } from 'web3-utils';
-import { CommonPayloadKeys, DarwiniaAsset, DeepRequired, Deposit } from '../../../model';
+import { CommonPayloadKeys, DarwiniaAsset, DeepRequired } from '../../../model';
 import { CrossChainAsset, CrossChainParty, CrossChainPayload } from '../../../model/bridge';
+import { Deposit } from './deposit';
 
 export type IssuingDarwiniaTxPayload = CrossChainPayload<
   DeepRequired<Darwinia2EthereumPayload, ['sender' | 'assets' | 'recipient']>

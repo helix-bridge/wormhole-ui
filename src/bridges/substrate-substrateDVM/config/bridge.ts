@@ -14,10 +14,9 @@ const darwiniaCrabDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
   },
 };
 
-/**
- * substrate <-> substrate dvm
- */
-export const darwiniaCrabDVM = new Bridge(darwiniaConfig, crabConfig, darwiniaCrabDVMConfig);
+export const darwiniaCrabDVM = new Bridge(darwiniaConfig, crabConfig, darwiniaCrabDVMConfig, {
+  activeAssistantConnection: true,
+});
 
 const pangoroPangolinDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
   specVersion: 27020,
@@ -29,7 +28,6 @@ const pangoroPangolinDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
   },
 };
 
-/**
- * substrate <-> substrate dvm testnet
- */
-export const pangoroPangolinDVM = new Bridge(pangoroConfig, pangolinConfig, pangoroPangolinDVMConfig);
+export const pangoroPangolinDVM = new Bridge(pangoroConfig, pangolinConfig, pangoroPangolinDVMConfig, {
+  activeAssistantConnection: true,
+});

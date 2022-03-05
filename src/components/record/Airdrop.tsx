@@ -11,7 +11,7 @@ import { DATE_TIME_FORMATE, FORM_CONTROL } from '../../config/constant';
 import { crabConfig } from '../../config/network';
 import { NETWORK_LIGHT_THEME } from '../../config/theme';
 import { airportsDepartureFilter, useApi, useNetworks } from '../../hooks';
-import { ChainConfig, ClaimsRes, Network, SubscanResponse } from '../../model';
+import { ChainConfig, AirdropClaimRes, Network, SubscanResponse } from '../../model';
 import { apiUrl, fromWei, getAirdropData, getInitialSetting, isSameNetConfig, rxGet } from '../../utils';
 import { Destination } from '../form-control/Destination';
 import { ConnectionIndicator } from '../widget/ConnectionIndicator';
@@ -50,7 +50,7 @@ export function AirdropRecord() {
 
   useEffect(() => {
     // FIXME: api error because of cors
-    const sub$$ = rxGet<SubscanResponse<ClaimsRes>>({
+    const sub$$ = rxGet<SubscanResponse<AirdropClaimRes>>({
       url: apiUrl(CLAIM_ENDPOINT, SubscanApiPath.claims),
       params: { address: sender },
     })

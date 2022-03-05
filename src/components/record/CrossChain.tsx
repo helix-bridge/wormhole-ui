@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { EMPTY, takeWhile } from 'rxjs';
 import { useIsMounted, useNetworks, useRecords } from '../../hooks';
-import { Arrival, ChainConfig, Departure, HistoryRouteParam, Paginator, Vertices } from '../../model';
+import { Arrival, ChainConfig, Departure, Paginator, Vertices } from '../../model';
 import {
   getCrossChainArrivals,
   getDisplayName,
@@ -15,10 +15,10 @@ import {
   getNetworkMode,
   getVerticesFromDisplayName,
   hasBridge,
+  isChainConfigEqualTo,
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
-  isChainConfigEqualTo,
   isValidAddress,
   verticesToChainConfig,
 } from '../../utils';
@@ -57,18 +57,20 @@ const isAddressValid = (addr: string | null, departure: Vertices) => {
 // eslint-disable-next-line complexity
 export function CrossChainRecord() {
   const { t } = useTranslation();
-  const { search } = useLocation<HistoryRouteParam>();
+  const { search } = useLocation();
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
   const { setToFilters, toNetworks, fromNetworks } = useNetworks();
 
   const [departure, setDeparture] = useState<Vertices>(() => {
     const { from: network, fMode: mode } = searchParams;
+
     return network && mode ? { network, mode } : defaultSelect[0];
   });
 
   const [arrival, setArrival] = useState<Vertices>(() => {
     const { to: network, tMode: mode } = searchParams;
+
     return network && mode ? { network, mode } : defaultSelect[1];
   });
 
@@ -78,6 +80,7 @@ export function CrossChainRecord() {
 
   const searchPlaceholder = useMemo(() => {
     const { network, mode } = departure;
+
     if (isPolkadotNetwork(network)) {
       return mode === 'dvm' && !isEthereumNetwork(arrival.network)
         ? t('Please fill in a {{network}} smart address which start with 0x', { network: upperFirst(network) })

@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { RegisterStatus } from '../../config';
-import { CrossChainComponentProps, CrossChainDirection, DVMPayload } from '../../model';
+import { CrossChainComponentProps, CrossChainDirection } from '../../model';
 import { getBridge } from '../../utils';
 import { DVM } from '../DVM/DVM';
-import { EthereumDVMBridgeConfig } from './model';
+import { EthereumDVMBridgeConfig, Erc20Payload } from './model';
 import { issuingErc20 } from './utils';
 
 /**
@@ -14,7 +14,7 @@ import { issuingErc20 } from './utils';
 /**
  * @description test chain: pangolin dvm -> ropsten
  */
-export function DarwiniaDVM2Ethereum({ form, setSubmit, direction }: CrossChainComponentProps<DVMPayload>) {
+export function DarwiniaDVM2Ethereum({ form, setSubmit, direction }: CrossChainComponentProps<Erc20Payload>) {
   const spenderResolver = useCallback((dir: CrossChainDirection) => {
     const bridget = getBridge<EthereumDVMBridgeConfig>(dir);
 

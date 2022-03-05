@@ -5,18 +5,18 @@ import { PropsWithRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RegisterStatus } from '../../config';
 import { MemoedTokenInfo } from '../../hooks';
-import { CustomFormControlProps, Erc20Token } from '../../model';
+import { CustomFormControlProps, MappingToken } from '../../model';
 import { fromWei, getUnit, prettyNumber } from '../../utils';
 import { EllipsisMiddle } from '../widget/EllipsisMiddle';
-import { Erc20ListInfo } from '../erc20/Erc20ListInfo';
+import { MappingTokenInfo } from '../widget/MappingTokenInfo';
 
-interface Erc20ControlProps extends CustomFormControlProps<Erc20Token | null> {
+interface Erc20ControlProps extends CustomFormControlProps<MappingToken | null> {
   tokens: MemoedTokenInfo[];
   total: number;
 }
 
 // eslint-disable-next-line complexity
-export function Erc20Control({ value, onChange, tokens, total }: PropsWithRef<Erc20ControlProps>) {
+export function MappingTokenControl({ value, onChange, tokens, total }: PropsWithRef<Erc20ControlProps>) {
   const { t } = useTranslation();
   const data = useMemo(() => groupBy(tokens, (token) => RegisterStatus[token.status ?? 0]), [tokens]);
   const triggerChange = useCallback(
@@ -24,13 +24,13 @@ export function Erc20Control({ value, onChange, tokens, total }: PropsWithRef<Er
       if (onChange) {
         const result = tokens.find((item) => item.address === val) ?? null;
 
-        onChange(result as Erc20Token);
+        onChange(result as MappingToken);
       }
     },
     [tokens, onChange]
   );
   const option = useCallback(
-    (token: Erc20Token, disabled = false) => (
+    (token: MappingToken, disabled = false) => (
       <Select.Option
         value={token.address}
         key={token.address}
@@ -42,7 +42,7 @@ export function Erc20Control({ value, onChange, tokens, total }: PropsWithRef<Er
         }
       >
         <div className="flex justify-between items-center pr-3">
-          <Erc20ListInfo token={token}></Erc20ListInfo>
+          <MappingTokenInfo token={token}></MappingTokenInfo>
           {token.status === 1 ? (
             <span>{fromWei({ value: token.balance, unit: getUnit(+token.decimals) }, prettyNumber)}</span>
           ) : (
@@ -77,7 +77,7 @@ export function Erc20Control({ value, onChange, tokens, total }: PropsWithRef<Er
               {t('No Data')}
             </Select.Option>
           ) : (
-            confirmed.map((token) => option(token as Erc20Token))
+            confirmed.map((token) => option(token as MappingToken))
           )}
         </Select.OptGroup>
 
@@ -87,7 +87,7 @@ export function Erc20Control({ value, onChange, tokens, total }: PropsWithRef<Er
               {t('No Data')}
             </Select.Option>
           ) : (
-            inprogress.map((token) => option(token as Erc20Token, true))
+            inprogress.map((token) => option(token as MappingToken, true))
           )}
         </Select.OptGroup>
       </Select>

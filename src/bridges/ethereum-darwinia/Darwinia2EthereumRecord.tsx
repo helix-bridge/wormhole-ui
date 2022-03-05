@@ -4,13 +4,14 @@ import BN from 'bn.js';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EMPTY, filter, from, iif, map, Observable, of, switchMap, take, tap, zip } from 'rxjs';
+import { Progresses, ProgressProps, State } from '../../components/record/Progress';
+import { Record } from '../../components/record/Record';
 import { abi } from '../../config';
 import { useTx } from '../../hooks';
 import { ConnectionStatus, RecordComponentProps } from '../../model';
-import { claimToken, connect, entrance, getBridge } from '../../utils';
-import { Progresses, ProgressProps, State } from '../../components/record/Progress';
-import { Record } from '../../components/record/Record';
-import { EthereumDarwiniaBridgeConfig, Darwinia2EthereumRecord as D2ERecord, Darwinia2EthereumMeta } from './model';
+import { connect, entrance, getBridge } from '../../utils';
+import { Darwinia2EthereumMeta, Darwinia2EthereumRecord as D2ERecord, EthereumDarwiniaBridgeConfig } from './model';
+import { claimToken } from './utils';
 
 function isSufficient(
   config: EthereumDarwiniaBridgeConfig,

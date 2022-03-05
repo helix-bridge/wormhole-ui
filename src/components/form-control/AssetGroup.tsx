@@ -3,9 +3,9 @@ import FormList from 'antd/lib/form/FormList';
 import BN from 'bn.js';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Darwinia2EthereumPayload } from '../../bridges/ethereum-darwinia/model';
+import { Unit } from 'web3-utils';
 import { FORM_CONTROL } from '../../config';
-import { AvailableBalance, CustomFormControlProps, Network } from '../../model';
+import { AvailableBalance, CrossChainAsset, CustomFormControlProps, DarwiniaAsset, Network } from '../../model';
 import {
   amountLessThanFeeRule,
   fromWei,
@@ -17,9 +17,8 @@ import {
 import { Balance } from './Balance';
 import { MaxBalance } from './MaxBalance';
 
-export type AssetGroupValue = Darwinia2EthereumPayload['assets'];
+type AssetGroupValue = (CrossChainAsset<DarwiniaAsset> & { checked?: boolean; unit?: Unit })[];
 
-// eslint-disable-next-line complexity
 export function AssetGroup({
   value,
   onChange,
