@@ -37,7 +37,7 @@ import {
   prettyNumber,
   toWei,
 } from '../../utils';
-import { getMappedTokenMeta, getTokenBalance, TokenCache } from '../../utils/token/tokenInfo';
+import { getMappedTokenMeta, getTokenBalance, TokenCache } from '../../utils/mappingToken/tokenInfo';
 import {
   Ethereum2DarwiniaPayload,
   EthereumDarwiniaBridgeConfig,

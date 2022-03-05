@@ -37,9 +37,8 @@ import { getAvailableDVMBridge, getBridge, isS2S, isSubstrateDVM2Substrate } fro
 import { apiUrl, encodeBlockHeader, rxGet } from '../helper';
 import { ClaimNetworkPrefix, encodeMMRRootMessage, getMMR, MMRProof } from '../mmr';
 import { chainConfigToVertices, connect, entrance, getMetamaskActiveAccount } from '../network';
-import { getMPTProof } from '../record';
-import { genEthereumContractTxObs } from '../tx/common';
-import { getErc20MappingPrams, getS2SMappingParams } from '../tx/redeem';
+import { genEthereumContractTxObs, getMPTProof } from '../tx/common';
+import { getErc20MappingPrams, getS2SMappingParams } from './mappingParams';
 import { getErc20Meta, getTokenBalance } from './tokenInfo';
 
 export type StoredProof = {

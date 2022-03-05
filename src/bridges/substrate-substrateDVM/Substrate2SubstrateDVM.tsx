@@ -37,7 +37,7 @@ import {
   waitUntilConnected,
   zeroAmountRule,
 } from '../../utils';
-import { getKnownMappingTokens } from '../../utils/token/mappingToken';
+import { getKnownMappingTokens } from '../../utils/mappingToken/mappingToken';
 import { Balance } from '../../components/form-control/Balance';
 import { MaxBalance } from '../../components/form-control/MaxBalance';
 import { PolkadotAccountsItem } from '../../components/form-control/PolkadotAccountsItem';

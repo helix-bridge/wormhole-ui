@@ -29,8 +29,8 @@ import {
   PolkadotConnection,
   TronConnection,
 } from '../../model';
+import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkReady } from '../network/network';
 import { entrance } from './entrance';
-import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkReady } from './network';
 import { switchMetamaskNetwork } from './switch';
 
 type ConnectFn<T extends Connection> = (network: ChainConfig, chainId?: string) => Observable<T>;

@@ -22,7 +22,7 @@ import {
 } from '../../model';
 import { getUnit } from '../helper/balance';
 import { getCustomNetworkConfig } from '../helper/storage';
-import { entrance } from './entrance';
+import { entrance } from '../connection/entrance';
 import { AIRDROP_GRAPH, NETWORK_GRAPH } from './graph';
 
 export const NETWORK_CONFIGURATIONS = SYSTEM_NETWORK_CONFIGURATIONS.map((item) => {
