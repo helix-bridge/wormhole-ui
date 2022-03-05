@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Subscription, switchMapTo, tap } from 'rxjs';
-import { useS2SRecords } from '../../hooks';
 import {
   BridgeDispatchEventRecord,
   PolkadotChainConfig,
@@ -13,6 +12,7 @@ import {
 import { chainConfigToVertices, convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM } from '../../utils';
 import { IndexingState, Progresses, ProgressProps, State } from '../../components/record/Progress';
 import { Record } from '../../components/record/Record';
+import { useS2SRecords } from './hooks';
 
 export function Substrate2SubstrateDVMRecord({
   record: originRecord,
