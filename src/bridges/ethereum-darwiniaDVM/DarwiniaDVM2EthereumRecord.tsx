@@ -1,3 +1,3 @@
-export function DarwiniaDVM2EthereumRecord() {
-  return <span>DarwiniaDVM2EthereumRecord</span>;
-}
+import { Darwinia2EthereumRecord } from '../ethereum-darwinia';
+
+export const DarwiniaDVM2EthereumRecord = Darwinia2EthereumRecord;

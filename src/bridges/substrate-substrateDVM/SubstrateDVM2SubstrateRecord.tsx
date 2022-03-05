@@ -1,3 +1,3 @@
-export function SubstrateDVM2SubstrateRecord() {
-  return <span>SubstrateDVM2SubstrateRecord</span>;
-}
+import { Substrate2SubstrateDVMRecord } from './Substrate2SubstrateDVMRecord';
+
+export const SubstrateDVM2SubstrateRecord = Substrate2SubstrateDVMRecord;
