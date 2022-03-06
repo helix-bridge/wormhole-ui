@@ -162,11 +162,12 @@ export async function isTronLinkReady(): Promise<boolean> {
     return true;
   }
 
+  const timeout = 2000;
+
   return await new Promise((resolve) => {
     setTimeout(() => {
       resolve(window.tronWeb && window.tronWeb.defaultAddress.base58);
-      // eslint-disable-next-line no-magic-numbers
-    }, 2000);
+    }, timeout);
   });
 }
 

@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { combineLatest, from } from 'rxjs';
 import Web3 from 'web3';
 import { abi, FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useTx } from '../../hooks';
+import { useAfterTx, useApi, useTx } from '../../hooks';
 import {
   AvailableBalance,
   CrossChainComponentProps,
@@ -87,7 +87,7 @@ export function DVM2Substrate({
   } = useApi();
 
   const { observer } = useTx();
-  const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload<DVMChainConfig>>>();
+  const { afterCrossChain } = useAfterTx<CrossChainPayload<SmartTxPayload<DVMChainConfig>>>();
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
   const [pendingClaimAmount, setPendingClaimAmount] = useState<BN>(BN_ZERO);
   const [selectedToken, setSelectedToken] = useState<string>(form.getFieldValue(FORM_CONTROL.asset));
@@ -157,7 +157,7 @@ export function DVM2Substrate({
 
       const obs = redeem(value, crossChain);
 
-      const afterTransfer = afterTx(TransferSuccess, {
+      const afterTransfer = afterCrossChain(TransferSuccess, {
         hashType: 'txHash',
         onDisappear: () => {
           form.setFieldsValue({
@@ -171,7 +171,7 @@ export function DVM2Substrate({
     };
 
     setSubmit(fn);
-  }, [afterTx, apiPromise, form, getBalances, observer, setSubmit]);
+  }, [afterCrossChain, apiPromise, form, getBalances, observer, setSubmit]);
 
   useEffect(() => {
     (async () => {

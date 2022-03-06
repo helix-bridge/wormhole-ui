@@ -8,6 +8,7 @@ import { findNetworkConfig, isNativeMetamaskChain } from '../network/network';
 async function switchEthereumChain(network: Network): Promise<null> {
   const chain = findNetworkConfig(network) as EthereumChainConfig;
   const chainId = Web3.utils.toHex(+chain.ethereumChain.chainId);
+
   const res: null = await window.ethereum.request({
     method: 'wallet_switchEthereumChain',
     params: [{ chainId }],
@@ -23,6 +24,7 @@ async function addEthereumChain(network: Network): Promise<null> {
   // TODO check the chaiId field, store in decimal in configuration but may be required hexadecimal in metamask side.
   const chain = findNetworkConfig(network) as EthereumChainConfig;
   const chainId = Web3.utils.toHex(+chain.ethereumChain.chainId);
+
   const result = await window.ethereum.request({
     method: 'wallet_addEthereumChain',
     params: [{ ...chain.ethereumChain, chainId }],

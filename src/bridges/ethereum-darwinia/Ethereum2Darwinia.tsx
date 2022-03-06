@@ -18,7 +18,7 @@ import { Des } from '../../components/modal/Des';
 import { TransferConfirm } from '../../components/modal/TransferConfirm';
 import { TransferSuccess } from '../../components/modal/TransferSuccess';
 import { abi, FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useDeparture, useTx } from '../../hooks';
+import { useAfterTx, useApi, useDeparture, useTx } from '../../hooks';
 import { CrossChainComponentProps, CrossChainPayload, Erc20Token, Network, Tx } from '../../model';
 import {
   AfterTxCreator,
@@ -266,7 +266,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
 
   const { observer } = useTx();
   const { updateDeparture } = useDeparture();
-  const { afterTx, afterApprove } = useAfterSuccess<ApproveValue>();
+  const { afterCrossChain, afterApprove } = useAfterTx<ApproveValue>();
 
   const account = useMemo(() => {
     const acc = (accounts || [])[0];
@@ -334,7 +334,7 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
         const fn = () => (value: RedeemDepositTxPayload) =>
           createCrossDepositTx(
             value,
-            afterTx(TransferSuccess, { onDisappear: refreshDeposit as unknown as never })(value)
+            afterCrossChain(TransferSuccess, { onDisappear: refreshDeposit as unknown as never })(value)
           ).subscribe(observer);
 
         setSubmit(fn);
@@ -351,14 +351,14 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
 
           return createCrossTokenTx(
             actual,
-            afterTx(TransferSuccess, { onDisappear: refreshBalance })(actual)
+            afterCrossChain(TransferSuccess, { onDisappear: refreshBalance })(actual)
           ).subscribe(observer);
         };
 
         setSubmit(fn);
       }
     },
-    [afterTx, fee, observer, refreshBalance, refreshDeposit, setSubmit]
+    [afterCrossChain, fee, observer, refreshBalance, refreshDeposit, setSubmit]
   );
 
   useEffect(() => {

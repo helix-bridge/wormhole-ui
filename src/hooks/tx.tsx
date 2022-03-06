@@ -11,12 +11,12 @@ import { useApi } from './api';
 
 export const useTx = () => useContext(TxContext) as Exclude<TxCtx, null>;
 
-export function useAfterSuccess<T extends CrossChainPayload<{ sender: string; recipient?: string }>>() {
+export function useAfterTx<T extends CrossChainPayload<{ sender: string; recipient?: string }>>() {
   const { t } = useTranslation();
   const history = useHistory();
   const { chain } = useApi();
 
-  const afterTx = useCallback(
+  const afterCrossChain = useCallback(
     (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Comp: FunctionComponent<TxSuccessComponentProps<CrossChainPayload<any>>>,
@@ -95,5 +95,5 @@ export function useAfterSuccess<T extends CrossChainPayload<{ sender: string; re
     []
   );
 
-  return { afterTx, afterApprove };
+  return { afterCrossChain, afterApprove };
 }

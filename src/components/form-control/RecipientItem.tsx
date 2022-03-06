@@ -12,7 +12,7 @@ import {
   IAccountMeta,
   PolkadotChainConfig,
 } from '../../model';
-import { convertToSS58, isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../../utils';
+import { convertToSS58, isPolkadotNetwork, isSameAddress, isValidAddressStrict, patchUrl } from '../../utils';
 import { IdentAccountAddress } from '../widget/account';
 import { FormItemExtra } from '../widget/facade';
 
@@ -63,7 +63,7 @@ export function RecipientItem({
           },
           {
             validator(_, value) {
-              return isValidAddress(value, !isDvm ? type : 'ethereum', true) ? Promise.resolve() : Promise.reject();
+              return isValidAddressStrict(value, !isDvm ? type : 'ethereum') ? Promise.resolve() : Promise.reject();
             },
             message: !isDvm
               ? t('Please enter a valid {{network}} address', { network: upperFirst(to.name) })

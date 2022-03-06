@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EMPTY, from } from 'rxjs';
 import { FORM_CONTROL } from '../../config';
-import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useIsMountedOperator, useTx } from '../../hooks';
+import { useAfterTx, useApi, useDarwiniaAvailableBalances, useIsMountedOperator, useTx } from '../../hooks';
 import {
   AvailableBalance,
   CrossChainComponentProps,
@@ -31,7 +31,7 @@ export function Substrate2DVM({
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
   const [selectedToken, setSelectedToken] = useState<string>(form.getFieldValue(FORM_CONTROL.asset));
   const getBalances = useDarwiniaAvailableBalances();
-  const { afterTx } = useAfterSuccess<CrossChainPayload<SmartTxPayload>>();
+  const { afterCrossChain } = useAfterTx<CrossChainPayload<SmartTxPayload>>();
   const { observer } = useTx();
   const { takeWhileIsMounted } = useIsMountedOperator();
 
@@ -55,7 +55,7 @@ export function Substrate2DVM({
       const beforeTransfer = applyModalObs({ content: <TransferConfirm value={value} unit={unit} /> });
       const obs = issuing(value, api);
 
-      const afterTransfer = afterTx(TransferSuccess, {
+      const afterTransfer = afterCrossChain(TransferSuccess, {
         hashType: 'block',
         onDisappear: () => {
           form.setFieldsValue({
@@ -70,7 +70,7 @@ export function Substrate2DVM({
     };
 
     setSubmit(fn);
-  }, [afterTx, api, availableBalances, form, getBalances, observer, setSubmit]);
+  }, [afterCrossChain, api, availableBalances, form, getBalances, observer, setSubmit]);
 
   return (
     <>

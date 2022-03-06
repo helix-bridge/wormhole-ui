@@ -9,24 +9,40 @@ import { isPolkadotNetwork, NETWORK_CONFIGURATIONS } from '../network/network';
 import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
 import { toWei } from './balance';
 
-// TODO: remove the third argument
 // eslint-disable-next-line complexity
-export const isValidAddress = (address: string, network: Network | NetworkCategory, strict = false): boolean => {
+export const isValidAddress = (address: string, network: Network | NetworkCategory): boolean => {
   if (network === 'ethereum') {
     const isDvm = Web3.utils.isAddress(address);
     const isSS58 = isSS58Address(address);
 
-    return strict ? isDvm : isDvm || (isSS58 && canConvertToEth(address));
+    return isDvm || (isSS58 && canConvertToEth(address));
+  }
+
+  if (isPolkadotNetwork(network as PolkadotTypeNetwork)) {
+    return isSS58Address(address);
+  }
+
+  if (network === 'tron') {
+    return window.tronWeb && window.tronWeb.isAddress(address);
+  }
+
+  return false;
+};
+
+// eslint-disable-next-line complexity
+export const isValidAddressStrict = (address: string, network: Network | NetworkCategory): boolean => {
+  if (network === 'ethereum') {
+    return Web3.utils.isAddress(address);
   }
 
   if (network === 'polkadot') {
-    return strict ? isSS58Address(address, 0) : isSS58Address(address);
+    return isSS58Address(address, 0);
   }
 
   if (isPolkadotNetwork(network as PolkadotTypeNetwork)) {
     const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network) as PolkadotChainConfig;
 
-    return strict ? isSS58Address(address, target.ss58Prefix) : isSS58Address(address);
+    return isSS58Address(address, target.ss58Prefix);
   }
 
   if (network === 'tron') {

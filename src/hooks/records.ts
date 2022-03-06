@@ -40,6 +40,7 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Record<string, unknown> | null>(null);
   const [data, setData] = useState<T | null>(null);
+
   const query = useCallback((request: RecordsQueryRequest) => {
     setLoading(true);
 
@@ -59,6 +60,7 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 
   useEffect(() => {
     const sub$$ = query(req);
+
     return () => {
       sub$$.unsubscribe();
     };

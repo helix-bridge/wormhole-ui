@@ -13,7 +13,7 @@ import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { TransferConfirm } from '../../components/modal/TransferConfirm';
 import { TransferSuccess } from '../../components/modal/TransferSuccess';
 import { FORM_CONTROL } from '../../config/constant';
-import { getToken, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
+import { getToken, useAfterTx, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../hooks';
 import { AvailableBalance, CrossChainComponentProps, CrossChainPayload, DarwiniaAsset, Token } from '../../model';
 import { applyModalObs, createTxWorkflow, fromWei, getInfoFromHash, isRing, toWei } from '../../utils';
 import { Darwinia2EthereumPayload, IssuingDarwiniaTxPayload } from './model';
@@ -173,7 +173,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
   const [currentAssets, setCurAssets] = useState<Darwinia2EthereumPayload['assets']>([]);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
-  const { afterTx } = useAfterSuccess<CrossChainPayload<Darwinia2EthereumPayload>>();
+  const { afterCrossChain } = useAfterTx<CrossChainPayload<Darwinia2EthereumPayload>>();
   const getBalances = useDarwiniaAvailableBalances();
 
   const observe = useCallback(
@@ -219,7 +219,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
       const beforeTransfer = applyModalObs({ content: <TransferConfirm value={value} /> });
       const obs = issuing(value, api);
 
-      const afterTransfer = afterTx(TransferSuccess, {
+      const afterTransfer = afterCrossChain(TransferSuccess, {
         hashType: 'block',
         onDisappear: () => {
           form.setFieldsValue({
@@ -234,7 +234,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
     };
 
     setSubmit(fn);
-  }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setSubmit]);
+  }, [afterCrossChain, api, chain.tokens, fee, form, getBalances, observer, setSubmit]);
 
   // eslint-disable-next-line complexity
   useEffect(() => {

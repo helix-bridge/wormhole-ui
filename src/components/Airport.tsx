@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { catchError, EMPTY, from, map, Observable, of } from 'rxjs';
 import Web3 from 'web3';
 import { useApi } from '../hooks';
-import { CrossChainComponentProps, CrossChainPayload, CrossChainDirection } from '../model';
-import { buf2hex, entrance, getAirdropData, isValidAddress } from '../utils';
+import { CrossChainComponentProps, CrossChainDirection, CrossChainPayload } from '../model';
+import { buf2hex, entrance, getAirdropData, isValidAddressStrict } from '../utils';
 
 type AirportValues = CrossChainPayload<{
   sender: string;
@@ -140,7 +140,7 @@ export function Airport({
           { required: true },
           {
             validator(_, value) {
-              return isValidAddress(value, 'crab', true) ? Promise.resolve() : Promise.reject();
+              return isValidAddressStrict(value, 'crab') ? Promise.resolve() : Promise.reject();
             },
             message: t('Please enter a valid {{network}} address', { network: 'Darwinia Crab' }),
           },

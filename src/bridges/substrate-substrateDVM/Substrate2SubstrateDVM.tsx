@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, of, Subscription, switchMap, takeWhile } from 'rxjs';
 import { abi, FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
-import { useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useIsMounted, useTx } from '../../hooks';
+import { useAfterTx, useApi, useDarwiniaAvailableBalances, useDeparture, useIsMounted, useTx } from '../../hooks';
 import {
   AvailableBalance,
   CrossChainComponentProps,
@@ -141,7 +141,7 @@ export function Substrate2SubstrateDVM({
   const [dailyLimit, setDailyLimit] = useState<DailyLimit | null>(null);
   const { updateDeparture } = useDeparture();
   const { observer } = useTx();
-  const { afterTx } = useAfterSuccess<CrossChainPayload<Substrate2SubstrateDVMPayload>>();
+  const { afterCrossChain } = useAfterTx<CrossChainPayload<Substrate2SubstrateDVMPayload>>();
   const getAvailableBalances = useDarwiniaAvailableBalances();
   const [targetChainTokens, setTargetChainTokens] = useState<MappingToken[]>([]);
 
@@ -203,7 +203,7 @@ export function Substrate2SubstrateDVM({
         content: <TransferConfirm value={value} unit={unit} />,
       });
       const obs = issuing(value, api, fee);
-      const afterTransfer = afterTx(TransferSuccess, {
+      const afterTransfer = afterCrossChain(TransferSuccess, {
         hashType: 'block',
         onDisappear: () => {
           form.setFieldsValue({
@@ -218,7 +218,7 @@ export function Substrate2SubstrateDVM({
     };
 
     setSubmit(fn);
-  }, [afterTx, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
+  }, [afterCrossChain, api, chain.tokens, fee, form, getBalances, observer, setAvailableBalances, setSubmit]);
 
   useEffect(() => {
     const sub$$ = getKnownMappingTokens('null', { from: direction.to, to: direction.from }).subscribe(({ tokens }) => {

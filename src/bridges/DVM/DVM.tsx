@@ -6,8 +6,8 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { from, Observable, of, Subscription, switchMap } from 'rxjs';
 import { Balance } from '../../components/form-control/Balance';
-import { MappingTokenControl } from '../../components/form-control/MappingTokenControl';
 import { EthereumAccountItem } from '../../components/form-control/EthereumAccountItem';
+import { MappingTokenControl } from '../../components/form-control/MappingTokenControl';
 import { MaxBalance } from '../../components/form-control/MaxBalance';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
@@ -19,7 +19,7 @@ import { FormItemExtra } from '../../components/widget/facade';
 import { FORM_CONTROL, LONG_DURATION, Path, RegisterStatus } from '../../config';
 import {
   MemoedTokenInfo,
-  useAfterSuccess,
+  useAfterTx,
   useApi,
   useIsMounted,
   useIsMountedOperator,
@@ -205,7 +205,7 @@ export function DVM({
   const [curAmount, setCurAmount] = useState<string>(() => form.getFieldValue(FORM_CONTROL.amount) ?? '');
   const unit = useMemo(() => (selectedToken ? getUnit(+selectedToken.decimals) : 'ether'), [selectedToken]);
   const { observer } = useTx();
-  const { afterTx, afterApprove } = useAfterSuccess();
+  const { afterCrossChain, afterApprove } = useAfterTx();
   const [fee, setFee] = useState<string>('');
   const isMounted = useIsMounted();
   const { takeWhileIsMounted } = useIsMountedOperator();
@@ -264,7 +264,7 @@ export function DVM({
       return createTxWorkflow(
         beforeTx,
         txObs,
-        afterTx(TransferSuccess, {
+        afterCrossChain(TransferSuccess, {
           onDisappear: () => {
             refreshTokenBalance(value.asset.address);
             refreshAllowance(value.direction);
@@ -275,7 +275,7 @@ export function DVM({
     };
 
     setSubmit(fn);
-  }, [afterTx, observer, refreshAllowance, refreshTokenBalance, selectedToken, setSubmit, transform, unit]);
+  }, [afterCrossChain, observer, refreshAllowance, refreshTokenBalance, selectedToken, setSubmit, transform, unit]);
 
   useEffect(() => {
     let sub$$: Subscription | null = null;
@@ -357,8 +357,7 @@ export function DVM({
             compared:
               dailyLimit && !new BN(dailyLimit.limit).isZero()
                 ? new BN(dailyLimit.limit).sub(new BN(dailyLimit.spentToday)).toString()
-                : // eslint-disable-next-line no-magic-numbers
-                  Math.pow(10, 18).toString(),
+                : toWei({ value: 1 }),
             token: tokenInfo,
           }),
           {

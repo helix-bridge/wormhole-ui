@@ -19,7 +19,7 @@ import {
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
-  isValidAddress,
+  isValidAddressStrict,
   verticesToChainConfig,
 } from '../../utils';
 import { RecordList } from './RecordList';
@@ -43,11 +43,11 @@ const isAddressValid = (addr: string | null, departure: Vertices) => {
 
   if (addr && network) {
     if (mode === 'dvm' || isEthereumNetwork(departure.network)) {
-      addressValid = isValidAddress(addr, 'ethereum', true);
+      addressValid = isValidAddressStrict(addr, 'ethereum');
     } else {
       const category = flow([getVerticesFromDisplayName, verticesToChainConfig, getNetworkCategory])(network);
 
-      addressValid = category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
+      addressValid = category && isValidAddressStrict(addr, category === 'polkadot' ? network : category);
     }
   }
 
