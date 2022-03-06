@@ -17,7 +17,7 @@ import { getToken, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDep
 import { AvailableBalance, CrossChainComponentProps, CrossChainPayload, DarwiniaAsset, Token } from '../../model';
 import { applyModalObs, createTxWorkflow, fromWei, getInfoFromHash, isRing, toWei } from '../../utils';
 import { Darwinia2EthereumPayload, IssuingDarwiniaTxPayload } from './model';
-import { issuingDarwiniaTokens } from './utils';
+import { issuing } from './utils';
 
 interface AmountCheckInfo {
   fee: BN | null;
@@ -217,7 +217,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
 
       const value = { ...data, assets: assetsToSend };
       const beforeTransfer = applyModalObs({ content: <TransferConfirm value={value} /> });
-      const obs = issuingDarwiniaTokens(value, api);
+      const obs = issuing(value, api);
 
       const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'block',

@@ -36,7 +36,7 @@ import { TransferSuccess } from '../../components/modal/TransferSuccess';
 import { FormItemExtra } from '../../components/widget/facade';
 import { KtonDraw } from './KtonDraw';
 import { SmartTxPayload, Substrate2DVMPayload } from './model/cross-chain';
-import { redeemFromDVM2Substrate } from './utils';
+import { redeem } from './utils';
 
 async function getTokenBalanceEth(ktonAddress: string, account = ''): Promise<[string, string]> {
   let ring = '0';
@@ -155,7 +155,7 @@ export function DVM2Substrate({
         content: <TransferConfirm value={value} />,
       });
 
-      const obs = redeemFromDVM2Substrate(value, crossChain);
+      const obs = redeem(value, crossChain);
 
       const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'txHash',

@@ -4,7 +4,7 @@ import { CrossChainComponentProps, CrossChainDirection } from '../../model';
 import { getBridge } from '../../utils';
 import { DVM } from '../DVM/DVM';
 import { EthereumDVMBridgeConfig, Erc20Payload } from './model';
-import { redeemErc20 } from './utils/tx';
+import { redeem } from './utils/tx';
 
 export function Ethereum2DarwiniaDVM({ form, setSubmit, direction }: CrossChainComponentProps<Erc20Payload>) {
   const spenderResolver = useCallback((dir: CrossChainDirection) => {
@@ -17,7 +17,7 @@ export function Ethereum2DarwiniaDVM({ form, setSubmit, direction }: CrossChainC
       form={form}
       direction={direction}
       setSubmit={setSubmit}
-      transform={redeemErc20}
+      transform={redeem}
       spenderResolver={spenderResolver}
       canRegister
       tokenRegisterStatus={RegisterStatus.unregister}

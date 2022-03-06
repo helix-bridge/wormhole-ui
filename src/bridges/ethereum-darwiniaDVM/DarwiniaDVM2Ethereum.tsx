@@ -4,7 +4,7 @@ import { CrossChainComponentProps, CrossChainDirection } from '../../model';
 import { getBridge } from '../../utils';
 import { DVM } from '../DVM/DVM';
 import { EthereumDVMBridgeConfig, Erc20Payload } from './model';
-import { issuingErc20 } from './utils';
+import { issuing } from './utils';
 
 /**
  * TODO: Functions need to implement:
@@ -26,7 +26,7 @@ export function DarwiniaDVM2Ethereum({ form, setSubmit, direction }: CrossChainC
       form={form}
       direction={direction}
       setSubmit={setSubmit}
-      transform={issuingErc20}
+      transform={issuing}
       spenderResolver={spenderResolver}
       canRegister
       tokenRegisterStatus={RegisterStatus.unregister}

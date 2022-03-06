@@ -4,7 +4,7 @@ import { Tx, TxFn } from '../../../model';
 import { genEthereumContractTxObs, getBridge, getErc20MappingPrams } from '../../../utils';
 import { EthereumDVMBridgeConfig, Erc20TxPayload } from '../model';
 
-export const redeemErc20: TxFn<Erc20TxPayload> = (value) => {
+export const redeem: TxFn<Erc20TxPayload> = (value) => {
   const { asset, recipient, amount, direction, sender } = value;
   const bridge = getBridge<EthereumDVMBridgeConfig>(direction);
   const { address } = asset;
@@ -16,7 +16,7 @@ export const redeemErc20: TxFn<Erc20TxPayload> = (value) => {
   );
 };
 
-export function issuingErc20(value: Erc20TxPayload): Observable<Tx> {
+export function issuing(value: Erc20TxPayload): Observable<Tx> {
   const { asset, recipient, amount, direction: transfer, sender } = value;
   const { address } = asset;
 

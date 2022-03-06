@@ -19,7 +19,7 @@ import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { TransferConfirm } from '../../components/modal/TransferConfirm';
 import { TransferSuccess } from '../../components/modal/TransferSuccess';
 import { Substrate2DVMPayload, SmartTxPayload } from './model/cross-chain';
-import { issuingFromSubstrate2DVM } from './utils';
+import { issuing } from './utils';
 
 export function Substrate2DVM({
   form,
@@ -53,7 +53,7 @@ export function Substrate2DVM({
       const unit = availableBalances.find((item) => item.token.symbol === asset)?.token.decimal || 'gwei';
       const value = { ...data, amount: toWei({ value: amount, unit }) };
       const beforeTransfer = applyModalObs({ content: <TransferConfirm value={value} unit={unit} /> });
-      const obs = issuingFromSubstrate2DVM(value, api);
+      const obs = issuing(value, api);
 
       const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'block',

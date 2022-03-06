@@ -16,7 +16,7 @@ import {
 } from '../../../utils';
 import { IssuingSubstrateTxPayload, RedeemSubstrateTxPayload, SubstrateSubstrateDVMBridgeConfig } from '../model';
 
-export function issuingSubstrateToken(value: IssuingSubstrateTxPayload, api: ApiPromise, fee: BN): Observable<Tx> {
+export function issuing(value: IssuingSubstrateTxPayload, api: ApiPromise, fee: BN): Observable<Tx> {
   const { sender, recipient, amount, direction } = value;
   const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
   const WEIGHT = '1509000000';
@@ -32,11 +32,7 @@ export function issuingSubstrateToken(value: IssuingSubstrateTxPayload, api: Api
   return signAndSendExtrinsic(api, sender, extrinsic);
 }
 
-export function redeemSubstrate(
-  value: RedeemSubstrateTxPayload,
-  mappingAddress: string,
-  specVersion: string
-): Observable<Tx> {
+export function redeem(value: RedeemSubstrateTxPayload, mappingAddress: string, specVersion: string): Observable<Tx> {
   const { asset, amount, sender, recipient, direction: transfer } = value;
   const receiver = Web3.utils.hexToBytes(convertToDvm(recipient));
   const weight = '690133000';

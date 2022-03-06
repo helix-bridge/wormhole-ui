@@ -45,7 +45,7 @@ import { RecipientItem } from '../../components/form-control/RecipientItem';
 import { TransferConfirm } from '../../components/modal/TransferConfirm';
 import { TransferSuccess } from '../../components/modal/TransferSuccess';
 import { IssuingSubstrateTxPayload, Substrate2SubstrateDVMPayload } from './model';
-import { issuingSubstrateToken } from './utils/tx';
+import { issuing } from './utils/tx';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
@@ -202,7 +202,7 @@ export function Substrate2SubstrateDVM({
       const beforeTransfer = applyModalObs({
         content: <TransferConfirm value={value} unit={unit} />,
       });
-      const obs = issuingSubstrateToken(value, api, fee);
+      const obs = issuing(value, api, fee);
       const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'block',
         onDisappear: () => {

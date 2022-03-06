@@ -45,7 +45,7 @@ import {
   RedeemDarwiniaTxPayload,
   RedeemDepositTxPayload,
 } from './model';
-import { redeemDarwiniaToken, redeemDeposit } from './utils';
+import { redeem, redeemDeposit } from './utils';
 
 interface AmountCheckInfo {
   amount?: string;
@@ -208,7 +208,7 @@ function createCrossTokenTx(value: RedeemDarwiniaTxPayload, after: AfterTxCreato
   const beforeTx = applyModalObs({
     content: <TransferConfirm value={value} />,
   });
-  const txObs = redeemDarwiniaToken(value);
+  const txObs = redeem(value);
 
   return createTxWorkflow(beforeTx, txObs, after);
 }

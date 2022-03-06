@@ -15,6 +15,7 @@
     "stylelint": "stylelint \"src/**/*.scss\" --config stylelint.config.js",
     "i18next:scanner": "i18next-scanner --config i18next-scanner.config.js",
     "eslint": "eslint ./src -c .eslintrc.js --fix",
+    "init:bridge": "./bridge.sh",
     "lint": "npm run eslint && npm run stylelint",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "format": "prettier ./src/**/*.tsx  --write"

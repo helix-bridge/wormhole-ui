@@ -15,7 +15,7 @@ import {
 } from '../../../utils';
 import { SmartTxPayload } from '../model/cross-chain';
 
-export function issuingFromSubstrate2DVM(value: SmartTxPayload, api: ApiPromise): Observable<Tx> {
+export function issuing(value: SmartTxPayload, api: ApiPromise): Observable<Tx> {
   const { sender, recipient, amount, asset } = value;
   const toAccount = dvmAddressToAccountId(recipient).toHuman();
   const extrinsic = isRing(asset)
@@ -25,7 +25,7 @@ export function issuingFromSubstrate2DVM(value: SmartTxPayload, api: ApiPromise)
   return signAndSendExtrinsic(api, sender, extrinsic);
 }
 
-export function redeemFromDVM2Substrate(
+export function redeem(
   value: SmartTxPayload<DVMChainConfig>,
   direction: CrossChainDirection<DVMChainConfig, PolkadotChainConfig>
 ): Observable<Tx> {

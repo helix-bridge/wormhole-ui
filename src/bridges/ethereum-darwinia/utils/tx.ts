@@ -45,7 +45,7 @@ interface ClaimInfo {
  * @description darwinia <- ethereum
  * Because of the ring was released in advance on ethereum, so the action is issuing, but follow the Protocol Overview, it should be redeem.
  */
-export const redeemDarwiniaToken: TxFn<RedeemDarwiniaTxPayload> = ({ sender, direction, asset, amount, recipient }) => {
+export const redeem: TxFn<RedeemDarwiniaTxPayload> = ({ sender, direction, asset, amount, recipient }) => {
   const { to } = direction;
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const contractAddress = bridge.config.contracts[asset.toLowerCase() as 'ring' | 'kton'] as string;
@@ -75,7 +75,7 @@ export const redeemDeposit: TxFn<RedeemDepositTxPayload> = ({ direction, recipie
 /**
  * @description darwinia -> ethereum
  */
-export function issuingDarwiniaTokens(value: IssuingDarwiniaTxPayload, api: ApiPromise): Observable<Tx> {
+export function issuing(value: IssuingDarwiniaTxPayload, api: ApiPromise): Observable<Tx> {
   const { sender, recipient, assets } = value;
   const { amount: ring } = assets.find((item) => isRing(item.asset)) || { amount: '0' };
   const { amount: kton } = assets.find((item) => isKton(item.asset)) || { amount: '0' };

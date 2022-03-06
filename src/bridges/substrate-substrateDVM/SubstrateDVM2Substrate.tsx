@@ -5,7 +5,7 @@ import { ChainConfig, CrossChainComponentProps, CrossChainDirection, DailyLimit,
 import { entrance, fromWei, getBridge, getS2SMappingParams, waitUntilConnected } from '../../utils';
 import { DVM } from '../DVM';
 import { SubstrateDVM2SubstratePayload, SubstrateSubstrateDVMBridgeConfig, RedeemSubstrateTxPayload } from './model';
-import { redeemSubstrate } from './utils/tx';
+import { redeem } from './utils/tx';
 
 export function SubstrateDVM2Substrate({
   form,
@@ -17,7 +17,7 @@ export function SubstrateDVM2Substrate({
       const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
 
       return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
-        switchMap(({ mappingAddress }) => redeemSubstrate(value, mappingAddress, String(bridge.config.specVersion)))
+        switchMap(({ mappingAddress }) => redeem(value, mappingAddress, String(bridge.config.specVersion)))
       );
     },
     [direction]
