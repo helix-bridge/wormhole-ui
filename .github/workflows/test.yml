@@ -1,0 +1,47 @@
+name: Node Test
+
+on:
+  pull_request:
+    branches: [staging, master]
+
+
+jobs:
+  test-cypress:
+    name: E2E
+    runs-on: ubuntu-latest
+    container:
+      image: cypress/browsers:node14.17.0-chrome88-ff89
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run E2E tests 🧪
+        uses: cypress-io/github-action@v2
+        with:
+          start: yarn start:dev
+          wait-on: 'http://localhost:3007'
+          wait-on-timeout: 300
+          command: yarn test:e2e:ci
+          record: true
+          browser: chrome
+          group: 'Actions example'
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+
+  test-unit:
+    name: Uint
+    runs-on: ubuntu-latest
+    container:
+      image: cypress/browsers:node14.17.0-chrome88-ff89
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Unit tests 🧪
+        uses: cypress-io/github-action@v2
+        with:
+          command: yarn test:unit:ci
+          record: true
+          browser: chrome
+          group: 'Actions example'
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+
