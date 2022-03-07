@@ -48,6 +48,7 @@ jobs:
   completed-test:
     name: Uint
     runs-on: ubuntu-latest
+    needs: [test-e2e, test-unit]
     steps:
       - uses: actions/checkout@v2
 
