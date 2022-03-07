@@ -249,7 +249,7 @@ function createCrossDepositTx(value: RedeemDepositTxPayload, after: AfterTxCreat
 // eslint-disable-next-line complexity
 export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComponentProps<Ethereum2DarwiniaPayload>) {
   const { t } = useTranslation();
-  const [allowance, setAllowance] = useState(BN_ZERO);
+  const [allowance, setAllowance] = useState<BN>(BN_ZERO);
   const [max, setMax] = useState<BN | null>(null);
   const [fee, setFee] = useState<BN | null>(null);
   const [ringBalance, setRingBalance] = useState<BN | null>(null);
