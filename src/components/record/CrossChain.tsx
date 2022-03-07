@@ -19,6 +19,7 @@ import {
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
+  isSubstrateDVM,
   isValidAddressStrict,
   verticesToChainConfig,
 } from '../../utils';
@@ -286,34 +287,38 @@ export function CrossChainRecord() {
         </Input.Group>
       </Affix>
 
-      <Tabs
-        type="card"
-        onChange={(event) => {
-          const num = Number(event);
+      {!isSubstrateDVM(departure, arrival) ? (
+        <Tabs
+          type="card"
+          onChange={(event) => {
+            const num = Number(event);
 
-          setConfirmed(num < 0 ? null : !!num);
-        }}
-        size="large"
-        className="mt-4"
-      >
-        <Tabs.TabPane tab={t('All')} key="-1"></Tabs.TabPane>
-        <Tabs.TabPane tab={t('In Progress')} key="0"></Tabs.TabPane>
-        <Tabs.TabPane
-          tab={
-            <span className="flex items-center">
-              {t('Confirmed Extrinsic')}
-              <Tooltip
-                title={t(
-                  'When the process is aborted or an error occurs, the token will be revert to the original account'
-                )}
-              >
-                <InfoCircleOutlined className="ml-2" />
-              </Tooltip>
-            </span>
-          }
-          key="1"
-        ></Tabs.TabPane>
-      </Tabs>
+            setConfirmed(num < 0 ? null : !!num);
+          }}
+          size="large"
+          className="mt-4"
+        >
+          <Tabs.TabPane tab={t('All')} key="-1"></Tabs.TabPane>
+          <Tabs.TabPane tab={t('In Progress')} key="0"></Tabs.TabPane>
+          <Tabs.TabPane
+            tab={
+              <span className="flex items-center">
+                {t('Confirmed Extrinsic')}
+                <Tooltip
+                  title={t(
+                    'When the process is aborted or an error occurs, the token will be revert to the original account'
+                  )}
+                >
+                  <InfoCircleOutlined className="ml-2" />
+                </Tooltip>
+              </span>
+            }
+            key="1"
+          ></Tabs.TabPane>
+        </Tabs>
+      ) : (
+        <div className="h-8 mt-4"></div>
+      )}
 
       <Spin spinning={loading} size="large">
         <div className="bg-gray-200 dark:bg-antDark p-4 -mt-4">

@@ -55,6 +55,9 @@ export const isSubstrate2DVM: BridgePredicateFn = (departure, arrival) => {
 
 export const isDVM2Substrate: BridgePredicateFn = (departure, arrival) => isSubstrate2DVM(arrival, departure);
 
+export const isSubstrateDVM: BridgePredicateFn = (departure, arrival) =>
+  isSubstrate2DVM(departure, arrival) || isDVM2Substrate(departure, arrival);
+
 /**
  * Shorthand functions for predication without direction
  */

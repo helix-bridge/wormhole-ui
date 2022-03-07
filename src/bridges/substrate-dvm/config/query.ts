@@ -6,12 +6,7 @@ export const TRANSFERS_QUERY = `
    transfers(
      offset: $offset,
      last: $limit,
-     filter: {
-       or: [ 
-         { fromId: { equalTo: $account } },
-         { toId: { equalTo: $account } }
-       ]
-     },
+     filter: { fromId: { equalTo: $account } },
       orderBy: TIMESTAMP_DESC
    ){
      totalCount
