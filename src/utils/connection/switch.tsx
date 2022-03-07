@@ -1,7 +1,9 @@
 import { Button, message, notification } from 'antd';
+import { DebouncedFunc, throttle } from 'lodash';
 import { Trans } from 'react-i18next';
 import { Observable, Observer } from 'rxjs';
 import Web3 from 'web3';
+import { SHORT_DURATION } from '../../config/constant';
 import { EthereumChainConfig, MetamaskError, Network } from '../../model';
 import { findNetworkConfig, isNativeMetamaskChain } from '../network/network';
 
@@ -33,7 +35,7 @@ async function addEthereumChain(network: Network): Promise<null> {
   return result;
 }
 
-export const switchMetamaskNetwork: (network: Network) => Observable<null> = (network: Network) => {
+export const switchMetamaskNetwork: DebouncedFunc<(network: Network) => Observable<null>> = throttle((network) => {
   const key = `key${Date.now()}`;
 
   return new Observable((observer: Observer<null>) => {
@@ -80,4 +82,4 @@ export const switchMetamaskNetwork: (network: Network) => Observable<null> = (ne
       duration: null,
     });
   });
-};
+}, SHORT_DURATION);

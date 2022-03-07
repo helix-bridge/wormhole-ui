@@ -93,8 +93,8 @@ export const getPolkadotConnection: (network: PolkadotChainConfig) => Observable
     })
   );
 
-export const getEthereumConnection: () => Observable<EthereumConnection> = () => {
-  return from(window.ethereum.request({ method: 'eth_requestAccounts' })).pipe(
+export const getEthereumConnection: () => Observable<EthereumConnection> = () =>
+  from(window.ethereum.request({ method: 'eth_requestAccounts' })).pipe(
     switchMap((_) => {
       const addressToAccounts = (addresses: string[]) =>
         addresses.map((address) => ({ address, meta: { source: '' } }));
@@ -141,15 +141,16 @@ export const getEthereumConnection: () => Observable<EthereumConnection> = () =>
     }),
     startWith<EthereumConnection>({ status: ConnectionStatus.connecting, accounts: [], type: 'metamask', chainId: '' })
   );
-};
 
 export const getTronConnection: () => Observable<TronConnection> = () => {
   const wallet = window.tronWeb.defaultAddress;
+
   const mapData: (data: TronAddress) => TronConnection = (data) => ({
     status: ConnectionStatus.success,
     accounts: [{ address: data.base58, meta: { name: data?.name ?? '', source: '', genesisHash: '' } }],
     type: 'tron',
   });
+
   const obs: Observable<TronConnection> = new Observable((observer) => {
     window.tronWeb.on('addressChanged', (data: TronAddress) => {
       observer.next(mapData(data));
@@ -175,26 +176,24 @@ const showWarning = (plugin: string, downloadUrl: string) =>
     okText: <Trans>OK</Trans>,
   });
 
-const connectToPolkadot: ConnectFn<PolkadotConnection> = (network) => {
-  if (!network) {
-    return EMPTY;
-  }
+const connectToPolkadot: ConnectFn<PolkadotConnection> = (network) =>
+  !network ? EMPTY : getPolkadotConnection(network as PolkadotChainConfig);
 
-  return getPolkadotConnection(network as PolkadotChainConfig);
-};
-
-const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {
+const connectToEthereum: ConnectFn<EthereumConnection> = (network, chainId?) => {
   if (!isMetamaskInstalled()) {
     showWarning(
       'metamask',
       'https://chrome.google.com/webstore/detail/empty-title/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=zh-CN'
     );
+
     return EMPTY;
   }
 
   return from(isNetworkConsistent(network.name, chainId)).pipe(
     switchMap((isMatch) =>
-      isMatch ? getEthereumConnection() : switchMetamaskNetwork(network.name).pipe(switchMapTo(getEthereumConnection()))
+      isMatch
+        ? getEthereumConnection()
+        : switchMetamaskNetwork(network.name)!.pipe(switchMapTo(getEthereumConnection()))
     )
   );
 };
@@ -217,8 +216,8 @@ const connectToTron = () => {
 
 const config: ConnectConfig = {
   darwinia: connectToPolkadot,
-  dvm: connectToEth,
-  ethereum: connectToEth,
+  dvm: connectToEthereum,
+  ethereum: connectToEthereum,
   polkadot: connectToPolkadot,
   tron: connectToTron,
 };
