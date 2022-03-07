@@ -1,0 +1,18 @@
+name: Deploy develop
+
+on:
+  pull_request:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/checkout@v2
+        with:
+          repository: itering/actions
+          path: .github/actions
+          persist-credentials: false
+          ssh-key: "${{ secrets.ITERING_ACTIONS_DEPLOY_KEY }}"
