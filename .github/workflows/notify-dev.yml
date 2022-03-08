@@ -11,8 +11,8 @@ on:
 
 
 jobs:
-  deploy:
-    name: Deploy
+  notify:
+    name: Notify
     runs-on: ubuntu-latest
     steps:
 
