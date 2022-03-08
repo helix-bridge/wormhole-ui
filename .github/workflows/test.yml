@@ -8,6 +8,9 @@ jobs:
   test-e2e:
     name: E2E
     runs-on: ubuntu-latest
+    outputs:
+      check-ok: ${{ steps.output-ok.outputs.test }}
+      check-err: ${{ steps.output-err.outputs.test }}
     container:
       image: cypress/browsers:node14.17.0-chrome88-ff89
       options: --privileged
@@ -40,9 +43,18 @@ jobs:
           name: e2e-videos
           path: cypress/videos
 
+      - id: output-ok
+        run: echo "::set-output name=STATUS::ok"
+      - id: output-err
+        if: failure()
+        run: echo "::set-output name=STATUS::err"
+
   test-unit:
     name: Uint
     runs-on: ubuntu-latest
+    outputs:
+      check-ok: ${{ steps.output-ok.outputs.test }}
+      check-err: ${{ steps.output-err.outputs.test }}
     container:
       image: cypress/browsers:node14.17.0-chrome88-ff89
       options: --privileged
@@ -73,6 +85,12 @@ jobs:
           name: unit-videos
           path: cypress/videos
 
+      - id: output-ok
+        run: echo "::set-output name=STATUS::ok"
+      - id: output-err
+        if: failure()
+        run: echo "::set-output name=STATUS::err"
+
   completed-test:
     name: Completed test
     runs-on: ubuntu-latest
@@ -82,4 +100,18 @@ jobs:
 
       - name: Collect file
         run: |
-          ls
+          E2E_OK='${{ needs.test-e2e.outputs.check-ok }}'
+          E2E_ERR='${{ needs.test-e2e.outputs.check-err }}'
+          UNIT_OK='${{ needs.test-unit.outputs.check-ok }}'
+          UNIT_ERR='${{ needs.test-unit.outputs.check-err }}'
+          E2E_STATUS=${E2E_OK:-$E2E_ERR}
+          UNIT_STATUS=${UNIT_OK:-$UNIT_ERR}
+
+          mkdir -p test
+          echo "${E2E_STATUS}" > test/e2e.log
+          echo "${UNIT_STATUS}" > test/unit.log
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: test
+          path: test

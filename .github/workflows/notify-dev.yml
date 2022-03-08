@@ -1,10 +1,14 @@
 name: Notify dev
 
+#on:
+#  workflow_run:
+#    workflows: ["Test", "Deploy develop"]
+#    types:
+#      - completed
+
 on:
-  workflow_run:
-    workflows: ["Test", "Deploy develop"]
-    types:
-      - completed
+  pull_request:
+
 
 jobs:
   deploy:
@@ -12,8 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/download-artifact@v3
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: deploy-dev.yml
+          workflow_conclusion: completed
           name: deploy
           path: deploy
 
@@ -42,4 +50,5 @@ jobs:
           SLACK_TITLE: Preview
           SLACK_USERNAME: Vercel
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
+
 

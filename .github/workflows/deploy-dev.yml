@@ -17,13 +17,13 @@ jobs:
           persist-credentials: false
           ssh-key: "${{ secrets.ITERING_ACTIONS_DEPLOY_KEY }}"
 
-      - uses: ./.github/actions/smart-vercel
-        name: Deploy to Vercel
-        id: smart-vercel
-        with:
-          vercel_token: ${{ secrets.VERCEL_TOKEN }}
-          vercel_group: itering
-          preview_output: true
+#      - uses: ./.github/actions/smart-vercel
+#        name: Deploy to Vercel
+#        id: smart-vercel
+#        with:
+#          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+#          vercel_group: itering
+#          preview_output: true
 
       - name: Completed deploy
         run: |
