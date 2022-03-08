@@ -20,6 +20,7 @@ jobs:
           wait-on-timeout: 300
           command: yarn test:e2e:ci
           record: true
+          parallel: true
           browser: chrome
           group: 'Actions example'
         env:
