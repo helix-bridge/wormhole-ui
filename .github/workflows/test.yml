@@ -112,7 +112,3 @@ jobs:
           echo "${E2E_STATUS}" > test/e2e.log
           echo "${UNIT_STATUS}" > test/unit.log
 
-      - uses: actions/upload-artifact@v1
-        with:
-          name: test
-          path: test

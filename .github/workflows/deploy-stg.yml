@@ -1,7 +1,8 @@
-name: Deploy develop
+name: Deploy staging
 
 on:
-  pull_request:
+  push:
+    branches: [master]
 
 jobs:
   deploy:
@@ -24,12 +25,7 @@ jobs:
           vercel_token: ${{ secrets.VERCEL_TOKEN }}
           vercel_group: itering
           preview_output: true
-          alias_domain: wormhole-dev
-
-      - uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          append: true
-          message: ${{ steps.smart-vercel.outputs.PREVIEW_OUTPUT }}
+          alias_domain: wormhole-stg
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
