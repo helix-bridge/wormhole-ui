@@ -25,18 +25,22 @@ jobs:
           vercel_group: itering
           preview_output: true
 
-      - uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          append: true
-          message: ${{ steps.smart-vercel.outputs.PREVIEW_OUTPUT }}
+      - name: Completed deploy
+        run: |
+          echo '${{ steps.smart-vercel.outputs.PREVIEW_OUTPUT }}' > deploy.log
 
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_CHANNEL: wormhole-ui
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_ICON: https://avatars.githubusercontent.com/u/14985020?s=48&v=4
-          SLACK_MESSAGE: '${{ steps.smart-vercel.outputs.PREVIEW_LINK }}'
-          SLACK_TITLE: Preview
-          SLACK_USERNAME: Vercel
-          SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
+#      - uses: marocchino/sticky-pull-request-comment@v2
+#        with:
+#          append: true
+#          message: ${{ steps.smart-vercel.outputs.PREVIEW_OUTPUT }}
+#
+#      - name: Slack Notification
+#        uses: rtCamp/action-slack-notify@v2
+#        env:
+#          SLACK_CHANNEL: wormhole-ui
+#          SLACK_COLOR: ${{ job.status }}
+#          SLACK_ICON: https://avatars.githubusercontent.com/u/14985020?s=48&v=4
+#          SLACK_MESSAGE: '${{ steps.smart-vercel.outputs.PREVIEW_LINK }}'
+#          SLACK_TITLE: Preview
+#          SLACK_USERNAME: Vercel
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}

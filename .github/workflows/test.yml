@@ -2,8 +2,6 @@ name: Node Test
 
 on:
   pull_request:
-    branches: [staging, master]
-
 
 jobs:
   test-e2e:
@@ -27,6 +25,18 @@ jobs:
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: cypress/screenshots
+
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: e2e-videos
+          path: cypress/videos
+
   test-unit:
     name: Uint
     runs-on: ubuntu-latest
@@ -44,6 +54,18 @@ jobs:
           group: 'Actions example'
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: unit-screenshots
+          path: cypress/screenshots
+
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: unit-videos
+          path: cypress/videos
 
   completed-test:
     name: Completed test
