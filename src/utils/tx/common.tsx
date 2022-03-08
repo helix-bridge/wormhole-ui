@@ -1,3 +1,5 @@
+import { ApiPromise } from '@polkadot/api';
+import { TypeRegistry } from '@polkadot/types';
 import { Modal, ModalFuncProps, ModalProps } from 'antd';
 import BN from 'bn.js';
 import { Trans } from 'react-i18next';
@@ -6,18 +8,10 @@ import Web3 from 'web3';
 import { PromiEvent, TransactionConfig, TransactionReceipt } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
-import { abi } from '../../config';
-import {
-  CrossChainPayload,
-  DVMPayload,
-  Erc20Token,
-  Ethereum2DarwiniaPayload,
-  RequiredPartial,
-  Tx,
-  TxFn,
-} from '../../model';
+import { abi } from '../../config/abi';
+import { CrossChainPayload, MappingToken, RequiredPartial, Tx, TxFn } from '../../model';
 import { empty } from '../helper';
-import { entrance } from '../network';
+import { entrance, waitUntilConnected } from '../network';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModalSpyFn<T = any> = (observer: Observer<T>, closeFn: () => void) => void;
@@ -167,7 +161,7 @@ export function genEthereumTransactionObs(params: TransactionConfig): Observable
 }
 
 export const approveToken: TxFn<
-  RequiredPartial<CrossChainPayload<Ethereum2DarwiniaPayload & DVMPayload>, 'sender'> & {
+  RequiredPartial<CrossChainPayload, 'sender'> & {
     tokenAddress?: string;
     spender?: string;
     sendOptions?: { gas: string; gasPrice: string };
@@ -189,7 +183,7 @@ export const approveToken: TxFn<
   );
 };
 
-export async function getAllowance(sender: string, spender: string, token: Erc20Token | null): Promise<BN> {
+export async function getAllowance(sender: string, spender: string, token: MappingToken | null): Promise<BN> {
   if (!token) {
     return Web3.utils.toBN(0);
   }
@@ -199,4 +193,19 @@ export async function getAllowance(sender: string, spender: string, token: Erc20
   const allowanceAmount = await erc20Contract.methods.allowance(sender, spender).call();
 
   return Web3.utils.toBN(allowanceAmount || 0);
+}
+
+/* -------------------------------------------Claim Token---------------------------------------------- */
+
+export async function getMPTProof(
+  api: ApiPromise,
+  hash = '',
+  proofAddress = '0xf8860dda3d08046cf2706b92bf7202eaae7a79191c90e76297e0895605b8b457'
+) {
+  await waitUntilConnected(api);
+
+  const proof = await api.rpc.state.getReadProof([proofAddress], hash);
+  const registry = new TypeRegistry();
+
+  return registry.createType('Vec<Bytes>', proof.proof.toJSON());
 }

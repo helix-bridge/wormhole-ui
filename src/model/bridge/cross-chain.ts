@@ -1,8 +1,5 @@
 import { FormInstance } from 'antd';
 import { Subscription } from 'rxjs';
-import { Unit } from 'web3-utils';
-import { Erc20Token } from '../erc20';
-import { Deposit } from '../evolution';
 import { ChainConfig } from '../network';
 import { NullableFields } from '../type-operator';
 
@@ -41,43 +38,9 @@ export interface CrossChainParty {
 
 /**
  * for native token, T = string;
- * for mapped token, T = Mapped Token;
+ * for mapped token, T = Mapping Token;
  */
 export interface CrossChainAsset<T = string> {
   amount: string;
   asset: T | null;
 }
-
-/* ---------------------------------------------------E2D--------------------------------------------------- */
-
-export interface Ethereum2DarwiniaPayload extends CrossChainParty, CrossChainAsset {
-  deposit?: Deposit;
-}
-
-/* ---------------------------------------------------D2E--------------------------------------------------- */
-
-export enum DarwiniaAsset {
-  ring = 'ring',
-  kton = 'kton',
-  crab = 'crab',
-}
-
-export interface Darwinia2EthereumPayload extends CrossChainParty {
-  assets: (CrossChainAsset<DarwiniaAsset> & { checked?: boolean; unit?: Unit })[];
-}
-
-/* ---------------------------------------------------DVM--------------------------------------------------- */
-
-export type DVMAsset = Erc20Token;
-
-export interface DVMPayload extends CrossChainParty, CrossChainAsset<DVMAsset> {}
-
-/* ---------------------------------------------------S2S--------------------------------------------------- */
-
-export type SubstrateAsset = string | Erc20Token;
-
-export interface Substrate2SubstrateDVMPayload extends CrossChainParty, CrossChainAsset<SubstrateAsset> {}
-
-/* ---------------------------------------------------S2DVM--------------------------------------------------- */
-
-export interface Substrate2DVMPayload extends CrossChainParty, CrossChainAsset<DarwiniaAsset> {}

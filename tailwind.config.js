@@ -1,4 +1,8 @@
 module.exports = {
+  purge: {
+    enabled: process.env.REACT_APP_HOST_TYPE !== 'dev',
+    content: ['./src/**/*.tsx'],
+  },
   darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {
@@ -6,9 +10,6 @@ module.exports = {
         whirl: 'whirl 1s linear',
         'whirl-reverse': 'whirl-reverse 1s linear',
         'ball-scale-pulse': 'ball-scale-pulse 2s ease-in-out infinite',
-        //   "ra-1": "animate-arrow-1 1s ease-in-out infinite",
-        //   "ra-2": "animate-arrow-2 1s ease-in-out infinite 0.1s",
-        //   "ra-3": "animate-arrow-3 1s ease-in-out infinite 0.2s",
       },
       keyframes: {
         whirl: {
@@ -30,21 +31,6 @@ module.exports = {
           '50%': { transform: 'scale(1)' },
           '100%': { transform: 'scale(0)' },
         },
-        //   'right-arrow-1': {
-        //     '0%': { transform: 'translateX(-40px);opacity: 0;' },
-        //     '70%': { transform: 'translateX(0px);opacity: 1;' },
-        //     '100%': { transform: 'translateX(0px);opacity: 1;' },
-        //   },
-        //   'right-arrow-2': {
-        //     '0%': { transform: 'translateX(-20px);opacity: 0;' },
-        //     '70%': { transform: 'translateX(0px);opacity: .5;' },
-        //     '100%': { transform: 'translateX(0px);opacity: .5;' },
-        //   },
-        //   'right-arrow-3': {
-        //     '0%': { transform: 'translateX(-10px);opacity: 0;' },
-        //     '70%': { transform: 'translateX(0px);opacity: .3;' },
-        //     '100%': { transform: 'translateX(0px);opacity: .3;' },
-        //   },
       },
       backgroundImage: (_) => ({
         darwinia: 'linear-gradient(-45deg, #fe3876 0%, #7c30dd 71%, #3a30dd 100%)',

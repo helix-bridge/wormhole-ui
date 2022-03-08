@@ -1,12 +1,18 @@
 import { LockOutlined } from '@ant-design/icons';
 import { AutoComplete, Form, FormInstance, Input } from 'antd';
 import { upperFirst } from 'lodash';
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FORM_CONTROL } from '../../config';
 import { useLock } from '../../hooks';
-import { CrossChainComponentProps, CrossChainParty, CrossChainPayload, IAccountMeta } from '../../model';
-import { isPolkadotNetwork, isSameAddress, isValidAddress, patchUrl } from '../../utils';
+import {
+  CrossChainComponentProps,
+  CrossChainParty,
+  CrossChainPayload,
+  IAccountMeta,
+  PolkadotChainConfig,
+} from '../../model';
+import { convertToSS58, isPolkadotNetwork, isSameAddress, isValidAddressStrict, patchUrl } from '../../utils';
 import { IdentAccountAddress } from '../widget/account';
 import { FormItemExtra } from '../widget/facade';
 
@@ -24,6 +30,15 @@ export function RecipientItem({
 }) {
   const { t } = useTranslation();
   const [lock] = useLock(form as FormInstance<CrossChainPayload<CrossChainParty>>);
+
+  const formattedAccounts = useMemo(
+    () =>
+      accounts?.map((item) => ({
+        ...item,
+        address: convertToSS58(item.address, (direction.to as PolkadotChainConfig).ss58Prefix),
+      })),
+    [accounts, direction.to]
+  );
 
   const { to } = direction;
   const isPolkadot = isPolkadotNetwork(to.name);
@@ -48,7 +63,7 @@ export function RecipientItem({
           },
           {
             validator(_, value) {
-              return isValidAddress(value, !isDvm ? type : 'ethereum', true) ? Promise.resolve() : Promise.reject();
+              return isValidAddressStrict(value, !isDvm ? type : 'ethereum') ? Promise.resolve() : Promise.reject();
             },
             message: !isDvm
               ? t('Please enter a valid {{network}} address', { network: upperFirst(to.name) })
@@ -58,7 +73,7 @@ export function RecipientItem({
         extra={to ? <FormItemExtra>{extraTip}</FormItemExtra> : ''}
         className="mb-2"
       >
-        {isDvm || !accounts?.length ? (
+        {isDvm || !formattedAccounts?.length ? (
           <Input
             onBlur={(event) => {
               patchUrl({ recipient: event.target.value });
@@ -75,7 +90,7 @@ export function RecipientItem({
             size="large"
             className="flex-1"
           >
-            {accounts.map((item) => (
+            {formattedAccounts.map((item) => (
               <AutoComplete.Option value={item.address} key={item.address}>
                 <IdentAccountAddress account={item} />
               </AutoComplete.Option>

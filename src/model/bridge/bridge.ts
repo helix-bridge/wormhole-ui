@@ -1,6 +1,6 @@
 import { has, isEqual } from 'lodash';
 import { FunctionComponent } from 'react';
-import { ChainConfig } from '..';
+import { ChainConfig } from '../network';
 import { Network, NetworkMode } from '../network/network';
 
 /* ----------------------------------------------- bridge state ------------------------------------------------ */
@@ -48,47 +48,6 @@ export interface BridgeConfig<C = ContractConfig, K = Record<string, string>> {
   contracts?: C;
   api?: K;
 }
-
-/**
- * ethereum <-> darwinia
- */
-export interface EthereumDarwiniaContractConfig extends ContractConfig {
-  ring: string; // e2d ring balance address
-  kton: string; // e2d kton balance address
-  fee: string; // e2d cross chain fee querying address
-  redeemDeposit: string; // e2d redeem deposit address
-}
-
-export type EthereumDarwiniaBridgeConfig = Required<
-  BridgeConfig<EthereumDarwiniaContractConfig, Pick<Api<ApiKeys>, 'dapp' | 'evolution'>>
-> & {
-  lockEvents: LockEventsStorage[];
-};
-
-/**
- * substrate <-> substrate dvm
- */
-export type SubstrateSubstrateDVMBridgeConfig = Required<
-  Omit<BridgeConfig<ContractConfig, Omit<Api<ApiKeys>, 'subscan' | 'subqlMMr'>>, 'contracts'>
->;
-
-/**
- * ethereum <-> crab dvm
- */
-export interface EthereumDVMcontractConfig extends ContractConfig {
-  proof: string;
-}
-
-export type EthereumDVMBridgeConfig = Required<
-  BridgeConfig<EthereumDVMcontractConfig, Pick<Api<ApiKeys>, 'dapp' | 'evolution'>>
->;
-
-/**
- * smart app
- */
-export type SubstrateDVMBridgeConfig = Required<
-  Omit<BridgeConfig<ContractConfig, Pick<Api<ApiKeys>, 'subql'>>, 'contracts'>
->;
 
 /* ----------------------------------------------- bridge  ------------------------------------------------ */
 

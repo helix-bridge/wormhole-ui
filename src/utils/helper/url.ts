@@ -1,14 +1,6 @@
 import { mapKeys } from 'lodash';
-import { Network, HistoryRouteParam, StorageInfo, ValueOf, WithNull, NetworkMode } from '../../model';
+import { Network, HistoryRouteParam, StorageInfo, ValueOf, WithNull, NetworkMode, HashInfo } from '../../model';
 import { readStorage } from './storage';
-
-export interface HashInfo {
-  from?: Network | null;
-  to?: Network | null;
-  recipient?: string | null; // to account address;
-  fMode?: NetworkMode | null;
-  tMode?: NetworkMode | null;
-}
 
 interface HashShort {
   f?: Network;

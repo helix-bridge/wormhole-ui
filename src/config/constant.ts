@@ -18,3 +18,18 @@ export enum FORM_CONTROL {
   sender = 'sender',
   direction = 'direction',
 }
+
+export enum Path {
+  root = '/',
+  history = '/history',
+  airdrop = '/airdrop',
+  airdropHistory = '/airdropHistory',
+  register = '/register',
+  configure = '/configure',
+}
+
+export enum RegisterStatus {
+  unregister,
+  registered,
+  registering,
+}

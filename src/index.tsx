@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
 import { BallScalePulse } from './components/widget/BallScalePulse';
-import './components/bridge/register';
+import './bridges/register';
 import { THEME } from './config';
 import './index.scss';
 import { ApiProvider, GqlProvider, TxProvider } from './providers';
