@@ -6,7 +6,7 @@ on:
 
 
 jobs:
-  test-cypress:
+  test-e2e:
     name: E2E
     runs-on: ubuntu-latest
     container:
