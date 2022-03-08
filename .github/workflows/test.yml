@@ -95,6 +95,7 @@ jobs:
     name: Completed test
     runs-on: ubuntu-latest
     needs: [test-e2e, test-unit]
+    if: always()
     steps:
       - uses: actions/checkout@v2
 
