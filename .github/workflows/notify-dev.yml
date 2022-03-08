@@ -1,13 +1,13 @@
 name: Notify develop
 
-#on:
-#  workflow_run:
-#    workflows: ["Test", "Deploy develop"]
-#    types:
-#      - completed
-
 on:
-  pull_request:
+  workflow_run:
+    workflows: ["Test", "Deploy develop"]
+    types:
+      - completed
+
+#on:
+#  pull_request:
 
 
 jobs:
