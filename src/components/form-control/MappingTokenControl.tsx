@@ -91,7 +91,6 @@ export function MappingTokenControl({ value, onChange, tokens, total }: PropsWit
           )}
         </Select.OptGroup>
       </Select>
-      {/* eslint-disable-next-line no-magic-numbers */}
       {percent >= 0 && percent < 100 && (
         <Progress percent={percent} status="active" strokeColor={{ from: '#5745de', to: '#ec3783' }} />
       )}

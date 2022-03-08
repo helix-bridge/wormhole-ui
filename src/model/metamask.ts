@@ -5,7 +5,6 @@ export interface AddEthereumChainParameter {
   nativeCurrency: {
     name?: string;
     symbol?: string; // 2-6 characters long
-    // eslint-disable-next-line no-magic-numbers
     decimals: number;
   };
   rpcUrls: string[];

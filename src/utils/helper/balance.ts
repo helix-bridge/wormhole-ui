@@ -37,10 +37,7 @@ const toStr = (value: WeiValue): string => {
   } else if (isUndefined(value) || isNull(value) || isNaN(value)) {
     return '0';
   } else {
-    throw new TypeError(
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      `Can not convert the value ${value} to String type. Value type is ${typeof value}`
-    );
+    throw new TypeError(`Can not convert the value ${value} to String type. Value type is ${typeof value}`);
   }
 };
 

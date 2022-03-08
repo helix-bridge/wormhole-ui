@@ -22,7 +22,6 @@ class Backend {
       return responder(null, languageCache[lng]);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     if (!loaders[lng]) {
       loaders[lng] = this.createLoader(lng);
     }
