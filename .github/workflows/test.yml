@@ -22,6 +22,7 @@ jobs:
           record: true
           parallel: true
           browser: chrome
+          cache-key: ${{ runner.os }}-hash-${{ hashFiles('yarn.lock') }}
           group: 'Actions example'
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
