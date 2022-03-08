@@ -4,11 +4,12 @@ import BN from 'bn.js';
 import type { ValidatorRule } from 'rc-field-form/lib/interface';
 import { TFunction } from 'react-i18next';
 import Web3 from 'web3';
-import { Network, NetworkCategory, PolkadotChainConfig, PolkadotTypeNetwork, TokenChainInfo } from '../../model';
+import { Network, NetworkCategory, PolkadotChainConfig, PolkadotTypeNetwork, Token } from '../../model';
 import { isPolkadotNetwork, NETWORK_CONFIGURATIONS } from '../network';
 import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
 import { toWei } from './balance';
 
+// TODO: remove the third argument
 // eslint-disable-next-line complexity
 export const isValidAddress = (address: string, network: Network | NetworkCategory, strict = false): boolean => {
   if (network === 'ethereum') {
@@ -93,7 +94,7 @@ export const isSameAddress = (from: string, to: string): boolean => {
   return fromAddress === toAddress;
 };
 
-export const isRing = (name: string | null | undefined) => /ring/i.test(String(name));
+export const isRing = (name: string | null | undefined) => /ring/i.test(String(name)) || /crab/i.test(String(name));
 
 export const isKton = (name: string | null | undefined) => /kton/i.test(String(name));
 
@@ -106,7 +107,7 @@ export type Validator = ValidatorRule['validator'];
 export interface ValidateOptions {
   t: TFunction;
   compared?: string | BN | number | null;
-  token?: TokenChainInfo;
+  token?: Token;
   asset?: string;
 }
 

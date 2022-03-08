@@ -19,7 +19,7 @@ import {
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
-  isSameNetworkCurry,
+  isChainConfigEqualTo,
   isValidAddress,
   verticesToChainConfig,
 } from '../../utils';
@@ -55,17 +55,21 @@ export function CrossChainRecord() {
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
   const { setToFilters, toNetworks, fromNetworks } = useNetworks();
+
   const [departure, setDeparture] = useState<Vertices>(() => {
     const { from: network, fMode: mode } = searchParams;
     return network && mode ? { network, mode } : defaultSelect[0];
   });
+
   const [arrival, setArrival] = useState<Vertices>(() => {
     const { to: network, tMode: mode } = searchParams;
     return network && mode ? { network, mode } : defaultSelect[1];
   });
+
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState<boolean | null>(null);
   const [address, setAddress] = useState<string | null>(null);
+
   const searchPlaceholder = useMemo(() => {
     const { network, mode } = departure;
     if (isPolkadotNetwork(network)) {
@@ -80,8 +84,10 @@ export function CrossChainRecord() {
 
     return t('Please enter a valid {{network}} address', { network: upperFirst(network) });
   }, [departure, arrival, t]);
+
   const [sourceData, setSourceData] =
     useState<{ count: number; list: Record<string, string | number | null | undefined>[] }>(SOURCE_DATA_DEFAULT);
+
   const { queryRecords } = useRecords(departure, arrival);
   const [paginator, setPaginator] = useState<Paginator>(PAGINATOR_DEFAULT);
   const isMounted = useIsMounted();
@@ -126,7 +132,7 @@ export function CrossChainRecord() {
     const isSameEnv = (net: ChainConfig) =>
       isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
-    setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target)]);
+    setToFilters([negate(isChainConfigEqualTo(target)), isSameEnv, isReachable(target)]);
 
     const { to, tMode } = searchParams;
 
@@ -163,8 +169,10 @@ export function CrossChainRecord() {
               const target = fromNetworks.find(
                 (item) => getDisplayName(item).toLowerCase() === name.toLowerCase()
               ) as ChainConfig;
+
               const dep = { network: target.name, mode: getNetworkMode(target) };
               const reachable = hasBridge([dep, arrival]);
+
               const isSameEnv = (net: ChainConfig) =>
                 isBoolean(target.isTest) && isBoolean(net.isTest) ? net.isTest === target.isTest : true;
 
@@ -172,7 +180,7 @@ export function CrossChainRecord() {
                 setArrival(getCrossChainArrivals(dep)[0]);
               }
 
-              setToFilters([negate(isSameNetworkCurry(target)), isSameEnv, isReachable(target)]);
+              setToFilters([negate(isChainConfigEqualTo(target)), isSameEnv, isReachable(target)]);
               setDeparture(dep);
             }}
           >

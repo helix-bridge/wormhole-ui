@@ -43,7 +43,7 @@ export interface ContractConfig {
   redeem: string;
 }
 
-export interface BridgeConfig<C extends ContractConfig = ContractConfig, K = Record<string, string>> {
+export interface BridgeConfig<C = ContractConfig, K = Record<string, string>> {
   specVersion: number;
   contracts?: C;
   api?: K;
@@ -83,16 +83,25 @@ export type EthereumDVMBridgeConfig = Required<
   BridgeConfig<EthereumDVMcontractConfig, Pick<Api<ApiKeys>, 'dapp' | 'evolution'>>
 >;
 
+/**
+ * smart app
+ */
+export type SubstrateDVMBridgeConfig = Required<
+  Omit<BridgeConfig<ContractConfig, Pick<Api<ApiKeys>, 'subql'>>, 'contracts'>
+>;
+
 /* ----------------------------------------------- bridge  ------------------------------------------------ */
 
 /**
  * departure -> arrival: issuing;
  * departure <- arrival: redeem;
  */
-export class Bridge<C extends BridgeConfig> {
+export class Bridge<C = BridgeConfig> {
   readonly status: BridgeStatus;
 
   readonly stable: boolean;
+
+  readonly activeAssistantConnection: boolean;
 
   readonly departure: ChainConfig;
 
@@ -115,6 +124,7 @@ export class Bridge<C extends BridgeConfig> {
     options?: {
       status?: BridgeStatus;
       stable?: boolean;
+      activeAssistantConnection?: boolean;
     }
   ) {
     const dep = this.toVertices(departure);
@@ -127,6 +137,7 @@ export class Bridge<C extends BridgeConfig> {
     this._config = config;
     this.status = options?.status ?? 'available';
     this.stable = options?.stable ?? true;
+    this.activeAssistantConnection = options?.activeAssistantConnection ?? false;
   }
 
   get config() {

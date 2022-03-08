@@ -189,5 +189,11 @@ declare namespace Cypress {
     confirmMetamaskTransaction(): Chainable<Subject>;
 
     waitForReactComponent(): Chainable<Subject>;
+
+    checkTxInfo(text: string | number | RegExp): Chainable<Subject>;
+
+    confirmTxInfo(): Chainable<Subject>;
+
+    checkTxResult(text: string, hrefRegExp: RegExp, timeout?: number): Chainable<Subject>;
   }
 }

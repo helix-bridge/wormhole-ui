@@ -1,28 +1,3 @@
-// ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-//
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 /** eslint-disable */
 import '@testing-library/cypress/add-commands';
 import 'cypress-wait-until';
@@ -171,49 +146,6 @@ Cypress.Commands.add('etherscanWaitForTxSuccess', (txid) => {
   return cy.task('etherscanWaitForTxSuccess', { txid }, { timeout: 120000 });
 });
 
-// helper commands
-
-// Cypress.Commands.add('getDesktopSizes', () => {
-//   return [
-//     [1366, 768],
-//     [1920, 1080],
-//     [1536, 864],
-//     [1440, 900],
-//     [1280, 720],
-//     [1600, 900],
-//   ] as any;
-// });
-
-// Cypress.Commands.add('getTabletSizes', () => {
-//   return [
-//     [768, 1024],
-//     [1024, 768],
-//     [1280, 800],
-//     [800, 1280],
-//     [601, 962],
-//     [962, 601],
-//     [600, 1024],
-//     [1024, 600],
-//   ] as any;
-// });
-
-// Cypress.Commands.add('getMobileSizes', () => {
-//   return [
-//     [360, 640],
-//     [640, 360],
-//     [375, 667],
-//     [667, 375],
-//     [414, 896],
-//     [896, 414],
-//     [360, 780],
-//     [780, 360],
-//     [360, 760],
-//     [760, 360],
-//     [375, 812],
-//     [812, 375],
-//   ] as any;
-// });
-
 Cypress.Commands.add('waitForResources', (resources = []) => {
   const globalTimeout = 60000;
   const resourceCheckInterval = 2000;
@@ -273,4 +205,21 @@ Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
 // for unit tests
 Cypress.Commands.add('waitForReactComponent', () => {
   return cy.waitForReact(3000, '#__cy_root');
+});
+
+// cross-chain commands
+Cypress.Commands.add('checkTxInfo', (text) => {
+  return cy.get('.ant-modal-confirm-content .ant-typography').contains(text);
+});
+
+Cypress.Commands.add('confirmTxInfo', () => {
+  return cy.get('.ant-modal-confirm-btns button').contains('Confirm').click();
+});
+
+Cypress.Commands.add('checkTxResult', (text, href, timeout = 60 * 1000) => {
+  return cy
+    .get('.ant-modal-confirm-content', { timeout })
+    .find('a')
+    .should('have.text', text)
+    .then((ele) => expect(ele.attr('href')).to.match(href));
 });

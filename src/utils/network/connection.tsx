@@ -25,6 +25,7 @@ import {
   ConnectionStatus,
   EthereumConnection,
   NetworkCategory,
+  PolkadotChainConfig,
   PolkadotConnection,
   TronConnection,
 } from '../../model';
@@ -44,7 +45,7 @@ interface TronAddress {
   name?: string;
 }
 
-export const getPolkadotConnection: (network: ChainConfig) => Observable<PolkadotConnection> = (network) =>
+export const getPolkadotConnection: (network: PolkadotChainConfig) => Observable<PolkadotConnection> = (network) =>
   from(web3Enable('polkadot-js/apps')).pipe(
     concatMap((extensions) =>
       from(web3Accounts()).pipe(
@@ -54,6 +55,7 @@ export const getPolkadotConnection: (network: ChainConfig) => Observable<Polkado
               accounts: !extensions.length && !accounts.length ? [] : accounts,
               type: 'polkadot',
               status: 'pending',
+              network: network.name,
             } as Exclude<PolkadotConnection, 'api'>)
         )
       )
@@ -82,7 +84,13 @@ export const getPolkadotConnection: (network: ChainConfig) => Observable<Polkado
 
       return from(api.isReady).pipe(switchMapTo(source));
     }),
-    startWith<PolkadotConnection>({ status: ConnectionStatus.connecting, accounts: [], api: null, type: 'polkadot' })
+    startWith<PolkadotConnection>({
+      status: ConnectionStatus.connecting,
+      accounts: [],
+      api: null,
+      type: 'polkadot',
+      network: network.name,
+    })
   );
 
 export const getEthereumConnection: () => Observable<EthereumConnection> = () => {
@@ -172,7 +180,7 @@ const connectToPolkadot: ConnectFn<PolkadotConnection> = (network) => {
     return EMPTY;
   }
 
-  return getPolkadotConnection(network);
+  return getPolkadotConnection(network as PolkadotChainConfig);
 };
 
 const connectToEth: ConnectFn<EthereumConnection> = (network, chainId?) => {

@@ -12,4 +12,7 @@ const ethereumCrabDVMConfig: EthereumDVMBridgeConfig = {
   },
 };
 
-export const ethereumCrabDVM = new Bridge(ethereumConfig, crabConfig, ethereumCrabDVMConfig, { stable: false });
+export const ethereumCrabDVM = new Bridge(ethereumConfig, crabConfig, ethereumCrabDVMConfig, {
+  stable: false,
+  status: 'pending',
+});

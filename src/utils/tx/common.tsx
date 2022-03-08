@@ -1,35 +1,23 @@
 import { Modal, ModalFuncProps, ModalProps } from 'antd';
-import { Contract } from 'web3-eth-contract';
-import { AbiItem } from 'web3-utils';
-import { Trans } from 'react-i18next';
 import BN from 'bn.js';
+import { Trans } from 'react-i18next';
 import { EMPTY, finalize, Observable, Observer, switchMap, tap } from 'rxjs';
 import Web3 from 'web3';
+import { PromiEvent, TransactionConfig, TransactionReceipt } from 'web3-core';
+import { Contract } from 'web3-eth-contract';
+import { AbiItem } from 'web3-utils';
 import { abi } from '../../config';
 import {
+  CrossChainPayload,
   DVMPayload,
   Erc20Token,
   Ethereum2DarwiniaPayload,
   RequiredPartial,
-  CrossChainPayload,
   Tx,
   TxFn,
 } from '../../model';
 import { empty } from '../helper';
 import { entrance } from '../network';
-
-/**
- * TODO: web3 types
- */
-interface Receipt {
-  transactionHash: string;
-  transactionIndex: number;
-  blockHash: string;
-  blockNumber: number;
-  contractAddress: string;
-  cumulativeGasUsed: number;
-  gasUsed: number;
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModalSpyFn<T = any> = (observer: Observer<T>, closeFn: () => void) => void;
@@ -129,10 +117,9 @@ export function createTxWorkflow(
  * @param contractAbi - Contract ABI
  * @returns An Observable which will emit the tx events that includes signing, queued, finalized and error.
  */
-export function getContractTxObs(
+export function genEthereumContractTxObs(
   contractAddress: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fn: (contract: Contract) => any,
+  fn: (contract: Contract) => PromiEvent<unknown>,
   contractAbi: AbiItem | AbiItem[] = abi.tokenABI
 ): Observable<Tx> {
   return new Observable((observer) => {
@@ -146,7 +133,7 @@ export function getContractTxObs(
         .on('transactionHash', (hash: string) => {
           observer.next({ status: 'queued', hash });
         })
-        .on('receipt', ({ transactionHash }: Receipt) => {
+        .on('receipt', ({ transactionHash }: TransactionReceipt) => {
           observer.next({ status: 'finalized', hash: transactionHash });
           observer.complete();
         })
@@ -157,6 +144,25 @@ export function getContractTxObs(
       console.warn('%c contract tx observable error', 'font-size:13px; background:pink; color:#bf2c9f;', error);
       observer.error({ status: 'error', error: 'Contract construction/call failed!' });
     }
+  });
+}
+
+export function genEthereumTransactionObs(params: TransactionConfig): Observable<Tx> {
+  const web3 = entrance.web3.getInstance(entrance.web3.defaultProvider);
+
+  return new Observable((observer) => {
+    const tx = web3.eth.sendTransaction(params);
+
+    tx.on('transactionHash', (hash) => {
+      observer.next({ status: 'queued', hash });
+    })
+      .on('receipt', ({ transactionHash }: TransactionReceipt) => {
+        observer.next({ status: 'finalized', hash: transactionHash });
+        observer.complete();
+      })
+      .on('error', (error) => {
+        observer.error({ status: 'error', error: error.message });
+      });
   });
 }
 
@@ -178,7 +184,7 @@ export const approveToken: TxFn<
   const hardCodeAmount = '100000000000000000000000000';
   const params = sendOptions ? { from: sender, ...sendOptions } : { from: sender };
 
-  return getContractTxObs(tokenAddress, (contract) =>
+  return genEthereumContractTxObs(tokenAddress, (contract) =>
     contract.methods.approve(spender, Web3.utils.toWei(hardCodeAmount)).send(params)
   );
 };

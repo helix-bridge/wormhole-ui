@@ -52,7 +52,7 @@ export function Register() {
   const [form] = useForm();
   const [net, setNet] = useState<EthereumChainConfig>(DEFAULT_REGISTER_NETWORK);
   const {
-    connection: { status },
+    mainConnection: { status },
     network,
   } = useApi();
   const [active, setActive] = useState(TabKeys.register);

@@ -130,18 +130,12 @@ module.exports = {
     'newline-per-chained-call': 'off',
     'no-bitwise': 'error',
     'no-caller': 'error',
-    'no-console': [
-      'error',
-      {
-        allow: ['warn', 'error', 'info'],
-      },
-    ],
     'no-eval': 'error',
     'no-invalid-this': 'error',
     'no-magic-numbers': [
       'error',
       {
-        ignore: [0, 1, -1, 10],
+        ignore: [0, 1, -1, 10, 100],
       },
     ],
     'no-new-wrappers': 'error',

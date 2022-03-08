@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import camelCaseKeys from 'camelcase-keys';
 import { getUnixTime } from 'date-fns';
 import { FetchData, GraphQLClient, useManualQuery } from 'graphql-hooks';
 import { isBoolean, isNull, omitBy } from 'lodash';
@@ -9,31 +10,40 @@ import Web3 from 'web3';
 import {
   BRIDGE_DISPATCH_EVENTS,
   S2S_ISSUING_RECORDS_QUERY,
+  S2S_ISSUING_RECORD_QUERY,
   S2S_REDEEM_RECORDS_QUERY,
   S2S_REDEEM_RECORD_QUERY,
-  S2S_UNLOCK_RECORD_QUERY,
   SHORT_DURATION,
+  TRANSFERS_QUERY,
 } from '../config';
 import {
   BridgeDispatchEventRecord,
   BridgeDispatchEventRes,
   ChainConfig,
   Departure,
+  DVM2SubstrateRecordsRes,
   HistoryReq,
-  S2SBurnRecord,
-  S2SBurnRecordRes,
-  S2SBurnRecordsRes,
-  S2SHistoryRecord,
-  S2SIssuingRecordRes,
-  S2SLockedRecordRes,
+  PolkadotChainConfig,
+  SubstrateDVM2SubstrateRecord,
+  SubstrateDVM2SubstrateRecordRes,
+  SubstrateDVM2SubstrateRecordsRes,
+  Substrate2SubstrateDVMRecord,
+  Substrate2SubstrateDVMRecordRes,
+  Substrate2SubstrateDVMRecordsRes,
+  Substrate2DVMRecord,
+  Substrate2DVMRecordsRes,
   SubstrateSubstrateDVMBridgeConfig,
 } from '../model';
 import {
+  convertToSS58,
+  dvmAddressToAccountId,
   getBridge,
   isDarwinia2Ethereum,
   isDVM2Ethereum,
+  isDVM2Substrate,
   isEthereum2Darwinia,
   isEthereum2DVM,
+  isSubstrate2DVM,
   isSubstrate2SubstrateDVM,
   isSubstrateDVM2Substrate,
   isTronNetwork,
@@ -100,6 +110,7 @@ export function useRecords(departure: Departure, arrival: Departure) {
     verticesToChainConfig(departure),
     verticesToChainConfig(arrival)
   );
+
   const genParams = useCallback((params: HistoryReq) => {
     const req = omitBy<HistoryReq>(params, isNull) as HistoryReq;
     const [dep] = params.direction;
@@ -110,6 +121,11 @@ export function useRecords(departure: Departure, arrival: Departure) {
 
     return req;
   }, []);
+
+  const { fetchDVM2SubstrateRecords, fetchSubstrate2DVMRecords } = useSubstrate2DVMRecords(
+    verticesToChainConfig(departure),
+    verticesToChainConfig(arrival)
+  );
 
   const genQueryFn = useCallback<(isGenesis: boolean) => (req: HistoryReq) => Observable<unknown>>(
     // eslint-disable-next-line complexity
@@ -142,9 +158,24 @@ export function useRecords(departure: Departure, arrival: Departure) {
         return queryDarwiniaDVM2EthereumIssuingRecords;
       }
 
+      if (isSubstrate2DVM(departure, arrival)) {
+        return fetchSubstrate2DVMRecords;
+      }
+
+      if (isDVM2Substrate(departure, arrival)) {
+        return fetchDVM2SubstrateRecords;
+      }
+
       return (_: HistoryReq) => EMPTY;
     },
-    [departure, arrival, fetchS2SIssuingRecords, fetchS2SRedeemRecords]
+    [
+      departure,
+      arrival,
+      fetchS2SIssuingRecords,
+      fetchS2SRedeemRecords,
+      fetchSubstrate2DVMRecords,
+      fetchDVM2SubstrateRecords,
+    ]
   );
 
   const queryRecords = useCallback(
@@ -175,48 +206,13 @@ enum S2SRecordResult {
 }
 
 const UNKNOWN_CLIENT = 'unknown';
-
-const lockedRecordMapper = ({
-  laneId,
-  nonce,
-  startTimestamp,
-  endTimestamp,
-  ...rest
-}: S2SLockedRecordRes['s2sEvents']['nodes'][number]) =>
-  ({
-    laneId,
-    nonce,
-    startTimestamp: startTimestamp && getUnixTime(new Date(startTimestamp)).toString(),
-    endTimestamp: endTimestamp && getUnixTime(new Date(endTimestamp)).toString(),
-    ...rest,
-  } as S2SHistoryRecord);
-
-const burnRecordMapper = ({
-  request_transaction,
-  response_transaction,
-  lane_id,
-  nonce,
-  start_timestamp,
-  end_timestamp,
-  ...rest
-}: S2SBurnRecord) =>
-  ({
-    laneId: lane_id,
-    nonce,
-    requestTxHash: request_transaction,
-    responseTxHash: response_transaction,
-    startTimestamp: start_timestamp,
-    endTimestamp: end_timestamp,
-    ...rest,
-  } as S2SHistoryRecord);
-
 interface FetchRecordOptions<T> {
   attemptsCount?: number;
   keepActive?: (res: T) => boolean;
   skipCache?: boolean;
 }
 
-type FetchS2SRecords = (req: HistoryReq) => Observable<{ count: number; list: S2SHistoryRecord[] }>;
+type FetchS2SRecords = (req: HistoryReq) => Observable<{ count: number; list: Substrate2SubstrateDVMRecord[] }>;
 type FetchS2SRecord<T, R> = (laneId: string, nonce: string, options: FetchRecordOptions<T>) => Observable<R>;
 
 export function useS2SRecords(
@@ -225,8 +221,8 @@ export function useS2SRecords(
 ): {
   fetchS2SIssuingRecords: FetchS2SRecords;
   fetchS2SRedeemRecords: FetchS2SRecords;
-  fetchS2SIssuingRecord: FetchS2SRecord<S2SIssuingRecordRes, S2SHistoryRecord>;
-  fetchS2SRedeemRecord: FetchS2SRecord<S2SBurnRecordRes, S2SHistoryRecord>;
+  fetchS2SIssuingRecord: FetchS2SRecord<Substrate2SubstrateDVMRecordRes, Substrate2SubstrateDVMRecord>;
+  fetchS2SRedeemRecord: FetchS2SRecord<SubstrateDVM2SubstrateRecordRes, Substrate2SubstrateDVMRecord>;
   fetchMessageEvent: FetchS2SRecord<BridgeDispatchEventRes, BridgeDispatchEventRecord>;
 } {
   const api = useMemo(
@@ -244,20 +240,20 @@ export function useS2SRecords(
   const redeemClient = useMemo(() => new GraphQLClient({ url: api.subGraph || UNKNOWN_CLIENT }), [api.subGraph]);
   const { t } = useTranslation();
   // s2s issuing
-  const [fetchLockedRecords] = useManualQuery<S2SLockedRecordRes>(S2S_ISSUING_RECORDS_QUERY, {
+  const [fetchIssuingRecords] = useManualQuery<Substrate2SubstrateDVMRecordsRes>(S2S_ISSUING_RECORDS_QUERY, {
     skipCache: true,
     client: issuingClient,
   });
-  const [fetchIssuingRecord] = useManualQuery<S2SIssuingRecordRes>(S2S_UNLOCK_RECORD_QUERY, {
+  const [fetchIssuingRecord] = useManualQuery<Substrate2SubstrateDVMRecordRes>(S2S_ISSUING_RECORD_QUERY, {
     skipCache: true,
     client: issuingClient,
   });
   // s2s redeem, departure pangolin-smart
-  const [fetchBurnRecords] = useManualQuery<S2SBurnRecordsRes>(S2S_REDEEM_RECORDS_QUERY, {
+  const [fetchBurnRecords] = useManualQuery<SubstrateDVM2SubstrateRecordsRes>(S2S_REDEEM_RECORDS_QUERY, {
     skipCache: true,
     client: redeemClient,
   });
-  const [fetchBurnRecord] = useManualQuery<S2SBurnRecordRes>(S2S_REDEEM_RECORD_QUERY, {
+  const [fetchBurnRecord] = useManualQuery<SubstrateDVM2SubstrateRecordRes>(S2S_REDEEM_RECORD_QUERY, {
     skipCache: true,
     client: redeemClient,
   });
@@ -265,8 +261,8 @@ export function useS2SRecords(
     skipCache: true,
     client: issuingTargetClient,
   });
-  const [issuingMemo, setIssuingMemo] = useState<Record<string, S2SHistoryRecord>>({});
-  const [burnMemo, setBurnMemo] = useState<Record<string, S2SHistoryRecord>>({});
+  const [issuingMemo, setIssuingMemo] = useState<Record<string, Substrate2SubstrateDVMRecord>>({});
+  const [burnMemo, setBurnMemo] = useState<Record<string, Substrate2SubstrateDVMRecord>>({});
 
   const toQueryVariables = useCallback((req: HistoryReq) => {
     const {
@@ -286,13 +282,17 @@ export function useS2SRecords(
   const fetchS2SIssuingRecords = useCallback(
     (req: HistoryReq) =>
       from(
-        fetchLockedRecords({
+        fetchIssuingRecords({
           variables: toQueryVariables(req),
         })
       ).pipe(
         map((res) => {
           const { totalCount = 0, nodes = [] } = res.data?.s2sEvents ?? {};
-          const list = nodes.map(lockedRecordMapper);
+          const list = nodes.map(({ startTimestamp, endTimestamp, ...rest }) => ({
+            ...rest,
+            startTimestamp: startTimestamp && getUnixTime(new Date(startTimestamp)).toString(),
+            endTimestamp: endTimestamp && getUnixTime(new Date(endTimestamp)).toString(),
+          }));
 
           return { count: totalCount, list };
         }),
@@ -301,7 +301,7 @@ export function useS2SRecords(
           return of({ count: 0, list: [] });
         })
       ),
-    [fetchLockedRecords, t, toQueryVariables]
+    [fetchIssuingRecords, t, toQueryVariables]
   );
 
   const fetchS2SRedeemRecords = useCallback(
@@ -325,7 +325,18 @@ export function useS2SRecords(
             count = (page + 1) * row + count;
           }
 
-          return { count, list: list.map(burnRecordMapper) };
+          return {
+            count,
+            list: list.map((item) => {
+              const {
+                requestTransaction: requestTxHash,
+                responseTransaction: responseTxHash,
+                ...rest
+              } = camelCaseKeys(item);
+
+              return { ...rest, requestTxHash, responseTxHash };
+            }),
+          };
         }),
         catchError(() => {
           message.error(t('Querying failed, please try it again later'));
@@ -342,10 +353,10 @@ export function useS2SRecords(
       fetch: FetchData<any>,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { skipCache, attemptsCount, keepActive }: Required<FetchRecordOptions<any>>,
-      memo: Record<string, S2SHistoryRecord>,
-      updateMemo: Dispatch<React.SetStateAction<Record<string, S2SHistoryRecord>>>,
+      memo: Record<string, Substrate2SubstrateDVMRecord>,
+      updateMemo: Dispatch<React.SetStateAction<Record<string, Substrate2SubstrateDVMRecord>>>,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recordMapper: (res: any) => S2SHistoryRecord
+      recordMapper: (res: any) => Substrate2SubstrateDVMRecord
     ) => {
       if (!skipCache && memo[id]) {
         return of(memo[id]);
@@ -371,7 +382,9 @@ export function useS2SRecords(
     []
   );
 
-  const fetchS2SIssuingRecord = useCallback<FetchS2SRecord<S2SIssuingRecordRes, S2SHistoryRecord>>(
+  const fetchS2SIssuingRecord = useCallback<
+    FetchS2SRecord<Substrate2SubstrateDVMRecordRes, Substrate2SubstrateDVMRecord>
+  >(
     (
       laneId: string,
       nonce: string,
@@ -389,7 +402,9 @@ export function useS2SRecords(
     [fetchIssuingRecord, fetchRecord, issuingMemo]
   );
 
-  const fetchS2SRedeemRecord = useCallback<FetchS2SRecord<S2SBurnRecordRes, S2SHistoryRecord>>(
+  const fetchS2SRedeemRecord = useCallback<
+    FetchS2SRecord<SubstrateDVM2SubstrateRecordRes, Substrate2SubstrateDVMRecord>
+  >(
     (
       laneId: string,
       nonce: string,
@@ -401,7 +416,15 @@ export function useS2SRecords(
         { skipCache, attemptsCount, keepActive: (res) => !res.data || keepActive(res.data) },
         burnMemo,
         setBurnMemo,
-        (res) => burnRecordMapper(res.data!.burnRecordEntity)
+        (res) => {
+          const {
+            responseTransaction: responseTxHash,
+            requestTransaction: requestTxHash,
+            ...rest
+          } = camelCaseKeys(res.data!.burnRecordEntity as unknown as SubstrateDVM2SubstrateRecord);
+
+          return { ...rest, responseTxHash, requestTxHash };
+        }
       );
     },
     [burnMemo, fetchBurnRecord, fetchRecord]
@@ -448,5 +471,100 @@ export function useS2SRecords(
     fetchS2SRedeemRecord,
     fetchS2SIssuingRecord,
     fetchMessageEvent,
+  };
+}
+
+/* ---------------------------------------------------Substrate 2 DVM(smart app) records--------------------------------------------- */
+
+type FetchSubstrate2DVMRecords = (
+  req: Omit<HistoryReq, 'confirmed'>
+) => Observable<{ count: number; list: Substrate2DVMRecord[] }>;
+
+export function useSubstrate2DVMRecords(
+  departure: ChainConfig,
+  arrival: ChainConfig
+): {
+  fetchDVM2SubstrateRecords: FetchSubstrate2DVMRecords;
+  fetchSubstrate2DVMRecords: FetchSubstrate2DVMRecords;
+} {
+  const api = useMemo(
+    () => getBridge<SubstrateSubstrateDVMBridgeConfig>([departure, arrival]).config.api,
+    [departure, arrival]
+  );
+
+  const issuingClient = useMemo(
+    () => new GraphQLClient({ url: `${api.subql}${departure.name}` || UNKNOWN_CLIENT }),
+    [api.subql, departure.name]
+  );
+
+  const redeemClient = useMemo(
+    () => new GraphQLClient({ url: `${api.subql}${arrival.name}` || UNKNOWN_CLIENT }),
+    [api.subql, arrival.name]
+  );
+
+  const [fetchIssuingRecords] = useManualQuery<Substrate2DVMRecordsRes>(TRANSFERS_QUERY, {
+    skipCache: true,
+    client: issuingClient,
+  });
+
+  const [fetchRedeemRecords] = useManualQuery<DVM2SubstrateRecordsRes>(TRANSFERS_QUERY, {
+    skipCache: true,
+    client: redeemClient,
+  });
+
+  const ss58Prefix = useMemo(() => (departure as PolkadotChainConfig).ss58Prefix, [departure]);
+
+  const fetchRecords = useCallback(
+    (
+      req: Omit<HistoryReq, 'confirmed'>,
+      fetch: FetchData<Substrate2DVMRecordsRes, Record<string, unknown>, unknown>
+    ) => {
+      const {
+        paginator: { row, page },
+        address,
+      } = req;
+
+      return from(
+        fetch({
+          variables: {
+            limit: row,
+            offset: page,
+            account: address,
+          },
+          skipCache: true,
+        })
+      ).pipe(
+        map((res) => {
+          const { totalCount = 0, nodes = [] } = res.data?.transfers ?? {};
+
+          return { count: totalCount, list: nodes };
+        }),
+        catchError(() => EMPTY)
+      );
+    },
+    []
+  );
+
+  const fetchSubstrate2DVMRecords = useCallback(
+    (req: Omit<HistoryReq, 'confirmed'>) =>
+      fetchRecords({ ...req, address: convertToSS58(req.address, ss58Prefix) }, fetchIssuingRecords),
+    [ss58Prefix, fetchIssuingRecords, fetchRecords]
+  );
+
+  const fetchDVM2SubstrateRecords = useCallback(
+    (req: Omit<HistoryReq, 'confirmed'>) =>
+      fetchRecords(
+        {
+          ...req,
+          address: convertToSS58(dvmAddressToAccountId(req.address).toHuman() as string, ss58Prefix),
+        },
+        fetchRedeemRecords
+      ),
+    [ss58Prefix, fetchRecords, fetchRedeemRecords]
+  );
+
+  return {
+    fetchDVM2SubstrateRecords,
+    fetchSubstrate2DVMRecords,
   };
 }

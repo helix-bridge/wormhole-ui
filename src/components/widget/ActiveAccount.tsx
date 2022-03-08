@@ -24,7 +24,7 @@ export function ActiveAccount({
 }: ActiveAccountProps) {
   const {
     network,
-    connection: { status, accounts },
+    mainConnection: { status, accounts },
   } = useApi();
   const containerCls = useMemo(
     () =>
@@ -66,9 +66,9 @@ export function ActiveAccount({
       />
       <span className="text-white mr-2 ml-1 hidden sm:inline leading-none">{getDisplayName(network)}</span>
       {isPolkadotNetwork(network.name) && getNetworkMode(network) === 'native' ? null : (
-        <div className="self-stretch flex items-center justify-between sm:px-1 bg-white dark:bg-gray-800 sm:my-px sm:mx-px rounded-lg sm:rounded-xl text-gray-800 dark:text-gray-200 w-36 sm:w-48 md:w-56 ">
+        <div className="self-stretch flex items-center sm:px-1 bg-white dark:bg-gray-800 sm:my-px sm:mx-px rounded-lg sm:rounded-xl text-gray-800 dark:text-gray-200 overflow-hidden">
           <img src={walletLogo} style={{ height: 18 }} className="mx-2" />
-          <EllipsisMiddle>{accounts[0].address}</EllipsisMiddle>
+          <EllipsisMiddle className="overflow-hidden mr-2 py-2 md:py-0">{accounts[0].address}</EllipsisMiddle>
         </div>
       )}
     </div>

@@ -6,9 +6,9 @@ import {
   BridgeDispatchEventRecord,
   PolkadotChainConfig,
   RecordComponentProps,
-  S2SBurnRecordRes,
-  S2SHistoryRecord,
-  S2SIssuingRecordRes,
+  SubstrateDVM2SubstrateRecordRes,
+  Substrate2SubstrateDVMRecord,
+  Substrate2SubstrateDVMRecordRes,
 } from '../../../model';
 import { chainConfigToVertices, convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM } from '../../../utils';
 import { IndexingState, Progresses, ProgressProps, State } from '../Progress';
@@ -18,12 +18,13 @@ export function SubstrateSubstrateDVMRecord({
   record: originRecord,
   departure,
   arrival,
-}: RecordComponentProps<S2SHistoryRecord, PolkadotChainConfig, PolkadotChainConfig>) {
+}: RecordComponentProps<Substrate2SubstrateDVMRecord, PolkadotChainConfig, PolkadotChainConfig>) {
   const { t } = useTranslation();
   const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchMessageEvent } = useS2SRecords(departure!, arrival!);
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
   const [record, setRecord] = useState(originRecord);
   const [messageEvent, setMessageEvent] = useState<BridgeDispatchEventRecord | null>(null);
+
   const transactionSend = useMemo(
     () => ({
       title: t('{{chain}} Sent', { chain: departure?.name }),
@@ -32,6 +33,7 @@ export function SubstrateSubstrateDVMRecord({
     }),
     [departure, t]
   );
+
   const originLocked = useMemo(
     () => ({
       title: t('{{chain}} Locked', { chain: departure?.name }),
@@ -51,7 +53,7 @@ export function SubstrateSubstrateDVMRecord({
 
     if (messageEvent) {
       state = messageEvent.isSuccess ? State.completed : State.error;
-      txHash = messageEvent.block.number + '-' + messageEvent.index;
+      txHash = messageEvent.block.extrinsicHash;
     }
 
     return {
@@ -86,6 +88,7 @@ export function SubstrateSubstrateDVMRecord({
     () => ({ count: record.amount, currency: `${isRedeem ? 'x' : ''}${departure?.isTest ? 'O' : ''}RING` }),
     [record.amount, isRedeem, departure]
   );
+
   const progresses = [transactionSend, originLocked, bridgeDelivered, originConfirmed];
 
   useEffect(() => {
@@ -107,7 +110,9 @@ export function SubstrateSubstrateDVMRecord({
             queryOriginRecord(laneId, nonce, {
               attemptsCount,
               keepActive: (res) => {
-                const event = (res as S2SBurnRecordRes).burnRecordEntity || (res as S2SIssuingRecordRes).s2sEvent;
+                const event =
+                  (res as SubstrateDVM2SubstrateRecordRes).burnRecordEntity ||
+                  (res as Substrate2SubstrateDVMRecordRes).s2sEvent;
 
                 return event.result === result;
               },

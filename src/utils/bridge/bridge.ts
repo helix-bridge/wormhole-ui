@@ -15,28 +15,39 @@ import { chainConfigToVertices, isDVM, isEthereumNetwork, isPolkadotNetwork } fr
 type BridgePredicateFn = (departure: Vertices, arrival: Vertices) => boolean;
 
 export const isSubstrate2SubstrateDVM: BridgePredicateFn = (departure, arrival) => {
-  return isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network) && arrival.mode === 'dvm';
+  return (
+    isPolkadotNetwork(departure.network) &&
+    isPolkadotNetwork(arrival.network) &&
+    arrival.mode === 'dvm' &&
+    arrival.network !== departure.network
+  );
 };
 
-export const isSubstrateDVM2Substrate: BridgePredicateFn = (departure, arrival) => {
-  return isPolkadotNetwork(departure.network) && isPolkadotNetwork(arrival.network) && departure.mode === 'dvm';
-};
+export const isSubstrateDVM2Substrate: BridgePredicateFn = (departure, arrival) =>
+  isSubstrate2SubstrateDVM(arrival, departure);
 
 export const isEthereum2Darwinia: BridgePredicateFn = (departure, arrival) => {
   return isEthereumNetwork(departure.network) && isPolkadotNetwork(arrival.network) && arrival.mode === 'native';
 };
 
-export const isDarwinia2Ethereum: BridgePredicateFn = (departure, arrival) => {
-  return isPolkadotNetwork(departure.network) && isEthereumNetwork(arrival.network) && departure.mode === 'native';
-};
+export const isDarwinia2Ethereum: BridgePredicateFn = (departure, arrival) => isEthereum2Darwinia(arrival, departure);
 
 export const isDVM2Ethereum: BridgePredicateFn = (departure, arrival) => {
   return isPolkadotNetwork(departure.network) && isEthereumNetwork(arrival.network) && departure.mode === 'dvm';
 };
 
-export const isEthereum2DVM: BridgePredicateFn = (departure, arrival) => {
-  return isEthereumNetwork(departure.network) && isPolkadotNetwork(arrival.network) && arrival.mode === 'dvm';
+export const isEthereum2DVM: BridgePredicateFn = (departure, arrival) => isDVM2Ethereum(arrival, departure);
+
+export const isSubstrate2DVM: BridgePredicateFn = (departure, arrival) => {
+  return (
+    isPolkadotNetwork(departure.network) &&
+    isPolkadotNetwork(arrival.network) &&
+    arrival.mode === 'dvm' &&
+    departure.network === arrival.network
+  );
 };
+
+export const isDVM2Substrate: BridgePredicateFn = (departure, arrival) => isSubstrate2DVM(arrival, departure);
 
 /**
  * Shorthand functions for predication without direction
@@ -104,7 +115,7 @@ export function getBridgeComponent(type: 'crossChain' | 'record') {
     const direction = [departure, arrival] as [Departure, Departure];
     const bridge = getBridge(direction);
 
-    if (!bridge) {
+    if (!bridge || bridge.status === 'pending') {
       return ComingSoon;
     }
 

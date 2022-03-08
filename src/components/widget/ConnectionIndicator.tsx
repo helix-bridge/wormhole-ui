@@ -23,7 +23,7 @@ interface LinkIndicatorProps {
 // eslint-disable-next-line complexity
 export function ConnectionIndicator({ config, showSwitch }: LinkIndicatorProps) {
   const { t } = useTranslation();
-  const { connection, network, connectNetwork } = useApi();
+  const { mainConnection: connection, network, connectNetwork } = useApi();
   const [isConsistent, setIsConsistent] = useState(false);
   const [connectionConfig, setConnectionConfig] = useState<ChainConfig | null>(null);
 

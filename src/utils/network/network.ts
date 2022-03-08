@@ -1,7 +1,7 @@
 import { ApiPromise } from '@polkadot/api';
 import { chain as lodashChain, curry, curryRight, has, isEqual, isNull, omit, once, pick, upperFirst } from 'lodash';
 import Web3 from 'web3';
-import { getCustomNetworkConfig } from '../helper';
+import { getCustomNetworkConfig, getUnit } from '../helper';
 import { SYSTEM_NETWORK_CONFIGURATIONS, NETWORK_SIMPLE, tronConfig } from '../../config';
 import {
   Arrival,
@@ -17,6 +17,7 @@ import {
   NetworkCategory,
   NetworkMode,
   NoNullFields,
+  PolkadotChain,
   PolkadotConnection,
   Vertices,
 } from '../../model';
@@ -82,6 +83,7 @@ function isSpecifyNetworkType(type: NetworkCategory) {
 
 function byNetworkAlias(network: string): Network | null {
   const minLength = 3;
+
   const allowAlias: (full: string, at?: number) => string[] = (name, startAt = minLength) => {
     const len = name.length;
     const shortestName = name.slice(0, startAt);
@@ -89,7 +91,11 @@ function byNetworkAlias(network: string): Network | null {
     return new Array(len - startAt).fill('').map((_, index) => shortestName + name.substr(startAt, index));
   };
 
-  const alias = new Map([['ethereum', [...allowAlias('ethereum')]]]);
+  const alias = new Map([
+    ['ethereum', [...allowAlias('ethereum')]],
+    ['crab', ['darwinia crab']],
+  ]);
+
   let res = null;
 
   for (const [name, value] of alias) {
@@ -110,13 +116,7 @@ export function getLegalName(network: string): Network | string {
   return byNetworkAlias(network) || network;
 }
 
-const isSameNetwork = (net1: ChainConfig | null, net2: ChainConfig | null) => {
-  if ([net1, net2].some(isNull)) {
-    return false;
-  }
-
-  return typeof net1 === typeof net2 && net1?.name === net2?.name;
-};
+const isChainConfigEqual = (net1: ChainConfig | null, net2: ChainConfig | null) => isEqual(net1, net2);
 
 const getArrivals = (source: Map<Departure, Arrival[]>, departure: ChainConfig) => {
   const mode: NetworkMode = getNetworkMode(departure);
@@ -142,7 +142,7 @@ export const isReachable = (net: ChainConfig | null, type: CrossType = 'cross-ch
   type === 'cross-chain' ? curry(isInCrossList)(net) : curry(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net1
 export const isTraceable = (net: ChainConfig | null, type: CrossType = 'cross-chain') =>
   type === 'cross-chain' ? curryRight(isInCrossList)(net) : curryRight(isInAirportList)(net); // relation: net1 -> net2 ---- Find the relation by net2
-export const isSameNetworkCurry = curry(isSameNetwork);
+export const isChainConfigEqualTo = curry(isChainConfigEqual);
 export const isPolkadotNetwork = isSpecifyNetworkType('polkadot');
 export const isEthereumNetwork = isSpecifyNetworkType('ethereum');
 export const isTronNetwork = isSpecifyNetworkType('tron');
@@ -333,7 +333,7 @@ export async function getConfigByConnection(connection: Connection): Promise<Cha
     await waitUntilConnected(api);
 
     const chain = await api?.rpc.system.chain();
-    const network = chain.toHuman()?.toLowerCase() as Network;
+    const network = chain.toHuman()?.toLowerCase();
     const target = findNetworkConfig(network);
 
     return chain ? omit(target, 'dvm') : null;
@@ -374,12 +374,28 @@ export function getCrossChainArrivals(dep: ChainConfig | Vertices): Arrival[] {
   return getArrivals(NETWORK_GRAPH, departure);
 }
 
-export function findNetworkConfig(network: Network): ChainConfig {
-  const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network);
+export function findNetworkConfig(network: Network | string): ChainConfig {
+  const target = NETWORK_CONFIGURATIONS.find((item) => item.name === network || item.name === byNetworkAlias(network));
 
   if (!target) {
     throw new Error(`Can not find chain configuration by ${network}`);
   }
 
   return target;
+}
+
+export async function getPolkadotChainProperties(api: ApiPromise): Promise<PolkadotChain> {
+  const chainState = await api?.rpc.system.properties();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { tokenDecimals, tokenSymbol, ss58Format } = chainState?.toHuman() as any;
+
+  return tokenDecimals.reduce(
+    (acc: PolkadotChain, decimal: string, index: number) => {
+      const unit = getUnit(+decimal);
+      const token = { decimal: unit, symbol: tokenSymbol[index] };
+
+      return { ...acc, tokens: [...acc.tokens, token] };
+    },
+    { ss58Format, tokens: [] } as PolkadotChain
+  );
 }

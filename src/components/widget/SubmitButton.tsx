@@ -40,7 +40,7 @@ export function SubmitButton({
 }: PropsWithChildren<SubmitButtonProps>) {
   const { t } = useTranslation();
   const {
-    connection: { status },
+    mainConnection: { status },
     network,
     setNetwork,
     connectNetwork,

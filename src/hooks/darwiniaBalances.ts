@@ -1,24 +1,21 @@
 import { useCallback } from 'react';
-import { AvailableBalance, DarwiniaAsset, TokenChainInfo } from '../model';
+import { AvailableBalance, DarwiniaAsset, Token } from '../model';
 import { getDarwiniaBalances } from '../utils';
 import { useApi } from './api';
 
-export const getChainInfo: (tokens: TokenChainInfo[], target: DarwiniaAsset) => TokenChainInfo | undefined = (
-  tokens: TokenChainInfo[],
-  target: DarwiniaAsset
-) => {
-  if (target) {
-    return tokens.find((token) => token.symbol.toLowerCase().includes(target.toLowerCase()));
-  }
+export const getToken: (tokens: Token[], target: DarwiniaAsset) => Token = (tokens, target) => {
+  const result = tokens.find((token) => token.symbol.toLowerCase().includes(target.toLowerCase()));
+  const unknown: Token = { symbol: 'unknown', decimal: 'gwei' };
 
-  return;
+  return result || unknown;
 };
 
 export function useDarwiniaAvailableBalances() {
-  const { api, chain } = useApi();
+  const { api, chain, network } = useApi();
+
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
-    async (account: string) => {
-      if (!api) {
+    async (account: string | undefined | null) => {
+      if (!api || !account) {
         return [];
       }
 
@@ -28,17 +25,17 @@ export function useDarwiniaAvailableBalances() {
         {
           max: ring,
           asset: DarwiniaAsset.ring,
-          chainInfo: getChainInfo(chain.tokens, DarwiniaAsset.ring),
           checked: true,
+          token: getToken(chain.tokens, network?.name === 'crab' ? DarwiniaAsset.crab : DarwiniaAsset.ring),
         },
         {
           max: kton,
           asset: DarwiniaAsset.kton,
-          chainInfo: getChainInfo(chain.tokens, DarwiniaAsset.kton),
+          token: getToken(chain.tokens, DarwiniaAsset.kton),
         },
       ];
     },
-    [api, chain.tokens]
+    [api, chain.tokens, network?.name]
   );
 
   return getBalances;

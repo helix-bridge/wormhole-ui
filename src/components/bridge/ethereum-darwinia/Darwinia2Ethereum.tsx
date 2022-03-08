@@ -1,5 +1,6 @@
 import { QuestionCircleFilled, ReloadOutlined } from '@ant-design/icons';
 import { ApiPromise } from '@polkadot/api';
+import { BN_ZERO } from '@polkadot/util';
 import { Button, Descriptions, Form, Spin, Tooltip } from 'antd';
 import BN from 'bn.js';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -7,22 +8,15 @@ import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, map, Observable } from 'rxjs';
 import Web3 from 'web3';
 import { FORM_CONTROL } from '../../../config';
-import {
-  getChainInfo,
-  useAfterSuccess,
-  useApi,
-  useDarwiniaAvailableBalances,
-  useDeparture,
-  useTx,
-} from '../../../hooks';
+import { getToken, useAfterSuccess, useApi, useDarwiniaAvailableBalances, useDeparture, useTx } from '../../../hooks';
 import {
   AvailableBalance,
   CrossChainComponentProps,
-  Darwinia2EthereumPayload,
-  IssuingDarwiniaToken,
-  TokenChainInfo,
   CrossChainPayload,
+  Darwinia2EthereumPayload,
   DarwiniaAsset,
+  IssuingDarwiniaToken,
+  Token,
 } from '../../../model';
 import {
   applyModalObs,
@@ -45,8 +39,6 @@ interface AmountCheckInfo {
   availableBalance: AvailableBalance[];
 }
 
-const BN_ZERO = new BN(0);
-
 const INITIAL_ASSETS: AssetGroupValue = [
   { asset: DarwiniaAsset.ring, amount: '', checked: true },
   { asset: DarwiniaAsset.kton, amount: '' },
@@ -68,14 +60,14 @@ async function getFee(api: ApiPromise | null): Promise<BN | null> {
   }
 }
 
-// eslint-disable-next-line complexity
 function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
   const { chain } = useApi();
-  const ringBalance = useMemo(() => {
-    const ring = availableBalance.find((item) => isRing(item.asset));
 
-    return new BN(ring?.max ?? 0);
-  }, [availableBalance]);
+  const ringBalance = useMemo(
+    () => new BN(availableBalance.find((item) => isRing(item.asset))?.max ?? 0),
+    [availableBalance]
+  );
+
   // eslint-disable-next-line complexity
   const isRingBalanceEnough = useMemo(() => {
     if (!fee || ringBalance.eq(BN_ZERO)) {
@@ -89,14 +81,12 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
   }, [assets, fee, ringBalance]);
 
   const hasAssetSet = useMemo(() => !!assets.filter((item) => item.checked && item?.amount).length, [assets]);
-  const chainSymbol = useCallback(
-    (token: DarwiniaAsset) => {
-      const info = getChainInfo(chain.tokens, token);
 
-      return info?.symbol || token.toUpperCase();
-    },
+  const chainSymbol = useCallback(
+    (token: DarwiniaAsset) => getToken(chain.tokens, token)?.symbol || token.toUpperCase(),
     [chain.tokens]
   );
+
   const animationCount = 5;
 
   if (!fee || ringBalance.eq(BN_ZERO)) {
@@ -180,14 +170,15 @@ function TransferInfo({ fee, availableBalance, assets }: AmountCheckInfo) {
 /**
  * @description test chain: pangolin -> ropsten
  */
-// eslint-disable-next-line complexity
 export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComponentProps<Darwinia2EthereumPayload>) {
   const { t } = useTranslation();
+
   const {
-    connection: { accounts },
+    mainConnection: { accounts },
     api,
     chain,
   } = useApi();
+
   const [availableBalances, setAvailableBalances] = useState<AvailableBalance[]>([]);
   const [crossChainFee, setCrossChainFee] = useState<BN | null>(null);
   const [txFee, setTxFee] = useState<BN | null>(null);
@@ -198,6 +189,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
   const { observer } = useTx();
   const { afterTx } = useAfterSuccess<CrossChainPayload<Darwinia2EthereumPayload>>();
   const getBalances = useDarwiniaAvailableBalances();
+
   const observe = useCallback(
     (updateFee: React.Dispatch<React.SetStateAction<BN | null>>, source: Observable<BN | null>) => {
       setIsFeeCalculating(true);
@@ -221,12 +213,13 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
       }
 
       const { assets, sender } = data;
+
       const assetsToSend = assets?.map((item) => {
         const { asset, amount, checked } = item as Required<Darwinia2EthereumPayload['assets'][number]>;
-        const { decimal = 'gwei', symbol = asset } = getChainInfo(
+        const { decimal = 'gwei', symbol = asset } = getToken(
           chain.tokens,
           asset as DarwiniaAsset
-        ) as TokenChainInfo<DarwiniaAsset>;
+        ) as Token<DarwiniaAsset>;
         const amountWei = checked ? toWei({ value: amount, unit: decimal }) : '0';
 
         return {
@@ -235,11 +228,11 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
           amount: isRing(symbol) && new BN(amountWei).gte(fee) ? new BN(amountWei).sub(fee).toString() : amountWei,
         };
       });
+
       const value = { ...data, assets: assetsToSend };
-      const beforeTransfer = applyModalObs({
-        content: <TransferConfirm value={value} />,
-      });
+      const beforeTransfer = applyModalObs({ content: <TransferConfirm value={value} /> });
       const obs = issuingDarwiniaTokens(value, api);
+
       const afterTransfer = afterTx(TransferSuccess, {
         hashType: 'block',
         onDisappear: () => {
@@ -295,6 +288,7 @@ export function Darwinia2Ethereum({ form, setSubmit, direction }: CrossChainComp
     }
 
     const extrinsic = api!.tx.balances.transfer(recipient, checked ? new BN(amount ?? 0) : new BN(0));
+
     const sub$$ = observe(
       setTxFee,
       from(extrinsic.paymentInfo(sender)).pipe(map((info) => new BN(info.partialFee ?? 0)))
