@@ -31,8 +31,8 @@ import {
 import { Balance } from '../../components/form-control/Balance';
 import { EthereumAccountItem } from '../../components/form-control/EthereumAccountItem';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
-import { TransferConfirm } from '../../components/modal/TransferConfirm';
-import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { TransferConfirm } from '../../components/tx/TransferConfirm';
+import { TransferSuccess } from '../../components/tx/TransferSuccess';
 import { FormItemExtra } from '../../components/widget/facade';
 import { KtonDraw } from './KtonDraw';
 import { SmartTxPayload, Substrate2DVMPayload } from './model/cross-chain';

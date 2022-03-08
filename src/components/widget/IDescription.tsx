@@ -1,13 +1,13 @@
 import { Typography } from 'antd';
 import { ReactNode } from 'react';
 
-interface DesProps {
+interface IDescriptionProps {
   title: string | ReactNode;
   content: string | ReactNode;
   icon?: ReactNode;
 }
 
-export function Des({ title, content, icon }: DesProps) {
+export function IDescription({ title, content, icon }: IDescriptionProps) {
   return (
     <div className="my-4 flex items-center gap-2">
       {icon}

@@ -12,7 +12,7 @@ import {
   isPolkadotNetwork,
 } from '../../utils';
 import { SubscanLink } from '../widget/SubscanLink';
-import { Des } from './Des';
+import { IDescription } from '../widget/IDescription';
 
 function Detail({ amount, asset }: CrossChainAsset<string | MappingToken>) {
   return (
@@ -43,7 +43,7 @@ export function TransferSuccess({
 
   return (
     <>
-      <Des
+      <IDescription
         title={
           <span className="capitalize">
             {t('{{network}} Network Address', { network: getDisplayName(value.direction.from) })}
@@ -51,9 +51,9 @@ export function TransferSuccess({
         }
         content={sender}
         icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}
-      ></Des>
+      ></IDescription>
 
-      <Des
+      <IDescription
         title={
           <span className="capitalize">
             {t('{{network}} Network Address', { network: getDisplayName(value.direction.to) })}
@@ -61,9 +61,9 @@ export function TransferSuccess({
         }
         content={value.recipient}
         icon={<CheckCircleFilled style={{ color }} className="text-2xl" />}
-      ></Des>
+      ></IDescription>
 
-      <Des
+      <IDescription
         title={t('Details')}
         content={
           (value.asset && value.amount && <Detail {...value} amount={fromWei({ value: value.amount, unit })} />) ||
@@ -77,7 +77,7 @@ export function TransferSuccess({
             )))
         }
         icon={<CheckCircleFilled className="text-2xl" style={{ color }} />}
-      ></Des>
+      ></IDescription>
 
       <p className="my-6">
         {t('The transaction has been sent, please check the transfer progress in the cross-chain history.')}

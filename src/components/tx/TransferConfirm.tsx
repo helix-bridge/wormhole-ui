@@ -4,7 +4,7 @@ import { PropsWithChildren, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CrossChainAsset, CrossChainPayload, PolkadotChainConfig, TxConfirmComponentProps } from '../../model';
 import { convertToSS58, fromWei, getDisplayName, getNetworkMode, isPolkadotNetwork } from '../../utils';
-import { Des } from './Des';
+import { IDescription } from '../widget/IDescription';
 
 export function TransferConfirm({
   value,
@@ -18,7 +18,7 @@ export function TransferConfirm({
       return children;
     } else if (value.assets) {
       return (
-        <Des
+        <IDescription
           title={t('Amount')}
           content={value.assets.map((bill: CrossChainAsset<string> & { unit?: Unit }) => (
             <span key={bill.asset} className="mr-6">
@@ -26,11 +26,11 @@ export function TransferConfirm({
               <span className="ml-2">{bill.asset}</span>
             </span>
           ))}
-        ></Des>
+        ></IDescription>
       );
     } else {
       return (
-        <Des
+        <IDescription
           title={t('Amount')}
           content={
             <span>
@@ -53,7 +53,7 @@ export function TransferConfirm({
 
   return (
     <>
-      <Des
+      <IDescription
         title={t('Cross-chain direction')}
         content={
           <>
@@ -64,9 +64,9 @@ export function TransferConfirm({
         }
       />
 
-      <Des title={t('Sender Account')} content={sender} />
+      <IDescription title={t('Sender Account')} content={sender} />
 
-      <Des title={t('Recipient')} content={value.recipient}></Des>
+      <IDescription title={t('Recipient')} content={value.recipient}></IDescription>
 
       {amountDes}
     </>

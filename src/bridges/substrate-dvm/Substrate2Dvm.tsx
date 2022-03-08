@@ -16,8 +16,8 @@ import { applyModalObs, createTxWorkflow, fromWei, prettyNumber, toWei } from '.
 import { Balance } from '../../components/form-control/Balance';
 import { PolkadotAccountsItem } from '../../components/form-control/PolkadotAccountsItem';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
-import { TransferConfirm } from '../../components/modal/TransferConfirm';
-import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { TransferConfirm } from '../../components/tx/TransferConfirm';
+import { TransferSuccess } from '../../components/tx/TransferSuccess';
 import { Substrate2DVMPayload, SmartTxPayload } from './model/cross-chain';
 import { issuing } from './utils';
 

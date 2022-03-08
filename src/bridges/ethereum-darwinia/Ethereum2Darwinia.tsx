@@ -12,11 +12,11 @@ import Web3 from 'web3';
 import { Balance } from '../../components/form-control/Balance';
 import { MaxBalance } from '../../components/form-control/MaxBalance';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
-import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
-import { ApproveSuccess } from '../../components/modal/ApproveSuccess';
-import { Des } from '../../components/modal/Des';
-import { TransferConfirm } from '../../components/modal/TransferConfirm';
-import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { ApproveConfirm } from '../../components/tx/ApproveConfirm';
+import { ApproveSuccess } from '../../components/tx/ApproveSuccess';
+import { IDescription } from '../../components/widget/IDescription';
+import { TransferConfirm } from '../../components/tx/TransferConfirm';
+import { TransferSuccess } from '../../components/tx/TransferSuccess';
 import { abi, FORM_CONTROL } from '../../config';
 import { useAfterTx, useApi, useDeparture, useTx } from '../../hooks';
 import { CrossChainComponentProps, CrossChainPayload, Erc20Token, Network, Tx } from '../../model';
@@ -220,7 +220,7 @@ function createCrossDepositTx(value: RedeemDepositTxPayload, after: AfterTxCreat
   const beforeTx = applyModalObs({
     content: (
       <TransferConfirm value={value}>
-        <Des
+        <IDescription
           title={<Trans>Deposit</Trans>}
           content={
             <span>
@@ -231,7 +231,7 @@ function createCrossDepositTx(value: RedeemDepositTxPayload, after: AfterTxCreat
               </span>
             </span>
           }
-        ></Des>
+        ></IDescription>
       </TransferConfirm>
     ),
   });

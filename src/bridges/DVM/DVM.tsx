@@ -10,11 +10,11 @@ import { EthereumAccountItem } from '../../components/form-control/EthereumAccou
 import { MappingTokenControl } from '../../components/form-control/MappingTokenControl';
 import { MaxBalance } from '../../components/form-control/MaxBalance';
 import { RecipientItem } from '../../components/form-control/RecipientItem';
-import { ApproveConfirm } from '../../components/modal/ApproveConfirm';
-import { ApproveSuccess } from '../../components/modal/ApproveSuccess';
-import { Des } from '../../components/modal/Des';
-import { TransferConfirm } from '../../components/modal/TransferConfirm';
-import { TransferSuccess } from '../../components/modal/TransferSuccess';
+import { ApproveConfirm } from '../../components/tx/ApproveConfirm';
+import { ApproveSuccess } from '../../components/tx/ApproveSuccess';
+import { IDescription } from '../../components/widget/IDescription';
+import { TransferConfirm } from '../../components/tx/TransferConfirm';
+import { TransferSuccess } from '../../components/tx/TransferSuccess';
 import { FormItemExtra } from '../../components/widget/facade';
 import { FORM_CONTROL, LONG_DURATION, Path, RegisterStatus } from '../../config';
 import {
@@ -247,14 +247,14 @@ export function DVM({
       const beforeTx = applyModalObs({
         content: (
           <TransferConfirm value={value}>
-            <Des
+            <IDescription
               title={<Trans>Amount</Trans>}
               content={
                 <span>
                   {amount} {value.asset.symbol}
                 </span>
               }
-            ></Des>
+            ></IDescription>
           </TransferConfirm>
         ),
       });
