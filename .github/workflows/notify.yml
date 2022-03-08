@@ -17,21 +17,16 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     steps:
-#      - name: Wait for tests to succeed
-#        uses: lewagon/wait-on-check-action@v1.0.0
-#        with:
-#          ref: ${{ github.ref }}
-#          check-name: 'Completed test'
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-#          wait-interval: 10
-#
-#      - name: Wait for deploy to succeed
-#        uses: lewagon/wait-on-check-action@v1.0.0
-#        with:
-#          ref: ${{ github.ref }}
-#          check-name: 'Completed deploy'
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-#          wait-interval: 10
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: deploy
+          path: deploy
+
+      - uses: pCYSl5EDgo/cat@master
+        id: vercel
+        with:
+          path: deploy/vercel.log
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
@@ -39,7 +34,7 @@ jobs:
           SLACK_CHANNEL: wormhole-ui
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/14985020?s=48&v=4
-          SLACK_MESSAGE: 'Notify message'
+          SLACK_MESSAGE: '${{ steps.vercel.outputs.text }}'
           SLACK_TITLE: Preview
           SLACK_USERNAME: Vercel
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
