@@ -46,7 +46,7 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
   completed-test:
-    name: Uint
+    name: Completed test
     runs-on: ubuntu-latest
     needs: [test-e2e, test-unit]
     steps:
