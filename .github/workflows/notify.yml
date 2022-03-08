@@ -6,6 +6,9 @@ name: Notify dev
 on:
   workflow_run:
     workflows: ["Node Test", "Deploy develop"]
+    types:
+      - completed
+
 
 jobs:
   deploy:
