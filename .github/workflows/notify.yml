@@ -7,8 +7,8 @@ on:
   workflow_run:
     workflows: ["Node Test", "Deploy develop"]
     pull_request:
-    types:
-      - completed
+#    types:
+#      - completed
 
 
 jobs:
