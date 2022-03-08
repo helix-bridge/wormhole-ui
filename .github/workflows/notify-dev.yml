@@ -1,16 +1,10 @@
 name: Notify dev
 
-#on:
-#  pull_request:
-
 on:
   workflow_run:
-    workflows: [Test]
+    workflows: ["Test", "Deploy develop"]
     types:
       - completed
-#    types:
-#      - completed
-
 
 jobs:
   deploy:
@@ -24,9 +18,19 @@ jobs:
           path: deploy
 
       - uses: pCYSl5EDgo/cat@master
-        id: vercel
+        id: vercel-output
         with:
-          path: deploy/vercel.log
+          path: deploy/vercel-output.log
+
+      - uses: pCYSl5EDgo/cat@master
+        id: vercel-preview
+        with:
+          path: deploy/vercel-preview.log
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          append: true
+          message: ${{ steps.vercel-output.outputs.text }}
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
@@ -34,7 +38,7 @@ jobs:
           SLACK_CHANNEL: wormhole-ui
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/14985020?s=48&v=4
-          SLACK_MESSAGE: '${{ steps.vercel.outputs.text }}'
+          SLACK_MESSAGE: '${{ steps.vercel-preview.outputs.text }}'
           SLACK_TITLE: Preview
           SLACK_USERNAME: Vercel
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
