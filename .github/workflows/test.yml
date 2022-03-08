@@ -9,8 +9,8 @@ jobs:
     name: E2E
     runs-on: ubuntu-latest
     outputs:
-      check-ok: ${{ steps.output-ok.outputs.test }}
-      check-err: ${{ steps.output-err.outputs.test }}
+      check-ok: ${{ steps.output-ok.outputs.STATUS }}
+      check-err: ${{ steps.output-err.outputs.STATUS }}
     container:
       image: cypress/browsers:node14.17.0-chrome88-ff89
       options: --privileged
@@ -53,8 +53,8 @@ jobs:
     name: Uint
     runs-on: ubuntu-latest
     outputs:
-      check-ok: ${{ steps.output-ok.outputs.test }}
-      check-err: ${{ steps.output-err.outputs.test }}
+      check-ok: ${{ steps.output-ok.outputs.STATUS }}
+      check-err: ${{ steps.output-err.outputs.STATUS }}
     container:
       image: cypress/browsers:node14.17.0-chrome88-ff89
       options: --privileged
