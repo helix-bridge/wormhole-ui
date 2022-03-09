@@ -102,10 +102,10 @@ jobs:
       - name: Test status
         id: test-status
         run: |
-          E2E_OK='&#x1F499; ${{ needs.test-e2e.outputs.check-ok }}' # 💙
-          E2E_ERR='&#x1F534; ${{ needs.test-e2e.outputs.check-err }}'
-          UNIT_OK='&#x1F499; ${{ needs.test-unit.outputs.check-ok }}'
-          UNIT_ERR='&#x1F534; ${{ needs.test-unit.outputs.check-err }}' # 🔴
+          E2E_OK='💙 ${{ needs.test-e2e.outputs.check-ok }}'
+          E2E_ERR='🔴 ${{ needs.test-e2e.outputs.check-err }}'
+          UNIT_OK='💙 ${{ needs.test-unit.outputs.check-ok }}'
+          UNIT_ERR='🔴 ${{ needs.test-unit.outputs.check-err }}'
           E2E_STATUS=${E2E_OK:-$E2E_ERR}
           UNIT_STATUS=${UNIT_OK:-$UNIT_ERR}
 
