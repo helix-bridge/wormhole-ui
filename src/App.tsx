@@ -4,13 +4,12 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useHistory, useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import { ActiveAccount } from './components/widget/ActiveAccount';
 import { BridgeState } from './components/bridge/BridgeState';
-import { Footer } from './components/widget/Footer';
 import { DownIcon } from './components/icons';
+import { ActiveAccount } from './components/widget/ActiveAccount';
+import { Footer } from './components/widget/Footer';
 import { ThemeSwitch } from './components/widget/ThemeSwitch';
-import { THEME } from './config';
-import { Path, routes } from './config/routes';
+import { Path, routes, THEME } from './config';
 import { useApi } from './hooks';
 import { readStorage } from './utils/helper/storage';
 

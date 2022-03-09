@@ -10,15 +10,15 @@ import {
   ChainConfig,
   CrossType,
   CustomFormControlProps,
+  HashInfo,
   NullableCrossChainDirection,
 } from '../../model';
 import {
   getArrival,
   getBridge,
   getNetworkMode,
-  HashInfo,
-  isReachable,
   isChainConfigEqualTo,
+  isReachable,
   isTraceable,
   patchUrl,
   truth,
@@ -32,7 +32,6 @@ type DirectionProps = CustomFormControlProps<NullableCrossChainDirection> & {
   mode?: DestinationMode;
 };
 
-// eslint-disable-next-line complexity
 export function Direction({ value, onChange, type = 'cross-chain', mode = 'default' }: DirectionProps) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(type);

@@ -1,8 +1,7 @@
 import { ApiPromise } from '@polkadot/api';
 import { chain as lodashChain, curry, curryRight, has, isEqual, isNull, omit, once, pick, upperFirst } from 'lodash';
 import Web3 from 'web3';
-import { getCustomNetworkConfig, getUnit } from '../helper';
-import { SYSTEM_NETWORK_CONFIGURATIONS, NETWORK_SIMPLE, tronConfig } from '../../config';
+import { NETWORK_SIMPLE, SYSTEM_NETWORK_CONFIGURATIONS, tronConfig } from '../../config/network';
 import {
   Arrival,
   ChainConfig,
@@ -21,7 +20,9 @@ import {
   PolkadotConnection,
   Vertices,
 } from '../../model';
-import { entrance } from './entrance';
+import { getUnit } from '../helper/balance';
+import { getCustomNetworkConfig } from '../helper/storage';
+import { entrance } from '../connection/entrance';
 import { AIRDROP_GRAPH, NETWORK_GRAPH } from './graph';
 
 export const NETWORK_CONFIGURATIONS = SYSTEM_NETWORK_CONFIGURATIONS.map((item) => {
@@ -161,11 +162,12 @@ export async function isTronLinkReady(): Promise<boolean> {
     return true;
   }
 
+  const timeout = 2000;
+
   return await new Promise((resolve) => {
     setTimeout(() => {
       resolve(window.tronWeb && window.tronWeb.defaultAddress.base58);
-      // eslint-disable-next-line no-magic-numbers
-    }, 2000);
+    }, timeout);
   });
 }
 

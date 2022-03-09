@@ -5,11 +5,14 @@ const CracoAntDesignPlugin = require('craco-antd');
 const { getLessVars } = require('./plugins/ant-theme-generator');
 const themeVariables = getLessVars(path.join(__dirname, antdVarsPath));
 const defaultVars = getLessVars(path.join(__dirname, './node_modules/antd/lib/style/themes/default.less'));
+const CircularDependencyPlugin = require('circular-dependency-plugin');
+
 const darkVars = {
   ...getLessVars(path.join(__dirname, './node_modules/antd/lib/style/themes/dark.less')),
   '@primary-color': defaultVars['@primary-color'],
   '@picker-basic-cell-active-with-range-color': 'darken(@primary-color, 20%)',
 };
+
 const lightVars = {
   ...getLessVars(path.join(__dirname, './node_modules/antd/lib/style/themes/compact.less')),
   '@primary-color': defaultVars['@primary-color'],
@@ -33,6 +36,12 @@ const options = {
   customColorRegexArray: [],
 };
 const themePlugin = new AntDesignThemePlugin(options);
+const circularDependencyPlugin = new CircularDependencyPlugin({
+  exclude: /\*.js|node_modules/,
+  failOnError: true,
+  allowAsyncCycles: false,
+  cwd: process.cwd(),
+});
 
 module.exports = {
   style: {
@@ -53,7 +62,7 @@ module.exports = {
   },
   webpack: {
     plugins: {
-      add: [themePlugin],
+      add: [themePlugin, circularDependencyPlugin],
     },
     // add mjs compatibility configuration
     configure: (config) => {

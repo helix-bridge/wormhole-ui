@@ -1,10 +1,12 @@
+import { BN_ZERO } from '@polkadot/util';
 import { Checkbox, Form, FormInstance } from 'antd';
 import FormList from 'antd/lib/form/FormList';
 import BN from 'bn.js';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Unit } from 'web3-utils';
 import { FORM_CONTROL } from '../../config';
-import { AvailableBalance, CustomFormControlProps, Darwinia2EthereumPayload, Network } from '../../model';
+import { AvailableBalance, CrossChainAsset, CustomFormControlProps, DarwiniaAsset, Network } from '../../model';
 import {
   amountLessThanFeeRule,
   fromWei,
@@ -12,13 +14,13 @@ import {
   insufficientBalanceRule,
   invalidFeeRule,
   isRing,
+  toWei,
 } from '../../utils';
 import { Balance } from './Balance';
 import { MaxBalance } from './MaxBalance';
 
-export type AssetGroupValue = Darwinia2EthereumPayload['assets'];
+type AssetGroupValue = (CrossChainAsset<DarwiniaAsset> & { checked?: boolean; unit?: Unit })[];
 
-// eslint-disable-next-line complexity
 export function AssetGroup({
   value,
   onChange,
@@ -146,11 +148,12 @@ export function AssetGroup({
                       network={network}
                       size="large"
                       onClick={() => {
-                        const max = balance?.max
-                          ? new BN(balance.max).sub(
-                              new BN(Math.pow(10, getPrecisionByUnit(balance.token?.decimal || 'gwei')))
-                            )
-                          : new BN(0);
+                        const keep = isRing(balance?.asset)
+                          ? new BN(toWei({ value: 1, unit: balance?.token?.decimal ?? 'gwei' }))
+                          : BN_ZERO;
+
+                        const max = balance?.max ? new BN(balance.max).sub(keep) : BN_ZERO;
+
                         const val = {
                           ...target,
                           amount: fromWei({ value: max, unit }),

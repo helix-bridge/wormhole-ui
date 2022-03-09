@@ -1,8 +1,13 @@
 import { AddEthereumChainParameter } from '../metamask';
-import { Facade } from './facade';
 import { EthereumTypeNetwork, Network, NetworkCategory, PolkadotTypeNetwork } from './network';
 
-interface DVMTokenConfig {
+interface Facade {
+  logo: string;
+  logoMinor: string;
+  logoWithText: string;
+}
+
+interface DVMConfig {
   ring: string;
   kton: string;
   smartKton: string;
@@ -39,5 +44,5 @@ export interface PolkadotChainConfig extends ChainConfig {
 }
 
 export interface DVMChainConfig extends Omit<EthereumChainConfig, 'name'>, PolkadotChainConfig {
-  dvm: DVMTokenConfig;
+  dvm: DVMConfig;
 }

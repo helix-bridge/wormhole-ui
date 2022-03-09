@@ -5,9 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { EMPTY, takeWhile } from 'rxjs';
-import { darwiniaCrabDVM } from '../../config';
 import { useIsMounted, useNetworks, useRecords } from '../../hooks';
-import { ChainConfig, HistoryRouteParam, Paginator, Vertices } from '../../model';
+import { Arrival, ChainConfig, Departure, Paginator, Vertices } from '../../model';
 import {
   getCrossChainArrivals,
   getDisplayName,
@@ -16,18 +15,26 @@ import {
   getNetworkMode,
   getVerticesFromDisplayName,
   hasBridge,
+  isChainConfigEqualTo,
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
-  isChainConfigEqualTo,
-  isValidAddress,
+  isSubstrateDVM,
+  isValidAddressStrict,
   verticesToChainConfig,
 } from '../../utils';
 import { RecordList } from './RecordList';
 
 const SOURCE_DATA_DEFAULT = { count: 0, list: [] };
 const PAGINATOR_DEFAULT = { row: 10, page: 0 };
-const defaultSelect = darwiniaCrabDVM.issuing;
+
+const defaultSelect: [Departure, Arrival] = [
+  {
+    network: 'darwinia',
+    mode: 'native',
+  },
+  { network: 'crab', mode: 'dvm' },
+];
 
 // eslint-disable-next-line complexity
 const isAddressValid = (addr: string | null, departure: Vertices) => {
@@ -37,11 +44,11 @@ const isAddressValid = (addr: string | null, departure: Vertices) => {
 
   if (addr && network) {
     if (mode === 'dvm' || isEthereumNetwork(departure.network)) {
-      addressValid = isValidAddress(addr, 'ethereum', true);
+      addressValid = isValidAddressStrict(addr, 'ethereum');
     } else {
       const category = flow([getVerticesFromDisplayName, verticesToChainConfig, getNetworkCategory])(network);
 
-      addressValid = category && isValidAddress(addr, category === 'polkadot' ? network : category, true);
+      addressValid = category && isValidAddressStrict(addr, category === 'polkadot' ? network : category);
     }
   }
 
@@ -51,18 +58,20 @@ const isAddressValid = (addr: string | null, departure: Vertices) => {
 // eslint-disable-next-line complexity
 export function CrossChainRecord() {
   const { t } = useTranslation();
-  const { search } = useLocation<HistoryRouteParam>();
+  const { search } = useLocation();
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
   const [isGenesis, setIGenesis] = useState(false);
   const { setToFilters, toNetworks, fromNetworks } = useNetworks();
 
   const [departure, setDeparture] = useState<Vertices>(() => {
     const { from: network, fMode: mode } = searchParams;
+
     return network && mode ? { network, mode } : defaultSelect[0];
   });
 
   const [arrival, setArrival] = useState<Vertices>(() => {
     const { to: network, tMode: mode } = searchParams;
+
     return network && mode ? { network, mode } : defaultSelect[1];
   });
 
@@ -72,6 +81,7 @@ export function CrossChainRecord() {
 
   const searchPlaceholder = useMemo(() => {
     const { network, mode } = departure;
+
     if (isPolkadotNetwork(network)) {
       return mode === 'dvm' && !isEthereumNetwork(arrival.network)
         ? t('Please fill in a {{network}} smart address which start with 0x', { network: upperFirst(network) })
@@ -277,34 +287,38 @@ export function CrossChainRecord() {
         </Input.Group>
       </Affix>
 
-      <Tabs
-        type="card"
-        onChange={(event) => {
-          const num = Number(event);
+      {!isSubstrateDVM(departure, arrival) ? (
+        <Tabs
+          type="card"
+          onChange={(event) => {
+            const num = Number(event);
 
-          setConfirmed(num < 0 ? null : !!num);
-        }}
-        size="large"
-        className="mt-4"
-      >
-        <Tabs.TabPane tab={t('All')} key="-1"></Tabs.TabPane>
-        <Tabs.TabPane tab={t('In Progress')} key="0"></Tabs.TabPane>
-        <Tabs.TabPane
-          tab={
-            <span className="flex items-center">
-              {t('Confirmed Extrinsic')}
-              <Tooltip
-                title={t(
-                  'When the process is aborted or an error occurs, the token will be revert to the original account'
-                )}
-              >
-                <InfoCircleOutlined className="ml-2" />
-              </Tooltip>
-            </span>
-          }
-          key="1"
-        ></Tabs.TabPane>
-      </Tabs>
+            setConfirmed(num < 0 ? null : !!num);
+          }}
+          size="large"
+          className="mt-4"
+        >
+          <Tabs.TabPane tab={t('All')} key="-1"></Tabs.TabPane>
+          <Tabs.TabPane tab={t('In Progress')} key="0"></Tabs.TabPane>
+          <Tabs.TabPane
+            tab={
+              <span className="flex items-center">
+                {t('Confirmed Extrinsic')}
+                <Tooltip
+                  title={t(
+                    'When the process is aborted or an error occurs, the token will be revert to the original account'
+                  )}
+                >
+                  <InfoCircleOutlined className="ml-2" />
+                </Tooltip>
+              </span>
+            }
+            key="1"
+          ></Tabs.TabPane>
+        </Tabs>
+      ) : (
+        <div className="h-8 mt-4"></div>
+      )}
 
       <Spin spinning={loading} size="large">
         <div className="bg-gray-200 dark:bg-antDark p-4 -mt-4">

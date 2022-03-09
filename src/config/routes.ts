@@ -6,15 +6,7 @@ import { Configure } from '../pages/Configure';
 import { HistoryRecords } from '../pages/CrossHistory';
 import { Erc20Register } from '../pages/Erc20Register';
 import { Home } from '../pages/Home';
-
-export enum Path {
-  root = '/',
-  history = '/history',
-  airdrop = '/airdrop',
-  airdropHistory = '/airdropHistory',
-  register = '/register',
-  configure = '/configure',
-}
+import { Path } from './constant';
 
 export const routes: RouteProps[] = [
   {

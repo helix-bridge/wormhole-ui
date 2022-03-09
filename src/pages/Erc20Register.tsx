@@ -1,5 +1,5 @@
 import { Card } from 'antd';
-import { Register } from '../components/erc20/Register';
+import { Erc20Register as Register } from '../bridges/ethereum-darwiniaDVM/Erc20Register';
 
 export function Erc20Register() {
   return (

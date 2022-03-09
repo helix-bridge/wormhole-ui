@@ -2,7 +2,8 @@ import { Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FORM_CONTROL, validateMessages } from '../config';
+import { FORM_CONTROL } from '../config/constant';
+import { validateMessages } from '../config/validate-msg';
 import { useApi, useTx } from '../hooks';
 import {
   CrossChainComponentProps,

@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash';
-import { BRIDGES } from '../../config';
+import { BRIDGES } from '../../config/bridges';
 import { Arrival, Bridge, BridgeConfig, ContractConfig, Departure } from '../../model';
 
 const isPro = process.env.REACT_APP_HOST_TYPE !== 'dev';

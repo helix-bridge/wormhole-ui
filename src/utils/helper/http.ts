@@ -1,11 +1,17 @@
 import { isNull, isUndefined } from 'lodash';
 import { map, Observable } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
-import { EResponse } from '../../model';
 
 export interface RecordsQueryRequest {
   url: string;
   params: Record<string, string | number | boolean | undefined | null>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface RecordsQueryResponse<T = any> {
+  code: number;
+  detail: string;
+  data?: T;
 }
 
 export function rxGet<T>({ url, params }: RecordsQueryRequest): Observable<T | null> {
@@ -17,7 +23,7 @@ export function rxGet<T>({ url, params }: RecordsQueryRequest): Observable<T | n
       return acc !== '' ? `${acc}&${pair}` : pair;
     }, '');
 
-  return ajax<EResponse<T>>({
+  return ajax<RecordsQueryResponse<T>>({
     url: url + (queryStr ? `?${queryStr}` : ''),
     method: 'GET',
   }).pipe(map((res) => res.response.data || null));

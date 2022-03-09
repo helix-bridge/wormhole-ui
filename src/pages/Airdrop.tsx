@@ -2,7 +2,7 @@ import { Card } from 'antd';
 import { Trans } from 'react-i18next';
 import { Link, withRouter } from 'react-router-dom';
 import { CrossChain } from '../components/CrossChain';
-import { Path } from '../config/routes';
+import { Path } from '../config/constant';
 
 function Cross() {
   return (

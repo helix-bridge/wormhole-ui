@@ -23,7 +23,7 @@ describe('Substrate DVM to Substrate', () => {
       });
 
     cy.react('RecipientItem').find('input').type(recipient);
-    cy.react('Erc20Control')
+    cy.react('MappingTokenControl')
       .find('input')
       .click()
       .then(() => {
@@ -44,7 +44,7 @@ describe('Substrate DVM to Substrate', () => {
 
   it('should launch tx', () => {
     cy.react('RecipientItem').find('input').type(recipient);
-    cy.react('Erc20Control')
+    cy.react('MappingTokenControl')
       .find('input')
       .click()
       .then(() => {

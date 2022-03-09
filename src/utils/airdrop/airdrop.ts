@@ -1,7 +1,7 @@
 import BN from 'bn.js';
 import Web3 from 'web3';
-import genesisData from '../../config/genesis.json';
 import { Network } from '../../model';
+import genesisData from './genesis.json';
 
 export function getAirdropData(account: string, network: Network): BN {
   if (!account) {

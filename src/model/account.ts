@@ -1,16 +1,14 @@
 import type ExtType from '@polkadot/extension-inject/types';
 import BN from 'bn.js';
-import { Units } from 'web3-utils';
+import { Token } from './token';
 import { WithOptional } from './type-operator';
 
 export type InjectedAccountWithMeta = ExtType.InjectedAccountWithMeta;
 
 export type IAccountMeta = WithOptional<InjectedAccountWithMeta, 'meta'>;
 
-export interface Token<T = string> {
-  symbol: T;
-  decimal: keyof Units;
-}
+// eslint-disable-next-line no-magic-numbers
+export type Erc20RegisterStatus = 0 | 1 | 2;
 
 export interface PolkadotChain {
   tokens: Token[];

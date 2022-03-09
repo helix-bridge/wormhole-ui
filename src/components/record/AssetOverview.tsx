@@ -3,8 +3,7 @@ import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
 import { DATE_FORMAT } from '../../config';
-import { fromWei, prettyNumber } from '../../utils';
-import { getDepositTimeRange } from '../form-control/DepositItem';
+import { fromWei, getTimeRange, prettyNumber } from '../../utils';
 
 export interface AssetOverviewProps {
   amount: string;
@@ -23,7 +22,7 @@ export function AssetOverview({ amount, deposit, currency, unit = 'ether' }: Ass
 
   if (currency.toUpperCase() === depositFlag) {
     const { deposit_id, start, month } = deposit!;
-    const { start: startTime, end: endTime } = getDepositTimeRange({ deposit_time: start, duration: month });
+    const { start: startTime, end: endTime } = getTimeRange(start, month);
 
     return (
       <Typography.Text>
