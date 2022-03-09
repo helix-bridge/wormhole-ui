@@ -99,7 +99,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Collect file
+      - name: Test status
+        id: test-status
         run: |
           E2E_OK='${{ needs.test-e2e.outputs.check-ok }}'
           E2E_ERR='${{ needs.test-e2e.outputs.check-err }}'
@@ -108,7 +109,33 @@ jobs:
           E2E_STATUS=${E2E_OK:-$E2E_ERR}
           UNIT_STATUS=${UNIT_OK:-$UNIT_ERR}
 
-          mkdir -p test
-          echo "${E2E_STATUS}" > test/e2e.log
-          echo "${UNIT_STATUS}" > test/unit.log
+          SHA=${GITHUB_SHA::7}
+          COMMIT=[${SHA}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${SHA})
+
+          echo "::set-output name=E2E_STATUS::${E2E_STATUS}"
+          echo "::set-output name=UNIT_STATUS::${UNIT_STATUS}"
+          echo "::set-output name=COMMIT::${COMMIT}"
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          append: true
+          message: |
+            \---
+            commit: ${{ steps.test-status.oututs.COMMIT }}
+            e2e: ${{ steps.test-status.oututs.E2E_STATUS }}
+            unit: ${{ steps.test-status.oututs.UNIT_STATUS }}
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: wormhole-ui
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://avatars.githubusercontent.com/u/14985020?s=48&v=4
+          SLACK_MESSAGE: |
+            e2e: ${{ steps.test-status.oututs.E2E_STATUS }}
+            unit: ${{ steps.test-status.oututs.UNIT_STATUS }}
+          SLACK_TITLE: Cypress
+          SLACK_USERNAME: Vercel
+          SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
+
 
