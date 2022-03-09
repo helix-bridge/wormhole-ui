@@ -62,38 +62,47 @@ export function useS2SRecords(
     () => getBridge<SubstrateSubstrateDVMBridgeConfig>([departure, arrival]).config.api,
     [departure, arrival]
   );
+
   const issuingClient = useMemo(
     () => new GraphQLClient({ url: `${api.subql}${departure.name}` || UNKNOWN_CLIENT }),
     [api.subql, departure.name]
   );
+
   const issuingTargetClient = useMemo(
     () => new GraphQLClient({ url: `${api.subql}${arrival.name}` || UNKNOWN_CLIENT }),
     [api.subql, arrival.name]
   );
+
   const redeemClient = useMemo(() => new GraphQLClient({ url: api.subGraph || UNKNOWN_CLIENT }), [api.subGraph]);
   const { t } = useTranslation();
+
   // s2s issuing
   const [fetchIssuingRecords] = useManualQuery<Substrate2SubstrateDVMRecordsRes>(S2S_ISSUING_RECORDS_QUERY, {
     skipCache: true,
     client: issuingClient,
   });
+
   const [fetchIssuingRecord] = useManualQuery<Substrate2SubstrateDVMRecordRes>(S2S_ISSUING_RECORD_QUERY, {
     skipCache: true,
     client: issuingClient,
   });
+
   // s2s redeem, departure pangolin-smart
   const [fetchBurnRecords] = useManualQuery<SubstrateDVM2SubstrateRecordsRes>(S2S_REDEEM_RECORDS_QUERY, {
     skipCache: true,
     client: redeemClient,
   });
+
   const [fetchBurnRecord] = useManualQuery<SubstrateDVM2SubstrateRecordRes>(S2S_REDEEM_RECORD_QUERY, {
     skipCache: true,
     client: redeemClient,
   });
+
   const [fetchDispatchEvent] = useManualQuery<BridgeDispatchEventRes>(BRIDGE_DISPATCH_EVENTS, {
     skipCache: true,
     client: issuingTargetClient,
   });
+
   const [issuingMemo, setIssuingMemo] = useState<Record<string, Substrate2SubstrateDVMRecord>>({});
   const [burnMemo, setBurnMemo] = useState<Record<string, Substrate2SubstrateDVMRecord>>({});
 
@@ -103,6 +112,7 @@ export function useS2SRecords(
       paginator: { row: limit, page: offset },
       confirmed,
     } = req;
+
     const result = isBoolean(confirmed)
       ? confirmed
         ? [S2SRecordResult.lockConfirmedSuccess, S2SRecordResult.lockConfirmedFail]
@@ -164,10 +174,11 @@ export function useS2SRecords(
               const {
                 requestTransaction: requestTxHash,
                 responseTransaction: responseTxHash,
+                sender,
                 ...rest
               } = camelCaseKeys(item);
 
-              return { ...rest, requestTxHash, responseTxHash };
+              return { ...rest, senderId: sender, requestTxHash, responseTxHash };
             }),
           };
         }),
@@ -253,10 +264,11 @@ export function useS2SRecords(
           const {
             responseTransaction: responseTxHash,
             requestTransaction: requestTxHash,
+            sender,
             ...rest
           } = camelCaseKeys(res.data!.burnRecordEntity as unknown as SubstrateDVM2SubstrateRecord);
 
-          return { ...rest, responseTxHash, requestTxHash };
+          return { ...rest, senderId: sender, responseTxHash, requestTxHash };
         }
       );
     },
