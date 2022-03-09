@@ -20,7 +20,7 @@ export interface Substrate2SubstrateDVMRecord {
   nonce: string;
   requestTxHash: string;
   responseTxHash: string;
-  sender: string;
+  senderId: string;
   recipient: string;
   token: string;
   amount: string;
