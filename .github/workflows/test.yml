@@ -110,7 +110,7 @@ jobs:
           UNIT_STATUS=${UNIT_OK:-$UNIT_ERR}
 
           SHA=${GITHUB_SHA::7}
-          COMMIT=[${SHA}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${SHA})
+          COMMIT="[${SHA}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${SHA})"
 
           echo "::set-output name=E2E_STATUS::${E2E_STATUS}"
           echo "::set-output name=UNIT_STATUS::${UNIT_STATUS}"
