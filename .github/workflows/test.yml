@@ -106,8 +106,18 @@ jobs:
           E2E_ERR='🔴 ${{ needs.test-e2e.outputs.check-err }}'
           UNIT_OK='💙 ${{ needs.test-unit.outputs.check-ok }}'
           UNIT_ERR='🔴 ${{ needs.test-unit.outputs.check-err }}'
-          E2E_STATUS=${E2E_OK:-$E2E_ERR}
-          UNIT_STATUS=${UNIT_OK:-$UNIT_ERR}
+          E2E_STATUS=
+          UNIT_STATUS=
+          if [ "${{ needs.test-e2e.outputs.check-ok }}" == "ok" ]; then
+            E2E_STATUS=${E2E_OK}
+          else
+            E2E_STATUS=${E2E_ERR}
+          fi
+          if [ "${{ needs.test-unit.outputs.check-ok }}" == "ok" ]; then
+            UNIT_STATUS=${UNIT_OK}
+          else
+            UNIT_STATUS=${UNIT_ERR}
+          fi
 
           SHA='${{github.event.pull_request.head.sha}}'
           SHA=${SHA::7}
