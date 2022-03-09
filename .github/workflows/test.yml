@@ -120,10 +120,13 @@ jobs:
           SHA=${SHA::7}
           COMMIT="[${SHA}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${SHA})"
 
-          ARTIFACTS=
+          ARTIFACTS_MD=
+          ARTIFACTS_LINK=
           if [[ "${E2E_ERR}" == "err" || "${UNIT_ERR}" == "err" ]]; then
-            ARTIFACTS="[${{ github.run_id }}](https://github.com/darwinia-network/wormhole-ui/actions/runs/${{ github.run_id }})"
-            echo "::set-output name=ARTIFACTS::${ARTIFACTS}"
+            ARTIFACTS_LINK="https://github.com/darwinia-network/wormhole-ui/actions/runs/${{ github.run_id }}"
+            ARTIFACTS_MD="[${{ github.run_id }}](${ARTIFACTS_LINK})"
+            echo "::set-output name=ARTIFACTS_MD::${ARTIFACTS_MD}"
+            echo "::set-output name=ARTIFACTS_LINK::${ARTIFACTS_LINK}"
           fi
 
           echo "::set-output name=E2E_STATUS::${E2E_STATUS}"
@@ -139,7 +142,7 @@ jobs:
             Commit: ${{ steps.test-status.outputs.COMMIT }}
             E2E: ${{ steps.test-status.outputs.E2E_STATUS }}
             Unit: ${{ steps.test-status.outputs.UNIT_STATUS }}
-            Artifacts: ${{ steps.test-status.outputs.ARTIFACTS }}
+            Artifacts: ${{ steps.test-status.outputs.ARTIFACTS_MD }}
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
@@ -150,7 +153,7 @@ jobs:
           SLACK_MESSAGE: |
             E2E: ${{ steps.test-status.outputs.E2E_STATUS }}
             Unit: ${{ steps.test-status.outputs.UNIT_STATUS }}
-            Artifacts: ${{ steps.test-status.outputs.ARTIFACTS }}
+            Artifacts: ${{ steps.test-status.outputs.ARTIFACTS_LINK }}
           SLACK_TITLE: Cypress
           SLACK_USERNAME: Vercel
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
