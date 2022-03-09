@@ -135,6 +135,7 @@ jobs:
           append: true
           message: |
             \---
+            Type: 🧪
             Commit: ${{ steps.test-status.outputs.COMMIT }}
             E2E: ${{ steps.test-status.outputs.E2E_STATUS }}
             Unit: ${{ steps.test-status.outputs.UNIT_STATUS }}
