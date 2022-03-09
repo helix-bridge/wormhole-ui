@@ -16,20 +16,20 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v2
-#      - name: Run E2E tests 🧪
-#        uses: cypress-io/github-action@v2
-#        with:
-#          start: yarn start:dev
-#          wait-on: 'http://localhost:3007'
-#          wait-on-timeout: 300
-#          command: yarn test:e2e:ci
-#          record: true
-#          parallel: true
-#          browser: chrome
-#          cache-key: ${{ runner.os }}-hash-${{ hashFiles('yarn.lock') }}
-#          group: 'Actions example'
-#        env:
-#          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      - name: Run E2E tests 🧪
+        uses: cypress-io/github-action@v2
+        with:
+          start: yarn start:dev
+          wait-on: 'http://localhost:3007'
+          wait-on-timeout: 300
+          command: yarn test:e2e:ci
+          record: true
+          parallel: true
+          browser: chrome
+          cache-key: ${{ runner.os }}-hash-${{ hashFiles('yarn.lock') }}
+          group: 'Actions example'
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
       - uses: actions/upload-artifact@v1
         if: failure()
@@ -60,18 +60,15 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v2
-#      - name: Run Unit tests 🧪
-#        uses: cypress-io/github-action@v2
-#        with:
-#          command: yarn test:unit:ci
-#          record: true
-#          browser: chrome
-#          group: 'Actions example'
-#        env:
-#          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-
-      - name: Test error exit
-        run: exit 1
+      - name: Run Unit tests 🧪
+        uses: cypress-io/github-action@v2
+        with:
+          command: yarn test:unit:ci
+          record: true
+          browser: chrome
+          group: 'Actions example'
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
       - uses: actions/upload-artifact@v1
         if: failure()
@@ -102,26 +99,32 @@ jobs:
       - name: Test status
         id: test-status
         run: |
-          E2E_OK='💙 ${{ needs.test-e2e.outputs.check-ok }}'
-          E2E_ERR='🔴 ${{ needs.test-e2e.outputs.check-err }}'
-          UNIT_OK='💙 ${{ needs.test-unit.outputs.check-ok }}'
-          UNIT_ERR='🔴 ${{ needs.test-unit.outputs.check-err }}'
+          E2E_OK='${{ needs.test-e2e.outputs.check-ok }}'
+          E2E_ERR='${{ needs.test-e2e.outputs.check-err }}'
+          UNIT_OK='${{ needs.test-unit.outputs.check-ok }}'
+          UNIT_ERR='${{ needs.test-unit.outputs.check-err }}'
           E2E_STATUS=
           UNIT_STATUS=
-          if [ "${{ needs.test-e2e.outputs.check-ok }}" == "ok" ]; then
-            E2E_STATUS=${E2E_OK}
+          if [ "${E2E_OK}" == "ok" ]; then
+            E2E_STATUS="💙 ${E2E_OK}"
           else
-            E2E_STATUS=${E2E_ERR}
+            E2E_STATUS="🔴 ${E2E_ERR}"
           fi
-          if [ "${{ needs.test-unit.outputs.check-ok }}" == "ok" ]; then
-            UNIT_STATUS=${UNIT_OK}
+          if [ "${UNIT_OK}" == "ok" ]; then
+            UNIT_STATUS="💙 ${UNIT_OK}"
           else
-            UNIT_STATUS=${UNIT_ERR}
+            UNIT_STATUS="🔴 ${UNIT_ERR}"
           fi
 
           SHA='${{github.event.pull_request.head.sha}}'
           SHA=${SHA::7}
           COMMIT="[${SHA}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${SHA})"
+
+          ARTIFACTS=
+          if [[ "${E2E_ERR}" == "err" || "${UNIT_ERR}" == "err" ]]; then
+            ARTIFACTS="[${{ github.run_id }}](https://github.com/darwinia-network/wormhole-ui/actions/runs/${{ github.run_id }})"
+            echo "::set-output name=ARTIFACTS::${ARTIFACTS}"
+          fi
 
           echo "::set-output name=E2E_STATUS::${E2E_STATUS}"
           echo "::set-output name=UNIT_STATUS::${UNIT_STATUS}"
@@ -135,6 +138,7 @@ jobs:
             Commit: ${{ steps.test-status.outputs.COMMIT }}
             E2E: ${{ steps.test-status.outputs.E2E_STATUS }}
             Unit: ${{ steps.test-status.outputs.UNIT_STATUS }}
+            Artifacts: ${{ steps.test-status.outputs.ARTIFACTS }}
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
@@ -143,8 +147,9 @@ jobs:
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/14985020?s=48&v=4
           SLACK_MESSAGE: |
-            E2e: ${{ steps.test-status.outputs.E2E_STATUS }}
+            E2E: ${{ steps.test-status.outputs.E2E_STATUS }}
             Unit: ${{ steps.test-status.outputs.UNIT_STATUS }}
+            Artifacts: ${{ steps.test-status.outputs.ARTIFACTS }}
           SLACK_TITLE: Cypress
           SLACK_USERNAME: Vercel
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
