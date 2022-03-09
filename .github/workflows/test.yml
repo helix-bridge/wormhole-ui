@@ -121,9 +121,9 @@ jobs:
           append: true
           message: |
             \---
-            commit: ${{ steps.test-status.oututs.COMMIT }}
-            e2e: ${{ steps.test-status.oututs.E2E_STATUS }}
-            unit: ${{ steps.test-status.oututs.UNIT_STATUS }}
+            Commit: ${{ steps.test-status.outputs.COMMIT }}
+            E2E: ${{ steps.test-status.outputs.E2E_STATUS }}
+            Unit: ${{ steps.test-status.outputs.UNIT_STATUS }}
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
