@@ -10,13 +10,13 @@ import { fromWei, getUnit, prettyNumber } from '../../utils';
 import { EllipsisMiddle } from '../widget/EllipsisMiddle';
 import { MappingTokenInfo } from '../widget/MappingTokenInfo';
 
-interface Erc20ControlProps extends CustomFormControlProps<MappingToken | null> {
+interface MappingTokenControlProps extends CustomFormControlProps<MappingToken | null> {
   tokens: MemoedTokenInfo[];
   total: number;
 }
 
 // eslint-disable-next-line complexity
-export function MappingTokenControl({ value, onChange, tokens, total }: PropsWithRef<Erc20ControlProps>) {
+export function MappingTokenControl({ value, onChange, tokens, total }: PropsWithRef<MappingTokenControlProps>) {
   const { t } = useTranslation();
   const data = useMemo(() => groupBy(tokens, (token) => RegisterStatus[token.status ?? 0]), [tokens]);
   const triggerChange = useCallback(
