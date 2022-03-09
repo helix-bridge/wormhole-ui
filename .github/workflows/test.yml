@@ -102,14 +102,15 @@ jobs:
       - name: Test status
         id: test-status
         run: |
-          E2E_OK='${{ needs.test-e2e.outputs.check-ok }}'
-          E2E_ERR='<span style="color: red">${{ needs.test-e2e.outputs.check-err }}</span>'
-          UNIT_OK='${{ needs.test-unit.outputs.check-ok }}'
-          UNIT_ERR='<span style="color: red">${{ needs.test-unit.outputs.check-err }}</span>'
+          E2E_OK='&#x1F499; ${{ needs.test-e2e.outputs.check-ok }}' # 💙
+          E2E_ERR='&#x1F534; ${{ needs.test-e2e.outputs.check-err }}'
+          UNIT_OK='&#x1F499; ${{ needs.test-unit.outputs.check-ok }}'
+          UNIT_ERR='&#x1F534; ${{ needs.test-unit.outputs.check-err }}' # 🔴
           E2E_STATUS=${E2E_OK:-$E2E_ERR}
           UNIT_STATUS=${UNIT_OK:-$UNIT_ERR}
 
-          SHA=${GITHUB_SHA::7}
+          SHA='${{github.event.pull_request.head.sha}}'
+          SHA=${SHA::7}
           COMMIT="[${SHA}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${SHA})"
 
           echo "::set-output name=E2E_STATUS::${E2E_STATUS}"
