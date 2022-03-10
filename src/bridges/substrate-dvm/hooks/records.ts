@@ -3,7 +3,7 @@ import { useMemo, useCallback } from 'react';
 import { Observable, from, map, catchError, EMPTY } from 'rxjs';
 import { TRANSFERS_QUERY } from '../config';
 import { RecordRequestParams, ChainConfig, PolkadotChainConfig } from '../../../model';
-import { getBridge, convertToSS58, dvmAddressToAccountId } from '../../../utils';
+import { getBridge, convertToSS58, dvmAddressToAccountId, isDVM2Substrate } from '../../../utils';
 import { SubstrateSubstrateDVMBridgeConfig } from '../../substrate-substrateDVM/model/bridge';
 import { Substrate2DVMRecord, Substrate2DVMRecordsRes, DVM2SubstrateRecordsRes } from '../model';
 
@@ -55,14 +55,17 @@ export function useSubstrate2DVMRecords(
       const {
         paginator: { row, page },
         address,
+        direction,
       } = req;
 
       return from(
         fetch({
           variables: {
             limit: row,
-            offset: page,
+            offset: page * row,
             account: address,
+            // FIXME: https://github.com/darwinia-network/darwinia-common/issues/1123 this issue will be fix the record from dvm to substrate
+            method: isDVM2Substrate(...direction) ? 'Endowed' : 'Transfer',
           },
           skipCache: true,
         })

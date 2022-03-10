@@ -1,10 +1,10 @@
 interface Transfer {
   amount: string;
-  fee: string;
   fromId: string;
   timestamp: string;
   toId: string;
-  tokenId: 'balances' | 'kton';
+  section: 'kton' | 'balances';
+  method: string;
   // eslint-disable-next-line id-denylist
   block: { blockHash: string; number: number; specVersion: number };
 }
