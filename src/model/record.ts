@@ -1,3 +1,6 @@
+import { Observable } from 'rxjs';
+import { RecordRequestParams } from './record-api';
+
 interface SimpleBlock {
   blockHash: string;
   extrinsicHash: string;
@@ -20,4 +23,16 @@ export interface BridgeDispatchEventRecord {
     | 'MessageDispatched';
   block: SimpleBlock;
   index: number;
+}
+
+export interface RecordList<T> {
+  count: number;
+  list: T[];
+}
+
+export type FetchRecords<Res extends RecordList<unknown>, Req = RecordRequestParams> = (req: Req) => Observable<Res>;
+
+export interface RecordsHooksResult<T extends RecordList<unknown>, R = RecordRequestParams> {
+  fetchIssuingRecords: FetchRecords<T, R>;
+  fetchRedeemRecords: FetchRecords<T, R>;
 }

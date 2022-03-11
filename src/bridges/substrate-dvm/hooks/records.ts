@@ -1,25 +1,18 @@
-import { GraphQLClient, useManualQuery, FetchData } from 'graphql-hooks';
-import { useMemo, useCallback } from 'react';
-import { Observable, from, map, catchError, EMPTY } from 'rxjs';
-import { TRANSFERS_QUERY } from '../config';
-import { RecordRequestParams, ChainConfig, PolkadotChainConfig } from '../../../model';
-import { getBridge, convertToSS58, dvmAddressToAccountId, isDVM2Substrate } from '../../../utils';
+import { FetchData, GraphQLClient, useManualQuery } from 'graphql-hooks';
+import { useCallback, useMemo } from 'react';
+import { catchError, EMPTY, from, map } from 'rxjs';
+import { ChainConfig, PolkadotChainConfig, RecordList, RecordRequestParams, RecordsHooksResult } from '../../../model';
+import { convertToSS58, dvmAddressToAccountId, getBridge, isDVM2Substrate } from '../../../utils';
 import { SubstrateSubstrateDVMBridgeConfig } from '../../substrate-substrateDVM/model/bridge';
-import { Substrate2DVMRecord, Substrate2DVMRecordsRes, DVM2SubstrateRecordsRes } from '../model';
-
-type FetchSubstrate2DVMRecords = (
-  req: Omit<RecordRequestParams, 'confirmed'>
-) => Observable<{ count: number; list: Substrate2DVMRecord[] }>;
+import { TRANSFERS_QUERY } from '../config';
+import { DVM2SubstrateRecordsRes, Substrate2DVMRecord, Substrate2DVMRecordsRes } from '../model';
 
 const UNKNOWN_CLIENT = 'unknown';
 
-export function useSubstrate2DVMRecords(
+export function useRecords(
   departure: ChainConfig,
   arrival: ChainConfig
-): {
-  fetchDVM2SubstrateRecords: FetchSubstrate2DVMRecords;
-  fetchSubstrate2DVMRecords: FetchSubstrate2DVMRecords;
-} {
+): RecordsHooksResult<RecordList<Substrate2DVMRecord>, Omit<RecordRequestParams, 'confirmed'>> {
   const api = useMemo(
     () => getBridge<SubstrateSubstrateDVMBridgeConfig>([departure, arrival]).config.api,
     [departure, arrival]
@@ -100,7 +93,7 @@ export function useSubstrate2DVMRecords(
   );
 
   return {
-    fetchDVM2SubstrateRecords,
-    fetchSubstrate2DVMRecords,
+    fetchRedeemRecords: fetchDVM2SubstrateRecords,
+    fetchIssuingRecords: fetchSubstrate2DVMRecords,
   };
 }
