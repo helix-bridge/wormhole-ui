@@ -24,6 +24,7 @@ export function useAfterTx<T extends CrossChainPayload<{ sender: string; recipie
           onDisappear,
           unit,
           hashType = 'txHash',
+          ...rest
         }: Exclude<ModalProps, 'onCancel'> & {
           onDisappear: (value: T, tx: Tx) => void;
           hashType?: TxHashType;
@@ -65,6 +66,7 @@ export function useAfterTx<T extends CrossChainPayload<{ sender: string; recipie
             onDisappear(value, tx);
             close();
           },
+          ...rest,
         });
       },
     [chain.ss58Format, history, t]

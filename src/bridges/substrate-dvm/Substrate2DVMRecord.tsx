@@ -20,7 +20,7 @@ export function Substrate2DVMRecord({
       return '';
     }
 
-    return record.tokenId === 'balances'
+    return record.section === 'balances'
       ? (departure as DVMChainConfig).ethereumChain.nativeCurrency.symbol!
       : upperCase(`${departure.name.charAt(0)}kton`);
   }, [departure, record]);

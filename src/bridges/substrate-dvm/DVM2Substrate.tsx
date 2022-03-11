@@ -165,6 +165,10 @@ export function DVM2Substrate({
           });
           getBalances(apiPromise!, sender, (departure as DVMChainConfig).dvm.smartKton);
         },
+        okButtonProps: {
+          size: 'large',
+          disabled: true,
+        },
       })(value);
 
       return createTxWorkflow(beforeTransfer, obs, afterTransfer).subscribe(observer);

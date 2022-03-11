@@ -117,7 +117,7 @@ describe('History records', () => {
     cy.react('Record').should('have.length', 10);
   });
 
-  it('should display DVM to substrate records', () => {
+  it.skip('should display DVM to substrate records', () => {
     cy.intercept(
       {
         method: 'POST',
@@ -131,6 +131,13 @@ describe('History records', () => {
     setSearchAccount(pangolinDVMAccount);
 
     cy.react('Record').should('have.length', 4);
+  });
+
+  it('should disable DVM to substrate records', () => {
+    selectFrom('Pangolin-Smart');
+    selectTo('Pangolin');
+
+    cy.react('Search').find('input').should('be.disabled');
   });
 
   it('should display substrate to DVM records', () => {
