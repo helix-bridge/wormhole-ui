@@ -1,3 +1,4 @@
+import { ApiPromise } from '@polkadot/api';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import { Modal } from 'antd';
 import Link from 'antd/lib/typography/Link';
@@ -11,6 +12,7 @@ import {
   EMPTY,
   from,
   map,
+  mapTo,
   merge,
   Observable,
   Observer,
@@ -29,7 +31,13 @@ import {
   PolkadotConnection,
   TronConnection,
 } from '../../model';
-import { getNetworkCategory, isMetamaskInstalled, isNetworkConsistent, isTronLinkReady } from '../network/network';
+import {
+  getNetworkCategory,
+  isMetamaskInstalled,
+  isNetworkConsistent,
+  isTronLinkReady,
+  waitUntilConnected,
+} from '../network/network';
 import { entrance } from './entrance';
 import { switchMetamaskNetwork } from './switch';
 
@@ -45,8 +53,8 @@ interface TronAddress {
   name?: string;
 }
 
-export const getPolkadotConnection: (network: PolkadotChainConfig) => Observable<PolkadotConnection> = (network) =>
-  from(web3Enable('polkadot-js/apps')).pipe(
+export const getPolkadotConnection: (network: PolkadotChainConfig) => Observable<PolkadotConnection> = (network) => {
+  const extensionObs = from(web3Enable('polkadot-js/apps')).pipe(
     concatMap((extensions) =>
       from(web3Accounts()).pipe(
         map(
@@ -60,15 +68,21 @@ export const getPolkadotConnection: (network: PolkadotChainConfig) => Observable
         )
       )
     ),
-    switchMap((envelop: Exclude<PolkadotConnection, 'api'>) => {
-      const subject = new BehaviorSubject<PolkadotConnection>(envelop);
-      const url = network.provider.rpc;
-      const api = entrance.polkadot.getInstance(url);
-      const source = subject.asObservable().pipe(distinctUntilKeyChanged('status'));
+    startWith<PolkadotConnection>({
+      status: ConnectionStatus.connecting,
+      accounts: [],
+      api: null,
+      type: 'polkadot',
+      network: network.name,
+    })
+  );
 
-      if (api.isConnected) {
-        subject.next({ ...envelop, status: ConnectionStatus.success, api });
-      }
+  const apiInstance = entrance.polkadot.getInstance(network.provider.rpc);
+  const apiObs = from(waitUntilConnected(apiInstance)).pipe(mapTo(apiInstance));
+
+  return combineLatest([extensionObs, apiObs]).pipe(
+    switchMap(([envelop, api]: [Exclude<PolkadotConnection, 'api'>, ApiPromise]) => {
+      const subject = new BehaviorSubject<PolkadotConnection>(envelop);
 
       api.on('connected', () => {
         subject.next({ ...envelop, status: ConnectionStatus.success, api });
@@ -82,16 +96,12 @@ export const getPolkadotConnection: (network: PolkadotChainConfig) => Observable
         subject.next({ ...envelop, status: ConnectionStatus.error, api });
       });
 
-      return from(api.isReady).pipe(switchMapTo(source));
-    }),
-    startWith<PolkadotConnection>({
-      status: ConnectionStatus.connecting,
-      accounts: [],
-      api: null,
-      type: 'polkadot',
-      network: network.name,
+      subject.next({ ...envelop, status: ConnectionStatus.success, api });
+
+      return subject.asObservable().pipe(distinctUntilKeyChanged('status'));
     })
   );
+};
 
 export const getEthereumConnection: () => Observable<EthereumConnection> = () =>
   from(window.ethereum.request({ method: 'eth_requestAccounts' })).pipe(

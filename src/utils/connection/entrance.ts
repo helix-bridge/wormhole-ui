@@ -55,8 +55,8 @@ class PolkadotEntrance extends Entrance<ApiPromise> {
     });
   }
 
-  afterInit(instance: ApiPromise) {
-    instance.connect();
+  afterInit(_: ApiPromise) {
+    // instance.connect(); // comment it if api auto connect disabled
   }
 
   beforeRemove(instance: ApiPromise) {
