@@ -36,16 +36,9 @@ body:
       required: true
 
   - type: textarea
-    id: description
-    attributes:
-      label: Description
-    validations:
-      required: true
-
-  - type: textarea
     id: reproduce
     attributes:
-      label: How to reproduce this issue
+      label: Reproduce steps
       placeholder: |
         1. xxxxx
         2. xxxxx
