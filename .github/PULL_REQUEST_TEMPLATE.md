@@ -1,4 +1,4 @@
-## Priority
+## Review Priority
 
 Do you need reviewers to review this PR as soon as possible?
 
@@ -6,18 +6,9 @@ Do you need reviewers to review this PR as soon as possible?
 - [x] Medium
 - [ ] Low
 
-## Help Merge
-
-Do you need any other people to merge it if all checks passed and reviews were approved?
-
-- [x] Yes - Merge it immediately
-- [ ] NO - Please let me merge
-
 ## PR Type
 
 What kind of change does this PR introduce?
-
-<!-- Please check the one that applies to this PR using "x". -->
 
 - [ ] Bugfix
 - [ ] Feature
