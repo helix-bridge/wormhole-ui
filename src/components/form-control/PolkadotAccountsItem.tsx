@@ -17,6 +17,7 @@ interface PolkadotAccountsProps {
 
 export function PolkadotAccountsItem({ onChange, availableBalances, form }: PolkadotAccountsProps) {
   const { t } = useTranslation();
+
   const {
     mainConnection: { accounts },
   } = useApi();

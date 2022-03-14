@@ -26,6 +26,7 @@ export function ActiveAccount({
     network,
     mainConnection: { status, accounts },
   } = useApi();
+
   const containerCls = useMemo(
     () =>
       `flex items-center justify-between leading-normal whitespace-nowrap bg-pangolin 
@@ -33,6 +34,7 @@ export function ActiveAccount({
         ${className}`,
     [isLargeRounded, className]
   );
+
   const walletLogo = useMemo(() => {
     const metamask = 'image/metamask-fox.svg';
     const polkadot = 'image/polkadot.svg';

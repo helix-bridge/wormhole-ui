@@ -35,6 +35,7 @@ export function AssetGroup({
   form: FormInstance;
 }) {
   const { t } = useTranslation();
+
   const triggerChange = useCallback(
     (val: AssetGroupValue[0], index: number, origin: AssetGroupValue = []) => {
       if (onChange) {
@@ -46,10 +47,13 @@ export function AssetGroup({
     },
     [onChange]
   );
+
   const ringBalance = useMemo(() => (balances || []).find((item) => isRing(item.asset)), [balances]);
+
   const feeFormatted = useMemo(() => {
     return fromWei({ value: fee, unit: ringBalance?.token.decimal ?? 'gwei' });
   }, [fee, ringBalance]);
+
   const insufficient = useMemo(
     () => new BN(feeFormatted || 0).gt(new BN(ringBalance?.max || 0)),
     [feeFormatted, ringBalance?.max]

@@ -99,7 +99,7 @@ function initConfig() {
         import { ${from}${to}BridgeConfig } from '../model/bridge';
 
         const ${origin}${to}Config: ${from}${to}BridgeConfig = { 
-           specVersion: 0, 
+            specVersion: 0, 
         };
 
         export const ${origin}${to} = new Bridge(${origin}Config, ${target}Config, ${origin}${to}Config, {});

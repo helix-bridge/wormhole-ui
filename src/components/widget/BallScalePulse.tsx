@@ -10,6 +10,7 @@ const DEFAULT_SIZE = 24;
 
 export function BallScalePulse({ size = DEFAULT_SIZE }: BallScalePulseProps) {
   const [theme] = useState(readStorage().theme ?? THEME.DARK);
+
   const childCls = useMemo(() => {
     return `absolute box-border inline-block float-none bg-current  border-0 border-solid border-current top-0 left-0 w-${size} h-${size} rounded-full opacity-50 animate-ball-scale-pulse`;
   }, [size]);
