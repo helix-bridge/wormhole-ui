@@ -121,6 +121,25 @@ function initUitls() {
     echo "export * from './tx';" >>$1'/index.ts'
 }
 
+function initHooks() {
+    echo "
+        import { useCallback } from 'react';
+        import { ChainConfig, RecordsHooksResult, RecordList } from '../../../model';
+
+        export function useRecords(departure: ChainConfig, arrival: ChainConfig): RecordsHooksResult<RecordList<unknown>> {
+            const fetchIssuingRecords = useCallback(() => { }, []);
+            const fetchRedeemRecords = useCallback(() => { }, []);
+
+            return {
+                fetchRedeemRecords,
+                fetchIssuingRecords,
+            }
+        }
+    " >>$1'/records.ts'
+
+    echo "export * from './records';" >>$1'/index.ts'
+}
+
 function init() {
     local departure=${from}"2"${to}
     local arrival=${to}"2"${from}
@@ -144,7 +163,7 @@ function init() {
     initUitls $path'/utils'
 
     mkdir $path'/hooks'
-    indexEmpty $path'/hooks'
+    initHooks $path'/hooks'
 
     mkdir $path'/providers'
     indexEmpty $path'/providers'
@@ -166,4 +185,4 @@ checkExist
 
 init
 
-./node_modules/prettier/bin-prettier.js  ./src/bridges/${origin}'-'${target}/**/*.{ts,tsx} --write
+./node_modules/prettier/bin-prettier.js ./src/bridges/${origin}'-'${target}/**/*.{ts,tsx} --write
