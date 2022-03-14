@@ -5,7 +5,7 @@ import { IndexingState, Progresses, ProgressProps, State } from '../../component
 import { Record } from '../../components/record/Record';
 import { BridgeDispatchEventRecord, PolkadotChainConfig, RecordComponentProps } from '../../model';
 import { chainConfigToVertices, convertToSS58, getNetworkMode, isSubstrate2SubstrateDVM } from '../../utils';
-import { useS2SRecords } from './hooks';
+import { useRecords } from './hooks';
 import {
   Substrate2SubstrateDVMRecord as S2SDVMRecord,
   Substrate2SubstrateDVMRecordRes,
@@ -18,7 +18,7 @@ export function Substrate2SubstrateDVMRecord({
   arrival,
 }: RecordComponentProps<S2SDVMRecord, PolkadotChainConfig, PolkadotChainConfig>) {
   const { t } = useTranslation();
-  const { fetchS2SIssuingRecord, fetchS2SRedeemRecord, fetchMessageEvent } = useS2SRecords(departure!, arrival!);
+  const { fetchIssuingRecord, fetchRedeemRecord, fetchMessageEvent } = useRecords(departure!, arrival!);
   const isRedeem = useMemo(() => departure && getNetworkMode(departure) === 'dvm', [departure]);
   const [record, setRecord] = useState(originRecord);
   const [messageEvent, setMessageEvent] = useState<BridgeDispatchEventRecord | null>(null);
@@ -93,7 +93,7 @@ export function Substrate2SubstrateDVMRecord({
     const { laneId, nonce, result } = record;
     const attemptsCount = 100;
     const isS2DVM = isSubstrate2SubstrateDVM(chainConfigToVertices(departure!), chainConfigToVertices(arrival!));
-    const queryOriginRecord = isS2DVM ? fetchS2SIssuingRecord : fetchS2SRedeemRecord;
+    const queryOriginRecord = isS2DVM ? fetchIssuingRecord : fetchRedeemRecord;
     let subscription: Subscription | null = null;
 
     /**

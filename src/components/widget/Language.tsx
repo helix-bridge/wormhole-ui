@@ -30,6 +30,7 @@ export function Language({
   const { t, i18n } = useTranslation();
   const [current, setCurrent] = useState(i18n.language.includes('-') ? i18n.language.split('-')[0] : i18n.language);
   const textColor = useMemo(() => (network ? 'text-' + network + '-main' : ''), [network]);
+
   const calcColor = useMemo(
     () => (theme === THEME.DARK ? network && NETWORK_LIGHT_THEME[network]['@project-main-bg'] : '#fff'),
     [network, theme]

@@ -53,7 +53,6 @@ export function MappingTokenControl({ value, onChange, tokens, total }: PropsWit
     ),
     []
   );
-  // eslint-disable-next-line no-magic-numbers
   const percent = total && (tokens.length / total) * 100;
   const inprogress = data[RegisterStatus[RegisterStatus.registering]] ?? [];
   const confirmed = data[RegisterStatus[RegisterStatus.registered]] ?? [];

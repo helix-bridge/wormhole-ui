@@ -19,6 +19,7 @@ export function Balance({
     },
     [onChange]
   );
+
   const getValue = useCallback(
     (inputValue: string) => {
       const [integer, decimal] = inputValue.split('.');
@@ -31,17 +32,16 @@ export function Balance({
     },
     [precision]
   );
-  const style = useMemo(() => {
+
+  const style = useMemo<CSSProperties>(() => {
     if (!children) {
       return {};
     }
 
-    const sty: CSSProperties = {
+    return {
       borderTopRightRadius: 0,
       borderBottomRightRadius: 0,
     };
-
-    return sty;
   }, [children]);
 
   return (

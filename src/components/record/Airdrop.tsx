@@ -23,22 +23,29 @@ const CLAIM_ENDPOINT = 'https://crab.subscan.io';
 // eslint-disable-next-line complexity
 export function AirdropRecord() {
   const { t } = useTranslation();
+
   const {
     mainConnection: { accounts, status },
     network,
   } = useApi();
+
   const [claimAmount, setClaimAmount] = useState(new BN(0));
   const [target, setTarget] = useState('');
   const { fromNetworks, setFromFilters } = useNetworks('airdrop');
+
   const [fromNetwork, setFromNetwork] = useState<ChainConfig | null>(() => {
     const from = getInitialSetting('from', null);
+
     return fromNetworks.find((item) => item.name === from) ?? null;
   });
+
   const isConnectionReady = useMemo(() => {
     return status === 'success' && isSameNetConfig(network, fromNetwork);
   }, [fromNetwork, network, status]);
+
   const color = NETWORK_LIGHT_THEME[fromNetwork?.name ?? ('pangolin' as Network)]['@project-main-bg'];
   const { address: sender } = useMemo(() => (accounts || [])[0] ?? '', [accounts]);
+
   const amount = useMemo(
     () => (fromNetwork?.name ? getAirdropData(sender, fromNetwork.name) : 0),
     [sender, fromNetwork]

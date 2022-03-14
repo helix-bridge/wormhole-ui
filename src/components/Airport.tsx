@@ -73,9 +73,11 @@ export function Airport({
 }: CrossChainComponentProps<AirportValues> & { direction: CrossChainDirection }) {
   const { t } = useTranslation();
   const [signature] = useState<string>('');
+
   const {
     mainConnection: { accounts },
   } = useApi();
+
   const [amount, setAmount] = useState('0');
   const { address: account } = useMemo(() => (accounts || [])[0] ?? { address: '' }, [accounts]);
 

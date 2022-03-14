@@ -16,6 +16,7 @@ const getRecordComponent = getBridgeComponent('record');
 
 export function RecordList({ departure, arrival, sourceData }: RecordListProps) {
   const { t } = useTranslation();
+
   const Record = useMemo(
     () =>
       getRecordComponent({

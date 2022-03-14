@@ -1,14 +1,20 @@
 import { message } from 'antd';
 import camelCaseKeys from 'camelcase-keys';
 import { getUnixTime } from 'date-fns';
-import { GraphQLClient, useManualQuery, FetchData } from 'graphql-hooks';
+import { FetchData, GraphQLClient, useManualQuery } from 'graphql-hooks';
 import { isBoolean } from 'lodash';
-import { useMemo, useState, useCallback, Dispatch } from 'react';
+import { Dispatch, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Observable, from, map, catchError, of, switchMap, tap, EMPTY } from 'rxjs';
+import { catchError, EMPTY, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import Web3 from 'web3';
 import { SHORT_DURATION } from '../../../config/constant';
-import { RecordRequestParams, ChainConfig, BridgeDispatchEventRecord } from '../../../model';
+import {
+  BridgeDispatchEventRecord,
+  ChainConfig,
+  RecordList,
+  RecordRequestParams,
+  RecordsHooksResult,
+} from '../../../model';
 import { getBridge, pollWhile } from '../../../utils';
 import {
   BRIDGE_DISPATCH_EVENTS,
@@ -18,13 +24,13 @@ import {
   S2S_REDEEM_RECORD_QUERY,
 } from '../config';
 import {
+  BridgeDispatchEventRes,
   Substrate2SubstrateDVMRecord,
   Substrate2SubstrateDVMRecordRes,
-  SubstrateDVM2SubstrateRecordRes,
-  BridgeDispatchEventRes,
   Substrate2SubstrateDVMRecordsRes,
-  SubstrateDVM2SubstrateRecordsRes,
   SubstrateDVM2SubstrateRecord,
+  SubstrateDVM2SubstrateRecordRes,
+  SubstrateDVM2SubstrateRecordsRes,
 } from '../model';
 import { SubstrateSubstrateDVMBridgeConfig } from '../model/bridge';
 
@@ -42,20 +48,14 @@ interface FetchRecordOptions<T> {
   skipCache?: boolean;
 }
 
-type FetchS2SRecords = (
-  req: RecordRequestParams
-) => Observable<{ count: number; list: Substrate2SubstrateDVMRecord[] }>;
-
 type FetchS2SRecord<T, R> = (laneId: string, nonce: string, options: FetchRecordOptions<T>) => Observable<R>;
 
-export function useS2SRecords(
+export function useRecords(
   departure: ChainConfig,
   arrival: ChainConfig
-): {
-  fetchS2SIssuingRecords: FetchS2SRecords;
-  fetchS2SRedeemRecords: FetchS2SRecords;
-  fetchS2SIssuingRecord: FetchS2SRecord<Substrate2SubstrateDVMRecordRes, Substrate2SubstrateDVMRecord>;
-  fetchS2SRedeemRecord: FetchS2SRecord<SubstrateDVM2SubstrateRecordRes, Substrate2SubstrateDVMRecord>;
+): RecordsHooksResult<RecordList<Substrate2SubstrateDVMRecord>> & {
+  fetchIssuingRecord: FetchS2SRecord<Substrate2SubstrateDVMRecordRes, Substrate2SubstrateDVMRecord>;
+  fetchRedeemRecord: FetchS2SRecord<SubstrateDVM2SubstrateRecordRes, Substrate2SubstrateDVMRecord>;
   fetchMessageEvent: FetchS2SRecord<BridgeDispatchEventRes, BridgeDispatchEventRecord>;
 } {
   const api = useMemo(
@@ -311,10 +311,10 @@ export function useS2SRecords(
   );
 
   return {
-    fetchS2SIssuingRecords,
-    fetchS2SRedeemRecords,
-    fetchS2SRedeemRecord,
-    fetchS2SIssuingRecord,
+    fetchIssuingRecords: fetchS2SIssuingRecords,
+    fetchRedeemRecords: fetchS2SRedeemRecords,
+    fetchRedeemRecord: fetchS2SRedeemRecord,
+    fetchIssuingRecord: fetchS2SIssuingRecord,
     fetchMessageEvent,
   };
 }

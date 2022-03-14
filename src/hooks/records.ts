@@ -1,17 +1,10 @@
 import { isNull, omitBy } from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
 import { EMPTY, Observable, Subscription } from 'rxjs';
-import {
-  queryDarwinia2EthereumIssuingRecords,
-  queryEthereum2DarwiniaGenesisRecords,
-  queryEthereum2DarwiniaRedeemRecords,
-} from '../bridges/ethereum-darwinia/utils';
-import {
-  queryDarwiniaDVM2EthereumIssuingRecords,
-  queryEthereum2DarwiniaDVMRedeemRecords,
-} from '../bridges/ethereum-darwiniaDVM/utils';
-import { useSubstrate2DVMRecords } from '../bridges/substrate-dvm/hooks';
-import { useS2SRecords } from '../bridges/substrate-substrateDVM/hooks';
+import { useRecords as useDarwiniaEthereum } from '../bridges/ethereum-darwinia/hooks';
+import { useRecords as useEthereumDarwiniaDVM } from '../bridges/ethereum-darwiniaDVM/hooks';
+import { useRecords as useSubstrateDVM } from '../bridges/substrate-dvm/hooks';
+import { useRecords as useSubstrateSubstrateDVM } from '../bridges/substrate-substrateDVM/hooks';
 import { Departure, RecordRequestParams } from '../model';
 import {
   isDarwinia2Ethereum,
@@ -76,10 +69,12 @@ export function useRecordsQuery<T = unknown>(req: RecordsQueryRequest): RecordsH
 }
 
 export function useRecords(departure: Departure, arrival: Departure) {
-  const { fetchS2SIssuingRecords, fetchS2SRedeemRecords } = useS2SRecords(
-    verticesToChainConfig(departure),
-    verticesToChainConfig(arrival)
-  );
+  const [depConfig, arrConfig] = [verticesToChainConfig(departure), verticesToChainConfig(arrival)];
+
+  const darwiniaEthereum = useDarwiniaEthereum(depConfig, arrConfig);
+  const ethereumDarwiniaDVM = useEthereumDarwiniaDVM(depConfig, arrConfig);
+  const substrateSubstrateDVM = useSubstrateSubstrateDVM(depConfig, arrConfig);
+  const substrateDVM = useSubstrateDVM(depConfig, arrConfig);
 
   const genParams = useCallback((params: RecordRequestParams) => {
     const req = omitBy<RecordRequestParams>(params, isNull) as RecordRequestParams;
@@ -92,48 +87,43 @@ export function useRecords(departure: Departure, arrival: Departure) {
     return req;
   }, []);
 
-  const { fetchDVM2SubstrateRecords, fetchSubstrate2DVMRecords } = useSubstrate2DVMRecords(
-    verticesToChainConfig(departure),
-    verticesToChainConfig(arrival)
-  );
-
   const genQueryFn = useCallback<(isGenesis: boolean) => (req: RecordRequestParams) => Observable<unknown>>(
     // eslint-disable-next-line complexity
     (isGenesis = false) => {
       if (isTronNetwork(departure.network) || (isEthereum2Darwinia(departure, arrival) && isGenesis)) {
-        return queryEthereum2DarwiniaGenesisRecords;
+        return darwiniaEthereum.fetchGenesisRecords;
       }
 
       if (isEthereum2Darwinia(departure, arrival) && !isGenesis) {
-        return queryEthereum2DarwiniaRedeemRecords;
+        return darwiniaEthereum.fetchRedeemRecords;
       }
 
       if (isDarwinia2Ethereum(departure, arrival)) {
-        return queryDarwinia2EthereumIssuingRecords;
+        return darwiniaEthereum.fetchIssuingRecords;
       }
 
       if (isSubstrate2SubstrateDVM(departure, arrival)) {
-        return fetchS2SIssuingRecords;
+        return substrateSubstrateDVM.fetchIssuingRecords;
       }
 
       if (isSubstrateDVM2Substrate(departure, arrival)) {
-        return fetchS2SRedeemRecords;
+        return substrateSubstrateDVM.fetchRedeemRecords;
       }
 
       if (isEthereum2DVM(departure, arrival)) {
-        return queryEthereum2DarwiniaDVMRedeemRecords;
+        return ethereumDarwiniaDVM.fetchRedeemRecords;
       }
 
       if (isDVM2Ethereum(departure, arrival)) {
-        return queryDarwiniaDVM2EthereumIssuingRecords;
+        return ethereumDarwiniaDVM.fetchIssuingRecords;
       }
 
       if (isSubstrate2DVM(departure, arrival)) {
-        return fetchSubstrate2DVMRecords;
+        return substrateDVM.fetchIssuingRecords;
       }
 
       if (isDVM2Substrate(departure, arrival)) {
-        return fetchDVM2SubstrateRecords;
+        return substrateDVM.fetchRedeemRecords;
       }
 
       return (_: RecordRequestParams) => EMPTY;
@@ -141,10 +131,15 @@ export function useRecords(departure: Departure, arrival: Departure) {
     [
       departure,
       arrival,
-      fetchS2SIssuingRecords,
-      fetchS2SRedeemRecords,
-      fetchSubstrate2DVMRecords,
-      fetchDVM2SubstrateRecords,
+      darwiniaEthereum.fetchGenesisRecords,
+      darwiniaEthereum.fetchRedeemRecords,
+      darwiniaEthereum.fetchIssuingRecords,
+      substrateSubstrateDVM.fetchIssuingRecords,
+      substrateSubstrateDVM.fetchRedeemRecords,
+      ethereumDarwiniaDVM.fetchRedeemRecords,
+      ethereumDarwiniaDVM.fetchIssuingRecords,
+      substrateDVM.fetchIssuingRecords,
+      substrateDVM.fetchRedeemRecords,
     ]
   );
 

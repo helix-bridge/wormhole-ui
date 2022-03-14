@@ -32,6 +32,12 @@ type DirectionProps = CustomFormControlProps<NullableCrossChainDirection> & {
   mode?: DestinationMode;
 };
 
+interface RoadIndicatorProps {
+  status: BridgeStatus | null;
+  canReverse?: boolean;
+  onSwap: () => void;
+}
+
 export function Direction({ value, onChange, type = 'cross-chain', mode = 'default' }: DirectionProps) {
   const { t } = useTranslation();
   const { setFromFilters, setToFilters, fromNetworks, toNetworks } = useNetworks(type);
@@ -155,14 +161,9 @@ export function Direction({ value, onChange, type = 'cross-chain', mode = 'defau
   );
 }
 
-interface RoadIndicatorProps {
-  status: BridgeStatus | null;
-  canReverse?: boolean;
-  onSwap: () => void;
-}
-
 function RoadIndicatorArrow({ status, canReverse, onSwap }: RoadIndicatorProps) {
   const { t } = useTranslation();
+
   return status === 'pending' ? (
     <Tooltip title={t('Coming Soon')}>
       <DashOutlined className="mt-6 mx-4 text-2xl" />
