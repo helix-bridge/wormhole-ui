@@ -9,7 +9,7 @@ query transfers($account: String!, $method: String!, $offset: Int, $limit: Int) 
     filter: {
       and: [
         {
-          fromId: {
+          senderId: {
             equalTo: $account
           }
         },
@@ -20,8 +20,8 @@ query transfers($account: String!, $method: String!, $offset: Int, $limit: Int) 
   ){
     totalCount
     nodes {
-      toId
-      fromId
+      recipientId
+      senderId
       amount
       timestamp
       section

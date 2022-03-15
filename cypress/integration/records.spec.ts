@@ -89,7 +89,7 @@ describe('History records', () => {
     cy.intercept(
       {
         method: 'POST',
-        url: 'https://api.subquery.network/sq/darwinia-network/pangoro',
+        url: 'https://api.subquery.network/sq/darwinia-network/wormhole-pangoro',
       },
       { fixture: 's2sDVM.records.json' }
     );
@@ -98,7 +98,7 @@ describe('History records', () => {
     selectTo('Pangolin-Smart');
     setSearchAccount(pangoroAccount);
 
-    cy.react('Record').should('have.length', 8);
+    cy.react('Record').should('have.length', 10);
   });
 
   it('should display substrate DVM to substrate records', () => {
