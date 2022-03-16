@@ -54,7 +54,7 @@ export const S2S_REDEEM_RECORD_QUERY = `
  */
 export const S2S_ISSUING_RECORDS_QUERY = `
   query s2sEvents($account: String!, $offset: Int!, $limit: Int!, $result: [Int!]) {
-    s2sEvents(offset: $offset, first: $limit, filter: { sender: { equalTo: $account }, result: { in: $result } }, orderBy: START_TIMESTAMP_DESC) {
+    s2sEvents(offset: $offset, first: $limit, filter: { senderId: { equalTo: $account }, result: { in: $result } }, orderBy: START_TIMESTAMP_DESC) {
       totalCount
       nodes {
         amount
@@ -66,7 +66,7 @@ export const S2S_ISSUING_RECORDS_QUERY = `
         requestTxHash
         responseTxHash
         result
-        sender
+        senderId
         startTimestamp
         token
       }

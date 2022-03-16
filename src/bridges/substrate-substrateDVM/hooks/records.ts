@@ -2,6 +2,7 @@ import { message } from 'antd';
 import camelCaseKeys from 'camelcase-keys';
 import { getUnixTime } from 'date-fns';
 import { FetchData, GraphQLClient, useManualQuery } from 'graphql-hooks';
+import { isHex } from '@polkadot/util';
 import { isBoolean } from 'lodash';
 import { Dispatch, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +16,7 @@ import {
   RecordRequestParams,
   RecordsHooksResult,
 } from '../../../model';
-import { getBridge, pollWhile } from '../../../utils';
+import { convertToDvm, getBridge, pollWhile } from '../../../utils';
 import {
   BRIDGE_DISPATCH_EVENTS,
   S2S_ISSUING_RECORDS_QUERY,
@@ -108,10 +109,11 @@ export function useRecords(
 
   const toQueryVariables = useCallback((req: RecordRequestParams) => {
     const {
-      address: account,
+      address,
       paginator: { row: limit, page: offset },
       confirmed,
     } = req;
+    const account = isHex(address) ? address : convertToDvm(address);
 
     const result = isBoolean(confirmed)
       ? confirmed

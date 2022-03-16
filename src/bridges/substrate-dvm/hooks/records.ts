@@ -2,7 +2,7 @@ import { FetchData, GraphQLClient, useManualQuery } from 'graphql-hooks';
 import { useCallback, useMemo } from 'react';
 import { catchError, EMPTY, from, map } from 'rxjs';
 import { ChainConfig, PolkadotChainConfig, RecordList, RecordRequestParams, RecordsHooksResult } from '../../../model';
-import { convertToSS58, dvmAddressToAccountId, getBridge, isDVM2Substrate } from '../../../utils';
+import { convertToDvm, convertToSS58, dvmAddressToAccountId, getBridge, isDVM2Substrate } from '../../../utils';
 import { SubstrateSubstrateDVMBridgeConfig } from '../../substrate-substrateDVM/model/bridge';
 import { TRANSFERS_QUERY } from '../config';
 import { DVM2SubstrateRecordsRes, Substrate2DVMRecord, Substrate2DVMRecordsRes } from '../model';
@@ -56,7 +56,7 @@ export function useRecords(
           variables: {
             limit: row,
             offset: page * row,
-            account: address,
+            account: convertToDvm(address),
             // FIXME: https://github.com/darwinia-network/darwinia-common/issues/1123 this issue will be fix the record from dvm to substrate
             method: isDVM2Substrate(...direction) ? 'Endowed' : 'Transfer',
           },

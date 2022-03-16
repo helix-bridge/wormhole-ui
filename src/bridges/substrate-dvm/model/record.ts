@@ -1,8 +1,8 @@
 interface Transfer {
   amount: string;
-  fromId: string;
+  senderId: string;
   timestamp: string;
-  toId: string;
+  recipientId: string;
   section: 'kton' | 'balances';
   method: string;
   // eslint-disable-next-line id-denylist

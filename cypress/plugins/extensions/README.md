@@ -1,1 +1,0 @@
-# The metamask extensions folder

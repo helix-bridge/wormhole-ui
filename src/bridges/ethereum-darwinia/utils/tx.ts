@@ -49,11 +49,12 @@ export const redeem: TxFn<RedeemDarwiniaTxPayload> = ({ sender, direction, asset
   const { to } = direction;
   const bridge = getBridge<EthereumDarwiniaBridgeConfig>(direction);
   const contractAddress = bridge.config.contracts[asset.toLowerCase() as 'ring' | 'kton'] as string;
+  const options = to.isTest ? { from: sender, gasPrice: '500000000000' } : { from: sender };
 
   recipient = buf2hex(decodeAddress(recipient, false, (to as PolkadotChainConfig).ss58Prefix).buffer);
 
   return genEthereumContractTxObs(contractAddress, (contract) =>
-    contract.methods.transferFrom(sender, bridge.config.contracts.issuing, amount, recipient).send({ from: sender })
+    contract.methods.transferFrom(sender, bridge.config.contracts.issuing, amount, recipient).send(options)
   );
 };
 

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Progresses, ProgressProps, State } from '../../components/record/Progress';
 import { Record } from '../../components/record/Record';
 import { DVMChainConfig, PolkadotChainConfig, RecordComponentProps } from '../../model';
-import { convertToSS58, isDVM } from '../../utils';
+import { convertToSS58, dvmAddressToAccountId, isDVM } from '../../utils';
 import { Substrate2DVMRecord as S2DRecord } from './model';
 
 export function Substrate2DVMRecord({
@@ -64,7 +64,11 @@ export function Substrate2DVMRecord({
       departure={departure}
       arrival={arrival}
       blockTimestamp={getUnixTime(new Date(record.timestamp)) || Date.now()}
-      recipient={isDVM(departure!) ? convertToSS58(record.toId, arrival?.ss58Prefix ?? null) : record.fromId}
+      recipient={
+        isDVM(departure!)
+          ? convertToSS58(record.recipientId, arrival?.ss58Prefix ?? null)
+          : dvmAddressToAccountId(record.recipientId).toString()
+      }
       assets={[{ amount: record.amount, currency: symbol, unit: 'gwei' }]}
       items={progresses}
     >
