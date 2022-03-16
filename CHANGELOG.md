@@ -1,3 +1,13 @@
+# [2.3.0](https://github.com/darwinia-network/wormhole-pro/compare/v2.2.2...v2.3.0) (2022-03-16)
+
+### Bug Fixes
+
+- **#266:** tx hash link ([#280](https://github.com/darwinia-network/wormhole-pro/issues/280)) ([4925663](https://github.com/darwinia-network/wormhole-pro/commit/49256639c64bd8b12586af9cc02c465e0c4bdf5b)), closes [#266](https://github.com/darwinia-network/wormhole-pro/issues/266) [#266](https://github.com/darwinia-network/wormhole-pro/issues/266)
+
+### Features
+
+- merge smart app into wormhole ([#286](https://github.com/darwinia-network/wormhole-pro/issues/286)) ([c876d68](https://github.com/darwinia-network/wormhole-pro/commit/c876d68f1d8755660bfb7d2bab67d555a2a35a39))
+
 ## [2.2.2](https://github.com/darwinia-network/wormhole-pro/compare/v2.2.1...v2.2.2) (2022-01-20)
 
 ### Bug Fixes
