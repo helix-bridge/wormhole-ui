@@ -156,9 +156,14 @@ module.exports = {
   },
   waitClearAndType: async (text, selector, page = metamaskWindow) => {
     await module.exports.waitFor(selector, page);
+
     const input = await page.$(selector);
-    
-    await input.click({ clickCount: 3 });
+
+    // clear origin gasPrice value
+    await page.$eval(selector, el => el.value = '');
+
+    // https://zhaoqize.github.io/puppeteer-api-zh_CN/#?product=Puppeteer&version=v13.5.1&show=api-elementhandleclickoptions 
+    // await input.click({ clickCount: 3 });
     await input.type(text);
   },
   waitForText: async (selector, text, page = metamaskWindow) => {
