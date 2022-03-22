@@ -26,6 +26,8 @@ export enum Path {
   airdropHistory = '/airdropHistory',
   register = '/register',
   configure = '/configure',
+  dashboard = '/dashboard',
+  explorer = '/explorer',
 }
 
 export enum RegisterStatus {

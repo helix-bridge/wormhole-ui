@@ -1,5 +1,5 @@
 {
-  "@border-radius-base": "10px",
+  "@border-radius-base": "4px",
   "@btn-default-bg": "linear-gradient(#ffffff, #ffffff) padding-box,\n  linear-gradient(to right, #5745de, #ec3783) border-box",
   "@btn-default-border": "2px solid transparent",
   "@btn-primary-bg": "@project-main-bg",

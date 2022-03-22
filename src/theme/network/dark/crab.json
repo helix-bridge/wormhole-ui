@@ -6,5 +6,5 @@
   "@project-accent": "#5745de",
   "@project-main-bg": "#ec3783",
   "@project-primary": "#ec3783",
-  "@project-radius-base": "12px"
+  "@project-radius-base": "4px"
 }

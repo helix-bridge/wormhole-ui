@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@import '~@fontsource/ibm-plex-sans/index.css';
+
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
 .confirm-modal.ant-modal {
   max-width: calc(100vw - 32px);
 
