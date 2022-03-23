@@ -22,7 +22,7 @@ function App() {
   return (
     <Layout className="min-h-screen overflow-scroll">
       <Header
-        className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-2"
+        className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-4"
         style={{ marginTop: -1 }}
       >
         <Tooltip title={t('Wormhole is in beta. Please use at your own risk level')}>
@@ -45,13 +45,11 @@ function App() {
         </div>
 
         <div className="hidden lg:flex lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-12">
-          <div className="hidden gap-8 lg:flex items-center">
-            <Navigator theme={theme} />
+          <Navigator theme={theme} />
 
-            <Button type="primary" size="large">
-              {t('Launch App')}
-            </Button>
-          </div>
+          <Button type="primary" size="large" className="ml-8">
+            {t('Launch App')}
+          </Button>
 
           <div className="justify-end items-center md:pl-8 hidden">
             <ThemeSwitch defaultTheme={THEME.DARK} onThemeChange={setTheme} mode="btn" />
@@ -59,7 +57,7 @@ function App() {
         </div>
       </Header>
 
-      <Content className="sm:px-16 sm:pt-4 px-2 py-1 my-24 sm:my-20 z-10">
+      <Content className="sm:px-16 sm:pt-4 px-4 py-1 my-24 sm:my-20 z-10">
         <BridgeState className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow max-w-full mb-8" />
         <TransitionGroup>
           <CSSTransition in={true} key={location.key} timeout={300} classNames="fade">

@@ -95,7 +95,7 @@ export function Navigator({ toggle, theme = THEME.DARK }: NavigatorProps) {
 
   return (
     <>
-      <div className="hidden lg:block">
+      <div className="hidden lg:flex items-center gap-8">
         {navs.map((nav, index) =>
           Array.isArray(nav) ? (
             <Dropdown
@@ -125,7 +125,7 @@ export function Navigator({ toggle, theme = THEME.DARK }: NavigatorProps) {
         theme={theme}
         mode="inline"
         defaultSelectedKeys={selectedNavMenu}
-        className="flex-1"
+        className="block lg:hidden flex-1"
         style={{ background: theme === THEME.DARK ? 'transparent' : 'inherit' }}
       >
         {navigators.map(({ Icon, path, label, className }) => (

@@ -45,7 +45,6 @@ function LineChart() {
   const options = {
     chart: {
       type: 'column',
-      height: 280,
       backgroundColor: {
         linearGradient: { x1: 0, y1: 0, x2: 1, y2: 1 },
         stops: [
@@ -80,7 +79,14 @@ function LineChart() {
     /* eslint-enable no-magic-numbers */
   };
 
-  return <HighchartsReact highcharts={Highcharts} options={options} ref={charRef}></HighchartsReact>;
+  return (
+    <HighchartsReact
+      containerProps={{ className: 'h-48 lg:h-72' }}
+      highcharts={Highcharts}
+      options={options}
+      ref={charRef}
+    ></HighchartsReact>
+  );
 }
 
 function Page() {
@@ -89,24 +95,24 @@ function Page() {
     <div>
       <DayFilter />
 
-      <div className="grid grid-cols-12 gap-6 mt-6">
-        <div className="col-span-8 flex-1 p-4 bg-antDark">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mt-4 lg:mt-6">
+        <div className="lg:col-span-8 flex-1 p-4 bg-antDark">
           <span className="uppercase">{t('volume by week')}</span>
           <LineChart />
         </div>
 
-        <div className="col-span-4 bg-antDark px-5 py-6">
+        <div className="lg:col-span-4 bg-antDark px-5 py-6">
           <div className="flex justify-between items-center">
             <h3 className="uppercase">{t('volume')}</h3>
             <span className="text-gray-400">Since Dec 21,2020(UTC)</span>
           </div>
 
-          <div className="flex flex-col gap-2 items-center justify-center mt-10 mb-6">
+          <div className="flex flex-col gap-2 items-center justify-center mt-4 mb-2 md:mt-10 md:mb-6">
             <h2 className="text-4xl">$834,312,847</h2>
             <span className="text-gray-400">{t('Total Volume')}</span>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2 md:gap-4">
             <div className="flex justify-between">
               <span className="uppercase">{t('top 3 destination')}</span>
               <span className="uppercase">{t('volume')}</span>
@@ -142,24 +148,24 @@ function Page() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6 mt-6">
-        <div className="col-span-8 flex-1 p-4 bg-antDark">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mt-4 lg:mt-6">
+        <div className="lg:col-span-8 flex-1 p-4 bg-antDark">
           <span className="uppercase">{t('transactions by week')}</span>
           <LineChart />
         </div>
 
-        <div className="col-span-4 bg-antDark px-5 py-6">
+        <div className="lg:col-span-4 bg-antDark px-5 py-6">
           <div className="flex justify-between items-center">
             <h3 className="uppercase">{t('transactions')}</h3>
             <span className="text-gray-400">Since Dec 21,2020(UTC)</span>
           </div>
 
-          <div className="flex flex-col gap-2 items-center justify-center mt-10 mb-6">
+          <div className="flex flex-col gap-2 items-center justify-center  mt-4 mb-2 md:mt-10 md:mb-6">
             <h2 className="text-4xl">$834,312,847</h2>
             <span className="text-gray-400">{t('Total Volume')}</span>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2 md:gap-4">
             <div className="flex justify-between">
               <span className="uppercase">{t('top 3 destination')}</span>
               <span className="uppercase">{t('transactions')}</span>
@@ -195,10 +201,10 @@ function Page() {
         </div>
       </div>
 
-      <div className="gap-6">
+      <div className="gap-4 lg:gap-6">
         <h2 className="uppercase my-6">{t('chains')}</h2>
 
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-4 gap-4 lg:gap-6">
           {chains.map((item) => (
             <Chain {...item} key={item.name} />
           ))}
