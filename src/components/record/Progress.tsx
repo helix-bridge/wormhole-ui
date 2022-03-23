@@ -203,7 +203,11 @@ export function Progresses({ items }: ProgressesProps) {
   const cols = useMemo(() => items.length, [items.length]);
 
   return (
-    <div className={`grid bg-gray-300 dark:bg-gray-800 bg-opacity-20 progress-steps grid-cols-${cols}`}>
+    <div
+      className="grid bg-gray-300 dark:bg-gray-800 bg-opacity-20 progress-steps"
+      /* when using tailwind purge, class name like grid-cols-${cols} can not be recognized */
+      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+    >
       {items.map((item, index) => (
         <Progress {...item} key={index} />
       ))}
