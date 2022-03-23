@@ -1,5 +1,5 @@
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Input, Table, TableColumnType } from 'antd';
+import { Input, Table, TableColumnType } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
 import { DayFilter } from '../components/widget/DayFilter';
@@ -12,6 +12,7 @@ interface Record {
   amount: string;
   fee: string;
   id: string;
+  asset: string;
   executionFee: string;
 }
 
@@ -19,31 +20,34 @@ const data: Record[] = [
   {
     id: '0',
     state: 'Await ChainRelay Confirm',
+    asset: 'RING',
     time: '10 hours 23 mins ago',
     from: 'Ethereum 0xe596...F1E5',
     to: 'Darwinia 0xe596...F1E',
     amount: 'Sent: 1000.03 RING',
-    fee: '0.123 ETH 10RINg',
+    fee: '0.123 ETH 10RING',
     executionFee: '0.13Ring',
   },
   {
     id: '1',
     state: 'Await ChainRelay Confirm',
+    asset: 'RING',
     time: '10 hours 23 mins ago',
     from: 'Ethereum 0xe596...F1E5',
     to: 'Darwinia 0xe596...F1E',
     amount: 'Sent: 1000.03 RING',
-    fee: '0.123 ETH 10RINg',
+    fee: '0.123 ETH 10RING',
     executionFee: '0.13Ring',
   },
   {
     id: '2',
     state: 'Await ChainRelay Confirm',
+    asset: 'RING',
     time: '10 hours 23 mins ago',
     from: 'Ethereum 0xe596...F1E5',
     to: 'Darwinia 0xe596...F1E',
     amount: 'Sent: 1000.03 RING',
-    fee: '0.123 ETH 10RINg',
+    fee: '0.123 ETH 10RING',
     executionFee: '0.13Ring',
   },
 ];
@@ -60,6 +64,10 @@ function Page() {
       dataIndex: 'time',
     },
     {
+      title: t('Asset'),
+      dataIndex: 'asset',
+    },
+    {
       title: t('From'),
       dataIndex: 'from',
     },
@@ -69,11 +77,7 @@ function Page() {
     },
     {
       title: t('Amount'),
-      dataIndex: 'amount',
-    },
-    {
-      title: t('Fee'),
-      key: 'fee',
+      key: 'amount',
       render() {
         return (
           <div>
@@ -97,6 +101,10 @@ function Page() {
       },
     },
     {
+      title: t('Fee'),
+      dataIndex: 'fee',
+    },
+    {
       title: t('Execution Fee'),
       dataIndex: 'executionFee',
     },
@@ -106,34 +114,31 @@ function Page() {
     <div>
       <DayFilter />
 
-      <div className="grid grid-cols-3 gap-6 place-items-center my-6">
-        <div className="flex flex-col gap-4 bg-antDark w-full py-4 text-center">
+      <div className="grid lg:grid-cols-3 gap-0 lg:gap-6 place-items-center my-4 lg:my-6">
+        <div className="flex justify-between items-center lg:flex-col lg:gap-4 bg-antDark w-full px-4 lg:px-0 py-2 lg:py-4 text-center">
           <span className="text-gray-400 uppercase">{t('transactions')}</span>
-          <span className="text-4xl">10,200</span>
+          <span className="text-xl lg:text-4xl">10,200</span>
         </div>
 
-        <div className="flex flex-col gap-4 bg-antDark w-full py-4 text-center">
+        <div className="flex justify-between items-center lg:flex-col lg:gap-4 bg-antDark w-full px-4 lg:px-0 py-2 lg:py-4 text-center">
           <span className="text-gray-400 uppercase">{t('unique users')}</span>
-          <span className="text-4xl">800</span>
+          <span className="text-xl lg:text-4xl">800</span>
         </div>
 
-        <div className="flex flex-col gap-4 bg-antDark w-full py-4 text-center">
+        <div className="flex justify-between items-center lg:flex-col lg:gap-4 bg-antDark w-full px-4 lg:px-0 py-2 lg:py-4 text-center">
           <span className="text-gray-400 uppercase">{t('supported blockchains')}</span>
-          <span className="text-4xl">7</span>
+          <span className="text-xl lg:text-4xl">7</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <Input
-          size="large"
-          suffix={<SearchOutlined />}
-          placeholder={t('Search by sender address')}
-          className="max-w-md"
-        />
-        <Button size="large">{t('Filter')}</Button>
-      </div>
+      <Input
+        size="large"
+        suffix={<SearchOutlined />}
+        placeholder={t('Search by sender address')}
+        className="max-w-md"
+      />
 
-      <div className="mt-6">
+      <div className="mt-4 lg:mt-6">
         <Table columns={columns} dataSource={data} rowKey="id" pagination={false} />
       </div>
     </div>
