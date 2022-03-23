@@ -1,31 +1,23 @@
-import { Button, Layout, Tooltip } from 'antd';
-import { useMemo, useState } from 'react';
+import { MenuOutlined } from '@ant-design/icons';
+import { Button, Drawer, Layout, Tooltip } from 'antd';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch, useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { BridgeState } from './components/bridge/BridgeState';
-import { Nav, Navigator } from './components/widget/Navigator';
+import { Navigator } from './components/widget/Navigator';
 import { ThemeSwitch } from './components/widget/ThemeSwitch';
 import { Path, routes, THEME } from './config';
-import { useApi } from './hooks';
 import { readStorage } from './utils/helper/storage';
 
 const { Header, Content } = Layout;
 
-const navigators: Nav[] = [
-  { label: 'Dashboard', path: Path.dashboard },
-  { label: 'Explorer', path: Path.explorer },
-  { label: 'DAO', path: Path.register },
-  { label: 'Docs', path: 'https://docs.darwinia.network/tutorials/wiki-tut-wormhole', extra: true },
-];
-
 // eslint-disable-next-line complexity
 function App() {
   const { t } = useTranslation();
-  const { isDev } = useApi();
   const [theme, setTheme] = useState<THEME>(readStorage().theme ?? THEME.DARK);
   const location = useLocation();
-  const navMenus = useMemo(() => navigators.filter((item) => isDev || (!isDev && !item.hide)), [isDev]);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <Layout className="min-h-screen overflow-scroll">
@@ -37,9 +29,24 @@ function App() {
           <Link to={Path.root}>{t('HelixBridge')}</Link>
         </Tooltip>
 
-        <div className="flex lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-12">
+        <Drawer
+          placement="right"
+          onClose={() => setCollapsed(true)}
+          closable={false}
+          visible={!collapsed}
+          bodyStyle={{ padding: 0 }}
+          className="block lg:hidden"
+        >
+          <Navigator theme={theme} toggle={() => setCollapsed(true)} />
+        </Drawer>
+
+        <div onClick={() => setCollapsed(false)} className="block lg:hidden">
+          <MenuOutlined className="text-xl" />
+        </div>
+
+        <div className="hidden lg:flex lg:justify-end items-center lg:flex-1 ml-2 md:ml-8 lg:ml-12">
           <div className="hidden gap-8 lg:flex items-center">
-            <Navigator data={navMenus} theme={theme} />
+            <Navigator theme={theme} />
 
             <Button type="primary" size="large">
               {t('Launch App')}
