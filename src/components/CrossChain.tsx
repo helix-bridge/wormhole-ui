@@ -86,14 +86,14 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
       const { from: departure, to } = data;
 
       if (departure && to) {
-        const bridge = getBridge({ from: departure, to });
+        const bridge = getBridge({ from: departure, to }, type);
 
         if (bridge.activeAssistantConnection) {
           connectAssistantNetwork(to);
         }
       }
     },
-    [connectAssistantNetwork]
+    [connectAssistantNetwork, type]
   );
 
   const Content = useMemo(() => {
@@ -165,7 +165,7 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
       {isReady && Content && <Content form={form} direction={direction as CrossChainDirection} setSubmit={setSubmit} />}
 
       <div className={status === 'success' && direction.from ? 'grid grid-cols-2 gap-4' : ''}>
-        <SubmitButton {...direction} requireTo launch={launch} />
+        <SubmitButton {...direction} requireTo launch={launch} crossType={type} />
 
         {status === 'success' && (
           <FromItemButton

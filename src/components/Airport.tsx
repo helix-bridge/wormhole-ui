@@ -82,10 +82,12 @@ export function Airport({
   const { address: account } = useMemo(() => (accounts || [])[0] ?? { address: '' }, [accounts]);
 
   useEffect(() => {
-    const num = getAirdropData(account, direction.from!.name);
+    if (direction.from) {
+      const num = getAirdropData(account, direction.from.name);
 
-    setAmount(num.toString());
-    form.setFieldsValue({ amount: num.toString() });
+      setAmount(num.toString());
+      form.setFieldsValue({ amount: num.toString() });
+    }
   }, [account, form, direction.from]);
 
   useEffect(() => {

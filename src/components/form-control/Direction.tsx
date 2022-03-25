@@ -101,7 +101,7 @@ export function Direction({ value, onChange, type = 'cross-chain', mode = 'defau
     const reverseVer = getArrival(to, from);
 
     if (from && to) {
-      const bridge = getBridge([from, to]);
+      const bridge = getBridge([from, to], type);
 
       setBridgetStatus(bridge.status);
     } else {
@@ -112,7 +112,7 @@ export function Direction({ value, onChange, type = 'cross-chain', mode = 'defau
     setReverseVertices(reverseVer);
     patchUrl(info);
     updateStorage(info);
-  }, [value]);
+  }, [value, type]);
 
   return (
     <div className={`relative flex justify-between items-center ${mode === 'default' ? 'flex-col' : ''}`}>
