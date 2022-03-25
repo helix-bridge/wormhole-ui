@@ -320,7 +320,7 @@ export function Erc20Register() {
             )
           )}
 
-          <SubmitButton disabled={isLoading || registeredStatus !== 0} from={net} to={null}>
+          <SubmitButton disabled={isLoading || registeredStatus !== 0} from={net} to={null} crossType="cross-chain">
             {t('Register')}
           </SubmitButton>
 

@@ -177,10 +177,9 @@ const showWarning = (plugin: string, downloadUrl: string) =>
       <Trans i18nKey="MissingPlugin">
         We need {{ plugin }} plugin to continue. Please
         <Link href={downloadUrl} target="_blank">
-          {' '}
-          Install{' '}
+          install
         </Link>
-        or unlock it first.
+        or <Link>enable</Link> it first.
       </Trans>
     ),
     okText: <Trans>OK</Trans>,

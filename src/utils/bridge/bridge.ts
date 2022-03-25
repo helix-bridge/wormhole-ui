@@ -1,6 +1,6 @@
 import { has, isEqual, pick } from 'lodash';
 import { ComingSoon } from '../../components/widget/ComingSoon';
-import { BRIDGES } from '../../config/bridges';
+import { AIRDROPS, BRIDGES } from '../../config/bridges';
 import {
   ChainConfig,
   Departure,
@@ -11,6 +11,7 @@ import {
   ApiKeys,
   Api,
   ContractConfig,
+  CrossType,
 } from '../../model';
 import { chainConfigToVertices, isDVM, isEthereumNetwork, isPolkadotNetwork } from '../network/network';
 
@@ -65,9 +66,12 @@ export const isS2S: BridgePredicateFn = (departure, arrival) => {
   return [isSubstrate2SubstrateDVM, isSubstrateDVM2Substrate].some((fn) => fn(departure, arrival));
 };
 
-export function hasBridge(source: CrossChainDirection | [Vertices | ChainConfig, Vertices | ChainConfig]): boolean {
+export function hasBridge(
+  source: CrossChainDirection | [Vertices | ChainConfig, Vertices | ChainConfig],
+  type: CrossType = 'cross-chain'
+): boolean {
   try {
-    getBridge(source);
+    getBridge(source, type);
 
     return true;
   } catch (_) {
@@ -75,16 +79,18 @@ export function hasBridge(source: CrossChainDirection | [Vertices | ChainConfig,
   }
 }
 
-export function isBridgeAvailable(from: ChainConfig, to: ChainConfig): boolean {
-  const bridge = getBridge([from, to]);
+export function isBridgeAvailable(from: ChainConfig, to: ChainConfig, type: CrossType): boolean {
+  const bridge = getBridge([from, to], type);
 
   return !!bridge && bridge.status === 'available';
 }
 
 export function getBridge<T extends BridgeConfig>(
-  source: CrossChainDirection | [Vertices | ChainConfig, Vertices | ChainConfig]
+  source: CrossChainDirection | [Vertices | ChainConfig, Vertices | ChainConfig],
+  type: CrossType = 'cross-chain'
 ): Bridge<T> {
   const data = Array.isArray(source) ? source : ([source.from, source.to] as [ChainConfig, ChainConfig]);
+
   const direction = data.map((item) => {
     const asVertices = has(item, 'network') && has(item, 'mode');
 
@@ -95,11 +101,8 @@ export function getBridge<T extends BridgeConfig>(
     return chainConfigToVertices(item as ChainConfig);
   });
 
-  return findBridge<T>(direction as [Vertices, Vertices]);
-}
-
-export function findBridge<T extends BridgeConfig>(direction: [Vertices, Vertices]): Bridge<T> {
-  const bridge = BRIDGES.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction));
+  const bridges: Bridge[] = type === 'cross-chain' ? BRIDGES : AIRDROPS;
+  const bridge = bridges.find((item) => isEqual(item.issuing, direction) || isEqual(item.redeem, direction));
 
   if (!bridge) {
     throw new Error(

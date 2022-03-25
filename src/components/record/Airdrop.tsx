@@ -130,7 +130,7 @@ export function AirdropRecord() {
           </Form.Item>
         </>
       )}
-      <SubmitButton from={fromNetwork} to={crabConfig} hideSubmit></SubmitButton>
+      <SubmitButton from={fromNetwork} to={crabConfig} hideSubmit crossType="airdrop"></SubmitButton>
     </Form>
   );
 }

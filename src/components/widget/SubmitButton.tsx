@@ -2,7 +2,7 @@ import { Button, ButtonProps, Form } from 'antd';
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi, useTx } from '../../hooks';
-import { ConnectionStatus, ChainConfig } from '../../model';
+import { ConnectionStatus, ChainConfig, CrossType } from '../../model';
 import { getDisplayName, hasBridge, isBridgeAvailable, isSameNetConfig } from '../../utils';
 
 interface SubmitButtonProps extends ButtonProps {
@@ -11,6 +11,7 @@ interface SubmitButtonProps extends ButtonProps {
   requireTo?: boolean;
   hideSubmit?: boolean;
   launch?: () => void;
+  crossType: CrossType;
 }
 
 export function FromItemButton({ children, className, ...others }: ButtonProps) {
@@ -36,6 +37,7 @@ export function SubmitButton({
   requireTo,
   disabled,
   launch,
+  crossType,
   hideSubmit = false,
 }: PropsWithChildren<SubmitButtonProps>) {
   const { t } = useTranslation();
@@ -57,7 +59,7 @@ export function SubmitButton({
     return <FromItemButton disabled>{t(tx.status)}</FromItemButton>;
   }
 
-  if (from?.name && to?.name && hasBridge({ from, to }) && !isBridgeAvailable(from, to)) {
+  if (from?.name && to?.name && hasBridge({ from, to }, crossType) && !isBridgeAvailable(from, to, crossType)) {
     return <FromItemButton disabled>{t('Coming Soon')}</FromItemButton>;
   }
 
