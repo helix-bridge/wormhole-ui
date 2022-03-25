@@ -83,7 +83,7 @@
   "Invalid token contract address": "无效的 token 合约地址",
   "MMR endpoint deployed on subql": "部署在 Sub query 的 MMR 索引地址",
   "Missing Wallet Plugin": "插件未安装",
-  "MissingPlugin": "此操作需要 {{plugin}} 插件，请先 <3> 安装 </3> 或 解锁插件",
+  "MissingPlugin": "此操作需要 {{plugin}} 插件，请先 <3> 安装 </3> 或 <5> 解锁 </5>插件",
   "Modifying the system configuration may lead to abnormal application functions, please be careful to modify": "修改系统配置可能导致应用功能异常，请谨慎修改!",
   "Native": "原生",
   "Network connected": "网络已连接",

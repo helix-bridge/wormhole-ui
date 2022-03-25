@@ -46,11 +46,16 @@ export function Direction({ value, onChange, type = 'cross-chain', mode = 'defau
   const [random, setRandom] = useState(0); // just for trigger animation when from and to reversed.
   const [bridgetStatus, setBridgetStatus] = useState<null | BridgeStatus>(null);
 
+  // eslint-disable-next-line complexity
   const canReverse = useMemo(() => {
+    if (type !== 'cross-chain') {
+      return false;
+    }
+
     const vers = [vertices, reverseVertices];
 
     return (vers.every(isNull) || vers.every(negate(isNull))) && !!value && (!!value.from || !!value.to);
-  }, [reverseVertices, value, vertices]);
+  }, [reverseVertices, type, value, vertices]);
 
   const triggerChange = useCallback(
     (val: NullableCrossChainDirection) => {

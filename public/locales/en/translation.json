@@ -83,7 +83,7 @@
   "Invalid token contract address": "Invalid token contract address",
   "MMR endpoint deployed on subql": "MMR endpoint deployed on subql",
   "Missing Wallet Plugin": "Missing Wallet Plugin",
-  "MissingPlugin": "We need {{plugin}} plugin to continue. Please <3>Install</3> or unlock it first",
+  "MissingPlugin": "We need {{plugin}} plugin to continue. Please <3>install</3> or <5>enable</5> it first",
   "Modifying the system configuration may lead to abnormal application functions, please be careful to modify": "Modifying the system configuration may lead to abnormal application functions, please be careful to modify",
   "Native": "Native",
   "Network connected": "Network connected",
