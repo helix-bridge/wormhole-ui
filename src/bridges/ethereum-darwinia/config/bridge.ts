@@ -5,7 +5,7 @@ import { Bridge } from '../../../model';
 import { EthereumDarwiniaBridgeConfig } from '../model';
 
 const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
-  specVersion: 1180,
+  specVersion: 1200,
   api: { dapp: 'https://api.darwinia.network', evolution: EVOLUTION_DOMAIN.product },
   contracts: {
     fee: '0x6B0940772516B69088904564A56d09CFe6Bb3D85',

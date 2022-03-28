@@ -18,11 +18,11 @@ export const BRIDGES = [
 ];
 
 const ethereumCrabConfig: BridgeConfig = {
-  specVersion: 1180,
+  specVersion: 1200,
 };
 
 const tronCrabConfig: BridgeConfig = {
-  specVersion: 1180,
+  specVersion: 1200,
 };
 
 const crabNative = omit(crabConfig, 'dvm');
