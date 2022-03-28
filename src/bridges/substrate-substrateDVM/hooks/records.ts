@@ -293,7 +293,7 @@ export function useRecords(
               ...rest,
               method,
               data,
-              isSuccess: !(detail[resultPosition] as Record<string, string[]>).ok.length,
+              isSuccess: !(detail[resultPosition] as Record<string, string[]>).ok?.length,
             };
           }
 
