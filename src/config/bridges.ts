@@ -17,13 +17,9 @@ export const BRIDGES = [
   ropstenPangolinDVM,
 ];
 
-const ethereumCrabConfig: BridgeConfig = {
-  specVersion: 1200,
-};
+const ethereumCrabConfig: BridgeConfig = {};
 
-const tronCrabConfig: BridgeConfig = {
-  specVersion: 1200,
-};
+const tronCrabConfig: BridgeConfig = {};
 
 const crabNative = omit(crabConfig, 'dvm');
 const ethereumCrab = new Bridge(ethereumConfig, crabNative, ethereumCrabConfig);

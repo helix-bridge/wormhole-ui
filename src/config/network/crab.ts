@@ -35,4 +35,5 @@ export const crabConfig: DVMChainConfig = {
   },
   type: ['polkadot', 'darwinia'],
   ss58Prefix: 42,
+  specVersion: 1200,
 };

@@ -1,23 +1,31 @@
 import { useCallback } from 'react';
 import { from, switchMap } from 'rxjs';
 import { RegisterStatus } from '../../config';
-import { ChainConfig, CrossChainComponentProps, CrossChainDirection, DailyLimit, MappingToken } from '../../model';
-import { entrance, fromWei, getBridge, getS2SMappingParams, waitUntilConnected } from '../../utils';
+import {
+  ChainConfig,
+  CrossChainComponentProps,
+  CrossChainDirection,
+  DailyLimit,
+  DVMChainConfig,
+  MappingToken,
+  PolkadotChainConfig,
+} from '../../model';
+import { entrance, fromWei, getS2SMappingParams, waitUntilConnected } from '../../utils';
 import { DVM } from '../DVM';
-import { SubstrateDVM2SubstratePayload, SubstrateSubstrateDVMBridgeConfig, RedeemSubstrateTxPayload } from './model';
+import { RedeemSubstrateTxPayload, SubstrateDVM2SubstratePayload } from './model';
 import { redeem } from './utils/tx';
 
 export function SubstrateDVM2Substrate({
   form,
   setSubmit,
   direction,
-}: CrossChainComponentProps<SubstrateDVM2SubstratePayload>) {
+}: CrossChainComponentProps<SubstrateDVM2SubstratePayload, DVMChainConfig, PolkadotChainConfig>) {
   const transform = useCallback(
     (value: RedeemSubstrateTxPayload) => {
-      const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
+      const { to } = direction;
 
       return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
-        switchMap(({ mappingAddress }) => redeem(value, mappingAddress, String(bridge.config.specVersion)))
+        switchMap(({ mappingAddress }) => redeem(value, mappingAddress, String(to.specVersion)))
       );
     },
     [direction]

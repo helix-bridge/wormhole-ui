@@ -4,7 +4,6 @@ import { ethereumConfig, crabConfig, ropstenConfig, pangolinConfig } from '../..
 import { EthereumDVMBridgeConfig } from '../model';
 
 const ethereumCrabDVMConfig: EthereumDVMBridgeConfig = {
-  specVersion: 1200,
   api: { dapp: 'https://api.darwinia.network', evolution: EVOLUTION_DOMAIN.product },
   contracts: {
     issuing: '',
@@ -19,7 +18,6 @@ export const ethereumCrabDVM = new Bridge(ethereumConfig, crabConfig, ethereumCr
 });
 
 const ropstenPangolinDVMConfig: EthereumDVMBridgeConfig = {
-  specVersion: 27020,
   api: { dapp: 'https://api.darwinia.network', evolution: EVOLUTION_DOMAIN.product },
   contracts: {
     proof: '0x096dba4ef2fc920b80ae081a80d4d5ca485b407d88f37d5fd6a2c59e5a696691',

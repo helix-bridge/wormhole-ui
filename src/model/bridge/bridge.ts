@@ -44,7 +44,6 @@ export interface ContractConfig {
 }
 
 export interface BridgeConfig<C = ContractConfig, K = Record<string, string>> {
-  specVersion: number;
   contracts?: C;
   api?: K;
 }

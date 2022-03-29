@@ -3,31 +3,25 @@ import BN from 'bn.js';
 import { from, map, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../../config';
+import { CrossChainDirection, DVMChainConfig, PolkadotChainConfig } from '../../../model';
 import { Tx } from '../../../model/tx';
 import {
   convertToDvm,
   entrance,
   fromWei,
   genEthereumContractTxObs,
-  getBridge,
   signAndSendExtrinsic,
   toWei,
   waitUntilConnected,
 } from '../../../utils';
-import { IssuingSubstrateTxPayload, RedeemSubstrateTxPayload, SubstrateSubstrateDVMBridgeConfig } from '../model';
+import { IssuingSubstrateTxPayload, RedeemSubstrateTxPayload } from '../model';
 
 export function issuing(value: IssuingSubstrateTxPayload, api: ApiPromise, fee: BN): Observable<Tx> {
   const { sender, recipient, amount, direction } = value;
-  const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
+  const { from: departure, to } = direction as CrossChainDirection<PolkadotChainConfig, DVMChainConfig>;
   const WEIGHT = '1509000000';
-  const module = direction.from.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
-  const extrinsic = api.tx[module].lockAndRemoteIssue(
-    String(bridge.config.specVersion),
-    WEIGHT,
-    amount,
-    fee,
-    recipient
-  );
+  const module = departure.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
+  const extrinsic = api.tx[module].lockAndRemoteIssue(String(to.specVersion), WEIGHT, amount, fee, recipient);
 
   return signAndSendExtrinsic(api, sender, extrinsic);
 }
