@@ -14,7 +14,14 @@ const s2sMappingParams: (rpc: string) => Promise<S2SInfo> = async (rpc: string) 
   await waitUntilConnected(api);
 
   const module = rpc.includes('pangolin') ? api.query.substrate2SubstrateIssuing : api.query.fromDarwiniaIssuing;
-  const mappingAddress = (await module.mappingFactoryAddress()).toString();
+  let mappingAddress = '';
+
+  try {
+    mappingAddress = (await module.mappingFactoryAddress()).toString();
+  } catch {
+    // FIXME: add backing address
+  }
+
   const specVersion = api.runtimeVersion.specVersion.toString();
 
   return { specVersion, mappingAddress };

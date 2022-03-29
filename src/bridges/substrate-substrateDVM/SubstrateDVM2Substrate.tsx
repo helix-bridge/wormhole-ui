@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { from, switchMap } from 'rxjs';
 import { RegisterStatus } from '../../config';
 import {
@@ -12,6 +12,7 @@ import {
 } from '../../model';
 import { entrance, fromWei, getS2SMappingParams, waitUntilConnected } from '../../utils';
 import { DVM } from '../DVM';
+import { useBridgeStatus } from './hooks';
 import { RedeemSubstrateTxPayload, SubstrateDVM2SubstratePayload } from './model';
 import { redeem } from './utils/tx';
 
@@ -19,7 +20,9 @@ export function SubstrateDVM2Substrate({
   form,
   setSubmit,
   direction,
+  setIsBridgeAvailable,
 }: CrossChainComponentProps<SubstrateDVM2SubstratePayload, DVMChainConfig, PolkadotChainConfig>) {
+  const { isAvailable } = useBridgeStatus(direction);
   const transform = useCallback(
     (value: RedeemSubstrateTxPayload) => {
       const { to } = direction;
@@ -64,6 +67,10 @@ export function SubstrateDVM2Substrate({
 
     return num;
   }, []);
+
+  useEffect(() => {
+    setIsBridgeAvailable(isAvailable);
+  }, [isAvailable, setIsBridgeAvailable]);
 
   return (
     <DVM

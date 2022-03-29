@@ -20,6 +20,7 @@ export interface CrossChainComponentProps<
   form: FormInstance<CrossChainPayload<C>>;
   direction: CrossChainDirection<F, T>;
   setSubmit: React.Dispatch<React.SetStateAction<SubmitFn>>;
+  setIsBridgeAvailable: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 /* ---------------------------------------------------Bridge elements--------------------------------------------------- */

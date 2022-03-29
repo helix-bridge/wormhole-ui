@@ -19,6 +19,7 @@ import {
   CrossChainPayload,
   ChainConfig,
   CrossChainDirection,
+  PolkadotChainConfig,
 } from '../../model';
 import {
   amountLessThanFeeRule,
@@ -46,6 +47,7 @@ import { TransferConfirm } from '../../components/tx/TransferConfirm';
 import { TransferSuccess } from '../../components/tx/TransferSuccess';
 import { IssuingSubstrateTxPayload, Substrate2SubstrateDVMPayload } from './model';
 import { issuing } from './utils/tx';
+import { useBridgeStatus } from './hooks';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
@@ -111,7 +113,8 @@ export function Substrate2SubstrateDVM({
   form,
   setSubmit,
   direction,
-}: CrossChainComponentProps<Substrate2SubstrateDVMPayload>) {
+  setIsBridgeAvailable,
+}: CrossChainComponentProps<Substrate2SubstrateDVMPayload, PolkadotChainConfig, DVMChainConfig>) {
   const { t } = useTranslation();
 
   const {
@@ -144,6 +147,7 @@ export function Substrate2SubstrateDVM({
   const { afterCrossChain } = useAfterTx<CrossChainPayload<Substrate2SubstrateDVMPayload>>();
   const getAvailableBalances = useDarwiniaAvailableBalances();
   const [targetChainTokens, setTargetChainTokens] = useState<MappingToken[]>([]);
+  const { isAvailable } = useBridgeStatus(direction);
 
   const getBalances = useCallback<(acc: string) => Promise<AvailableBalance[]>>(
     async (account: string) => {
@@ -186,6 +190,10 @@ export function Substrate2SubstrateDVM({
   );
 
   const isMounted = useIsMounted();
+
+  useEffect(() => {
+    setIsBridgeAvailable(isAvailable);
+  }, [isAvailable, setIsBridgeAvailable]);
 
   useEffect(() => {
     const fn = () => (data: IssuingSubstrateTxPayload) => {

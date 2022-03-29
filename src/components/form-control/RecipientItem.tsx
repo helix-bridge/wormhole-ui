@@ -23,7 +23,7 @@ export function RecipientItem({
   direction,
   accounts,
   isDvm = false,
-}: Omit<CrossChainComponentProps<CrossChainParty>, 'setSubmit'> & {
+}: Omit<CrossChainComponentProps<CrossChainParty>, 'setSubmit' | 'setIsBridgeAvailable'> & {
   extraTip?: string | ReactNode;
   isDvm?: boolean;
   accounts?: IAccountMeta[];
