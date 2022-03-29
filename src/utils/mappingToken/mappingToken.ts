@@ -20,7 +20,7 @@ import { ChainConfig, CrossChainDirection, DVMChainConfig, EthereumChainConfig, 
 import { DVMBridgeConfig, getAvailableDVMBridge, getBridge, isS2S, isSubstrateDVM2Substrate } from '../bridge';
 import { MMRProof } from '../mmr';
 import { chainConfigToVertices, connect, entrance } from '../network';
-import { getErc20MappingPrams, getS2SMappingParams } from './mappingParams';
+import { getErc20MappingAddress, getS2SMappingAddress } from './mappingParams';
 import { getErc20Meta } from './mappingTokenMeta';
 
 export interface Erc20RegisterProof {
@@ -208,13 +208,13 @@ export const getKnownMappingTokens = (
   const { from: departure, to: arrival } = direction;
 
   const mappingAddressObs = isSubstrateDVM2Substrate(chainConfigToVertices(departure), chainConfigToVertices(arrival))
-    ? from(getS2SMappingParams(departure.provider.rpc))
-    : from(getErc20MappingPrams(departure.provider.rpc));
+    ? from(getS2SMappingAddress(departure.provider.rpc))
+    : from(getErc20MappingAddress(departure.provider.rpc));
 
   const tokens = departure.type.includes('ethereum')
     ? getMappingTokensFromEthereum(currentAccount, direction)
     : mappingAddressObs.pipe(
-        switchMap(({ mappingAddress }) =>
+        switchMap((mappingAddress) =>
           getMappingTokensFromDVM(
             currentAccount,
             departure as DVMChainConfig,

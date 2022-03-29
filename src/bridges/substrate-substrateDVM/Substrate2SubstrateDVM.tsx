@@ -27,7 +27,7 @@ import {
   createTxWorkflow,
   entrance,
   fromWei,
-  getS2SMappingParams,
+  getS2SMappingAddress,
   insufficientBalanceRule,
   insufficientDailyLimit,
   invalidFeeRule,
@@ -171,7 +171,7 @@ export function Substrate2SubstrateDVM({
 
       const { to: arrival } = direction as CrossChainDirection<ChainConfig, DVMChainConfig>;
       const web3 = entrance.web3.getInstance(arrival.ethereumChain.rpcUrls[0]);
-      const { mappingAddress } = await getS2SMappingParams(arrival.provider.rpc);
+      const mappingAddress = await getS2SMappingAddress(arrival.provider.rpc);
       const contract = new web3.eth.Contract(abi.S2SMappingTokenABI, mappingAddress);
       const token = targetChainTokens.find((item) => isRing(item.symbol));
       const ringAddress = token?.address;

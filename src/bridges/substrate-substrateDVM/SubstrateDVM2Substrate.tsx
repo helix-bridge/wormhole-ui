@@ -10,7 +10,7 @@ import {
   MappingToken,
   PolkadotChainConfig,
 } from '../../model';
-import { entrance, fromWei, getS2SMappingParams, waitUntilConnected } from '../../utils';
+import { entrance, fromWei, getS2SMappingAddress, waitUntilConnected } from '../../utils';
 import { DVM } from '../DVM';
 import { useBridgeStatus } from './hooks';
 import { RedeemSubstrateTxPayload, SubstrateDVM2SubstratePayload } from './model';
@@ -27,15 +27,15 @@ export function SubstrateDVM2Substrate({
     (value: RedeemSubstrateTxPayload) => {
       const { to } = direction;
 
-      return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
-        switchMap(({ mappingAddress }) => redeem(value, mappingAddress, String(to.specVersion)))
+      return from(getS2SMappingAddress(value.direction.from.provider.rpc)).pipe(
+        switchMap((mappingAddress) => redeem(value, mappingAddress, String(to.specVersion)))
       );
     },
     [direction]
   );
 
   const getSpender = useCallback(async (dir: CrossChainDirection) => {
-    const { mappingAddress } = await getS2SMappingParams(dir.from.provider.rpc);
+    const mappingAddress = await getS2SMappingAddress(dir.from.provider.rpc);
 
     return mappingAddress;
   }, []);

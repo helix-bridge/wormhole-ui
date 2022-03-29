@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import { from } from 'rxjs';
 import { CrossChainDirection, PolkadotChainConfig } from '../../../model';
-import { getS2SMappingParams } from '../../../utils';
+import { entrance, waitUntilConnected } from '../../../utils';
 
 export function useBridgeStatus(direction: CrossChainDirection<PolkadotChainConfig, PolkadotChainConfig>) {
   const [specVersionOnline, setSpecVersionOnline] = useState<string>('');
   const { to } = direction;
 
   useEffect(() => {
-    const sub$$ = from(getS2SMappingParams(to.provider.rpc)).subscribe((res) => {
-      const { specVersion } = res;
+    const api = entrance.polkadot.getInstance(to.provider.rpc);
 
-      setSpecVersionOnline(specVersion);
+    const sub$$ = from(waitUntilConnected(api)).subscribe(() => {
+      setSpecVersionOnline(api.runtimeVersion.specVersion.toString());
     });
 
     return () => sub$$.unsubscribe();
