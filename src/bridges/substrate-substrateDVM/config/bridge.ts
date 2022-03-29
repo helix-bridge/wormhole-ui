@@ -4,7 +4,7 @@ import { Bridge } from '../../../model';
 import { SubstrateSubstrateDVMBridgeConfig } from '../model/bridge';
 
 const darwiniaCrabDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
-  specVersion: 1180,
+  specVersion: 1200,
   api: {
     dapp: 'https://api.darwinia.network',
     evolution: EVOLUTION_DOMAIN.product,
