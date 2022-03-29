@@ -1,3 +1,9 @@
+## [2.3.3](https://github.com/darwinia-network/wormhole-pro/compare/v2.3.2...v2.3.3) (2022-03-29)
+
+### Bug Fixes
+
+- s2s querying not disappear ([#309](https://github.com/darwinia-network/wormhole-pro/issues/309)) ([52e84f2](https://github.com/darwinia-network/wormhole-pro/commit/52e84f2cff0fcd003d1b1ba88e71e98c427de9b7))
+
 # [2.3.0](https://github.com/darwinia-network/wormhole-pro/compare/v2.2.2...v2.3.0) (2022-03-16)
 
 ### Bug Fixes
