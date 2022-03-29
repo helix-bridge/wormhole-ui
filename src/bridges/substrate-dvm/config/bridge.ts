@@ -5,7 +5,6 @@ import { crabConfig } from '../../../config/network';
 import { SubstrateDVMBridgeConfig } from '../model';
 
 const crabCrabDVMConfig: SubstrateDVMBridgeConfig = {
-  specVersion: 1200,
   api: {
     subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-',
   },
@@ -22,7 +21,6 @@ export const crabCrabDVM = new Bridge<SubstrateDVMBridgeConfig>(
 );
 
 const pangolinPangolinDVMConfig: SubstrateDVMBridgeConfig = {
-  specVersion: 27020,
   api: {
     subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-',
   },

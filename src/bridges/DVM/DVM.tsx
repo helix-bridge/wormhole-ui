@@ -157,7 +157,7 @@ export function DVM({
   getFee,
   direction,
   isDVM = true,
-}: CrossChainComponentProps<DVMPayload> & DVMProps) {
+}: Omit<CrossChainComponentProps<DVMPayload>, 'setIsBridgeAvailable'> & DVMProps) {
   const { t } = useTranslation();
 
   const {

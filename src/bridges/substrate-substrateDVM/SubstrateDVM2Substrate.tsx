@@ -1,30 +1,41 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { from, switchMap } from 'rxjs';
 import { RegisterStatus } from '../../config';
-import { ChainConfig, CrossChainComponentProps, CrossChainDirection, DailyLimit, MappingToken } from '../../model';
-import { entrance, fromWei, getBridge, getS2SMappingParams, waitUntilConnected } from '../../utils';
+import {
+  ChainConfig,
+  CrossChainComponentProps,
+  CrossChainDirection,
+  DailyLimit,
+  DVMChainConfig,
+  MappingToken,
+  PolkadotChainConfig,
+} from '../../model';
+import { entrance, fromWei, getS2SMappingAddress, waitUntilConnected } from '../../utils';
 import { DVM } from '../DVM';
-import { SubstrateDVM2SubstratePayload, SubstrateSubstrateDVMBridgeConfig, RedeemSubstrateTxPayload } from './model';
+import { useBridgeStatus } from './hooks';
+import { RedeemSubstrateTxPayload, SubstrateDVM2SubstratePayload } from './model';
 import { redeem } from './utils/tx';
 
 export function SubstrateDVM2Substrate({
   form,
   setSubmit,
   direction,
-}: CrossChainComponentProps<SubstrateDVM2SubstratePayload>) {
+  setIsBridgeAvailable,
+}: CrossChainComponentProps<SubstrateDVM2SubstratePayload, DVMChainConfig, PolkadotChainConfig>) {
+  const { isAvailable } = useBridgeStatus(direction);
   const transform = useCallback(
     (value: RedeemSubstrateTxPayload) => {
-      const bridge = getBridge<SubstrateSubstrateDVMBridgeConfig>(direction);
+      const { to } = direction;
 
-      return from(getS2SMappingParams(value.direction.from.provider.rpc)).pipe(
-        switchMap(({ mappingAddress }) => redeem(value, mappingAddress, String(bridge.config.specVersion)))
+      return from(getS2SMappingAddress(value.direction.from.provider.rpc)).pipe(
+        switchMap((mappingAddress) => redeem(value, mappingAddress, String(to.specVersion)))
       );
     },
     [direction]
   );
 
   const getSpender = useCallback(async (dir: CrossChainDirection) => {
-    const { mappingAddress } = await getS2SMappingParams(dir.from.provider.rpc);
+    const mappingAddress = await getS2SMappingAddress(dir.from.provider.rpc);
 
     return mappingAddress;
   }, []);
@@ -56,6 +67,10 @@ export function SubstrateDVM2Substrate({
 
     return num;
   }, []);
+
+  useEffect(() => {
+    setIsBridgeAvailable(isAvailable);
+  }, [isAvailable, setIsBridgeAvailable]);
 
   return (
     <DVM

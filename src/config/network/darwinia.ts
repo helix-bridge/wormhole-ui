@@ -16,5 +16,6 @@ export const darwiniaConfig: PolkadotChainConfig = {
     rpc: 'wss://rpc.darwinia.network',
   },
   ss58Prefix: 18,
+  specVersion: 1180,
   type: ['polkadot', 'darwinia'],
 };

@@ -1,7 +1,7 @@
 import { Observable, from, switchMap } from 'rxjs';
 import { abi } from '../../../config/abi';
 import { Tx, TxFn } from '../../../model';
-import { genEthereumContractTxObs, getBridge, getErc20MappingPrams } from '../../../utils';
+import { genEthereumContractTxObs, getBridge, getErc20MappingAddress } from '../../../utils';
 import { EthereumDVMBridgeConfig, Erc20TxPayload } from '../model';
 
 export const redeem: TxFn<Erc20TxPayload> = (value) => {
@@ -20,8 +20,8 @@ export function issuing(value: Erc20TxPayload): Observable<Tx> {
   const { asset, recipient, amount, direction: transfer, sender } = value;
   const { address } = asset;
 
-  return from(getErc20MappingPrams(transfer.from.provider.rpc)).pipe(
-    switchMap(({ mappingAddress }) =>
+  return from(getErc20MappingAddress(transfer.from.provider.rpc)).pipe(
+    switchMap((mappingAddress) =>
       genEthereumContractTxObs(
         mappingAddress,
         (contract) => contract.methods.crossSendToken(address, recipient, amount).send({ from: sender }),

@@ -34,5 +34,6 @@ export const pangolinConfig: DVMChainConfig = {
     rpc: 'wss://pangolin-rpc.darwinia.network',
   },
   ss58Prefix: 42,
+  specVersion: 28060,
   type: ['polkadot', 'darwinia'],
 };

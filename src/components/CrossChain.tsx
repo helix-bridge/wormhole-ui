@@ -67,7 +67,7 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
 
   const {
     network,
-    mainConnection: { status },
+    mainConnection: { status: connectionStatus },
     disconnect,
     connectAssistantNetwork,
   } = useApi();
@@ -75,6 +75,7 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
   const [direction, setDirection] = useState(() => validateDirection(getDirectionFromSettings(), type));
   const [isReady, setIsReady] = useState(false);
   const [submitFn, setSubmit] = useState<SubmitFn>(emptyObsFactory);
+  const [isBridgeAvailable, setIsBridgeAvailable] = useState<boolean>(true);
   const { tx } = useTx();
 
   const launch = useCallback(() => {
@@ -114,10 +115,10 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
 
   useEffect(() => {
     const { from, to } = direction;
-    const fromReady = !!from && isSameNetConfig(from, network) && status === 'success';
+    const fromReady = !!from && isSameNetConfig(from, network) && connectionStatus === 'success';
 
     setIsReady(fromReady && !!to);
-  }, [network, status, direction]);
+  }, [network, connectionStatus, direction]);
 
   useEffect(() => {
     launchAssistantConnection(direction);
@@ -162,12 +163,19 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
         />
       </Form.Item>
 
-      {isReady && Content && <Content form={form} direction={direction as CrossChainDirection} setSubmit={setSubmit} />}
+      {isReady && Content && (
+        <Content
+          form={form}
+          direction={direction as CrossChainDirection}
+          setSubmit={setSubmit}
+          setIsBridgeAvailable={setIsBridgeAvailable}
+        />
+      )}
 
-      <div className={status === 'success' && direction.from ? 'grid grid-cols-2 gap-4' : ''}>
-        <SubmitButton {...direction} requireTo launch={launch} crossType={type} />
+      <div className={connectionStatus === 'success' && direction.from ? 'grid grid-cols-2 gap-4' : ''}>
+        <SubmitButton {...direction} requireTo launch={launch} disabled={!isBridgeAvailable} crossType={type} />
 
-        {status === 'success' && (
+        {connectionStatus === 'success' && (
           <FromItemButton
             type="default"
             onClick={() => {

@@ -38,6 +38,7 @@ export interface EthereumChainConfig extends ChainConfig {
 export interface PolkadotChainConfig extends ChainConfig {
   name: PolkadotTypeNetwork;
   ss58Prefix: number;
+  specVersion: number;
   endpoints: {
     mmr: string;
   };

@@ -5,7 +5,6 @@ import { Bridge } from '../../../model';
 import { EthereumDarwiniaBridgeConfig } from '../model';
 
 const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
-  specVersion: 1200,
   api: { dapp: 'https://api.darwinia.network', evolution: EVOLUTION_DOMAIN.product },
   contracts: {
     fee: '0x6B0940772516B69088904564A56d09CFe6Bb3D85',
@@ -37,7 +36,6 @@ export const ethereumDarwinia = new Bridge(ethereumConfig, darwiniaConfig, ether
 });
 
 const ropstenDVMChainConfig: EthereumDarwiniaBridgeConfig = {
-  specVersion: 27020,
   api: {
     dapp: 'https://api.darwinia.network.l2me.com',
     evolution: EVOLUTION_DOMAIN.dev,
