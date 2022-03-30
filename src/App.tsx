@@ -57,7 +57,7 @@ function App() {
         </div>
       </Header>
 
-      <Content className="sm:px-16 sm:pt-4 px-4 py-1 my-24 sm:my-20 z-10">
+      <Content className="sm:px-16 sm:pt-4 px-4 py-1 my-24 sm:my-20">
         <BridgeState className="xl:w-1/3 lg:1/2 md:w-2/3 w-full mx-auto drop-shadow max-w-full mb-8" />
         <TransitionGroup>
           <CSSTransition in={true} key={location.key} timeout={300} classNames="fade">

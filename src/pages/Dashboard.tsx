@@ -1,13 +1,17 @@
 import { GithubOutlined, GlobalOutlined, TwitterCircleFilled } from '@ant-design/icons';
 import { Spin } from 'antd';
+import BN from 'bn.js';
+import { format, subMilliseconds } from 'date-fns';
 import { GraphQLClient, useQuery } from 'graphql-hooks';
 import HighchartsReact from 'highcharts-react-official';
 import Highcharts from 'highcharts/highstock';
+import { last } from 'lodash';
 import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
+import { DATE_FORMAT } from '../config/constant';
 import { DailyStatistic } from '../model';
-import { fromWei } from '../utils';
+import { fromWei, prettyNumber } from '../utils';
 
 interface ChainProps {
   name: string;
@@ -29,6 +33,12 @@ const client = new GraphQLClient({
   url: 'http://localhost:4000',
 });
 
+function toMillionSeconds(value: string | number) {
+  const thousand = 1000;
+
+  return +value * thousand;
+}
+
 function Chain({ name, img, bestNumber }: ChainProps) {
   return (
     <div className="flex items-center px-6 py-8 gap-6 bg-antDark">
@@ -47,8 +57,10 @@ function Chain({ name, img, bestNumber }: ChainProps) {
   );
 }
 
+type Statistic = [number, number];
+
 interface BarChartProps {
-  data: [number, number][]; // [timestamp<million seconds>, value];
+  data: Statistic[]; // [timestamp<million seconds>, value];
   name: string;
 }
 
@@ -112,7 +124,7 @@ function BarChart({ data, name }: BarChartProps) {
         },
       },
       inputStyle: {
-        color: mainColor,
+        color: '#9ca3af',
       },
     },
     scrollbar: {
@@ -175,29 +187,39 @@ const STATISTICS_QUERY = `
 
 function Page() {
   const { t } = useTranslation();
+  // eslint-disable-next-line no-magic-numbers
+  const timepast = 6 * 30 * 24 * 3600;
   const { data: volumeStatistic, loading } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
     client,
-    variables: {
-      // eslint-disable-next-line no-magic-numbers
-      timepast: 6 * 30 * 24 * 3600,
-    },
+    variables: { timepast },
   });
 
-  const { volume, transactions } = useMemo(() => {
+  const { volume, transactions, volumeTotal, transactionsTotal } = useMemo(() => {
     if (!volumeStatistic) {
-      return { volume: [], transactions: [] };
+      return { volume: [], transactions: [], volumeTotal: 0, transactionsTotal: 0 };
     }
 
     const { dailyStatistics } = volumeStatistic;
-    const thousand = 1000;
 
     return {
       volume: dailyStatistics
-        .map((item) => [+item.id * thousand, +fromWei({ value: item.dailyVolume, unit: 'gwei' })])
-        .reverse(),
-      transactions: dailyStatistics.map((item) => [+item.id * thousand, item.dailyCount]).reverse(),
-    } as { volume: [number, number][]; transactions: [number, number][] };
+        .map(({ id, dailyVolume }) => [toMillionSeconds(id), +fromWei({ value: dailyVolume, unit: 'gwei' })])
+        .reverse() as Statistic[],
+      volumeTotal: dailyStatistics.reduce((acc, cur) => acc.add(new BN(cur.dailyVolume)), new BN(0)),
+      transactions: dailyStatistics
+        .map(({ id, dailyCount }) => [toMillionSeconds(id), dailyCount])
+        .reverse() as Statistic[],
+      transactionsTotal: dailyStatistics.reduce((acc, cur) => acc.add(new BN(cur.dailyCount)), new BN(0)),
+    };
   }, [volumeStatistic]);
+
+  const startTime = useMemo(() => {
+    const date = !volumeStatistic?.dailyStatistics?.length
+      ? subMilliseconds(new Date(), toMillionSeconds(timepast)).getTime()
+      : toMillionSeconds(last(volumeStatistic!.dailyStatistics)!.id);
+
+    return format(date, DATE_FORMAT) + ' (+UTC)';
+  }, [timepast, volumeStatistic]);
 
   return (
     <div>
@@ -214,11 +236,11 @@ function Page() {
         <div className="lg:col-span-4 bg-antDark px-5 py-6">
           <div className="flex justify-between items-center">
             <h3 className="uppercase">{t('volume')}</h3>
-            <span className="text-gray-400">Since Dec 21,2020(UTC)</span>
+            <span className="text-gray-400">{startTime}</span>
           </div>
 
           <div className="flex flex-col gap-2 items-center justify-center mt-4 mb-2 md:mt-10 md:mb-6">
-            <h2 className="text-4xl">$834,312,847</h2>
+            <h2 className="text-4xl">{fromWei({ value: volumeTotal, unit: 'gwei' }, prettyNumber)}</h2>
             <span className="text-gray-400">{t('Total Volume')}</span>
           </div>
 
@@ -271,12 +293,12 @@ function Page() {
         <div className="lg:col-span-4 bg-antDark px-5 py-6">
           <div className="flex justify-between items-center">
             <h3 className="uppercase">{t('transactions')}</h3>
-            <span className="text-gray-400">Since Dec 21,2020(UTC)</span>
+            <span className="text-gray-400">{startTime}</span>
           </div>
 
           <div className="flex flex-col gap-2 items-center justify-center  mt-4 mb-2 md:mt-10 md:mb-6">
-            <h2 className="text-4xl">$834,312,847</h2>
-            <span className="text-gray-400">{t('Total Volume')}</span>
+            <h2 className="text-4xl">{prettyNumber(transactionsTotal)}</h2>
+            <span className="text-gray-400">{t('Total Transactions')}</span>
           </div>
 
           <div className="flex flex-col gap-2 md:gap-4">

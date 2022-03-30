@@ -2,7 +2,7 @@ import { ClockCircleOutlined, ImportOutlined, RightOutlined } from '@ant-design/
 import { Collapse, Progress, Tooltip } from 'antd';
 import { fromUnixTime, format } from 'date-fns/esm';
 import { PropsWithChildren, useMemo } from 'react';
-import { DATE_TIME_FORMATE } from '../../config';
+import { DATE_TIME_FORMAT } from '../../config';
 import { ChainConfig } from '../../model';
 import { EllipsisMiddle } from '../widget/EllipsisMiddle';
 import { AssetOverview, AssetOverviewProps } from './AssetOverview';
@@ -97,7 +97,7 @@ export function Record({
             <div className="flex flex-col justify-between ml-0 md:ml-4 mt-2 md:mt-0 col-span-3 md:col-span-1">
               <span className="flex items-center mb-2">
                 <ClockCircleOutlined />
-                <span className="ml-2">{format(fromUnixTime(blockTimestamp), DATE_TIME_FORMATE) + ' (+UTC)'}</span>
+                <span className="ml-2">{format(fromUnixTime(blockTimestamp), DATE_TIME_FORMAT) + ' (+UTC)'}</span>
               </span>
 
               <span className="w-full flex items-center">

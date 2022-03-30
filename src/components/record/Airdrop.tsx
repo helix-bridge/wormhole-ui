@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { map } from 'rxjs';
 import Web3 from 'web3';
 import { SubscanApiPath } from '../../config/api';
-import { DATE_TIME_FORMATE, FORM_CONTROL } from '../../config/constant';
+import { DATE_TIME_FORMAT, FORM_CONTROL } from '../../config/constant';
 import { crabConfig } from '../../config/network';
 import { NETWORK_LIGHT_THEME } from '../../config/theme';
 import { airportsDepartureFilter, useApi, useNetworks } from '../../hooks';
@@ -114,7 +114,7 @@ export function AirdropRecord() {
             <div className="flex flex-col px-4 py-2 rounded-lg bg-gray-900">
               {claimAmount.eq(new BN(0)) ? fromWei({ value: new BN(amount || 0) }) : fromWei({ value: claimAmount })}{' '}
               RING
-              <span>{format(fromUnixTime(SNAPSHOT_TIMESTAMP), DATE_TIME_FORMATE + ' zz')}</span>
+              <span>{format(fromUnixTime(SNAPSHOT_TIMESTAMP), DATE_TIME_FORMAT + ' zz')}</span>
             </div>
           </Form.Item>
 

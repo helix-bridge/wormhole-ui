@@ -72,5 +72,7 @@ export function BridgeState({ className = '' }: BridgeStateProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return message ? <Alert showIcon type="warning" closable message={message} className={className} /> : null;
+  return message ? (
+    <Alert showIcon type="warning" closable message={message} className={`${className} fixed top-10 left-1/3 z-50`} />
+  ) : null;
 }

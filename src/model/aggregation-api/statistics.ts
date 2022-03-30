@@ -1,5 +1,5 @@
 export interface DailyStatistic {
-  id: number;
+  id: string;
   dailyVolume: string;
   dailyCount: number;
 }
