@@ -1,10 +1,13 @@
 import { GithubOutlined, GlobalOutlined, TwitterCircleFilled } from '@ant-design/icons';
-import Highcharts from 'highcharts';
+import { Spin } from 'antd';
+import { GraphQLClient, useQuery } from 'graphql-hooks';
 import HighchartsReact from 'highcharts-react-official';
-import { useRef } from 'react';
+import Highcharts from 'highcharts/highstock';
+import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
-import { DayFilter } from '../components/widget/DayFilter';
+import { DailyStatistic } from '../model';
+import { fromWei } from '../utils';
 
 interface ChainProps {
   name: string;
@@ -16,11 +19,15 @@ const chains: ChainProps[] = [
   { name: 'Ethereum', img: '/image/ethereum.png', bestNumber: '6,029,137' },
   { name: 'Darwinia', img: '/image/darwinia.png', bestNumber: '6,029,137' },
   { name: 'Crab Smart Chain', img: '/image/crab-white-bg.png', bestNumber: '6,029,137' },
-  { name: 'Ethereum', img: '/image/ethereum.png', bestNumber: '6,029,137' },
+  { name: 'Ropsten', img: '/image/ethereum.png', bestNumber: '6,029,137' },
   { name: 'Pangolin', img: '/image/pangolin-2.png', bestNumber: '6,029,137' },
   { name: 'Pangolin Smart Chain', img: '/image/pangolin-white-bg.png', bestNumber: '6,029,137' },
   { name: 'Pangoro', img: '/image/pangoro.png', bestNumber: '6,029,137' },
 ];
+
+const client = new GraphQLClient({
+  url: 'http://localhost:4000',
+});
 
 function Chain({ name, img, bestNumber }: ChainProps) {
   return (
@@ -40,28 +47,87 @@ function Chain({ name, img, bestNumber }: ChainProps) {
   );
 }
 
-function LineChart() {
+interface BarChartProps {
+  data: [number, number][]; // [timestamp<million seconds>, value];
+  name: string;
+}
+
+function BarChart({ data, name }: BarChartProps) {
   const charRef = useRef(null);
+  const mainColor = '#816eeb';
+  const barColor = '#151e33';
   const options = {
     chart: {
-      type: 'column',
+      alignTicks: false,
       backgroundColor: {
         linearGradient: { x1: 0, y1: 0, x2: 1, y2: 1 },
         stops: [
-          [0, '#151e33'],
-          [1, '#151e33'],
+          [0, barColor],
+          [1, barColor],
         ],
       },
+    },
+    rangeSelector: {
+      buttons: [
+        {
+          type: 'all',
+          text: 'ALL',
+          title: 'ALL',
+        },
+        {
+          type: 'week',
+          count: 1,
+          text: '7D',
+          title: '7D',
+        },
+        {
+          type: 'month',
+          count: 1,
+          text: '30D',
+          title: '30D',
+        },
+      ],
+      buttonPosition: {
+        x: -23,
+      },
+      labelStyle: {
+        display: 'none',
+        width: 0,
+      },
+      buttonTheme: {
+        fill: '#000',
+        stroke: '#ffffff26',
+        'stroke-width': 1,
+        style: {
+          color: 'white',
+        },
+        states: {
+          hover: {},
+          select: {
+            fill: mainColor,
+            style: {
+              color: 'white',
+            },
+          },
+        },
+      },
+      inputStyle: {
+        color: mainColor,
+      },
+    },
+    scrollbar: {
+      enabled: false,
+    },
+    navigator: {
+      height: 24,
     },
     title: {
       text: '',
     },
     xAxis: {
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      crosshair: true,
-    },
-    legend: {
-      enable: false,
+      labels: {
+        format: '{value:%m-%d}',
+      },
     },
     yAxis: {
       visible: false,
@@ -69,8 +135,15 @@ function LineChart() {
     /* eslint-disable no-magic-numbers */
     series: [
       {
-        showInLegend: false,
-        data: [49.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4],
+        type: 'column',
+        name,
+        data,
+        dataGrouping: {
+          units: [
+            ['week', [1]],
+            ['month', [1, 2, 3, 4, 6]],
+          ],
+        },
       },
     ],
     credits: {
@@ -83,22 +156,59 @@ function LineChart() {
     <HighchartsReact
       containerProps={{ className: 'h-48 lg:h-72' }}
       highcharts={Highcharts}
+      constructorType="stockChart"
       options={options}
       ref={charRef}
     ></HighchartsReact>
   );
 }
 
+const STATISTICS_QUERY = `
+  query dailyStatistics($timepast: Int!) {
+    dailyStatistics(timepast: $timepast) {
+      dailyCount
+      dailyVolume
+      id
+    }
+  }
+`;
+
 function Page() {
   const { t } = useTranslation();
+  const { data: volumeStatistic, loading } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
+    client,
+    variables: {
+      // eslint-disable-next-line no-magic-numbers
+      timepast: 6 * 30 * 24 * 3600,
+    },
+  });
+
+  const { volume, transactions } = useMemo(() => {
+    if (!volumeStatistic) {
+      return { volume: [], transactions: [] };
+    }
+
+    const { dailyStatistics } = volumeStatistic;
+    const thousand = 1000;
+
+    return {
+      volume: dailyStatistics
+        .map((item) => [+item.id * thousand, +fromWei({ value: item.dailyVolume, unit: 'gwei' })])
+        .reverse(),
+      transactions: dailyStatistics.map((item) => [+item.id * thousand, item.dailyCount]).reverse(),
+    } as { volume: [number, number][]; transactions: [number, number][] };
+  }, [volumeStatistic]);
+
   return (
     <div>
-      <DayFilter />
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mt-4 lg:mt-6">
         <div className="lg:col-span-8 flex-1 p-4 bg-antDark">
-          <span className="uppercase">{t('volume by week')}</span>
-          <LineChart />
+          <span className="uppercase">{t('volumes')}</span>
+          {loading ? (
+            <Spin size="large" className="block relative top-1/3" />
+          ) : (
+            <BarChart data={volume} name="volume" />
+          )}
         </div>
 
         <div className="lg:col-span-4 bg-antDark px-5 py-6">
@@ -150,8 +260,12 @@ function Page() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mt-4 lg:mt-6">
         <div className="lg:col-span-8 flex-1 p-4 bg-antDark">
-          <span className="uppercase">{t('transactions by week')}</span>
-          <LineChart />
+          <span className="uppercase">{t('transactions')}</span>
+          {loading ? (
+            <Spin size="large" className="block relative top-1/3" />
+          ) : (
+            <BarChart data={transactions} name="transactions" />
+          )}
         </div>
 
         <div className="lg:col-span-4 bg-antDark px-5 py-6">

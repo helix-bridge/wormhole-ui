@@ -1,5 +1,8 @@
 import { BridgeDispatchEventRecord } from '../../../model';
 
+// eslint-disable-next-line no-magic-numbers
+type Result = 0 | 1 | 2; // 0 TokenLocked 1 TokenLockedConfirmed success 2 TokenLockedConfirmed fail
+
 export interface SubstrateDVM2SubstrateRecord {
   lane_id: string;
   nonce: string;
@@ -9,8 +12,7 @@ export interface SubstrateDVM2SubstrateRecord {
   recipient: string;
   token: string;
   amount: string;
-  // eslint-disable-next-line no-magic-numbers
-  result: 0 | 1 | 2;
+  result: Result;
   start_timestamp: string;
   end_timestamp: string;
 }
@@ -24,8 +26,7 @@ export interface Substrate2SubstrateDVMRecord {
   recipient: string;
   token: string;
   amount: string;
-  // eslint-disable-next-line no-magic-numbers
-  result: 0 | 1 | 2;
+  result: Result;
   startTimestamp: string;
   endTimestamp: string;
 }

@@ -2,11 +2,11 @@ import { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
-import { BallScalePulse } from './components/widget/BallScalePulse';
 import './bridges/register';
+import { BallScalePulse } from './components/widget/BallScalePulse';
 import { THEME } from './config';
 import './index.scss';
-import { ApiProvider, GqlProvider, TxProvider } from './providers';
+import { ApiProvider, TxProvider } from './providers';
 import reportWebVitals from './reportWebVitals';
 import './theme/antd/index.less';
 import { readStorage } from './utils/helper/storage';
@@ -26,9 +26,7 @@ ReactDOM.render(
     <Router>
       <ApiProvider>
         <TxProvider>
-          <GqlProvider>
-            <App />
-          </GqlProvider>
+          <App />
         </TxProvider>
       </ApiProvider>
     </Router>
