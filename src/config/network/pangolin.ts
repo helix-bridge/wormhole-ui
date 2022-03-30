@@ -26,6 +26,8 @@ export const pangolinConfig: DVMChainConfig = {
     logo: '/image/pangolin.png',
     logoMinor: '/image/pangolin.svg',
     logoWithText: '/image/pangolin-logo.svg',
+    logoAssist: '/image/pangolin-white-bg.png',
+    logoAssist2: '/image/pangolin-2.png',
   },
   isTest: true,
   name: 'pangolin',

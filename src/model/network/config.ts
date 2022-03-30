@@ -1,10 +1,12 @@
 import { AddEthereumChainParameter } from '../metamask';
 import { EthereumTypeNetwork, Network, NetworkCategory, PolkadotTypeNetwork } from './network';
 
-interface Facade {
+export interface Facade {
   logo: string;
   logoMinor: string;
   logoWithText: string;
+  logoAssist?: string;
+  logoAssist2?: string;
 }
 
 interface DVMConfig {

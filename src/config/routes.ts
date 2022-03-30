@@ -4,7 +4,7 @@ import { Airdrop } from '../pages/Airdrop';
 import { AirdropHistory } from '../pages/AirdropHistory';
 import { Configure } from '../pages/Configure';
 import { HistoryRecords } from '../pages/CrossHistory';
-import { Dashboard } from '../pages/Dashboard';
+import { Dashboard } from '../pages/dashboard/Dashboard';
 import { Erc20Register } from '../pages/Erc20Register';
 import { Explorer } from '../pages/Explorer';
 import { Home } from '../pages/Home';

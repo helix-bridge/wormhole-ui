@@ -26,6 +26,7 @@ export const crabConfig: DVMChainConfig = {
     logo: '/image/crab.png',
     logoMinor: '/image/crab.svg',
     logoWithText: '/image/crab-logo.svg',
+    logoAssist: '/image/crab-white-bg.png',
   },
   isTest: false,
   name: 'crab',
