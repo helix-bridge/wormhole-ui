@@ -35,3 +35,15 @@ export enum RegisterStatus {
   registered,
   registering,
 }
+
+export enum CrossChainStatus {
+  pending,
+  success,
+  reverted,
+}
+
+export enum CrossChainStatusColor {
+  blue,
+  green,
+  red,
+}

@@ -1,113 +1,97 @@
-import { SearchOutlined } from '@ant-design/icons';
-import { Input, Table, TableColumnType } from 'antd';
+import { SearchOutlined, SyncOutlined } from '@ant-design/icons';
+import { Button, Input, Table, TableColumnType, Tag } from 'antd';
+import { formatDistanceToNow, getUnixTime } from 'date-fns';
+import { useQuery } from 'graphql-hooks';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
 import { DayFilter } from '../../components/widget/DayFilter';
+import { CrossChainStatus, CrossChainStatusColor } from '../../config/constant';
+import { Network, Substrate2SubstrateRecord } from '../../model';
+import { convertToDvm, fromWei, getChainConfigByName, isValidAddress, prettyNumber } from '../../utils';
+import { Party } from './Party';
 
-interface Record {
-  state: string;
-  time: string;
-  from: string;
-  to: string;
-  amount: string;
-  fee: string;
-  id: string;
-  asset: string;
-  bridge: string;
-}
-
-const data: Record[] = [
-  {
-    id: '0',
-    state: 'Await ChainRelay Confirm',
-    asset: 'RING',
-    time: '10 hours 23 mins ago',
-    from: 'Ethereum 0xe596...F1E5',
-    to: 'Darwinia 0xe596...F1E',
-    amount: 'Sent: 1000.03 RING',
-    fee: '0.123 ETH 10RING',
-    bridge: '0.13Ring',
-  },
-  {
-    id: '1',
-    state: 'Await ChainRelay Confirm',
-    asset: 'RING',
-    time: '10 hours 23 mins ago',
-    from: 'Ethereum 0xe596...F1E5',
-    to: 'Darwinia 0xe596...F1E',
-    amount: 'Sent: 1000.03 RING',
-    fee: '0.123 ETH 10RING',
-    bridge: '0.13Ring',
-  },
-  {
-    id: '2',
-    state: 'Await ChainRelay Confirm',
-    asset: 'RING',
-    time: '10 hours 23 mins ago',
-    from: 'Ethereum 0xe596...F1E5',
-    to: 'Darwinia 0xe596...F1E',
-    amount: 'Sent: 1000.03 RING',
-    fee: '0.123 ETH 10RING',
-    bridge: '0.13Ring',
-  },
-];
+const S2S_RECORDS = `
+  query s2sRecords($first: Int!, $startTime: Int!, $sender: String) {
+    s2sRecords(first: $first, start_timestamp: $startTime, sender: $sender) {
+      id
+      bridge
+      fromChain
+      fromChainMode
+      toChain
+      toChainMode
+      laneId
+      nonce
+      requestTxHash
+      responseTxHash
+      sender
+      recipient
+      token
+      amount
+      startTime
+      endTime
+      result
+    }
+  }
+`;
 
 function Page() {
   const { t } = useTranslation();
-  // const { } = useQuery()
-  const columns: TableColumnType<Record>[] = [
+  const [isValidSender, setIsValidSender] = useState(true);
+  const startTime = useMemo(() => getUnixTime(new Date()), []);
+
+  const { data, loading, refetch } = useQuery<{ s2sRecords: Substrate2SubstrateRecord[] }>(S2S_RECORDS, {
+    variables: { first: 10, startTime },
+  });
+
+  const columns: TableColumnType<Substrate2SubstrateRecord>[] = [
     {
       title: t('Time'),
-      dataIndex: 'time',
+      dataIndex: 'startTime',
+      render(value: string) {
+        return formatDistanceToNow(new Date(value), { includeSeconds: true, addSuffix: true });
+      },
     },
     {
       title: t('From'),
-      dataIndex: 'from',
+      dataIndex: 'fromChain',
+      render: (value, record) => <Party chain={value} account={record.sender} mode={record.fromChainMode} />,
     },
     {
       title: t('To'),
-      dataIndex: 'to',
+      dataIndex: 'toChain',
+      render: (value, record) => <Party chain={value} account={record.recipient} mode={record.toChainMode} />,
     },
     {
       title: t('Asset'),
-      dataIndex: 'asset',
+      dataIndex: 'token',
+      render: (_, record) => {
+        const { fromChainMode, fromChain } = record;
+        const config = getChainConfigByName(fromChain as Network);
+
+        return `${fromChainMode === 'dvm' ? 'x' : ''}${config?.isTest ? 'O' : ''}RING`;
+      },
     },
     {
       title: t('Amount'),
-      key: 'amount',
-      render() {
-        return (
-          <div>
-            <div className="flex justify-between">
-              <span>{t('Sent')}:</span>
-              <span className="flex flex-col justify-end text-right">
-                <span>100.22 RING</span>
-                <span>88 KTON</span>
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>{t('Received')}:</span>
-              <span className="flex flex-col justify-end text-right">
-                <span>100.22 RING</span>
-                <span>88 KTON</span>
-              </span>
-            </div>
-          </div>
-        );
-      },
+      dataIndex: 'amount',
+      render: (value) => <span>{fromWei({ value, unit: 'gwei' }, prettyNumber)}</span>,
     },
     {
       title: t('Fee'),
       dataIndex: 'fee',
+      render() {
+        return <span>NAN</span>;
+      },
     },
     {
       title: t('Bridge'),
-      dataIndex: 'Bridge',
+      dataIndex: 'bridge',
     },
     {
       title: t('Status'),
-      dataIndex: 'state',
+      dataIndex: 'result',
+      render: (value) => <Tag color={CrossChainStatusColor[value]}>{CrossChainStatus[value]}</Tag>,
     },
   ];
 
@@ -132,15 +116,48 @@ function Page() {
         </div>
       </div>
 
-      <Input
-        size="large"
-        suffix={<SearchOutlined />}
-        placeholder={t('Search by sender address')}
-        className="max-w-md"
-      />
+      <div className="flex justify-between">
+        <Input
+          size="large"
+          suffix={<SearchOutlined />}
+          allowClear
+          onChange={(event) => {
+            const value = event.target.value;
+
+            if (!value) {
+              setIsValidSender(true);
+              refetch({ variables: { first: 10, startTime: getUnixTime(new Date()) } });
+              return;
+            }
+
+            try {
+              const address = isValidAddress(value, 'ethereum') ? value : convertToDvm(value);
+
+              refetch({ variables: { first: 10, startTime: getUnixTime(new Date()), sender: address } });
+              setIsValidSender(true);
+            } catch {
+              setIsValidSender(false);
+            }
+          }}
+          placeholder={t('Search by sender address')}
+          className={`max-w-md ${isValidSender ? '' : 'border-red-400'}`}
+        />
+
+        <Button
+          type="link"
+          onClick={() => {
+            refetch({ variables: { first: 10, startTime: getUnixTime(new Date()) } });
+          }}
+          disabled={loading}
+          className="flex items-center cursor-pointer"
+        >
+          <span className="mr-2">{t('Latest transactions')}</span>
+          <SyncOutlined />
+        </Button>
+      </div>
 
       <div className="mt-4 lg:mt-6">
-        <Table columns={columns} dataSource={data} rowKey="id" pagination={false} />
+        <Table columns={columns} dataSource={data?.s2sRecords || []} rowKey="id" pagination={false} loading={loading} />
       </div>
     </div>
   );

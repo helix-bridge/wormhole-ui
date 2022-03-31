@@ -209,7 +209,7 @@ export function isSameNetConfig(config1: ChainConfig | null, config2: ChainConfi
   );
 }
 
-export function getNetworkByName(name: Network | null | undefined): ChainConfig | null {
+export function getChainConfigByName(name: Network | null | undefined): ChainConfig | null {
   if (name) {
     return NETWORK_CONFIGURATIONS.find((item) => item.name === name) ?? null;
   }
@@ -243,7 +243,7 @@ export async function isNetworkConsistent(network: Network, id = ''): Promise<bo
   id = id && Web3.utils.isHex(id) ? parseInt(id, 16).toString() : id;
   // id 1: eth mainnet 3: ropsten 4: rinkeby 5: goerli 42: kovan  43: pangolin 44: crab
   const actualId: string = id ? await Promise.resolve(id) : await window.ethereum.request({ method: 'net_version' });
-  const chain = getNetworkByName(network) as EthereumChainConfig;
+  const chain = getChainConfigByName(network) as EthereumChainConfig;
   const storedId = chain.ethereumChain.chainId;
 
   return storedId === actualId;
@@ -257,7 +257,7 @@ export function isNativeMetamaskChain(network: Network): boolean {
     MetamaskNativeNetworkIds.goerli,
     MetamaskNativeNetworkIds.kovan,
   ];
-  const chain = getNetworkByName(network) as EthereumChainConfig;
+  const chain = getChainConfigByName(network) as EthereumChainConfig;
 
   return ids.includes(+chain.ethereumChain.chainId);
 }

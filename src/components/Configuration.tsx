@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { DESCRIPTIONS, SYSTEM_NETWORK_CONFIGURATIONS } from '../config/network';
 import { Network } from '../model';
-import { addCustomChain, readStorage, removeCustomChain, saveNetworkConfig, getNetworkByName } from '../utils';
+import { addCustomChain, readStorage, removeCustomChain, saveNetworkConfig, getChainConfigByName } from '../utils';
 
 interface ConfigurationProps {
   network: Network;
@@ -80,7 +80,7 @@ function getConfigControl(config: unknown, keys: (string | number)[]) {
 
 export function Configuration({ network }: ConfigurationProps) {
   const { t } = useTranslation();
-  const controls = getConfigControl(getNetworkByName(network), []);
+  const controls = getConfigControl(getChainConfigByName(network), []);
   const [form] = useForm();
   const [isCustom, setIsCustom] = useState(false);
 
