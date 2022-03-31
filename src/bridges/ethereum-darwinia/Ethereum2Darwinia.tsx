@@ -17,7 +17,8 @@ import { ApproveSuccess } from '../../components/tx/ApproveSuccess';
 import { IDescription } from '../../components/widget/IDescription';
 import { TransferConfirm } from '../../components/tx/TransferConfirm';
 import { TransferSuccess } from '../../components/tx/TransferSuccess';
-import { abi, FORM_CONTROL } from '../../config';
+import { abi } from '../../config/abi';
+import { FORM_CONTROL } from '../../config/constant';
 import { useAfterTx, useApi, useDeparture, useTx } from '../../hooks';
 import { CrossChainComponentProps, CrossChainPayload, Erc20Token, Network, Tx } from '../../model';
 import {

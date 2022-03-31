@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { THEME } from '../../config';
+import { THEME } from '../../config/theme';
 import { readStorage } from '../../utils/helper/storage';
 
 interface BallScalePulseProps {

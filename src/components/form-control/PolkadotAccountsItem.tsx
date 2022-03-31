@@ -2,7 +2,7 @@ import { Form, FormInstance, Select } from 'antd';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
-import { FORM_CONTROL } from '../../config';
+import { FORM_CONTROL } from '../../config/constant';
 import { useApi } from '../../hooks';
 import { AvailableBalance } from '../../model';
 import { fromWei, prettyNumber } from '../../utils';

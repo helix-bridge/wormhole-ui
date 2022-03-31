@@ -7,7 +7,9 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { BridgeState } from './components/bridge/BridgeState';
 import { Navigator } from './components/widget/Navigator';
 import { ThemeSwitch } from './components/widget/ThemeSwitch';
-import { Path, routes, THEME } from './config';
+import { Path } from './config/constant';
+import { routes } from './config/routes';
+import { THEME } from './config/theme';
 import { readStorage } from './utils/helper/storage';
 
 const { Header, Content } = Layout;

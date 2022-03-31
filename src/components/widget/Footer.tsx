@@ -3,7 +3,8 @@ import { Button, Layout } from 'antd';
 import { getYear } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { NETWORK_LIGHT_THEME, Path, THEME } from '../../config';
+import { Path } from '../../config/constant';
+import { NETWORK_LIGHT_THEME, THEME } from '../../config/theme';
 import { Language, LanguageProps } from './Language';
 
 type FooterProps = LanguageProps & { className?: string };

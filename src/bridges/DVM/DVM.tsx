@@ -16,7 +16,6 @@ import { IDescription } from '../../components/widget/IDescription';
 import { TransferConfirm } from '../../components/tx/TransferConfirm';
 import { TransferSuccess } from '../../components/tx/TransferSuccess';
 import { FormItemExtra } from '../../components/widget/facade';
-import { FORM_CONTROL, LONG_DURATION, Path, RegisterStatus } from '../../config';
 import {
   MemoedTokenInfo,
   useAfterTx,
@@ -59,6 +58,7 @@ import {
   prettyNumber,
   toWei,
 } from '../../utils';
+import { RegisterStatus, FORM_CONTROL, LONG_DURATION, Path } from '../../config/constant';
 
 interface DVMPayload extends CrossChainParty, CrossChainAsset<MappingToken> {}
 

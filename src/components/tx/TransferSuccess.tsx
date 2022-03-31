@@ -1,7 +1,7 @@
 import { CheckCircleFilled } from '@ant-design/icons';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NETWORK_LIGHT_THEME } from '../../config';
+import { NETWORK_LIGHT_THEME } from '../../config/theme';
 import { MappingToken, Network, CrossChainAsset, CrossChainPayload, TxSuccessComponentProps } from '../../model';
 import {
   convertToSS58,

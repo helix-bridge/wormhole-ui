@@ -5,7 +5,9 @@ import { Link, useHistory, useLocation } from 'react-router-dom';
 import { useApi } from '../../hooks';
 import { DownIcon } from '../icons';
 import { IconProps } from '../icons/icon-factory';
-import { Path, routes, THEME } from '../../config';
+import { THEME } from '../../config/theme';
+import { Path } from '../../config/constant';
+import { routes } from '../../config/routes';
 
 export interface Nav {
   label: string;

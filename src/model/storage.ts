@@ -1,4 +1,4 @@
-import { THEME } from '../config';
+import { THEME } from '../config/theme';
 import { Network, ChainConfig, NetworkMode } from './network';
 
 export interface HashInfo {

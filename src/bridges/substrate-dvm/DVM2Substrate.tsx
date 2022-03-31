@@ -6,7 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { combineLatest, from } from 'rxjs';
 import Web3 from 'web3';
-import { abi, FORM_CONTROL } from '../../config';
+import { abi } from '../../config/abi';
+import { FORM_CONTROL } from '../../config/constant';
 import { useAfterTx, useApi, useTx } from '../../hooks';
 import {
   AvailableBalance,

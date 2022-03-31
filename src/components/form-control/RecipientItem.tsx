@@ -3,7 +3,7 @@ import { AutoComplete, Form, FormInstance, Input } from 'antd';
 import { upperFirst } from 'lodash';
 import { ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FORM_CONTROL } from '../../config';
+import { FORM_CONTROL } from '../../config/constant';
 import { useLock } from '../../hooks';
 import {
   CrossChainComponentProps,

@@ -3,7 +3,7 @@ import { Progress, Select, Typography } from 'antd';
 import { groupBy } from 'lodash';
 import { PropsWithRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RegisterStatus } from '../../config';
+import { RegisterStatus } from '../../config/constant';
 import { MemoedTokenInfo } from '../../hooks';
 import { CustomFormControlProps, MappingToken } from '../../model';
 import { fromWei, getUnit, prettyNumber } from '../../utils';

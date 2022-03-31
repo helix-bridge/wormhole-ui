@@ -5,7 +5,7 @@ import BN from 'bn.js';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
-import { FORM_CONTROL } from '../../config';
+import { FORM_CONTROL } from '../../config/constant';
 import { AvailableBalance, CrossChainAsset, CustomFormControlProps, DarwiniaAsset, Network } from '../../model';
 import {
   amountLessThanFeeRule,

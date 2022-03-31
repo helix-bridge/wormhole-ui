@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { RegisterStatus } from '../../config';
+import { RegisterStatus } from '../../config/constant';
 import { CrossChainComponentProps, CrossChainDirection } from '../../model';
 import { getBridge } from '../../utils';
 import { DVM } from '../DVM/DVM';

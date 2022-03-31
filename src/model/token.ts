@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 import { Units } from 'web3-utils';
-import { RegisterStatus } from '../config';
+import { RegisterStatus } from '../config/constant';
 
 export interface Token<T = string> {
   symbol: T;

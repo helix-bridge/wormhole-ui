@@ -5,7 +5,7 @@ import { mount } from '@cypress/react';
 import { ThemeSwitch } from '../components/widget/ThemeSwitch';
 import '../index.scss';
 import '../theme/antd/index.less';
-import { NETWORK_DARK_THEME, THEME } from '../config';
+import { NETWORK_DARK_THEME, THEME } from '../config/theme';
 
 describe('render', () => {
   before(() => {

@@ -4,7 +4,7 @@ import { mount } from '@cypress/react';
 import { Suspense } from 'react';
 import { EMPTY } from 'rxjs';
 import { Progress, ProgressProps, State } from '../components/record/Progress';
-import { pangolinConfig as pangolin, pangoroConfig as pangoro } from '../config';
+import { pangolinConfig as pangolin, pangoroConfig as pangoro } from '../config/network';
 import '../index.scss';
 import { ApiProvider, TxProvider } from '../providers';
 import '../theme/antd/index.less';

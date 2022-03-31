@@ -2,7 +2,7 @@ import { ClockCircleOutlined, ImportOutlined, RightOutlined } from '@ant-design/
 import { Collapse, Progress, Tooltip } from 'antd';
 import { fromUnixTime, format } from 'date-fns/esm';
 import { PropsWithChildren, useMemo } from 'react';
-import { DATE_TIME_FORMAT } from '../../config';
+import { DATE_TIME_FORMAT } from '../../config/constant';
 import { ChainConfig } from '../../model';
 import { EllipsisMiddle } from '../widget/EllipsisMiddle';
 import { AssetOverview, AssetOverviewProps } from './AssetOverview';

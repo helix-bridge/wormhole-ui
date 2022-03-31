@@ -1,7 +1,7 @@
 import { UnlockOutlined, LockOutlined } from '@ant-design/icons';
 import { Switch, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { THEME } from '../../config';
+import { THEME } from '../../config/theme';
 import { useApi } from '../../hooks';
 
 interface NetworkFilterProps {

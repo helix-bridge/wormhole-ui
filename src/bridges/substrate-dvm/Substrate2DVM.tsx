@@ -3,7 +3,7 @@ import BN from 'bn.js';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EMPTY, from } from 'rxjs';
-import { FORM_CONTROL } from '../../config';
+import { FORM_CONTROL } from '../../config/constant';
 import { useAfterTx, useApi, useDarwiniaAvailableBalances, useIsMountedOperator, useTx } from '../../hooks';
 import {
   AvailableBalance,

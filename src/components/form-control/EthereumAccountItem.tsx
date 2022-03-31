@@ -1,7 +1,7 @@
 import { Form, FormInstance, FormItemProps, Input } from 'antd';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FORM_CONTROL } from '../../config';
+import { FORM_CONTROL } from '../../config/constant';
 import { useApi, useDeparture } from '../../hooks';
 import { isValidAddress } from '../../utils';
 

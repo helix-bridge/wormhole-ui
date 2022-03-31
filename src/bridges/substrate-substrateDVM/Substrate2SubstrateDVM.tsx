@@ -6,7 +6,8 @@ import { capitalize } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, of, Subscription, switchMap, takeWhile } from 'rxjs';
-import { abi, FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
+import { abi } from '../../config/abi';
+import { FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config/constant';
 import { useAfterTx, useApi, useDarwiniaAvailableBalances, useDeparture, useIsMounted, useTx } from '../../hooks';
 import {
   AvailableBalance,

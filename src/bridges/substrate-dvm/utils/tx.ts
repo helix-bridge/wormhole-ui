@@ -2,7 +2,7 @@ import { ApiPromise } from '@polkadot/api';
 import { TypeRegistry } from '@polkadot/types';
 import BN from 'bn.js';
 import { EMPTY, Observable } from 'rxjs';
-import { abi } from '../../../config';
+import { abi } from '../../../config/abi';
 import { CrossChainDirection, DVMChainConfig, PolkadotChainConfig, Tx } from '../../../model';
 import {
   convertToDvm,

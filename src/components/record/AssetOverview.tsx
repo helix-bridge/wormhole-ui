@@ -2,7 +2,7 @@ import { Typography } from 'antd';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Unit } from 'web3-utils';
-import { DATE_FORMAT } from '../../config';
+import { DATE_FORMAT } from '../../config/constant';
 import { fromWei, getTimeRange, prettyNumber } from '../../utils';
 
 export interface AssetOverviewProps {

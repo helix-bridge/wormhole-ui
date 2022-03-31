@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { EMPTY, filter, from, iif, map, Observable, of, switchMap, take, tap, zip } from 'rxjs';
 import { Progresses, ProgressProps, State } from '../../components/record/Progress';
 import { Record } from '../../components/record/Record';
-import { abi } from '../../config';
+import { abi } from '../../config/abi';
 import { useTx } from '../../hooks';
 import { ConnectionStatus, RecordComponentProps } from '../../model';
 import { connect, entrance, getBridge } from '../../utils';

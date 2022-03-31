@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { from, switchMap } from 'rxjs';
-import { RegisterStatus } from '../../config';
+import { RegisterStatus } from '../../config/constant';
 import {
   ChainConfig,
   CrossChainComponentProps,

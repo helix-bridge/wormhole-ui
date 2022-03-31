@@ -2,7 +2,7 @@ import { ApiPromise } from '@polkadot/api';
 import BN from 'bn.js';
 import { from, map, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
-import { abi } from '../../../config';
+import { abi } from '../../../config/abi';
 import { CrossChainDirection, DVMChainConfig, PolkadotChainConfig } from '../../../model';
 import { Tx } from '../../../model/tx';
 import {
