@@ -2,7 +2,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import { Input, Table, TableColumnType } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
-import { DayFilter } from '../components/widget/DayFilter';
+import { DayFilter } from '../../components/widget/DayFilter';
 
 interface Record {
   state: string;
@@ -13,7 +13,7 @@ interface Record {
   fee: string;
   id: string;
   asset: string;
-  executionFee: string;
+  bridge: string;
 }
 
 const data: Record[] = [
@@ -26,7 +26,7 @@ const data: Record[] = [
     to: 'Darwinia 0xe596...F1E',
     amount: 'Sent: 1000.03 RING',
     fee: '0.123 ETH 10RING',
-    executionFee: '0.13Ring',
+    bridge: '0.13Ring',
   },
   {
     id: '1',
@@ -37,7 +37,7 @@ const data: Record[] = [
     to: 'Darwinia 0xe596...F1E',
     amount: 'Sent: 1000.03 RING',
     fee: '0.123 ETH 10RING',
-    executionFee: '0.13Ring',
+    bridge: '0.13Ring',
   },
   {
     id: '2',
@@ -48,7 +48,7 @@ const data: Record[] = [
     to: 'Darwinia 0xe596...F1E',
     amount: 'Sent: 1000.03 RING',
     fee: '0.123 ETH 10RING',
-    executionFee: '0.13Ring',
+    bridge: '0.13Ring',
   },
 ];
 
@@ -56,16 +56,8 @@ function Page() {
   const { t } = useTranslation();
   const columns: TableColumnType<Record>[] = [
     {
-      title: t('Status'),
-      dataIndex: 'state',
-    },
-    {
       title: t('Time'),
       dataIndex: 'time',
-    },
-    {
-      title: t('Asset'),
-      dataIndex: 'asset',
     },
     {
       title: t('From'),
@@ -74,6 +66,10 @@ function Page() {
     {
       title: t('To'),
       dataIndex: 'to',
+    },
+    {
+      title: t('Asset'),
+      dataIndex: 'asset',
     },
     {
       title: t('Amount'),
@@ -105,8 +101,12 @@ function Page() {
       dataIndex: 'fee',
     },
     {
-      title: t('Execution Fee'),
-      dataIndex: 'executionFee',
+      title: t('Bridge'),
+      dataIndex: 'Bridge',
+    },
+    {
+      title: t('Status'),
+      dataIndex: 'state',
     },
   ];
 

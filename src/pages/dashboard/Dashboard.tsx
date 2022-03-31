@@ -1,11 +1,12 @@
 import { Spin } from 'antd';
 import BN from 'bn.js';
 import { format, subMilliseconds } from 'date-fns';
-import { GraphQLClient, useQuery } from 'graphql-hooks';
+import { useQuery } from 'graphql-hooks';
 import { last, omit } from 'lodash';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
+import { DATE_FORMAT } from '../../config/constant';
 import {
   crabConfig,
   darwiniaConfig,
@@ -14,7 +15,7 @@ import {
   pangoroConfig,
   ropstenConfig,
 } from '../../config/network';
-import { DATE_FORMAT } from '../../config/constant';
+import { useGqlClient } from '../../hooks';
 import { DailyStatistic } from '../../model';
 import { fromWei, prettyNumber } from '../../utils';
 import { BarChart, Statistic } from './BarChart';
@@ -37,10 +38,6 @@ const chains: ChainProps[] = [
   { config: pangoroConfig },
 ];
 
-const client = new GraphQLClient({
-  url: 'http://localhost:4000',
-});
-
 function toMillionSeconds(value: string | number) {
   const thousand = 1000;
 
@@ -61,6 +58,7 @@ function Page() {
   const { t } = useTranslation();
   // eslint-disable-next-line no-magic-numbers
   const timepast = 6 * 30 * 24 * 3600;
+  const client = useGqlClient();
   const { data: volumeStatistic, loading } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
     client,
     variables: { timepast },
@@ -84,7 +82,10 @@ function Page() {
       transactions: dailyStatistics
         .map(({ id, dailyCount }) => [toMillionSeconds(id), dailyCount])
         .reverse() as Statistic[],
-      transactionsTotal: prettyNumber(dailyStatistics.reduce((acc, cur) => acc.add(new BN(cur.dailyCount)), new BN(0))),
+      transactionsTotal: prettyNumber(
+        dailyStatistics.reduce((acc, cur) => acc.add(new BN(cur.dailyCount)), new BN(0)),
+        { decimal: 0 }
+      ),
     };
   }, [volumeStatistic]);
 

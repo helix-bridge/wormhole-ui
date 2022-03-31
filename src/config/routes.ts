@@ -6,7 +6,7 @@ import { Configure } from '../pages/Configure';
 import { HistoryRecords } from '../pages/CrossHistory';
 import { Dashboard } from '../pages/dashboard/Dashboard';
 import { Erc20Register } from '../pages/Erc20Register';
-import { Explorer } from '../pages/Explorer';
+import { Explorer } from '../pages/explorer/Explorer';
 import { Home } from '../pages/Home';
 import { Path } from './constant';
 
