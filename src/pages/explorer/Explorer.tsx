@@ -54,6 +54,7 @@ const data: Record[] = [
 
 function Page() {
   const { t } = useTranslation();
+  // const { } = useQuery()
   const columns: TableColumnType<Record>[] = [
     {
       title: t('Time'),

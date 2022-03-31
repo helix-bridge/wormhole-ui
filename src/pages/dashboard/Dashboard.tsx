@@ -15,7 +15,6 @@ import {
   pangoroConfig,
   ropstenConfig,
 } from '../../config/network';
-import { useGqlClient } from '../../hooks';
 import { DailyStatistic } from '../../model';
 import { fromWei, prettyNumber } from '../../utils';
 import { BarChart, Statistic } from './BarChart';
@@ -54,14 +53,13 @@ const STATISTICS_QUERY = `
   }
 `;
 
+// eslint-disable-next-line no-magic-numbers
+const TIMEPAST = 6 * 30 * 24 * 3600;
+
 function Page() {
   const { t } = useTranslation();
-  // eslint-disable-next-line no-magic-numbers
-  const timepast = 6 * 30 * 24 * 3600;
-  const client = useGqlClient();
   const { data: volumeStatistic, loading } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
-    client,
-    variables: { timepast },
+    variables: { timepast: TIMEPAST },
   });
 
   const { volume, transactions, volumeTotal, transactionsTotal } = useMemo(() => {
@@ -91,11 +89,11 @@ function Page() {
 
   const startTime = useMemo(() => {
     const date = !volumeStatistic?.dailyStatistics?.length
-      ? subMilliseconds(new Date(), toMillionSeconds(timepast)).getTime()
+      ? subMilliseconds(new Date(), toMillionSeconds(TIMEPAST)).getTime()
       : toMillionSeconds(last(volumeStatistic!.dailyStatistics)!.id);
 
     return format(date, DATE_FORMAT) + ' (+UTC)';
-  }, [timepast, volumeStatistic]);
+  }, [volumeStatistic]);
 
   return (
     <div>

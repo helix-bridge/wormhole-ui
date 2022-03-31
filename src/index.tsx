@@ -1,12 +1,14 @@
+import { ClientContext } from 'graphql-hooks';
 import { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
 import './bridges/register';
 import { BallScalePulse } from './components/widget/BallScalePulse';
+import { client } from './config/client';
 import { THEME } from './config/theme';
 import './index.scss';
-import { ApiProvider, GqlProvider, TxProvider } from './providers';
+import { ApiProvider, TxProvider } from './providers';
 import reportWebVitals from './reportWebVitals';
 import './theme/antd/index.less';
 import { readStorage } from './utils/helper/storage';
@@ -26,9 +28,9 @@ ReactDOM.render(
     <Router>
       <ApiProvider>
         <TxProvider>
-          <GqlProvider>
+          <ClientContext.Provider value={client}>
             <App />
-          </GqlProvider>
+          </ClientContext.Provider>
         </TxProvider>
       </ApiProvider>
     </Router>

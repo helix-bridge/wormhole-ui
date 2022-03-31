@@ -1,7 +1,6 @@
 export * from './api';
 export * from './darwiniaBalances';
 export * from './departure';
-export * from './gqlClient';
 export * from './isMounted';
 export * from './localSearch';
 export * from './lock';
