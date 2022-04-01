@@ -1,7 +1,6 @@
 import { Spin } from 'antd';
 import BN from 'bn.js';
 import { format, subMilliseconds } from 'date-fns';
-import { useQuery } from 'graphql-hooks';
 import { last, omit, orderBy } from 'lodash';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +14,7 @@ import {
   pangoroConfig,
   ropstenConfig,
 } from '../../config/network';
+import { TIMEPAST, useDailyStatistic } from '../../hooks';
 import { ChainConfig, DailyStatistic } from '../../model';
 import { fromWei, prettyNumber } from '../../utils';
 import { BarChart, Statistic } from './BarChart';
@@ -42,40 +42,21 @@ function toMillionSeconds(value: string | number) {
   return +value * thousand;
 }
 
-const STATISTICS_QUERY = `
-  query dailyStatistics($timepast: Int!, $chain: String) {
-    dailyStatistics(timepast: $timepast, chain: $chain) {
-      dailyCount
-      dailyVolume
-      id
-    }
-  }
-`;
-
-// eslint-disable-next-line no-magic-numbers
-const TIMEPAST = 6 * 30 * 24 * 3600;
-
 function Page() {
   const { t } = useTranslation();
 
-  const { data: volumeStatistic, loading } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
-    variables: { timepast: TIMEPAST },
-  });
+  const { data: dailyStatistic, loading } = useDailyStatistic();
 
-  const { data: crabStatistic } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
-    variables: { timepast: TIMEPAST, chain: 'crab' },
-  });
+  const { data: crabStatistic } = useDailyStatistic('crab');
 
-  const { data: darwiniaStatistic } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
-    variables: { timepast: TIMEPAST, chain: 'darwinia' },
-  });
+  const { data: darwiniaStatistic } = useDailyStatistic('darwinia');
 
   const { volume, transactions, volumeTotal, transactionsTotal } = useMemo(() => {
-    if (!volumeStatistic) {
+    if (!dailyStatistic) {
       return { volume: [], transactions: [], volumeTotal: 0, transactionsTotal: 0 };
     }
 
-    const { dailyStatistics } = volumeStatistic;
+    const { dailyStatistics } = dailyStatistic;
 
     return {
       volume: dailyStatistics
@@ -93,15 +74,15 @@ function Page() {
         { decimal: 0 }
       ),
     };
-  }, [volumeStatistic]);
+  }, [dailyStatistic]);
 
   const startTime = useMemo(() => {
-    const date = !volumeStatistic?.dailyStatistics?.length
+    const date = !dailyStatistic?.dailyStatistics?.length
       ? subMilliseconds(new Date(), toMillionSeconds(TIMEPAST)).getTime()
-      : toMillionSeconds(last(volumeStatistic!.dailyStatistics)!.id);
+      : toMillionSeconds(last(dailyStatistic!.dailyStatistics)!.id);
 
     return format(date, DATE_FORMAT) + ' (+UTC)';
-  }, [volumeStatistic]);
+  }, [dailyStatistic]);
 
   const { volumeRank, transactionsRank } = useMemo(() => {
     const calcTotal = (key: keyof DailyStatistic) => (acc: BN, cur: DailyStatistic) => acc.add(new BN(cur[key]));

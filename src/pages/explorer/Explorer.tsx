@@ -5,10 +5,17 @@ import { useQuery } from 'graphql-hooks';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
-import { DayFilter } from '../../components/widget/DayFilter';
 import { CrossChainStatus, CrossChainStatusColor } from '../../config/constant';
+import { useAccountStatistic, useDailyStatistic } from '../../hooks';
 import { Network, Substrate2SubstrateRecord } from '../../model';
-import { convertToDvm, fromWei, getChainConfigByName, isValidAddress, prettyNumber } from '../../utils';
+import {
+  convertToDvm,
+  fromWei,
+  getChainConfigByName,
+  getSupportedChains,
+  isValidAddress,
+  prettyNumber,
+} from '../../utils';
 import { Party } from './Party';
 
 const S2S_RECORDS = `
@@ -35,10 +42,33 @@ const S2S_RECORDS = `
   }
 `;
 
+const supportedChains = getSupportedChains();
+
+interface ViewBoardProps {
+  title: string;
+  count: string | number;
+}
+
+function ViewBoard({ title, count }: ViewBoardProps) {
+  return (
+    <div className="flex justify-between items-center lg:flex-col lg:gap-4 bg-antDark w-full px-4 lg:px-0 py-2 lg:py-4 text-center">
+      <span className="text-gray-400 uppercase">{title}</span>
+      <span className="text-xl lg:text-4xl">{count}</span>
+    </div>
+  );
+}
+
 function Page() {
   const { t } = useTranslation();
   const [isValidSender, setIsValidSender] = useState(true);
   const startTime = useMemo(() => getUnixTime(new Date()), []);
+  const { data: dailyStatistic } = useDailyStatistic();
+  const { total: accountTotal } = useAccountStatistic();
+
+  const transactionsTotal = useMemo(
+    () => dailyStatistic?.dailyStatistics.reduce((acc, cur) => acc + cur.dailyCount, 0) ?? '-',
+    [dailyStatistic]
+  );
 
   const { data, loading, refetch } = useQuery<{ s2sRecords: Substrate2SubstrateRecord[] }>(S2S_RECORDS, {
     variables: { first: 10, startTime },
@@ -97,23 +127,10 @@ function Page() {
 
   return (
     <div>
-      <DayFilter />
-
       <div className="grid lg:grid-cols-3 gap-0 lg:gap-6 place-items-center my-4 lg:my-6">
-        <div className="flex justify-between items-center lg:flex-col lg:gap-4 bg-antDark w-full px-4 lg:px-0 py-2 lg:py-4 text-center">
-          <span className="text-gray-400 uppercase">{t('transactions')}</span>
-          <span className="text-xl lg:text-4xl">10,200</span>
-        </div>
-
-        <div className="flex justify-between items-center lg:flex-col lg:gap-4 bg-antDark w-full px-4 lg:px-0 py-2 lg:py-4 text-center">
-          <span className="text-gray-400 uppercase">{t('unique users')}</span>
-          <span className="text-xl lg:text-4xl">800</span>
-        </div>
-
-        <div className="flex justify-between items-center lg:flex-col lg:gap-4 bg-antDark w-full px-4 lg:px-0 py-2 lg:py-4 text-center">
-          <span className="text-gray-400 uppercase">{t('supported blockchains')}</span>
-          <span className="text-xl lg:text-4xl">7</span>
-        </div>
+        <ViewBoard title={t('transactions')} count={transactionsTotal} />
+        <ViewBoard title={t('unique users')} count={accountTotal} />
+        <ViewBoard title={t('supported blockchains')} count={supportedChains.length} />
       </div>
 
       <div className="flex justify-between">

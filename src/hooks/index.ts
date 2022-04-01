@@ -1,4 +1,5 @@
 export * from './api';
+export * from './statistic';
 export * from './darwiniaBalances';
 export * from './departure';
 export * from './isMounted';

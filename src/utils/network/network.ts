@@ -82,6 +82,15 @@ function isSpecifyNetworkType(type: NetworkCategory) {
   };
 }
 
+export function getSupportedChains() {
+  return lodashChain([...NETWORK_GRAPH])
+    .map(([departure, arrivals]) => [departure, ...arrivals])
+    .filter((item) => item.length > 1)
+    .flatten()
+    .unionWith((cur, pre) => cur.mode === pre.mode && cur.network === pre.network)
+    .valueOf();
+}
+
 function byNetworkAlias(network: string): Network | null {
   const minLength = 3;
 

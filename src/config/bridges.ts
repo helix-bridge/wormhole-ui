@@ -26,3 +26,5 @@ const ethereumCrab = new Bridge(ethereumConfig, crabNative, ethereumCrabConfig);
 const tronCrab = new Bridge(tronConfig, crabNative, tronCrabConfig);
 
 export const AIRDROPS = [ethereumCrab, tronCrab];
+
+export { darwiniaCrabDVM, pangoroPangolinDVM };
