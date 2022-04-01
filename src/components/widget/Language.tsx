@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { NETWORK_LIGHT_THEME, THEME } from '../../config/theme';
 import { Network } from '../../model';
 import { EarthIcon } from '../icons';
+import '../../config/i18n';
 
 export interface LanguageProps extends ButtonProps {
   className?: string;
