@@ -22,7 +22,7 @@ export function Party({ chain, account, mode }: PartyProps) {
 
   return (
     <div className="flex flex-col max-w-xs">
-      <span>{chain}</span>
+      <span className="capitalize">{chain}</span>
       <EllipsisMiddle>{address}</EllipsisMiddle>
     </div>
   );

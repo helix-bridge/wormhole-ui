@@ -43,7 +43,7 @@ export enum CrossChainStatus {
 }
 
 export enum CrossChainStatusColor {
-  blue,
-  green,
-  red,
+  '#00b3ff',
+  '#00AA76',
+  '#EC9D00',
 }

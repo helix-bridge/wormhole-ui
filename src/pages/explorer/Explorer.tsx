@@ -1,7 +1,16 @@
-import { SearchOutlined, SyncOutlined } from '@ant-design/icons';
-import { Button, Input, Table, TableColumnType, Tag } from 'antd';
+import {
+  CheckCircleFilled,
+  ClockCircleFilled,
+  CloseCircleFilled,
+  LeftOutlined,
+  RightOutlined,
+  SearchOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
+import { Affix, Button, Input, Table, TableColumnType } from 'antd';
 import { formatDistanceToNow, getUnixTime } from 'date-fns';
 import { useQuery } from 'graphql-hooks';
+import { first, last } from 'lodash';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
@@ -48,6 +57,8 @@ interface ViewBoardProps {
   title: string;
   count: string | number;
 }
+
+const StatusIcons = [ClockCircleFilled, CheckCircleFilled, CloseCircleFilled];
 
 function ViewBoard({ title, count }: ViewBoardProps) {
   return (
@@ -121,7 +132,18 @@ function Page() {
     {
       title: t('Status'),
       dataIndex: 'result',
-      render: (value) => <Tag color={CrossChainStatusColor[value]}>{CrossChainStatus[value]}</Tag>,
+      render: (value) => {
+        const Icon = StatusIcons[value];
+        return (
+          <div
+            style={{ backgroundColor: CrossChainStatusColor[value] }}
+            className="flex items-center gap-1 px-2 rounded-xs max-w-max"
+          >
+            <Icon />
+            <span>{CrossChainStatus[value]}</span>
+          </div>
+        );
+      },
     },
   ];
 
@@ -133,49 +155,88 @@ function Page() {
         <ViewBoard title={t('supported blockchains')} count={supportedChains.length} />
       </div>
 
-      <div className="flex justify-between">
-        <Input
-          size="large"
-          suffix={<SearchOutlined />}
-          allowClear
-          onChange={(event) => {
-            const value = event.target.value;
+      <Affix offsetTop={64}>
+        <div className="flex justify-between">
+          <Input
+            size="large"
+            suffix={<SearchOutlined />}
+            allowClear
+            onChange={(event) => {
+              const value = event.target.value;
 
-            if (!value) {
-              setIsValidSender(true);
+              if (!value) {
+                setIsValidSender(true);
+                refetch({ variables: { first: 10, startTime: getUnixTime(new Date()) } });
+                return;
+              }
+
+              try {
+                const address = isValidAddress(value, 'ethereum') ? value : convertToDvm(value);
+
+                refetch({ variables: { first: 10, startTime: getUnixTime(new Date()), sender: address } });
+                setIsValidSender(true);
+              } catch {
+                setIsValidSender(false);
+              }
+            }}
+            placeholder={t('Search by sender address')}
+            className={`max-w-md ${isValidSender ? '' : 'border-red-400'}`}
+          />
+
+          <Button
+            type="link"
+            onClick={() => {
               refetch({ variables: { first: 10, startTime: getUnixTime(new Date()) } });
-              return;
-            }
+            }}
+            disabled={loading}
+            className="flex items-center cursor-pointer"
+          >
+            <span className="mr-2">{t('Latest transactions')}</span>
+            <SyncOutlined />
+          </Button>
+        </div>
 
-            try {
-              const address = isValidAddress(value, 'ethereum') ? value : convertToDvm(value);
+        {/* TODO: use infinite scroll */}
+        <div className="mt-4 lg:mt-6">
+          <Table
+            columns={columns}
+            dataSource={data?.s2sRecords || []}
+            rowKey="id"
+            pagination={false}
+            loading={loading}
+          />
 
-              refetch({ variables: { first: 10, startTime: getUnixTime(new Date()), sender: address } });
-              setIsValidSender(true);
-            } catch {
-              setIsValidSender(false);
-            }
-          }}
-          placeholder={t('Search by sender address')}
-          className={`max-w-md ${isValidSender ? '' : 'border-red-400'}`}
-        />
+          {data && data.s2sRecords.length >= 10 && (
+            <div className="flex items-center gap-4 mt-4 float-right">
+              <Button
+                onClick={() => {
+                  const cursor = first(data.s2sRecords);
+                  const start = getUnixTime(new Date(cursor!.startTime));
 
-        <Button
-          type="link"
-          onClick={() => {
-            refetch({ variables: { first: 10, startTime: getUnixTime(new Date()) } });
-          }}
-          disabled={loading}
-          className="flex items-center cursor-pointer"
-        >
-          <span className="mr-2">{t('Latest transactions')}</span>
-          <SyncOutlined />
-        </Button>
-      </div>
+                  refetch({ variables: { first: 10, startTime: start } });
+                }}
+                size="small"
+                className="flex items-center justify-center"
+              >
+                <LeftOutlined />
+              </Button>
 
-      <div className="mt-4 lg:mt-6">
-        <Table columns={columns} dataSource={data?.s2sRecords || []} rowKey="id" pagination={false} loading={loading} />
-      </div>
+              <Button
+                onClick={() => {
+                  const cursor = last(data.s2sRecords);
+                  const start = getUnixTime(new Date(cursor!.startTime));
+
+                  refetch({ variables: { first: 10, startTime: start } });
+                }}
+                size="small"
+                className="flex items-center justify-center"
+              >
+                <RightOutlined />
+              </Button>
+            </div>
+          )}
+        </div>
+      </Affix>
     </div>
   );
 }

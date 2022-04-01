@@ -46,6 +46,8 @@ module.exports = {
       borderRadius: {
         xl: '10px',
         lg: '8px',
+        sm: '4px',
+        xs: '2px',
       },
       boxShadow: {
         'mock-bottom-border': '0px 10px 1px -8px #5745de',
