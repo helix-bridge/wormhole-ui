@@ -2,7 +2,7 @@ import { Spin } from 'antd';
 import BN from 'bn.js';
 import { format, subMilliseconds } from 'date-fns';
 import { useQuery } from 'graphql-hooks';
-import { last, omit } from 'lodash';
+import { last, omit, orderBy } from 'lodash';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withRouter } from 'react-router-dom';
@@ -15,17 +15,16 @@ import {
   pangoroConfig,
   ropstenConfig,
 } from '../../config/network';
-import { DailyStatistic } from '../../model';
+import { ChainConfig, DailyStatistic } from '../../model';
 import { fromWei, prettyNumber } from '../../utils';
 import { BarChart, Statistic } from './BarChart';
 import { Chain, ChainProps } from './Chain';
-import { ChainStatisticOverview, Statistics } from './Statistics';
+import { Statistics } from './Statistics';
 
-const RANK: ChainStatisticOverview[] = [
-  { chain: 'Ethereum', logo: '/image/ethereum.png', total: '6,000' },
-  { chain: 'Darwinia', logo: '/image/darwinia.png', total: '2,000' },
-  { chain: 'Crab', logo: '/image/crab-white-bg.png', total: '4,000' },
-];
+interface StatisticTotal {
+  volume: BN;
+  transactions: BN;
+}
 
 const chains: ChainProps[] = [
   { config: ethereumConfig },
@@ -44,8 +43,8 @@ function toMillionSeconds(value: string | number) {
 }
 
 const STATISTICS_QUERY = `
-  query dailyStatistics($timepast: Int!) {
-    dailyStatistics(timepast: $timepast) {
+  query dailyStatistics($timepast: Int!, $chain: String) {
+    dailyStatistics(timepast: $timepast, chain: $chain) {
       dailyCount
       dailyVolume
       id
@@ -58,8 +57,17 @@ const TIMEPAST = 6 * 30 * 24 * 3600;
 
 function Page() {
   const { t } = useTranslation();
+
   const { data: volumeStatistic, loading } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
     variables: { timepast: TIMEPAST },
+  });
+
+  const { data: crabStatistic } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
+    variables: { timepast: TIMEPAST, chain: 'crab' },
+  });
+
+  const { data: darwiniaStatistic } = useQuery<{ dailyStatistics: DailyStatistic[] }>(STATISTICS_QUERY, {
+    variables: { timepast: TIMEPAST, chain: 'darwinia' },
   });
 
   const { volume, transactions, volumeTotal, transactionsTotal } = useMemo(() => {
@@ -95,13 +103,45 @@ function Page() {
     return format(date, DATE_FORMAT) + ' (+UTC)';
   }, [volumeStatistic]);
 
+  const { volumeRank, transactionsRank } = useMemo(() => {
+    const calcTotal = (key: keyof DailyStatistic) => (acc: BN, cur: DailyStatistic) => acc.add(new BN(cur[key]));
+    const calcVolumeTotal = calcTotal('dailyVolume');
+    const calcTransactionsTotal = calcTotal('dailyCount');
+
+    const calcChainTotal: (data: DailyStatistic[]) => StatisticTotal = (data) => ({
+      volume: data.reduce(calcVolumeTotal, new BN(0)),
+      transactions: data.reduce(calcTransactionsTotal, new BN(0)),
+    });
+
+    const rankSource = [
+      { chain: crabConfig, statistic: calcChainTotal(crabStatistic?.dailyStatistics || []) },
+      { chain: darwiniaConfig, statistic: calcChainTotal(darwiniaStatistic?.dailyStatistics || []) },
+    ];
+
+    const calcRank: (key: keyof StatisticTotal) => { chain: ChainConfig; total: BN }[] = (
+      key: keyof StatisticTotal
+    ) => {
+      const source = rankSource.map(({ chain, statistic }) => ({ chain, total: statistic[key] }));
+
+      return orderBy(source, (item) => item.total.toNumber(), 'desc');
+    };
+
+    return {
+      volumeRank: calcRank('volume').map(({ chain, total }) => ({
+        chain,
+        total: fromWei({ value: total, unit: 'gwei' }),
+      })),
+      transactionsRank: calcRank('transactions').map(({ chain, total }) => ({ chain, total: total.toString() })),
+    };
+  }, [crabStatistic, darwiniaStatistic]);
+
   return (
     <div>
-      <Statistics title={t('volumes')} startTime={startTime} total={volumeTotal} rank={RANK}>
+      <Statistics title={t('volumes')} startTime={startTime} total={volumeTotal} rank={volumeRank}>
         {loading ? <Spin size="large" className="block relative top-1/3" /> : <BarChart data={volume} name="volume" />}
       </Statistics>
 
-      <Statistics title="transactions" startTime={startTime} total={transactionsTotal} rank={RANK}>
+      <Statistics title="transactions" startTime={startTime} total={transactionsTotal} rank={transactionsRank}>
         {loading ? (
           <Spin size="large" className="block relative top-1/3" />
         ) : (
@@ -113,8 +153,8 @@ function Page() {
         <h2 className="uppercase my-6">{t('chains')}</h2>
 
         <div className="grid md:grid-cols-4 gap-4 lg:gap-6">
-          {chains.map((item) => (
-            <Chain {...item} key={item.config.name} />
+          {chains.map((item, index) => (
+            <Chain {...item} key={index} />
           ))}
         </div>
       </div>

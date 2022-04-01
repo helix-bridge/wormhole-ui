@@ -1,10 +1,10 @@
 import { PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ChainConfig } from '../../model';
 
 export interface ChainStatisticOverview {
-  chain: string;
-  logo: string;
-  total: string | number;
+  chain: ChainConfig;
+  total: string;
 }
 
 interface StatisticsProps {
@@ -41,11 +41,11 @@ export function Statistics({ children, startTime, total, title, rank }: PropsWit
             <span className="uppercase">{title}</span>
           </div>
 
-          {rank.map(({ logo, chain, total: iTotal }) => (
-            <div key={chain} className="flex justify-between">
+          {rank.map(({ chain, total: iTotal }) => (
+            <div key={chain.name} className="flex justify-between">
               <div className="flex items-center gap-2">
-                <img src={logo} width={24} />
-                <span className="uppercase">{chain}</span>
+                <img src={chain.facade.logo} width={24} />
+                <span className="capitalize">{chain.name}</span>
               </div>
 
               <span className="uppercase">{iTotal}</span>
