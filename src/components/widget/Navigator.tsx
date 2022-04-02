@@ -25,7 +25,7 @@ export interface NavigatorProps {
 
 const navigators: Nav[] = [
   { label: 'Dashboard', path: Path.dashboard },
-  { label: 'Explorer', path: Path.explorer },
+  { label: 'Explorer', path: Path.transaction },
   { label: 'DAO', path: Path.register },
   { label: 'Docs', path: 'https://docs.darwinia.network/tutorials/wiki-tut-wormhole', extra: true },
 ];

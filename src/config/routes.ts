@@ -7,6 +7,7 @@ import { HistoryRecords } from '../pages/CrossHistory';
 import { Dashboard } from '../pages/dashboard/Dashboard';
 import { Erc20Register } from '../pages/Erc20Register';
 import { Explorer } from '../pages/explorer/Explorer';
+import { TransactionsDetail } from '../pages/explorer/TransactionDetail';
 import { Home } from '../pages/Home';
 import { Path } from './constant';
 
@@ -48,8 +49,13 @@ export const routes: RouteProps[] = [
   },
   {
     exact: true,
-    path: Path.explorer,
-    children: Explorer,
+    path: Path.transaction,
+    component: Explorer,
+  },
+  {
+    path: Path.transaction + '/:id',
+    exact: true,
+    children: TransactionsDetail,
   },
   {
     path: '*',

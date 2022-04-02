@@ -83,11 +83,12 @@ export const S2S_ISSUING_RECORD_QUERY = `
       amount
       endTimestamp
       id
+      nonce
       recipient
       requestTxHash
       responseTxHash
       result
-      sender
+      senderId
       startTimestamp
       token
     }

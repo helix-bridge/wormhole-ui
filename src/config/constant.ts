@@ -27,7 +27,7 @@ export enum Path {
   register = '/register',
   configure = '/configure',
   dashboard = '/dashboard',
-  explorer = '/explorer',
+  transaction = '/transaction',
 }
 
 export enum RegisterStatus {

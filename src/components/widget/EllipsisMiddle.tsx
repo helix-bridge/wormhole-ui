@@ -38,11 +38,17 @@ export function EllipsisMiddle({
 }: PropsWithChildren<EllipsisMiddleProps>) {
   // eslint-disable-next-line complexity
   const prepEllipse = (node: HTMLDivElement) => {
-    const parent = node.parentNode!;
+    const parent = node.parentNode;
     const child = node.childNodes[0];
-    const txtToEllipse = parent.querySelector('.ellipseMe') || child;
+    let txtToEllipse;
 
-    if (child !== null && txtToEllipse !== null) {
+    try {
+      txtToEllipse = (parent && parent.querySelector('.ellipseMe')) || child;
+    } catch {
+      //
+    }
+
+    if (child !== null && txtToEllipse) {
       // (Re)-set text back to data-original-text if it exists.
       if ((txtToEllipse as HTMLElement).hasAttribute('data-original')) {
         txtToEllipse.textContent = (txtToEllipse as HTMLElement).getAttribute('data-original');

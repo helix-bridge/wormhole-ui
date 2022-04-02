@@ -13,8 +13,8 @@ import { useQuery } from 'graphql-hooks';
 import { first, last } from 'lodash';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { withRouter } from 'react-router-dom';
-import { CrossChainStatus, CrossChainStatusColor } from '../../config/constant';
+import { Link, withRouter } from 'react-router-dom';
+import { CrossChainStatus, CrossChainStatusColor, Path } from '../../config/constant';
 import { useAccountStatistic, useDailyStatistic } from '../../hooks';
 import { Network, Substrate2SubstrateRecord } from '../../model';
 import {
@@ -89,8 +89,23 @@ function Page() {
     {
       title: t('Time'),
       dataIndex: 'startTime',
-      render(value: string) {
-        return formatDistanceToNow(new Date(value), { includeSeconds: true, addSuffix: true });
+      render(value, record) {
+        return (
+          <Link
+            to={{
+              pathname: Path.transaction + '/' + record.id,
+              search: new URLSearchParams({
+                from: record.fromChain,
+                to: record.toChain,
+                fromMode: record.fromChainMode,
+                toMode: record.toChainMode,
+              }).toString(),
+              state: record,
+            }}
+          >
+            {formatDistanceToNow(new Date(value), { includeSeconds: true, addSuffix: true })}
+          </Link>
+        );
       },
     },
     {
@@ -134,6 +149,7 @@ function Page() {
       dataIndex: 'result',
       render: (value) => {
         const Icon = StatusIcons[value];
+
         return (
           <div
             style={{ backgroundColor: CrossChainStatusColor[value] }}
