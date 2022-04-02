@@ -1,4 +1,5 @@
-import { NetworkMode } from '../network';
+import { Substrate2SubstrateDVMRecord } from '../../bridges/substrate-substrateDVM/model';
+import { Network, NetworkMode } from '../network';
 
 export interface DailyStatistic {
   id: string;
@@ -6,22 +7,14 @@ export interface DailyStatistic {
   dailyCount: number;
 }
 
-export interface Substrate2SubstrateRecord {
+export interface Substrate2SubstrateRecord extends Substrate2SubstrateDVMRecord {
   id: string;
   bridge: string;
-  fromChain: string;
+  fromChain: Network;
   fromChainMode: NetworkMode;
-  toChain: string;
+  toChain: Network;
   toChainMode: NetworkMode;
-  laneId: string;
-  nonce: string;
-  requestTxHash: string;
-  responseTxHash: string;
   sender: string;
-  recipient: string;
-  token: string;
-  amount: string;
   startTime: string;
   endTime: string;
-  result: number;
 }

@@ -1,12 +1,4 @@
-import {
-  CheckCircleFilled,
-  ClockCircleFilled,
-  CloseCircleFilled,
-  LeftOutlined,
-  RightOutlined,
-  SearchOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+import { LeftOutlined, RightOutlined, SearchOutlined, SyncOutlined } from '@ant-design/icons';
 import { Affix, Button, Input, Table, TableColumnType } from 'antd';
 import { formatDistanceToNow, getUnixTime } from 'date-fns';
 import { useQuery } from 'graphql-hooks';
@@ -14,7 +6,8 @@ import { first, last } from 'lodash';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, withRouter } from 'react-router-dom';
-import { CrossChainStatus, CrossChainStatusColor, Path } from '../../config/constant';
+import { CrossChainState } from '../../components/widget/CrossChainStatus';
+import { Path } from '../../config/constant';
 import { useAccountStatistic, useDailyStatistic } from '../../hooks';
 import { Network, Substrate2SubstrateRecord } from '../../model';
 import {
@@ -57,8 +50,6 @@ interface ViewBoardProps {
   title: string;
   count: string | number;
 }
-
-const StatusIcons = [ClockCircleFilled, CheckCircleFilled, CloseCircleFilled];
 
 function ViewBoard({ title, count }: ViewBoardProps) {
   return (
@@ -147,19 +138,7 @@ function Page() {
     {
       title: t('Status'),
       dataIndex: 'result',
-      render: (value) => {
-        const Icon = StatusIcons[value];
-
-        return (
-          <div
-            style={{ backgroundColor: CrossChainStatusColor[value] }}
-            className="flex items-center gap-1 px-2 rounded-xs max-w-max"
-          >
-            <Icon />
-            <span>{CrossChainStatus[value]}</span>
-          </div>
-        );
-      },
+      render: (value) => <CrossChainState value={value} />,
     },
   ];
 

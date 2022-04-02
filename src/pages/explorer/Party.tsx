@@ -4,8 +4,8 @@ import { Network, NetworkMode, PolkadotChainConfig } from '../../model';
 import { convertToSS58, getChainConfigByName, isPolkadotNetwork } from '../../utils';
 
 interface PartyProps {
-  chain: Network;
   account: string;
+  chain?: Network;
   mode: NetworkMode;
 }
 
@@ -22,7 +22,7 @@ export function Party({ chain, account, mode }: PartyProps) {
 
   return (
     <div className="flex flex-col max-w-xs">
-      <span className="capitalize">{chain}</span>
+      {chain && <span className="capitalize">{chain}</span>}
       <EllipsisMiddle>{address}</EllipsisMiddle>
     </div>
   );

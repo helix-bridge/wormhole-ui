@@ -22,8 +22,8 @@ const ethereumCrabConfig: BridgeConfig = {};
 const tronCrabConfig: BridgeConfig = {};
 
 const crabNative = omit(crabConfig, 'dvm');
-const ethereumCrab = new Bridge(ethereumConfig, crabNative, ethereumCrabConfig);
-const tronCrab = new Bridge(tronConfig, crabNative, tronCrabConfig);
+const ethereumCrab = new Bridge(ethereumConfig, crabNative, ethereumCrabConfig, { category: 'helix' });
+const tronCrab = new Bridge(tronConfig, crabNative, tronCrabConfig, { category: 'helix' });
 
 export const AIRDROPS = [ethereumCrab, tronCrab];
 

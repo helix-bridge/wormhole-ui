@@ -32,6 +32,7 @@ const ethereumDarwiniaConfig: EthereumDarwiniaBridgeConfig = {
  * ethereum <-> darwinia
  */
 export const ethereumDarwinia = new Bridge(ethereumConfig, darwiniaConfig, ethereumDarwiniaConfig, {
+  category: 'helix',
   activeAssistantConnection: true,
 });
 
@@ -61,5 +62,6 @@ const ropstenDVMChainConfig: EthereumDarwiniaBridgeConfig = {
  * ethereum <-> darwinia testnet
  */
 export const ropstenPangolin = new Bridge(ropstenConfig, omit(pangolinConfig, 'dvm'), ropstenDVMChainConfig, {
+  category: 'helix',
   activeAssistantConnection: true,
 });

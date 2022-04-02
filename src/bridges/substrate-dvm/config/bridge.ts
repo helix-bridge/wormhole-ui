@@ -17,7 +17,7 @@ export const crabCrabDVM = new Bridge<SubstrateDVMBridgeConfig>(
   omit(crabConfig, 'dvm'),
   crabConfig,
   crabCrabDVMConfig,
-  { activeAssistantConnection: true, stable: false }
+  { category: 'helix', activeAssistantConnection: true, stable: false }
 );
 
 const pangolinPangolinDVMConfig: SubstrateDVMBridgeConfig = {
@@ -33,5 +33,5 @@ export const pangolinPangolinDVM = new Bridge<SubstrateDVMBridgeConfig>(
   omit(pangolinConfig, 'dvm'),
   pangolinConfig,
   pangolinPangolinDVMConfig,
-  { activeAssistantConnection: true, stable: false }
+  { category: 'helix', activeAssistantConnection: true, stable: false }
 );

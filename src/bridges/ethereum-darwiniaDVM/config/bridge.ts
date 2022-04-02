@@ -13,6 +13,7 @@ const ethereumCrabDVMConfig: EthereumDVMBridgeConfig = {
 };
 
 export const ethereumCrabDVM = new Bridge(ethereumConfig, crabConfig, ethereumCrabDVMConfig, {
+  category: 'helix',
   stable: false,
   status: 'pending',
 });
@@ -30,5 +31,6 @@ const ropstenPangolinDVMConfig: EthereumDVMBridgeConfig = {
  * ethereum <-> dvm testnet
  */
 export const ropstenPangolinDVM = new Bridge(ropstenConfig, pangolinConfig, ropstenPangolinDVMConfig, {
+  category: 'helix',
   stable: false,
 });

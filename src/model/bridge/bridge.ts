@@ -50,6 +50,8 @@ export interface BridgeConfig<C = ContractConfig, K = Record<string, string>> {
 
 /* ----------------------------------------------- bridge  ------------------------------------------------ */
 
+type BridgeCategory = 'helix';
+
 /**
  * departure -> arrival: issuing;
  * departure <- arrival: redeem;
@@ -69,6 +71,8 @@ export class Bridge<C = BridgeConfig> {
 
   readonly redeem: [Arrival, Departure];
 
+  readonly category: BridgeCategory;
+
   private _config: C;
 
   private crossChain: Map<Departure[], FunctionComponent> = new Map();
@@ -79,7 +83,8 @@ export class Bridge<C = BridgeConfig> {
     departure: ChainConfig,
     arrival: ChainConfig,
     config: C,
-    options?: {
+    options: {
+      category: BridgeCategory;
       status?: BridgeStatus;
       stable?: boolean;
       activeAssistantConnection?: boolean;
@@ -96,6 +101,7 @@ export class Bridge<C = BridgeConfig> {
     this.status = options?.status ?? 'available';
     this.stable = options?.stable ?? true;
     this.activeAssistantConnection = options?.activeAssistantConnection ?? false;
+    this.category = options.category;
   }
 
   get config() {
