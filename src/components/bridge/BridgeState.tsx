@@ -40,11 +40,7 @@ interface Page {
   updated_at: string;
 }
 
-interface BridgeStateProps {
-  className?: string;
-}
-
-export function BridgeState({ className = '' }: BridgeStateProps) {
+export function BridgeState() {
   const { isDev } = useApi();
 
   const url = useMemo(
@@ -73,6 +69,12 @@ export function BridgeState({ className = '' }: BridgeStateProps) {
   }, []);
 
   return message ? (
-    <Alert showIcon type="warning" closable message={message} className={`${className} fixed top-10 left-1/3 z-50`} />
+    <Alert
+      showIcon
+      type="warning"
+      closable
+      message={message}
+      className="xl:w-1/3 md:w-2/3 mx-auto drop-shadow max-w-full mb-8 w-80 fixed top-16 left-4 right-4 z-50"
+    />
   ) : null;
 }

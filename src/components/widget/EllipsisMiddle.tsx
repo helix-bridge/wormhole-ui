@@ -1,9 +1,8 @@
 import { Typography } from 'antd';
-import { PropsWithChildren, useCallback } from 'react';
+import { PropsWithChildren, useEffect, useRef } from 'react';
 
-const ellipse = (parentNode: HTMLDivElement, childNode: HTMLSpanElement, txtNode: HTMLElement) => {
+const ellipse = (containerWidth: number, childNode: HTMLSpanElement, txtNode: HTMLElement) => {
   const childWidth = childNode.offsetWidth;
-  const containerWidth = parentNode.offsetWidth;
   const txtWidth = txtNode.offsetWidth;
   const targetWidth = childWidth > txtWidth ? childWidth : txtWidth;
 
@@ -36,6 +35,7 @@ export function EllipsisMiddle({
   width,
   copyable = false,
 }: PropsWithChildren<EllipsisMiddleProps>) {
+  const ref = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line complexity
   const prepEllipse = (node: HTMLDivElement) => {
     const parent = node.parentNode;
@@ -54,27 +54,37 @@ export function EllipsisMiddle({
         txtToEllipse.textContent = (txtToEllipse as HTMLElement).getAttribute('data-original');
       }
 
-      ellipse(
-        // Use the smaller width.
-        (node.offsetWidth > (parent as HTMLElement).offsetWidth ? parent : node) as HTMLDivElement,
-        child as HTMLSpanElement,
-        txtToEllipse as HTMLElement
-      );
+      const nodeWidth = node.offsetWidth;
+      const parentWidth = (parent as HTMLElement).offsetWidth;
+      let containerWidth = Math.min(nodeWidth, parentWidth);
+
+      if (containerWidth === 0) {
+        containerWidth = Math.max(nodeWidth, parentWidth);
+      }
+
+      ellipse(containerWidth, child as HTMLSpanElement, txtToEllipse as HTMLElement);
     }
   };
 
-  const measuredParent = useCallback((node: HTMLDivElement) => {
+  useEffect(() => {
+    if (!ref.current) {
+      return;
+    }
+
+    const node = ref.current as HTMLDivElement;
+    const listener = () => prepEllipse(node);
+
     if (node !== null) {
-      window.addEventListener('resize', () => {
-        prepEllipse(node);
-      });
+      window.addEventListener('resize', listener);
       prepEllipse(node);
     }
+
+    return () => window.removeEventListener('resize', listener);
   }, []);
 
   return (
     <div
-      ref={measuredParent}
+      ref={ref}
       style={{
         wordBreak: 'keep-all',
         overflowWrap: 'normal',

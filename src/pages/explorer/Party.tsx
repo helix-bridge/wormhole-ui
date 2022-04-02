@@ -5,11 +5,12 @@ import { convertToSS58, getChainConfigByName, isPolkadotNetwork } from '../../ut
 
 interface PartyProps {
   account: string;
-  chain?: Network;
+  chain: Network;
   mode: NetworkMode;
+  showName?: boolean;
 }
 
-export function Party({ chain, account, mode }: PartyProps) {
+export function Party({ chain, account, mode, showName = true }: PartyProps) {
   const address = useMemo(() => {
     if (isPolkadotNetwork(chain) && mode !== 'dvm') {
       const config = getChainConfigByName(chain) as PolkadotChainConfig;
@@ -22,7 +23,7 @@ export function Party({ chain, account, mode }: PartyProps) {
 
   return (
     <div className="flex flex-col max-w-xs">
-      {chain && <span className="capitalize">{chain}</span>}
+      {showName && <span className="capitalize">{chain}</span>}
       <EllipsisMiddle>{address}</EllipsisMiddle>
     </div>
   );

@@ -1,5 +1,5 @@
 import { ClockCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { Breadcrumb, Tooltip, Progress, Divider } from 'antd';
+import { Breadcrumb, Divider, Progress, Tooltip } from 'antd';
 import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import BreadcrumbItem from 'antd/lib/breadcrumb/BreadcrumbItem';
 import camelcaseKeys from 'camelcase-keys';
@@ -48,6 +48,21 @@ const unifyRecordField: (record: Record<string, unknown>, fieldsMap: [string, st
 
   return record;
 };
+
+export function Description({ tip, title, children }: PropsWithChildren<{ tip: string; title: string }>) {
+  return (
+    <div className="flex flex-wrap md:items-center gap-2 md:gap-16 my-3 md:my-6">
+      <div className="w-36 flex items-center gap-2">
+        <Tooltip title={tip} className="cursor-help">
+          <InfoCircleOutlined />
+        </Tooltip>
+        <span className="capitalize">{title}</span>
+      </div>
+
+      {children}
+    </div>
+  );
+}
 
 export function useRecordQuery<T>(id: string, direction: [Departure, Arrival]) {
   const bridge = getBridge(direction);
@@ -122,35 +137,32 @@ function Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  console.log('🚀 ~ file: TransactionDetail.tsx ~ line 5 ~ Page ~ tx', param, state, search);
   return (
     <ErrorBoundary>
-      <Breadcrumb>
+      <Breadcrumb className="whitespace-nowrap flex items-center overflow-hidden overflow-ellipsis">
         <BreadcrumbItem>{t('Explorer')}</BreadcrumbItem>
         <BreadcrumbItem>{t('Transaction')}</BreadcrumbItem>
         <BreadcrumbItem>
-          <span className="w-32 overflow-hidden">
-            <EllipsisMiddle className="w-3/4 inline-block">{record?.requestTxHash || id}</EllipsisMiddle>
-          </span>
+          <EllipsisMiddle className="w-32 md:w-72 lg:w-96">{record?.requestTxHash}</EllipsisMiddle>
         </BreadcrumbItem>
       </Breadcrumb>
 
       <div className="flex justify-between items-center mt-6">
-        <h3 className="uppercase text-lg">{t('transaction detail')}</h3>
+        <h3 className="uppercase text-xs md:text-lg">{t('transaction detail')}</h3>
 
         <div>
           <div className="flex items-center gap-4 p-3 bg-antDark" style={{ borderRadius: 40 }}>
-            <img src={bridge.departure.facade.logo} width={40} />
+            <img src={bridge.departure.facade.logo} className="w-5 md:w-10" />
             <div
-              className="self-stretch flex items-center px-8"
+              className="self-stretch flex items-center px-4 md:px-8"
               style={{
                 clipPath: 'polygon(85% 0%, 100% 50%, 85% 100%, 0% 100%, 15% 50%, 0% 0%)',
                 backgroundColor: '#012342',
               }}
             >
-              <img src={`/image/bridges/${bridge.category}.png`} width={77} />
+              <img src={`/image/bridges/${bridge.category}.png`} className="w-10 md:w-20" />
             </div>
-            <img src={bridge.arrival.facade.logo} width={40} />
+            <img src={bridge.arrival.facade.logo} className="w-5 md:w-10" />
           </div>
 
           <div className="flex justify-between text-xs capitalize mt-1">
@@ -162,7 +174,7 @@ function Page() {
 
       <div className="px-8 py-3 mt-6 bg-antDark">
         <Description title={t('Source Tx Hash')} tip={t('Address (external or contract) receiving the transaction.')}>
-          <EllipsisMiddle>{record?.requestTxHash}</EllipsisMiddle>
+          {record && <EllipsisMiddle>{record.requestTxHash}</EllipsisMiddle>}
         </Description>
 
         <Description
@@ -195,7 +207,7 @@ function Page() {
             <div className="flex items-center gap-2">
               <ClockCircleOutlined />
               <span>{formatDistanceToNow(new Date(record.startTime), { includeSeconds: true, addSuffix: true })}</span>
-              <span>({formatRFC7231(new Date(record.startTime))})</span>
+              <span className="hidden md:inline-block">({formatRFC7231(new Date(record.startTime))})</span>
             </div>
           )}
         </Description>
@@ -203,11 +215,15 @@ function Page() {
         <Divider />
 
         <Description title={t('Sender')} tip={t('Address (external or contract) sending the transaction.')}>
-          {record && <Party account={record.sender} mode={record.fromChainMode} />}
+          {record && (
+            <Party chain={record.fromChain} account={record.sender} mode={record.fromChainMode} showName={false} />
+          )}
         </Description>
 
         <Description title={t('Receiver')} tip={t('Address (external or contract) receiving the transaction.')}>
-          {record && <Party account={record.recipient} mode={record.toChainMode} />}
+          {record && (
+            <Party chain={record.toChain} account={record.recipient} mode={record.toChainMode} showName={false} />
+          )}
         </Description>
 
         <Divider />
@@ -230,21 +246,6 @@ function Page() {
         </Description>
       </div>
     </ErrorBoundary>
-  );
-}
-
-function Description({ tip, title, children }: PropsWithChildren<{ tip: string; title: string }>) {
-  return (
-    <div className="flex items-center gap-16 my-6">
-      <div className="w-36 flex items-center gap-2">
-        <Tooltip title={tip} className="cursor-help">
-          <InfoCircleOutlined />
-        </Tooltip>
-        <span className="capitalize">{title}</span>
-      </div>
-
-      {children}
-    </div>
   );
 }
 
