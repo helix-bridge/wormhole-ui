@@ -8,9 +8,10 @@ interface PartyProps {
   chain: Network;
   mode: NetworkMode;
   showName?: boolean;
+  className?: string;
 }
 
-export function Party({ chain, account, mode, showName = true }: PartyProps) {
+export function Party({ chain, account, mode, showName = true, className = '' }: PartyProps) {
   const address = useMemo(() => {
     if (isPolkadotNetwork(chain) && mode !== 'dvm') {
       const config = getChainConfigByName(chain) as PolkadotChainConfig;
@@ -22,7 +23,7 @@ export function Party({ chain, account, mode, showName = true }: PartyProps) {
   }, [account, chain, mode]);
 
   return (
-    <div className="flex flex-col max-w-xs">
+    <div className={`flex flex-col max-w-xs ${className}`}>
       {showName && <span className="capitalize">{chain}</span>}
       <EllipsisMiddle>{address}</EllipsisMiddle>
     </div>

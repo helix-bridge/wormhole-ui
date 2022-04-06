@@ -1,11 +1,13 @@
-import { LeftOutlined, RightOutlined, SearchOutlined, SyncOutlined } from '@ant-design/icons';
-import { Affix, Button, Input, Table, TableColumnType } from 'antd';
+import { SearchOutlined, SyncOutlined } from '@ant-design/icons';
+import { Affix, Button, Input, Spin } from 'antd';
 import { formatDistanceToNow, getUnixTime } from 'date-fns';
 import { useQuery } from 'graphql-hooks';
-import { first, last } from 'lodash';
-import { useMemo, useState } from 'react';
+import { last } from 'lodash';
+import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, withRouter } from 'react-router-dom';
+import { useVirtual } from 'react-virtual';
+import { distinctUntilChanged, filter, Subject } from 'rxjs';
 import { CrossChainState } from '../../components/widget/CrossChainStatus';
 import { Path } from '../../config/constant';
 import { useAccountStatistic, useDailyStatistic } from '../../hooks';
@@ -60,6 +62,58 @@ function ViewBoard({ title, count }: ViewBoardProps) {
   );
 }
 
+function Record({
+  record,
+  className = '',
+  style = {},
+}: {
+  record: Substrate2SubstrateRecord;
+  style?: CSSProperties;
+  className?: string;
+}) {
+  const { fromChainMode, fromChain } = record;
+  const config = getChainConfigByName(fromChain as Network);
+
+  return (
+    <div className={`grid grid-cols-12 items-center py-2 px-4 ${className}`} style={style}>
+      <Link
+        to={{
+          pathname: Path.transaction + '/' + record.id,
+          search: new URLSearchParams({
+            from: record.fromChain,
+            to: record.toChain,
+            fromMode: record.fromChainMode,
+            toMode: record.toChainMode,
+          }).toString(),
+          state: record,
+        }}
+        className="justify-self-start whitespace-nowrap"
+      >
+        {formatDistanceToNow(new Date(record.startTime), { includeSeconds: true, addSuffix: true })}
+      </Link>
+      <Party
+        chain={record.fromChain}
+        account={record.sender}
+        mode={record.fromChainMode}
+        className="col-span-3 overflow-hidden"
+      />
+      <Party
+        chain={record.toChain}
+        account={record.recipient}
+        mode={record.toChainMode}
+        className="col-span-3 overflow-hidden"
+      />
+      <span>{`${fromChainMode === 'dvm' ? 'x' : ''}${config?.isTest ? 'O' : ''}RING`}</span>
+      <span>{fromWei({ value: record.amount, unit: 'gwei' }, prettyNumber)}</span>
+      <span>NAN</span>
+      <span>{record.bridge}</span>
+      <CrossChainState value={record.result} />
+    </div>
+  );
+}
+
+const PAGE_SIZE = 50;
+
 function Page() {
   const { t } = useTranslation();
   const [isValidSender, setIsValidSender] = useState(true);
@@ -68,79 +122,55 @@ function Page() {
   const { total: accountTotal } = useAccountStatistic();
 
   const transactionsTotal = useMemo(
-    () => dailyStatistic?.dailyStatistics.reduce((acc, cur) => acc + cur.dailyCount, 0) ?? '-',
+    () => (dailyStatistic?.dailyStatistics || []).reduce((acc, cur) => acc + cur.dailyCount, 0) ?? '-',
     [dailyStatistic]
   );
 
   const { data, loading, refetch } = useQuery<{ s2sRecords: Substrate2SubstrateRecord[] }>(S2S_RECORDS, {
-    variables: { first: 10, startTime },
+    variables: { first: PAGE_SIZE, startTime },
   });
 
-  const columns: TableColumnType<Substrate2SubstrateRecord>[] = [
-    {
-      title: t('Time'),
-      dataIndex: 'startTime',
-      render(value, record) {
-        return (
-          <Link
-            to={{
-              pathname: Path.transaction + '/' + record.id,
-              search: new URLSearchParams({
-                from: record.fromChain,
-                to: record.toChain,
-                fromMode: record.fromChainMode,
-                toMode: record.toChainMode,
-              }).toString(),
-              state: record,
-            }}
-          >
-            {formatDistanceToNow(new Date(value), { includeSeconds: true, addSuffix: true })}
-          </Link>
-        );
-      },
-    },
-    {
-      title: t('From'),
-      dataIndex: 'fromChain',
-      render: (value, record) => <Party chain={value} account={record.sender} mode={record.fromChainMode} />,
-    },
-    {
-      title: t('To'),
-      dataIndex: 'toChain',
-      render: (value, record) => <Party chain={value} account={record.recipient} mode={record.toChainMode} />,
-    },
-    {
-      title: t('Asset'),
-      dataIndex: 'token',
-      render: (_, record) => {
-        const { fromChainMode, fromChain } = record;
-        const config = getChainConfigByName(fromChain as Network);
+  const subject = useMemo(() => new Subject<string>(), []);
+  const [source, setSource] = useState<Substrate2SubstrateRecord[]>([]);
+  const virtualBoxRef = useRef(null);
 
-        return `${fromChainMode === 'dvm' ? 'x' : ''}${config?.isTest ? 'O' : ''}RING`;
-      },
-    },
-    {
-      title: t('Amount'),
-      dataIndex: 'amount',
-      render: (value) => <span>{fromWei({ value, unit: 'gwei' }, prettyNumber)}</span>,
-    },
-    {
-      title: t('Fee'),
-      dataIndex: 'fee',
-      render() {
-        return <span>NAN</span>;
-      },
-    },
-    {
-      title: t('Bridge'),
-      dataIndex: 'bridge',
-    },
-    {
-      title: t('Status'),
-      dataIndex: 'result',
-      render: (value) => <CrossChainState value={value} />,
-    },
-  ];
+  const rowVirtualizer = useVirtual({
+    size: source.length + 1,
+    parentRef: virtualBoxRef,
+    // eslint-disable-next-line no-magic-numbers
+    estimateSize: useCallback(() => 60, []),
+  });
+
+  useEffect(() => {
+    if (data?.s2sRecords && data.s2sRecords.length) {
+      setSource((pre) => [...pre, ...data.s2sRecords]);
+    }
+  }, [data]);
+
+  // eslint-disable-next-line complexity
+  useEffect(() => {
+    const [lastItem] = [...rowVirtualizer.virtualItems].reverse();
+    const triggerPosition = -2;
+    const courser = last(source);
+
+    if (lastItem && lastItem.index && !loading && courser && lastItem.index >= source.length + triggerPosition) {
+      subject.next(courser.startTime);
+    }
+  }, [loading, rowVirtualizer.virtualItems, source, subject]);
+
+  useEffect(() => {
+    const sub$$ = subject
+      .pipe(
+        filter((time) => !!time),
+        distinctUntilChanged()
+      )
+      .subscribe((time: string) => {
+        refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date(time)) } });
+      });
+
+    return () => sub$$.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div>
@@ -161,14 +191,14 @@ function Page() {
 
               if (!value) {
                 setIsValidSender(true);
-                refetch({ variables: { first: 10, startTime: getUnixTime(new Date()) } });
+                refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()) } });
                 return;
               }
 
               try {
                 const address = isValidAddress(value, 'ethereum') ? value : convertToDvm(value);
 
-                refetch({ variables: { first: 10, startTime: getUnixTime(new Date()), sender: address } });
+                refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()), sender: address } });
                 setIsValidSender(true);
               } catch {
                 setIsValidSender(false);
@@ -181,7 +211,7 @@ function Page() {
           <Button
             type="link"
             onClick={() => {
-              refetch({ variables: { first: 10, startTime: getUnixTime(new Date()) } });
+              refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()) } });
             }}
             disabled={loading}
             className="flex items-center cursor-pointer"
@@ -191,43 +221,47 @@ function Page() {
           </Button>
         </div>
 
-        {/* TODO: use infinite scroll */}
-        <div className="mt-4 lg:mt-6">
-          <Table
-            columns={columns}
-            dataSource={data?.s2sRecords || []}
-            rowKey="id"
-            pagination={false}
-            loading={loading}
-          />
+        <div className="mt-4 lg:mt-6 grid grid-cols-12 border-b border-gray-500 items-center py-2 px-4">
+          <span>{t('Time')}</span>
+          <span className="col-span-3 overflow-hidden">{t('From')}</span>
+          <span className="col-span-3 overflow-hidden">{t('To')}</span>
+          <span>{t('Asset')}</span>
+          <span>{t('Amount')}</span>
+          <span>{t('Fee')}</span>
+          <span>{t('Bridge')}</span>
+          <span>{t('Status')}</span>
+        </div>
 
-          {data && data.s2sRecords.length >= 10 && (
-            <div className="flex items-center gap-4 mt-4 float-right">
-              <Button
-                onClick={() => {
-                  const cursor = first(data.s2sRecords);
-                  const start = getUnixTime(new Date(cursor!.startTime));
+        <div style={{ height: 'calc(100vh - 40px - 64px - 78px)' }} ref={virtualBoxRef} className="overflow-auto">
+          {data && (
+            <div style={{ height: rowVirtualizer.totalSize, width: '100%', position: 'relative' }}>
+              {rowVirtualizer.virtualItems.map((row) => {
+                const record = source[row.index];
+                const isLoaderRow = row.index > source.length;
 
-                  refetch({ variables: { first: 10, startTime: start } });
-                }}
-                size="small"
-                className="flex items-center justify-center"
-              >
-                <LeftOutlined />
-              </Button>
+                if (!record) {
+                  return null;
+                }
 
-              <Button
-                onClick={() => {
-                  const cursor = last(data.s2sRecords);
-                  const start = getUnixTime(new Date(cursor!.startTime));
-
-                  refetch({ variables: { first: 10, startTime: start } });
-                }}
-                size="small"
-                className="flex items-center justify-center"
-              >
-                <RightOutlined />
-              </Button>
+                return isLoaderRow ? (
+                  <Spin />
+                ) : (
+                  <Record
+                    key={row.key}
+                    record={record}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${row.size}px`,
+                      transform: `translateY(${row.start}px)`,
+                    }}
+                    // eslint-disable-next-line no-magic-numbers
+                    className={row.index % 2 === 0 ? 'bg-antDark' : ''}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
