@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { from } from 'rxjs';
-import { CrossChainDirection, PolkadotChainConfig } from '../../../model';
+import { BridgeState, CrossChainDirection, PolkadotChainConfig } from '../../../model';
 import { entrance, waitUntilConnected } from '../../../utils';
 
-export function useBridgeStatus(direction: CrossChainDirection<PolkadotChainConfig, PolkadotChainConfig>) {
+export function useBridgeStatus(
+  direction: CrossChainDirection<PolkadotChainConfig, PolkadotChainConfig>
+): BridgeState & { specVersionOnline: string } {
   const [specVersionOnline, setSpecVersionOnline] = useState<string>('');
   const { to } = direction;
 
@@ -17,5 +19,11 @@ export function useBridgeStatus(direction: CrossChainDirection<PolkadotChainConf
     return () => sub$$.unsubscribe();
   }, [to.provider.rpc]);
 
-  return { isAvailable: to.specVersion === +specVersionOnline, specVersionOnline };
+  return to.specVersion === +specVersionOnline
+    ? { status: 'available', specVersionOnline }
+    : {
+        status: 'error',
+        reason: `The spec version of ${to.name} used here is inconsistent with the on-chain version`,
+        specVersionOnline,
+      };
 }
