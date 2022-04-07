@@ -3,7 +3,7 @@ import { Affix, Button, Input, Spin } from 'antd';
 import { formatDistanceToNow, getUnixTime } from 'date-fns';
 import { useQuery } from 'graphql-hooks';
 import { last } from 'lodash';
-import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, withRouter } from 'react-router-dom';
 import { useVirtual } from 'react-virtual';
@@ -62,20 +62,12 @@ function ViewBoard({ title, count }: ViewBoardProps) {
   );
 }
 
-function Record({
-  record,
-  className = '',
-  style = {},
-}: {
-  record: Substrate2SubstrateRecord;
-  style?: CSSProperties;
-  className?: string;
-}) {
+function Record({ record }: { record: Substrate2SubstrateRecord }) {
   const { fromChainMode, fromChain } = record;
   const config = getChainConfigByName(fromChain as Network);
 
   return (
-    <div className={`grid grid-cols-12 items-center py-2 px-4 ${className}`} style={style}>
+    <>
       <Link
         to={{
           pathname: Path.transaction + '/' + record.id,
@@ -108,7 +100,7 @@ function Record({
       <span>NAN</span>
       <span>{record.bridge}</span>
       <CrossChainState value={record.result} />
-    </div>
+    </>
   );
 }
 
@@ -150,10 +142,9 @@ function Page() {
   // eslint-disable-next-line complexity
   useEffect(() => {
     const [lastItem] = [...rowVirtualizer.virtualItems].reverse();
-    const triggerPosition = -2;
     const courser = last(source);
 
-    if (lastItem && lastItem.index && !loading && courser && lastItem.index >= source.length + triggerPosition) {
+    if (lastItem && lastItem.index && !loading && courser && lastItem.index >= source.length - 1) {
       subject.next(courser.startTime);
     }
   }, [loading, rowVirtualizer.virtualItems, source, subject]);
@@ -181,89 +172,94 @@ function Page() {
       </div>
 
       <Affix offsetTop={64}>
-        <div className="flex justify-between">
-          <Input
-            size="large"
-            suffix={<SearchOutlined />}
-            allowClear
-            onChange={(event) => {
-              const value = event.target.value;
+        <div>
+          <div className="flex justify-between">
+            <Input
+              size="large"
+              suffix={<SearchOutlined />}
+              allowClear
+              onChange={(event) => {
+                const value = event.target.value;
 
-              if (!value) {
-                setIsValidSender(true);
-                refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()) } });
-                return;
-              }
-
-              try {
-                const address = isValidAddress(value, 'ethereum') ? value : convertToDvm(value);
-
-                refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()), sender: address } });
-                setIsValidSender(true);
-              } catch {
-                setIsValidSender(false);
-              }
-            }}
-            placeholder={t('Search by sender address')}
-            className={`max-w-md ${isValidSender ? '' : 'border-red-400'}`}
-          />
-
-          <Button
-            type="link"
-            onClick={() => {
-              refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()) } });
-            }}
-            disabled={loading}
-            className="flex items-center cursor-pointer"
-          >
-            <span className="mr-2">{t('Latest transactions')}</span>
-            <SyncOutlined />
-          </Button>
-        </div>
-
-        <div className="mt-4 lg:mt-6 grid grid-cols-12 border-b border-gray-500 items-center py-2 px-4">
-          <span>{t('Time')}</span>
-          <span className="col-span-3 overflow-hidden">{t('From')}</span>
-          <span className="col-span-3 overflow-hidden">{t('To')}</span>
-          <span>{t('Asset')}</span>
-          <span>{t('Amount')}</span>
-          <span>{t('Fee')}</span>
-          <span>{t('Bridge')}</span>
-          <span>{t('Status')}</span>
-        </div>
-
-        <div style={{ height: 'calc(100vh - 40px - 64px - 78px)' }} ref={virtualBoxRef} className="overflow-auto">
-          {data && (
-            <div style={{ height: rowVirtualizer.totalSize, width: '100%', position: 'relative' }}>
-              {rowVirtualizer.virtualItems.map((row) => {
-                const record = source[row.index];
-                const isLoaderRow = row.index > source.length;
-
-                if (!record) {
-                  return null;
+                if (!value) {
+                  setIsValidSender(true);
+                  refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()) } });
+                  return;
                 }
 
-                return isLoaderRow ? (
-                  <Spin />
-                ) : (
-                  <Record
-                    key={row.key}
-                    record={record}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: `${row.size}px`,
-                      transform: `translateY(${row.start}px)`,
-                    }}
-                    // eslint-disable-next-line no-magic-numbers
-                    className={row.index % 2 === 0 ? 'bg-antDark' : ''}
-                  />
-                );
-              })}
-            </div>
-          )}
+                try {
+                  const address = isValidAddress(value, 'ethereum') ? value : convertToDvm(value);
+
+                  refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()), sender: address } });
+                  setIsValidSender(true);
+                } catch {
+                  setIsValidSender(false);
+                }
+              }}
+              placeholder={t('Search by sender address')}
+              className={`max-w-md ${isValidSender ? '' : 'border-red-400'}`}
+            />
+
+            <Button
+              type="link"
+              onClick={() => {
+                refetch({ variables: { first: PAGE_SIZE, startTime: getUnixTime(new Date()) } });
+              }}
+              disabled={loading}
+              className="flex items-center cursor-pointer"
+            >
+              <span className="mr-2">{t('Latest transactions')}</span>
+              <SyncOutlined />
+            </Button>
+          </div>
+
+          <div className="mt-4 lg:mt-6 grid grid-cols-12 border-b border-gray-500 items-center py-2 px-4">
+            <span>{t('Time')}</span>
+            <span className="col-span-3 overflow-hidden">{t('From')}</span>
+            <span className="col-span-3 overflow-hidden">{t('To')}</span>
+            <span>{t('Asset')}</span>
+            <span>{t('Amount')}</span>
+            <span>{t('Fee')}</span>
+            <span>{t('Bridge')}</span>
+            <span>{t('Status')}</span>
+          </div>
+
+          <div style={{ height: 'calc(100vh - 40px - 64px - 78px)' }} ref={virtualBoxRef} className="overflow-auto">
+            {data && (
+              <div style={{ height: rowVirtualizer.totalSize, width: '100%', position: 'relative' }}>
+                {rowVirtualizer.virtualItems.map((row) => {
+                  const record = source[row.index];
+                  const isLoaderRow = row.index > source.length - 1;
+
+                  return (
+                    <div
+                      // eslint-disable-next-line no-magic-numbers
+                      className={`grid grid-cols-12 items-center py-2 px-4 ${row.index % 2 === 0 ? 'bg-antDark' : ''}`}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: `${row.size}px`,
+                        transform: `translateY(${row.start}px)`,
+                      }}
+                      key={row.key}
+                    >
+                      {isLoaderRow ? (
+                        data.s2sRecords.length ? (
+                          <Spin className="col-span-full" />
+                        ) : (
+                          <span className="col-span-full text-center">{t('Nothing more to load')}</span>
+                        )
+                      ) : (
+                        record && <Record record={record} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </Affix>
     </div>
