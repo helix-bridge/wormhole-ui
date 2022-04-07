@@ -24,11 +24,13 @@ function App() {
   return (
     <Layout className="min-h-screen overflow-scroll">
       <Header
-        className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-4"
-        style={{ marginTop: -1 }}
+        className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between sm:px-8 px-4 border-b"
+        style={{ marginTop: -1, borderColor: '#113b5d' }}
       >
         <Tooltip title={t('Wormhole is in beta. Please use at your own risk level')}>
-          <Link to={Path.root}>{t('HelixBridge')}</Link>
+          <Link to={Path.root}>
+            <img src="/image/bridges/helix.png" width={90} height={24} />
+          </Link>
         </Tooltip>
 
         <Drawer
