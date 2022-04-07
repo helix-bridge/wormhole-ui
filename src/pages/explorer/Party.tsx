@@ -9,9 +9,10 @@ interface PartyProps {
   mode: NetworkMode;
   showName?: boolean;
   className?: string;
+  copyable?: boolean;
 }
 
-export function Party({ chain, account, mode, showName = true, className = '' }: PartyProps) {
+export function Party({ chain, account, mode, copyable = false, showName = true, className = '' }: PartyProps) {
   const address = useMemo(() => {
     if (isPolkadotNetwork(chain) && mode !== 'dvm') {
       const config = getChainConfigByName(chain) as PolkadotChainConfig;
@@ -25,7 +26,7 @@ export function Party({ chain, account, mode, showName = true, className = '' }:
   return (
     <div className={`flex flex-col max-w-xs ${className}`}>
       {showName && <span className="capitalize">{chain}</span>}
-      <EllipsisMiddle>{address}</EllipsisMiddle>
+      <EllipsisMiddle copyable={copyable}>{address}</EllipsisMiddle>
     </div>
   );
 }

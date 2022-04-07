@@ -1,15 +1,15 @@
-import { ClockCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { ClockCircleFilled, ClockCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { Breadcrumb, Divider, Progress, Tooltip } from 'antd';
 import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import BreadcrumbItem from 'antd/lib/breadcrumb/BreadcrumbItem';
 import camelcaseKeys from 'camelcase-keys';
-import { formatDistanceToNow, formatRFC7231 } from 'date-fns';
+import { formatDistance, formatDistanceToNow, formatRFC7231 } from 'date-fns';
 import { GraphQLClient, useManualQuery } from 'graphql-hooks';
 import { has } from 'lodash';
 import { PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams, withRouter } from 'react-router-dom';
-import { from } from 'rxjs';
+import { from as rxFrom } from 'rxjs';
 import { S2S_ISSUING_RECORD_QUERY, S2S_REDEEM_RECORD_QUERY } from '../../bridges/substrate-substrateDVM/config';
 import { Substrate2SubstrateDVMRecord, SubstrateDVM2SubstrateRecord } from '../../bridges/substrate-substrateDVM/model';
 import { CrossChainState } from '../../components/widget/CrossChainStatus';
@@ -108,13 +108,14 @@ function Page() {
   const { id } = param;
   const { fetchRecord, resultKey } = useRecordQuery(id, direction);
   const [record, setRecord] = useState<Substrate2SubstrateRecord | null>(state);
+  const amount = useMemo(() => fromWei({ value: record?.amount ?? 0, unit: 'gwei' }, prettyNumber), [record?.amount]);
 
   useEffect(() => {
     if (record) {
       return;
     }
 
-    const sub$$ = from(fetchRecord()).subscribe((res) => {
+    const sub$$ = rxFrom(fetchRecord()).subscribe((res) => {
       const result = unifyRecordField((res.data as Record<string, unknown>)[resultKey] as Record<string, unknown>, [
         ...s2sDVMFields,
         ...sDVM2sFields,
@@ -208,6 +209,15 @@ function Page() {
               <ClockCircleOutlined />
               <span>{formatDistanceToNow(new Date(record.startTime), { includeSeconds: true, addSuffix: true })}</span>
               <span className="hidden md:inline-block">({formatRFC7231(new Date(record.startTime))})</span>
+              <Divider type="vertical" orientation="center" />
+
+              <ClockCircleFilled className="text-gray-400" />
+
+              <span className="text-gray-400">
+                {t('Confirmed within {{des}}', {
+                  des: formatDistance(new Date(record.endTime), new Date(record.startTime), { includeSeconds: true }),
+                })}
+              </span>
             </div>
           )}
         </Description>
@@ -216,15 +226,68 @@ function Page() {
 
         <Description title={t('Sender')} tip={t('Address (external or contract) sending the transaction.')}>
           {record && (
-            <Party chain={record.fromChain} account={record.sender} mode={record.fromChainMode} showName={false} />
+            <Party
+              chain={record.fromChain}
+              account={record.sender}
+              mode={record.fromChainMode}
+              showName={false}
+              copyable
+            />
           )}
         </Description>
 
         <Description title={t('Receiver')} tip={t('Address (external or contract) receiving the transaction.')}>
           {record && (
-            <Party chain={record.toChain} account={record.recipient} mode={record.toChainMode} showName={false} />
+            <Party
+              chain={record.toChain}
+              account={record.recipient}
+              mode={record.toChainMode}
+              showName={false}
+              copyable
+            />
           )}
         </Description>
+
+        {record?.result && (
+          <Description
+            title={t('Token Transfer')}
+            tip={t('List of tokens transferred in this cross-chain transaction.')}
+          >
+            <div className="flex flex-col gap-2">
+              {[
+                {
+                  logo: bridge.departure.facade.logo,
+                  from: record.sender,
+                  to: '0x1234567891234569999',
+                  token: { logo: '/image/ring.svg', name: 'RING' },
+                },
+                {
+                  logo: bridge.arrival.facade.logoAssist,
+                  from: '0x1234567891234569999',
+                  to: record.recipient,
+                  token: { logo: '/image/ring.svg', name: 'xRING' },
+                },
+              ].map(({ logo, from, to, token }) => (
+                <div key={token.name} className="flex items-center gap-2">
+                  <img src={logo} className="w-5" />
+                  <span>{t('From')}</span>
+                  <span className="w-32 text-center">
+                    <EllipsisMiddle>{from}</EllipsisMiddle>
+                  </span>
+                  <span>{t('To')}</span>
+                  <span className="w-32 text-center">
+                    <EllipsisMiddle>{to}</EllipsisMiddle>
+                  </span>
+                  <span>{t('For')}</span>
+                  <img src={token.logo} className="w-5" />
+                  <span>
+                    {amount} {token.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Description>
+        )}
 
         <Divider />
 
@@ -232,7 +295,7 @@ function Page() {
           title={t('Value')}
           tip={t('The amount to be transferred to the recipient with the cross-chain transaction.')}
         >
-          {fromWei({ value: record?.amount ?? 0, unit: 'gwei' }, prettyNumber)}
+          {amount}
         </Description>
 
         <Description title={t('Transaction Fee')} tip={'Amount paid for processing the cross-chain transaction.'}>
