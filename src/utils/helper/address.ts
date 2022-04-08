@@ -27,9 +27,6 @@ export function dvmAddressToAccountId(address: string | null | undefined): Detec
   return accountId;
 }
 
-/**
- * @param isShort deprecate, use css to implement
- */
 export function convertToSS58(text: string, prefix: number | null, isShort = false): string {
   if (!text || isNull(prefix)) {
     return '';
@@ -57,11 +54,11 @@ export function convertToDvm(address: string): string {
   return u8aToHex(decodeAddress(address));
 }
 
-export function canConvertToEth(address: string): boolean {
-  return !!convertToEth(address);
+export function canConvertToEthereumFormat(address: string): boolean {
+  return !!convertToEthereumFormat(address);
 }
 
-export function convertToEth(address: string): string | null {
+export function convertToEthereumFormat(address: string): string | null {
   if (!address) {
     return '';
   }
