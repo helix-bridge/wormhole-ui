@@ -16,7 +16,6 @@ import {
   getVerticesFromDisplayName,
   hasBridge,
   isChainConfigEqualTo,
-  isDVM2Substrate,
   isEthereumNetwork,
   isPolkadotNetwork,
   isReachable,
@@ -254,7 +253,6 @@ export function CrossChainRecord() {
             defaultValue={searchParams?.sender || ''}
             loading={loading}
             placeholder={searchPlaceholder}
-            disabled={isDVM2Substrate(departure, arrival)}
             onChange={(event) => {
               const value = event.target.value;
               if (

@@ -27,18 +27,13 @@ export function dvmAddressToAccountId(address: string | null | undefined): Detec
   return accountId;
 }
 
-export function convertToSS58(text: string, prefix: number | null, isShort = false): string {
+export function convertToSS58(text: string, prefix: number | null): string {
   if (!text || isNull(prefix)) {
     return '';
   }
 
   try {
-    let address = encodeAddress(text, prefix);
-    const length = 8;
-
-    if (isShort) {
-      address = address.slice(0, length) + '...' + address.slice(address.length - length, length);
-    }
+    const address = encodeAddress(text, prefix);
 
     return address;
   } catch (error) {

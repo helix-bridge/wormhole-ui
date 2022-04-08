@@ -2,9 +2,9 @@ import { FetchData, GraphQLClient, useManualQuery } from 'graphql-hooks';
 import { useCallback, useMemo } from 'react';
 import { catchError, EMPTY, from, map } from 'rxjs';
 import { ChainConfig, PolkadotChainConfig, RecordList, RecordRequestParams, RecordsHooksResult } from '../../../model';
-import { convertToDvm, convertToSS58, dvmAddressToAccountId, getBridge, isDVM2Substrate } from '../../../utils';
+import { convertToDvm, convertToSS58, getBridge } from '../../../utils';
 import { SubstrateSubstrateDVMBridgeConfig } from '../../substrate-substrateDVM/model/bridge';
-import { TRANSFERS_QUERY } from '../config';
+import { DVM_TO_SUBSTRATE_QUERY, SUBSTRATE_TO_DVM_QUERY } from '../config';
 import { DVM2SubstrateRecordsRes, Substrate2DVMRecord, Substrate2DVMRecordsRes } from '../model';
 
 const UNKNOWN_CLIENT = 'unknown';
@@ -28,12 +28,12 @@ export function useRecords(
     [api.subql, arrival.name]
   );
 
-  const [fetchIssuingRecords] = useManualQuery<Substrate2DVMRecordsRes>(TRANSFERS_QUERY, {
+  const [fetchIssuingRecords] = useManualQuery<Substrate2DVMRecordsRes>(SUBSTRATE_TO_DVM_QUERY, {
     skipCache: true,
     client: issuingClient,
   });
 
-  const [fetchRedeemRecords] = useManualQuery<DVM2SubstrateRecordsRes>(TRANSFERS_QUERY, {
+  const [fetchRedeemRecords] = useManualQuery<DVM2SubstrateRecordsRes>(DVM_TO_SUBSTRATE_QUERY, {
     skipCache: true,
     client: redeemClient,
   });
@@ -43,23 +43,16 @@ export function useRecords(
   const fetchRecords = useCallback(
     (
       req: Omit<RecordRequestParams, 'confirmed'>,
-      fetch: FetchData<Substrate2DVMRecordsRes, Record<string, unknown>, unknown>
+      fetch: FetchData<Substrate2DVMRecordsRes, Record<string, unknown>, unknown>,
+      extra: { method?: string; account: string }
     ) => {
       const {
         paginator: { row, page },
-        address,
-        direction,
       } = req;
 
       return from(
         fetch({
-          variables: {
-            limit: row,
-            offset: page * row,
-            account: convertToDvm(address),
-            // FIXME: https://github.com/darwinia-network/darwinia-common/issues/1123 this issue will be fix the record from dvm to substrate
-            method: isDVM2Substrate(...direction) ? 'Endowed' : 'Transfer',
-          },
+          variables: { limit: row, offset: page * row, ...extra },
           skipCache: true,
         })
       ).pipe(
@@ -76,20 +69,17 @@ export function useRecords(
 
   const fetchSubstrate2DVMRecords = useCallback(
     (req: Omit<RecordRequestParams, 'confirmed'>) =>
-      fetchRecords({ ...req, address: convertToSS58(req.address, ss58Prefix) }, fetchIssuingRecords),
+      fetchRecords(req, fetchIssuingRecords, {
+        method: 'Transfer',
+        account: convertToDvm(convertToSS58(req.address, ss58Prefix)),
+      }),
     [ss58Prefix, fetchIssuingRecords, fetchRecords]
   );
 
   const fetchDVM2SubstrateRecords = useCallback(
     (req: Omit<RecordRequestParams, 'confirmed'>) =>
-      fetchRecords(
-        {
-          ...req,
-          address: convertToSS58(dvmAddressToAccountId(req.address).toHuman() as string, ss58Prefix),
-        },
-        fetchRedeemRecords
-      ),
-    [ss58Prefix, fetchRecords, fetchRedeemRecords]
+      fetchRecords(req, fetchRedeemRecords, { account: req.address.toLocaleLowerCase() }),
+    [fetchRecords, fetchRedeemRecords]
   );
 
   return {
