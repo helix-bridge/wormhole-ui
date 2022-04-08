@@ -117,7 +117,7 @@ describe('History records', () => {
     cy.react('Record').should('have.length', 10);
   });
 
-  it.skip('should display DVM to substrate records', () => {
+  it('should display DVM to substrate records', () => {
     cy.intercept(
       {
         method: 'POST',
@@ -130,7 +130,8 @@ describe('History records', () => {
     selectTo('Pangolin');
     setSearchAccount(pangolinDVMAccount);
 
-    cy.react('Record').should('have.length', 4);
+    cy.react('Record').should('have.length', 8);
+    cy.react('DVM2SubstrateRecord').first().getReact('CloudDownloadOutlined').should('exist');
   });
 
   it('should disable DVM to substrate records', () => {
