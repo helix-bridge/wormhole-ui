@@ -131,6 +131,7 @@ describe('History records', () => {
     setSearchAccount(pangolinDVMAccount);
 
     cy.react('Record').should('have.length', 8);
+    cy.react('DVM2SubstrateRecord').first().find('.anticon-cloud-download').should('exist');
   });
 
   it('should display substrate to DVM records', () => {
