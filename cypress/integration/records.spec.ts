@@ -131,14 +131,6 @@ describe('History records', () => {
     setSearchAccount(pangolinDVMAccount);
 
     cy.react('Record').should('have.length', 8);
-    cy.react('DVM2SubstrateRecord').first().getReact('CloudDownloadOutlined').should('exist');
-  });
-
-  it('should disable DVM to substrate records', () => {
-    selectFrom('Pangolin-Smart');
-    selectTo('Pangolin');
-
-    cy.react('Search').find('input').should('be.disabled');
   });
 
   it('should display substrate to DVM records', () => {
