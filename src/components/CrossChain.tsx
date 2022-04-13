@@ -1,4 +1,4 @@
-import { Form } from 'antd';
+import { Form, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,24 +6,25 @@ import { FORM_CONTROL } from '../config/constant';
 import { validateMessages } from '../config/validate-msg';
 import { useApi, useTx } from '../hooks';
 import {
+  BridgeState,
   CrossChainComponentProps,
-  Network,
-  NetworkMode,
-  SubmitFn,
-  CrossChainPayload,
   CrossChainDirection,
   CrossChainParty,
-  NullableCrossChainDirection,
+  CrossChainPayload,
   CrossType,
+  Network,
+  NetworkMode,
+  NullableCrossChainDirection,
+  SubmitFn,
 } from '../model';
 import {
   emptyObsFactory,
+  getBridge,
+  getBridgeComponent,
   getInitialSetting,
-  verticesToChainConfig,
   isReachable,
   isSameNetConfig,
-  getBridgeComponent,
-  getBridge,
+  verticesToChainConfig,
 } from '../utils';
 import { Airport } from './Airport';
 import { Direction } from './form-control/Direction';
@@ -75,7 +76,7 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
   const [direction, setDirection] = useState(() => validateDirection(getDirectionFromSettings(), type));
   const [isReady, setIsReady] = useState(false);
   const [submitFn, setSubmit] = useState<SubmitFn>(emptyObsFactory);
-  const [isBridgeAvailable, setIsBridgeAvailable] = useState<boolean>(true);
+  const [bridgeState, setBridgeState] = useState<BridgeState>({ status: 'available' });
   const { tx } = useTx();
 
   const launch = useCallback(() => {
@@ -168,12 +169,22 @@ export function CrossChain({ type = 'cross-chain' }: { type?: CrossType }) {
           form={form}
           direction={direction as CrossChainDirection}
           setSubmit={setSubmit}
-          setIsBridgeAvailable={setIsBridgeAvailable}
+          setBridgeState={setBridgeState}
         />
       )}
 
       <div className={connectionStatus === 'success' && direction.from ? 'grid grid-cols-2 gap-4' : ''}>
-        <SubmitButton {...direction} requireTo launch={launch} disabled={!isBridgeAvailable} crossType={type} />
+        <Tooltip title={bridgeState.reason} placement="bottom">
+          <div>
+            <SubmitButton
+              {...direction}
+              requireTo
+              launch={launch}
+              disabled={bridgeState.status !== 'available'}
+              crossType={type}
+            />
+          </div>
+        </Tooltip>
 
         {connectionStatus === 'success' && (
           <FromItemButton

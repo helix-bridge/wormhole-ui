@@ -6,7 +6,7 @@ import { TFunction } from 'react-i18next';
 import Web3 from 'web3';
 import { Network, NetworkCategory, PolkadotChainConfig, PolkadotTypeNetwork, Token } from '../../model';
 import { isPolkadotNetwork, NETWORK_CONFIGURATIONS } from '../network/network';
-import { canConvertToEth, convertToEth, convertToSS58, dvmAddressToAccountId } from './address';
+import { canConvertToEthereumFormat, convertToEthereumFormat, convertToSS58, dvmAddressToAccountId } from './address';
 import { toWei } from './balance';
 
 // eslint-disable-next-line complexity
@@ -15,7 +15,7 @@ export const isValidAddress = (address: string, network: Network | NetworkCatego
     const isDvm = Web3.utils.isAddress(address);
     const isSS58 = isSS58Address(address);
 
-    return isDvm || (isSS58 && canConvertToEth(address));
+    return isDvm || (isSS58 && canConvertToEthereumFormat(address));
   }
 
   if (isPolkadotNetwork(network as PolkadotTypeNetwork)) {
@@ -86,7 +86,7 @@ export const isSameAddress = (from: string, to: string): boolean => {
 
   if (Web3.utils.isAddress(from)) {
     try {
-      toAddress = convertToEth(to);
+      toAddress = convertToEthereumFormat(to);
     } catch (err) {
       console.warn(
         '%c [ file: src/utils/helper/validate.ts  ]- function: isSameAddress',

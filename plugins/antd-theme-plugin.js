@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const webpack = require('webpack');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { generateTheme } = require('./ant-theme-generator');
+const { generateTheme } = require('./antd-theme-generator');
 const { RawSource } = webpack.sources || require('webpack-sources');
 
 class AntDesignThemePlugin {

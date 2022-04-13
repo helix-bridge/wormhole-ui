@@ -16,6 +16,6 @@ export const pangoroConfig: PolkadotChainConfig = {
     rpc: 'wss://pangoro-rpc.darwinia.network',
   },
   ss58Prefix: 18,
-  specVersion: 28060,
+  specVersion: 28070,
   type: ['polkadot', 'darwinia'],
 };

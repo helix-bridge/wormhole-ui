@@ -117,7 +117,7 @@ describe('History records', () => {
     cy.react('Record').should('have.length', 10);
   });
 
-  it.skip('should display DVM to substrate records', () => {
+  it('should display DVM to substrate records', () => {
     cy.intercept(
       {
         method: 'POST',
@@ -130,14 +130,8 @@ describe('History records', () => {
     selectTo('Pangolin');
     setSearchAccount(pangolinDVMAccount);
 
-    cy.react('Record').should('have.length', 4);
-  });
-
-  it('should disable DVM to substrate records', () => {
-    selectFrom('Pangolin-Smart');
-    selectTo('Pangolin');
-
-    cy.react('Search').find('input').should('be.disabled');
+    cy.react('Record').should('have.length', 8);
+    cy.react('DVM2SubstrateRecord').first().find('.anticon-cloud-download').should('exist');
   });
 
   it('should display substrate to DVM records', () => {

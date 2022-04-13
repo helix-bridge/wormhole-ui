@@ -20,9 +20,10 @@ export function SubstrateDVM2Substrate({
   form,
   setSubmit,
   direction,
-  setIsBridgeAvailable,
+  setBridgeState,
 }: CrossChainComponentProps<SubstrateDVM2SubstratePayload, DVMChainConfig, PolkadotChainConfig>) {
-  const { isAvailable } = useBridgeStatus(direction);
+  const bridgeState = useBridgeStatus(direction);
+
   const transform = useCallback(
     (value: RedeemSubstrateTxPayload) => {
       const { to } = direction;
@@ -69,8 +70,8 @@ export function SubstrateDVM2Substrate({
   }, []);
 
   useEffect(() => {
-    setIsBridgeAvailable(isAvailable);
-  }, [isAvailable, setIsBridgeAvailable]);
+    setBridgeState({ status: bridgeState.status, reason: bridgeState.reason });
+  }, [bridgeState.status, bridgeState.reason, setBridgeState]);
 
   return (
     <DVM
