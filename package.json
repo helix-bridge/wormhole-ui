@@ -29,7 +29,7 @@
   "dependencies": {
     "@ant-design/icons": "^4.6.2",
     "@craco/craco": "^6.1.2",
-    "@darwinia/types": "^2.7.2",
+    "@darwinia/types": "^2.7.5",
     "@metamask/contract-metadata": "^1.28.0",
     "@metamask/jazzicon": "^2.0.0",
     "@polkadot/api": "^7.11.1",

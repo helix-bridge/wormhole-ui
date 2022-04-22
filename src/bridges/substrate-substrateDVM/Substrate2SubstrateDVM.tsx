@@ -1,25 +1,31 @@
-import { Fee } from '@darwinia/types';
 import { Descriptions, Form, Progress, Select } from 'antd';
+import { Codec } from '@polkadot/types/types';
 import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import BN from 'bn.js';
-import { capitalize } from 'lodash';
+import { capitalize, last } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { EMPTY, from, of, Subscription, switchMap, takeWhile } from 'rxjs';
+import { Balance } from '../../components/form-control/Balance';
+import { MaxBalance } from '../../components/form-control/MaxBalance';
+import { PolkadotAccountsItem } from '../../components/form-control/PolkadotAccountsItem';
+import { RecipientItem } from '../../components/form-control/RecipientItem';
+import { TransferConfirm } from '../../components/tx/TransferConfirm';
+import { TransferSuccess } from '../../components/tx/TransferSuccess';
 import { abi, FORM_CONTROL, LONG_DURATION, RegisterStatus } from '../../config';
 import { useAfterTx, useApi, useDarwiniaAvailableBalances, useDeparture, useIsMounted, useTx } from '../../hooks';
 import {
   AvailableBalance,
+  ChainConfig,
   CrossChainComponentProps,
+  CrossChainDirection,
+  CrossChainPayload,
   DailyLimit,
   DVMChainConfig,
   MappingToken,
   Network,
-  Token,
-  CrossChainPayload,
-  ChainConfig,
-  CrossChainDirection,
   PolkadotChainConfig,
+  Token,
 } from '../../model';
 import {
   amountLessThanFeeRule,
@@ -39,15 +45,9 @@ import {
   zeroAmountRule,
 } from '../../utils';
 import { getKnownMappingTokens } from '../../utils/mappingToken/mappingToken';
-import { Balance } from '../../components/form-control/Balance';
-import { MaxBalance } from '../../components/form-control/MaxBalance';
-import { PolkadotAccountsItem } from '../../components/form-control/PolkadotAccountsItem';
-import { RecipientItem } from '../../components/form-control/RecipientItem';
-import { TransferConfirm } from '../../components/tx/TransferConfirm';
-import { TransferSuccess } from '../../components/tx/TransferSuccess';
+import { useBridgeStatus } from './hooks';
 import { IssuingSubstrateTxPayload, Substrate2SubstrateDVMPayload } from './model';
 import { issuing } from './utils/tx';
-import { useBridgeStatus } from './hooks';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
@@ -250,16 +250,23 @@ export function Substrate2SubstrateDVM({
     }
 
     const subscription = from(waitUntilConnected(api))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .pipe(switchMap(() => (api.rpc as any).fee.marketFee() as Promise<Fee>))
+      .pipe(
+        switchMap(() => {
+          const section = direction.to.isTest ? `${direction.to.name}FeeMarket` : 'feeMarket';
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return (api.query as any)[section]['assignedRelayers']().then((data: Codec) => data.toJSON()) as Promise<
+            { id: string; collateral: number; fee: number }[]
+          >;
+        })
+      )
       .subscribe((res) => {
-        const marketFee = res.amount?.toString();
+        const marketFee = last(res)?.fee.toString();
 
         setFee(new BN(marketFee ?? -1)); // -1: fee market does not available
       });
 
     return () => subscription?.unsubscribe();
-  }, [api]);
+  }, [api, direction.to.isTest, direction.to.name]);
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';
