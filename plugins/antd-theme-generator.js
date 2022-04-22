@@ -555,9 +555,6 @@ async function generateTheme({
     results = await postcss([reducePlugin]).process(allCss, {
       from: antdStylesFile,
     });
-    fs.writeFileSync('./antCss.css', antCss)
-    // fs.writeFileSync('./allcss', allCss)
-    fs.writeFileSync('./userCss.css', userCustomCss)
     css = results.css;
 
     Object.keys(fadeMap).forEach((fade) => {

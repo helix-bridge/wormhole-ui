@@ -1,5 +1,7 @@
 import { ApiPromise } from '@polkadot/api';
+import { Codec } from '@polkadot/types/types';
 import BN from 'bn.js';
+import { last } from 'lodash';
 import { from, map, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../../config';
@@ -33,10 +35,15 @@ export function redeem(value: RedeemSubstrateTxPayload, mappingAddress: string, 
   const api = entrance.polkadot.getInstance(transfer.from.provider.rpc);
 
   const valObs = from(waitUntilConnected(api)).pipe(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    switchMap(() => (api.rpc as any).fee.marketFee() as Promise<{ amount: string }>),
+    switchMap(() => {
+      const section = transfer.to.isTest ? `${transfer.to.name}FeeMarket` : 'feeMarket';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (api.query as any)[section]['assignedRelayers']().then((data: Codec) => data.toJSON()) as Promise<
+        { id: string; collateral: number; fee: number }[]
+      >;
+    }),
     map((res) => {
-      const num = fromWei({ value: res.amount.toString(), unit: 'gwei' });
+      const num = fromWei({ value: last(res)?.fee.toString(), unit: 'gwei' });
 
       return Web3.utils.toHex(toWei({ value: num, unit: 'ether' }));
     })

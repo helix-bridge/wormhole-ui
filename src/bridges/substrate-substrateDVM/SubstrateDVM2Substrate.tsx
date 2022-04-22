@@ -1,8 +1,9 @@
+import { Codec } from '@polkadot/types/types';
+import { last } from 'lodash';
 import { useCallback, useEffect } from 'react';
 import { from, switchMap } from 'rxjs';
 import { RegisterStatus } from '../../config';
 import {
-  ChainConfig,
   CrossChainComponentProps,
   CrossChainDirection,
   DailyLimit,
@@ -57,14 +58,20 @@ export function SubstrateDVM2Substrate({
     [direction]
   );
 
-  const getFee = useCallback(async (departure: ChainConfig) => {
+  const getFee = useCallback(async ({ to: arrival, from: departure }: CrossChainDirection) => {
     const api = entrance.polkadot.getInstance(departure.provider.rpc);
 
     await waitUntilConnected(api);
 
+    const section = arrival.isTest ? `${arrival.name}FeeMarket` : 'feeMarket';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res = (await (api.rpc as any).fee.marketFee()) as { amount: string };
-    const num = fromWei({ value: res.amount.toString(), unit: 'gwei' });
+    const module = api.query[section] as any;
+    const res = (await module.assignedRelayers().then((data: Codec) => data.toJSON())) as {
+      id: string;
+      collateral: number;
+      fee: number;
+    }[];
+    const num = fromWei({ value: last(res)?.fee.toString(), unit: 'gwei' });
 
     return num;
   }, []);
