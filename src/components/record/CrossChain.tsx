@@ -60,7 +60,6 @@ export function CrossChainRecord() {
   const { t } = useTranslation();
   const { search } = useLocation();
   const searchParams = useMemo(() => getHistoryRouteParams(search), [search]);
-  const [isGenesis, setIGenesis] = useState(false);
   const { setToFilters, toNetworks, fromNetworks } = useNetworks();
 
   const [departure, setDeparture] = useState<Vertices>(() => {
@@ -161,10 +160,10 @@ export function CrossChainRecord() {
   }, []);
 
   useEffect(() => {
-    const sub$$ = loadData(address, confirmed, departure, arrival, isGenesis, paginator);
+    const sub$$ = loadData(address, confirmed, departure, arrival, false, paginator);
 
     return () => sub$$.unsubscribe();
-  }, [address, arrival, confirmed, departure, isGenesis, loadData, paginator]);
+  }, [address, arrival, confirmed, departure, loadData, paginator]);
 
   return (
     <>
@@ -231,24 +230,6 @@ export function CrossChainRecord() {
             </Select>
           )}
 
-          {isEthereumNetwork(departure.network) && (
-            <Select
-              value={Number(isGenesis)}
-              size="large"
-              onChange={(key) => {
-                setIGenesis(!!key);
-              }}
-              className="type-select capitalize"
-            >
-              <Select.Option value={0} key={0}>
-                {t('Normal')}
-              </Select.Option>
-              <Select.Option value={1} key={1}>
-                {t('Genesis')}
-              </Select.Option>
-            </Select>
-          )}
-
           <Input.Search
             defaultValue={searchParams?.sender || ''}
             loading={loading}
@@ -263,7 +244,7 @@ export function CrossChainRecord() {
               }
 
               if (value === address) {
-                loadData(address, confirmed, departure, arrival, isGenesis, paginator);
+                loadData(address, confirmed, departure, arrival, false, paginator);
               } else {
                 setAddress(value);
               }
@@ -275,7 +256,7 @@ export function CrossChainRecord() {
                 message.error(t('Origin network is not matched to the target network'));
               } else {
                 if (value === address) {
-                  loadData(address, confirmed, departure, arrival, isGenesis, paginator);
+                  loadData(address, confirmed, departure, arrival, false, paginator);
                 } else {
                   setAddress(value);
                 }
