@@ -450,9 +450,6 @@ export function Ethereum2Darwinia({ form, setSubmit, direction }: CrossChainComp
               </sup>
             </Select.Option>
           ))}
-          <Select.Option value="deposit" className="uppercase">
-            {t('Deposit')}
-          </Select.Option>
         </Select>
       </Form.Item>
 
