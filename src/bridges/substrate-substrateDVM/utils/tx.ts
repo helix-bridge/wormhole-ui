@@ -21,7 +21,7 @@ import { IssuingSubstrateTxPayload, RedeemSubstrateTxPayload } from '../model';
 export function issuing(value: IssuingSubstrateTxPayload, api: ApiPromise, fee: BN): Observable<Tx> {
   const { sender, recipient, amount, direction } = value;
   const { from: departure, to } = direction as CrossChainDirection<PolkadotChainConfig, DVMChainConfig>;
-  const WEIGHT = '1509000000';
+  const WEIGHT = '4000000000';
   const module = departure.isTest ? 'substrate2SubstrateBacking' : 'toCrabBacking';
   const extrinsic = api.tx[module].lockAndRemoteIssue(String(to.specVersion), WEIGHT, amount, fee, recipient);
 
