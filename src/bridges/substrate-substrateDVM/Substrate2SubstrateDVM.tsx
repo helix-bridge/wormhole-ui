@@ -1,5 +1,4 @@
 import { Descriptions, Form, Progress, Select } from 'antd';
-import { Codec } from '@polkadot/types/types';
 import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
 import BN from 'bn.js';
 import { capitalize, last } from 'lodash';
@@ -47,7 +46,7 @@ import {
 import { getKnownMappingTokens } from '../../utils/mappingToken/mappingToken';
 import { useBridgeStatus } from './hooks';
 import { IssuingSubstrateTxPayload, Substrate2SubstrateDVMPayload } from './model';
-import { issuing } from './utils/tx';
+import { issuing, queryFeeFromRelayers } from './utils/tx';
 
 /* ----------------------------------------------Base info helpers-------------------------------------------------- */
 
@@ -250,14 +249,7 @@ export function Substrate2SubstrateDVM({
     }
 
     const subscription = from(waitUntilConnected(api))
-      .pipe(
-        switchMap(() => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return (api.query as any)[`${direction.to.name}FeeMarket`]
-            ['assignedRelayers']()
-            .then((data: Codec) => data.toJSON()) as Promise<{ id: string; collateral: number; fee: number }[]>;
-        })
-      )
+      .pipe(switchMap(() => queryFeeFromRelayers(direction.from, direction.to)))
       .subscribe((res) => {
         const marketFee = last(res)?.fee.toString();
 
@@ -265,7 +257,7 @@ export function Substrate2SubstrateDVM({
       });
 
     return () => subscription?.unsubscribe();
-  }, [api, direction.to.isTest, direction.to.name]);
+  }, [api, direction.from, direction.to]);
 
   useEffect(() => {
     const sender = (accounts && accounts[0] && accounts[0].address) || '';

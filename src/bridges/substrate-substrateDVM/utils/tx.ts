@@ -5,13 +5,14 @@ import { last } from 'lodash';
 import { from, map, Observable, switchMap } from 'rxjs';
 import Web3 from 'web3';
 import { abi } from '../../../config';
-import { CrossChainDirection, DVMChainConfig, PolkadotChainConfig } from '../../../model';
+import { ChainConfig, CrossChainDirection, DVMChainConfig, PolkadotChainConfig } from '../../../model';
 import { Tx } from '../../../model/tx';
 import {
   convertToDvm,
   entrance,
   fromWei,
   genEthereumContractTxObs,
+  isDVM,
   signAndSendExtrinsic,
   toWei,
   waitUntilConnected,
@@ -35,12 +36,7 @@ export function redeem(value: RedeemSubstrateTxPayload, mappingAddress: string, 
   const api = entrance.polkadot.getInstance(transfer.from.provider.rpc);
 
   const valObs = from(waitUntilConnected(api)).pipe(
-    switchMap(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (api.query as any)[`${transfer.to.name}FeeMarket`]
-        ['assignedRelayers']()
-        .then((data: Codec) => data.toJSON()) as Promise<{ id: string; collateral: number; fee: number }[]>;
-    }),
+    switchMap(() => queryFeeFromRelayers(transfer.from, transfer.to)),
     map((res) => {
       const num = fromWei({ value: last(res)?.fee.toString(), unit: 'gwei' });
 
@@ -61,3 +57,19 @@ export function redeem(value: RedeemSubstrateTxPayload, mappingAddress: string, 
     )
   );
 }
+
+export const queryFeeFromRelayers = async (dep: ChainConfig, to: ChainConfig) => {
+  const api = entrance.polkadot.getInstance(dep.provider.rpc);
+  const section = isDVM(dep) || to.isTest ? `${to.name}FeeMarket` : 'feeMarket';
+  console.log('🚀 ~ file: tx.ts ~ line 64 ~ queryFeeFromRelayers ~ section', section);
+
+  await waitUntilConnected(api);
+
+  return api.query[section]['assignedRelayers']().then((data: Codec) => data.toJSON()) as Promise<
+    {
+      id: string;
+      collateral: number;
+      fee: number;
+    }[]
+  >;
+};

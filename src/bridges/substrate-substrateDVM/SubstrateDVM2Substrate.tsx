@@ -1,4 +1,3 @@
-import { Codec } from '@polkadot/types/types';
 import { last } from 'lodash';
 import { useCallback, useEffect } from 'react';
 import { from, switchMap } from 'rxjs';
@@ -15,7 +14,7 @@ import { entrance, fromWei, getS2SMappingAddress, waitUntilConnected } from '../
 import { DVM } from '../DVM';
 import { useBridgeStatus } from './hooks';
 import { RedeemSubstrateTxPayload, SubstrateDVM2SubstratePayload } from './model';
-import { redeem } from './utils/tx';
+import { queryFeeFromRelayers, redeem } from './utils/tx';
 
 export function SubstrateDVM2Substrate({
   form,
@@ -59,17 +58,7 @@ export function SubstrateDVM2Substrate({
   );
 
   const getFee = useCallback(async ({ to: arrival, from: departure }: CrossChainDirection) => {
-    const api = entrance.polkadot.getInstance(departure.provider.rpc);
-
-    await waitUntilConnected(api);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const module = api.query[`${arrival.name}FeeMarket`] as any;
-    const res = (await module.assignedRelayers().then((data: Codec) => data.toJSON())) as {
-      id: string;
-      collateral: number;
-      fee: number;
-    }[];
+    const res = await queryFeeFromRelayers(arrival, departure);
     const num = fromWei({ value: last(res)?.fee.toString(), unit: 'gwei' });
 
     return num;
