@@ -1,6 +1,6 @@
 {
   "name": "wormhole",
-  "version": "2.3.4",
+  "version": "2.3.12",
   "private": true,
   "scripts": {
     "start": "cross-env CHOKIDAR_USEPOLLING=1 PORT=3007 craco start",
