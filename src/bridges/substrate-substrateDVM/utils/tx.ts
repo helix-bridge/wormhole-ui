@@ -36,11 +36,10 @@ export function redeem(value: RedeemSubstrateTxPayload, mappingAddress: string, 
 
   const valObs = from(waitUntilConnected(api)).pipe(
     switchMap(() => {
-      const section = transfer.to.isTest ? `${transfer.to.name}FeeMarket` : 'feeMarket';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (api.query as any)[section]['assignedRelayers']().then((data: Codec) => data.toJSON()) as Promise<
-        { id: string; collateral: number; fee: number }[]
-      >;
+      return (api.query as any)[`${transfer.to.name}FeeMarket`]
+        ['assignedRelayers']()
+        .then((data: Codec) => data.toJSON()) as Promise<{ id: string; collateral: number; fee: number }[]>;
     }),
     map((res) => {
       const num = fromWei({ value: last(res)?.fee.toString(), unit: 'gwei' });

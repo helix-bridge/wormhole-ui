@@ -63,9 +63,8 @@ export function SubstrateDVM2Substrate({
 
     await waitUntilConnected(api);
 
-    const section = arrival.isTest ? `${arrival.name}FeeMarket` : 'feeMarket';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const module = api.query[section] as any;
+    const module = api.query[`${arrival.name}FeeMarket`] as any;
     const res = (await module.assignedRelayers().then((data: Codec) => data.toJSON())) as {
       id: string;
       collateral: number;
