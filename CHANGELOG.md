@@ -1,3 +1,5 @@
+## [2.3.14](https://github.com/darwinia-network/wormhole-pro/compare/v2.3.13...v2.3.14) (2022-06-07)
+
 ## [2.3.12](https://github.com/darwinia-network/wormhole-pro/compare/v2.3.11...v2.3.12) (2022-06-06)
 
 ## [2.3.3](https://github.com/darwinia-network/wormhole-pro/compare/v2.3.2...v2.3.3) (2022-03-29)
