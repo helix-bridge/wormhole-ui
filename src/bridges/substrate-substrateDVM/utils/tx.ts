@@ -61,7 +61,6 @@ export function redeem(value: RedeemSubstrateTxPayload, mappingAddress: string, 
 export const queryFeeFromRelayers = async (dep: ChainConfig, to: ChainConfig) => {
   const api = entrance.polkadot.getInstance(dep.provider.rpc);
   const section = isDVM(dep) || to.isTest ? `${to.name}FeeMarket` : 'feeMarket';
-  console.log('🚀 ~ file: tx.ts ~ line 64 ~ queryFeeFromRelayers ~ section', section);
 
   await waitUntilConnected(api);
 
