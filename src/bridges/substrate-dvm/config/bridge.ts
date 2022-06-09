@@ -6,7 +6,7 @@ import { SubstrateDVMBridgeConfig } from '../model';
 
 const crabCrabDVMConfig: SubstrateDVMBridgeConfig = {
   api: {
-    subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-',
+    subql: 'https://api.subquery.network/sq/helix-bridge/',
   },
 };
 
@@ -22,7 +22,7 @@ export const crabCrabDVM = new Bridge<SubstrateDVMBridgeConfig>(
 
 const pangolinPangolinDVMConfig: SubstrateDVMBridgeConfig = {
   api: {
-    subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-',
+    subql: 'https://api.subquery.network/sq/helix-bridge/',
   },
 };
 

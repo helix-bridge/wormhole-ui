@@ -8,7 +8,7 @@ const darwiniaCrabDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
     dapp: 'https://api.darwinia.network',
     evolution: EVOLUTION_DOMAIN.product,
     subGraph: 'https://crab-thegraph.darwinia.network/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
-    subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-',
+    subql: 'https://api.subquery.network/sq/helix-bridge/',
     //     subqlMMr: 'https://api.subquery.network/sq/darwinia-network/darwinia-mmr',
   },
 };
@@ -22,7 +22,7 @@ const pangoroPangolinDVMConfig: SubstrateSubstrateDVMBridgeConfig = {
     dapp: 'https://api.darwinia.network.l2me.com',
     evolution: EVOLUTION_DOMAIN.dev,
     subGraph: 'https://pangolin-thegraph.darwinia.network/subgraphs/name/wormhole/Sub2SubMappingTokenFactory',
-    subql: 'https://api.subquery.network/sq/darwinia-network/wormhole-',
+    subql: 'https://api.subquery.network/sq/helix-bridge/',
   },
 };
 
