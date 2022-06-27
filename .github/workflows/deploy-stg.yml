@@ -23,6 +23,7 @@ jobs:
         with:
           vercel_token: ${{ secrets.VERCEL_TOKEN }}
           vercel_group: itering
+          script_run: false
           dist_path: .
           preview_output: true
           alias_domain: wormhole-stg
